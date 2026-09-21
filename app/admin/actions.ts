@@ -168,10 +168,10 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
   }
 
   const variantes: (string | undefined)[] = [...(modelo.variantes ?? [])];
-  const camposVariante = [
-    { foto: "fotoVariante2", remover: "removerVariante2" },
-    { foto: "fotoVariante3", remover: "removerVariante3" },
-  ];
+  const camposVariante = [2, 3, 4, 5, 6].map((n) => ({
+    foto: `fotoVariante${n}`,
+    remover: `removerVariante${n}`,
+  }));
   for (const [i, { foto: campoFoto, remover: campoRemover }] of camposVariante.entries()) {
     const fotoVariante = formData.get(campoFoto);
     if (fotoVariante instanceof File && fotoVariante.size > 0) {

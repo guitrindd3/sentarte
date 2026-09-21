@@ -175,10 +175,12 @@ If a 7th team gets added via `/admin` later, add its name to `TIMES` in
 **`Modelo.variantes?: string[]` (added 2026-09-21)** holds extra photos of
 the same model in other color arrangements (e.g. Flamengo's alternate
 red/black layouts) — `imagemUrl` stays the primary/cover photo, `variantes`
-are additional ones. Admin support is capped at 2 extra slots
-(`fotoVariante2`/`fotoVariante3` fields in `updateModeloAction`, two more
-Field blocks in `app/admin/page.tsx`) rather than an open-ended list — keep
-it that way unless a model genuinely needs more than 3 total photos.
+are additional ones. Admin support is capped at 5 extra slots
+(`fotoVariante2`..`fotoVariante6` fields in `updateModeloAction`, generated
+via a `[2,3,4,5,6].map(...)` in `app/admin/page.tsx`, so 6 total photos per
+model) rather than an open-ended list — raised from an initial cap of 2 the
+same day to fit "Cadeiras boho" (6 distinct patterns). Bump the array
+literal in both files together if a model ever needs more than 6.
 `ModeloCard` shows a row of small photo-swatch buttons to pick a variant,
 but **only in the "Sem nome" state** — a personalizado model always shows
 its own single photo, no variant picker, since no personalizado model has
