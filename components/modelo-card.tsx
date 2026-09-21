@@ -22,14 +22,28 @@ export function ModeloCard({
   whatsappNumero: string;
 }) {
   const [wantsNome, setWantsNome] = useState(false);
+  const [varianteIndex, setVarianteIndex] = useState(0);
+  const [nomeTexto, setNomeTexto] = useState("");
+
   const ativo = wantsNome && personalizado ? personalizado : modelo;
+  const fotosBase = [modelo.imagemUrl, ...(modelo.variantes ?? [])].filter(
+    (f): f is string => Boolean(f)
+  );
+  const fotoAtiva =
+    wantsNome && personalizado ? personalizado.imagemUrl : fotosBase[varianteIndex] ?? fotosBase[0];
+  const nomeFinal = wantsNome ? nomeTexto.trim() : "";
+
+  const mensagemWhatsapp = `Oi! Quero pedir um orçamento de ${categoria} — modelo "${ativo.nome}".${
+    nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""
+  }`;
 
   return (
     <div className="group flex flex-col border border-line bg-paper transition-all duration-300 hover:-translate-y-1 hover:border-ink hover:shadow-[6px_6px_0_0_var(--line)]">
       <div className="relative aspect-[5/3] overflow-hidden border-b border-line">
-        {ativo.imagemUrl ? (
+        {fotoAtiva ? (
           <Image
-            src={ativo.imagemUrl}
+            key={fotoAtiva}
+            src={fotoAtiva}
             alt={ativo.nome}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -67,24 +81,54 @@ export function ModeloCard({
           </div>
         ) : null}
 
+        {!wantsNome && fotosBase.length > 1 ? (
+          <div className="mt-2 flex items-center gap-1.5" role="group" aria-label="Variação de cor">
+            {fotosBase.map((foto, i) => (
+              <button
+                key={foto}
+                type="button"
+                onClick={() => setVarianteIndex(i)}
+                aria-label={`Ver variação de cor ${i + 1}`}
+                aria-pressed={varianteIndex === i}
+                className={`relative h-9 w-9 overflow-hidden border transition-colors ${
+                  varianteIndex === i ? "border-ink" : "border-line hover:border-ink"
+                }`}
+              >
+                <Image src={foto} alt="" fill className="object-cover" sizes="36px" />
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {wantsNome && personalizado ? (
+          <label className="mt-2 block">
+            <span className="text-xs text-ink-soft">Nome ou apelido para trançar</span>
+            <input
+              type="text"
+              value={nomeTexto}
+              onChange={(e) => setNomeTexto(e.target.value)}
+              placeholder="Ex: João"
+              className="mt-1 w-full border border-line bg-canvas px-2.5 py-1.5 text-sm text-ink focus:border-ink focus:outline-none"
+            />
+          </label>
+        ) : null}
+
         <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-soft">{ativo.descricao}</p>
         <AddToCartButton
           item={{
-            id: `${categoriaSlug}:${ativo.id}`,
+            id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}`,
             categoriaSlug,
             categoriaTitulo: categoria,
             modeloId: ativo.id,
             modeloNome: ativo.nome,
-            imagemUrl: ativo.imagemUrl,
+            imagemUrl: fotoAtiva,
             corA: ativo.corA,
             corB: ativo.corB,
+            nomePersonalizado: nomeFinal || undefined,
           }}
         />
         <a
-          href={whatsappUrl(
-            whatsappNumero,
-            `Oi! Quero pedir um orçamento de ${categoria} — modelo "${ativo.nome}".`
-          )}
+          href={whatsappUrl(whatsappNumero, mensagemWhatsapp)}
           target="_blank"
           rel="noreferrer"
           className="mt-2 inline-flex items-center gap-2 text-xs text-ink-soft underline transition-colors hover:text-ink"

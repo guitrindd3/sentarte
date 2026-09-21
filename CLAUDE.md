@@ -172,6 +172,34 @@ still surfaces individual team models on a matching search — only the
 If a 7th team gets added via `/admin` later, add its name to `TIMES` in
 `lib/team-models.ts` — that's the only place the list lives.
 
+**`Modelo.variantes?: string[]` (added 2026-09-21)** holds extra photos of
+the same model in other color arrangements (e.g. Flamengo's alternate
+red/black layouts) — `imagemUrl` stays the primary/cover photo, `variantes`
+are additional ones. Admin support is capped at 2 extra slots
+(`fotoVariante2`/`fotoVariante3` fields in `updateModeloAction`, two more
+Field blocks in `app/admin/page.tsx`) rather than an open-ended list — keep
+it that way unless a model genuinely needs more than 3 total photos.
+`ModeloCard` shows a row of small photo-swatch buttons to pick a variant,
+but **only in the "Sem nome" state** — a personalizado model always shows
+its own single photo, no variant picker, since no personalizado model has
+more than one photo yet.
+
+**Personalizado now has a real name input.** When "Personalizado" is
+selected, `ModeloCard` shows a text field for the customer's name/apelido;
+it's threaded into both the cart (`CartItem.nomePersonalizado`, shown in
+`CartDrawer` and included in the consolidated WhatsApp message) and the
+card's own quick "Pedir direto pelo WhatsApp" link. The cart item's `id`
+incorporates the typed name (`${categoriaSlug}:${modeloId}:${nome}`) so two
+different names for the same model become separate line items instead of
+just bumping quantity on one.
+
+`app/admin/actions.ts` Server Actions default to a 1MB body limit in
+Next.js — raised to `10mb` in `next.config.ts`'s
+`experimental.serverActions.bodySizeLimit` after a ~2.9MB photo silently
+failed to upload for close to two minutes with no error surfaced anywhere
+(see "Content model" above for the incident). If a future upload never
+confirms, suspect this before Blob propagation delay.
+
 Categories are flat (no parent/subcategory nesting) — each has its own
 `modelos` array. `/categoria/[slug]` and the homepage are `force-dynamic` and
 read live from `getContent()`, so there's no `generateStaticParams`/build-time

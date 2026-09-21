@@ -5,6 +5,8 @@ export type Modelo = {
   corA: string;
   corB: string;
   imagemUrl?: string;
+  /** Extra photos showing the same model in other color arrangements. */
+  variantes?: string[];
 };
 
 export type Categoria = {

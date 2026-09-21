@@ -12,6 +12,8 @@ export type CartItem = {
   corA: string;
   corB: string;
   quantidade: number;
+  /** Name/nickname the customer typed for a "personalizado" item, if any. */
+  nomePersonalizado?: string;
 };
 
 type CartContextValue = {

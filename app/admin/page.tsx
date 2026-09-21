@@ -139,6 +139,24 @@ export default async function AdminPage() {
                         <Field label="Descrição">
                           <textarea name="descricao" defaultValue={m.descricao} rows={2} className={inputClass} />
                         </Field>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <Field label="Foto — variação de cor 2 (opcional)">
+                            <input type="file" name="fotoVariante2" accept="image/*" className="text-sm text-ink-soft" />
+                            {m.variantes?.[0] ? (
+                              <label className="mt-1 flex items-center gap-2 text-xs text-ink-soft">
+                                <input type="checkbox" name="removerVariante2" /> remover essa variação
+                              </label>
+                            ) : null}
+                          </Field>
+                          <Field label="Foto — variação de cor 3 (opcional)">
+                            <input type="file" name="fotoVariante3" accept="image/*" className="text-sm text-ink-soft" />
+                            {m.variantes?.[1] ? (
+                              <label className="mt-1 flex items-center gap-2 text-xs text-ink-soft">
+                                <input type="checkbox" name="removerVariante3" /> remover essa variação
+                              </label>
+                            ) : null}
+                          </Field>
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
                           <Field label="Cor 1 (usada se não tiver foto)">
                             <input type="color" name="corA" defaultValue={m.corA} className="h-10 w-full" />

@@ -14,7 +14,11 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
       ? ""
       : [
           "Oi! Quero fechar esse pedido:",
-          ...items.map((i) => `- ${i.categoriaTitulo} — ${i.modeloNome} (x${i.quantidade})`),
+          ...items.map(
+            (i) =>
+              `- ${i.categoriaTitulo} — ${i.modeloNome} (x${i.quantidade})` +
+              (i.nomePersonalizado ? ` — nome: "${i.nomePersonalizado}"` : "")
+          ),
           "Pode me ajudar a confirmar valores e prazo?",
         ].join("\n");
 
@@ -63,6 +67,9 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
                   <div className="flex flex-1 flex-col">
                     <p className="text-sm font-medium text-ink">{item.modeloNome}</p>
                     <p className="text-xs text-ink-soft">{item.categoriaTitulo}</p>
+                    {item.nomePersonalizado ? (
+                      <p className="text-xs italic text-ink-soft">Nome: {item.nomePersonalizado}</p>
+                    ) : null}
                     <div className="mt-2 flex items-center gap-3">
                       <div className="flex items-center border border-line">
                         <button

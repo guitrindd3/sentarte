@@ -167,6 +167,25 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
     modelo.imagemUrl = undefined;
   }
 
+  const variantes: (string | undefined)[] = [...(modelo.variantes ?? [])];
+  const camposVariante = [
+    { foto: "fotoVariante2", remover: "removerVariante2" },
+    { foto: "fotoVariante3", remover: "removerVariante3" },
+  ];
+  for (const [i, { foto: campoFoto, remover: campoRemover }] of camposVariante.entries()) {
+    const fotoVariante = formData.get(campoFoto);
+    if (fotoVariante instanceof File && fotoVariante.size > 0) {
+      const blob = await put(`modelos/${crypto.randomUUID()}-${fotoVariante.name}`, fotoVariante, {
+        access: "public",
+        contentType: fotoVariante.type || undefined,
+      });
+      variantes[i] = blob.url;
+    } else if (formData.get(campoRemover) === "on") {
+      variantes[i] = undefined;
+    }
+  }
+  modelo.variantes = variantes.filter((v): v is string => Boolean(v));
+
   await saveContent(content);
   revalidateSite();
 }

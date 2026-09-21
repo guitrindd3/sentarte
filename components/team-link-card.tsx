@@ -7,15 +7,15 @@ export function TeamLinkCard({ modelo }: { modelo: Modelo }) {
   return (
     <Link
       href="/times"
-      className="group flex flex-col border border-line bg-paper transition-all duration-300 hover:-translate-y-1 hover:border-ink hover:shadow-[6px_6px_0_0_var(--line)]"
+      className="group flex flex-col border border-line bg-paper transition-all duration-300 hover:-translate-y-1 hover:border-ink hover:shadow-[6px_6px_0_0_var(--line)] active:translate-y-0 active:shadow-[2px_2px_0_0_var(--line)] active:duration-75"
     >
-      <div className="relative aspect-[5/3] overflow-hidden border-b border-line">
+      <div className="relative aspect-square overflow-hidden border-b border-line">
         {modelo.imagemUrl ? (
           <Image
             src={modelo.imagemUrl}
             alt={modelo.nome}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-300 group-hover:scale-105 group-active:scale-100"
             sizes="(min-width: 1024px) 360px, (min-width: 640px) 45vw, 100vw"
           />
         ) : (
