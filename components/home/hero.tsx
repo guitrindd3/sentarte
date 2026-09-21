@@ -51,7 +51,11 @@ export function Hero({ hero, whatsappNumero }: { hero: SiteContent["hero"]; what
           </dl>
         </div>
 
-        <FramedWeave colorA="#15564C" colorB="#BD502E" cell={56} band={38} animated />
+        <FramedWeave
+          imagemUrl="/photos/hero-beach.jpg"
+          alt="Água turquesa e areia branca de uma praia, vista sob uma folha de coqueiro"
+          animated
+        />
       </div>
     </section>
   );

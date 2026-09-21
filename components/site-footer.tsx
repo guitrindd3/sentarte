@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { InstagramIcon, LockIcon, WhatsAppIcon } from "@/components/icons";
+import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
 import { getContent } from "@/lib/content-store";
 import { FOOTER_LINKS } from "@/lib/nav";
 import { instagramUrl, whatsappUrl } from "@/lib/urls";
@@ -70,16 +70,8 @@ export async function SiteFooter() {
         </div>
       </div>
 
-      <div className="relative border-t border-canvas/10 px-6 py-4 text-center text-xs text-canvas/50">
+      <div className="border-t border-canvas/10 px-6 py-4 text-center text-xs text-canvas/50">
         © {new Date().getFullYear()} {nome}. Todos os direitos reservados.
-        <Link
-          href="/admin"
-          aria-label="Acessar painel administrativo"
-          title="Painel administrativo"
-          className="absolute right-6 top-1/2 -translate-y-1/2 text-canvas/30 transition-colors hover:text-canvas"
-        >
-          <LockIcon className="h-4 w-4" />
-        </Link>
       </div>
     </footer>
   );

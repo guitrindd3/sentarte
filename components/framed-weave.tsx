@@ -2,8 +2,8 @@ import Image from "next/image";
 import { WeavePattern } from "@/components/weave-pattern";
 
 type FramedWeaveProps = {
-  colorA: string;
-  colorB: string;
+  colorA?: string;
+  colorB?: string;
   cell?: number;
   band?: number;
   animated?: boolean;
@@ -14,14 +14,14 @@ type FramedWeaveProps = {
 };
 
 /**
- * Presents a weave swatch the way the atelier actually displays rope
- * samples: matted and framed, like a textile sample pinned in a gallery,
- * rather than a bare full-bleed image. Shows a real photo instead of the
- * woven SVG once one has been uploaded through the admin panel.
+ * Presents a weave swatch — or a real photo, once one exists — the way the
+ * atelier actually displays rope samples: matted and framed, like a
+ * textile sample or a print pinned in a gallery, rather than a bare
+ * full-bleed image.
  */
 export function FramedWeave({
-  colorA,
-  colorB,
+  colorA = "#15564C",
+  colorB = "#BD502E",
   cell,
   band,
   animated,
@@ -34,7 +34,7 @@ export function FramedWeave({
     <div
       className={`border border-rattan/60 p-3 md:p-4 ${tone === "paper" ? "bg-paper" : "bg-canvas"}`}
     >
-      <div className={`relative overflow-hidden ${aspect}`}>
+      <div className={`relative overflow-hidden ${aspect} ${animated ? "sentarte-weave-in" : ""}`}>
         {imagemUrl ? (
           <Image
             src={imagemUrl}
@@ -44,7 +44,7 @@ export function FramedWeave({
             sizes="(min-width: 768px) 480px, 100vw"
           />
         ) : (
-          <WeavePattern colorA={colorA} colorB={colorB} cell={cell} band={band} animated={animated} className="h-full w-full" />
+          <WeavePattern colorA={colorA} colorB={colorB} cell={cell} band={band} className="h-full w-full" />
         )}
       </div>
     </div>

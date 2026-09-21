@@ -26,6 +26,14 @@ edits site content live; see "Content model" and "Admin panel" below.
   photos un-matted (catalog-card convention) instead.
 - Rope color palette for the homepage configurator lives in `lib/palette.ts`
   (`FIOS`) — a fixed brand palette, not admin-editable.
+- `public/photos/` — hero-beach.jpg, rope-texture.jpg, sand-texture.jpg. Real
+  Unsplash photos (Unsplash License — free for commercial use, no permission/
+  attribution required), picked and downloaded 2026-09-21 for hero/material-spec/
+  sobre. Source pages, for reference or swapping: hero-beach = unsplash.com/photos/9Itl-03hLao,
+  rope-texture = unsplash.com/photos/mbdOQS8SDnE, sand-texture = unsplash.com/photos/n5HOJGtYt4Q.
+  Don't add more site imagery by scraping arbitrary web/Pinterest results —
+  same reasoning as [[feedback-no-scraped-stock-photos]]: only pull from a
+  clearly commercial-use-licensed source like this, and record the source here.
 - Avoid generic AI-page tells: no ALL-CAPS labels, no middle-dot-joined meta
   strings, no arrow-suffixed link text, no uniform rounded-card-with-grey-shadow
   kit. Hover states use a hard offset shadow (`hover:shadow-[6px_6px_0_0_var(--rattan)]`)

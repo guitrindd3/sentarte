@@ -38,7 +38,11 @@ export function MaterialSpec() {
           </dl>
         </div>
         <div className="order-first md:order-none">
-          <FramedWeave colorA="#A9835A" colorB="#BD502E" cell={40} band={27} tone="canvas" />
+          <FramedWeave
+            imagemUrl="/photos/rope-texture.jpg"
+            alt="Corda náutica trançada à mão, de perto"
+            tone="canvas"
+          />
         </div>
       </div>
     </section>

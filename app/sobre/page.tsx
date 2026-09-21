@@ -33,7 +33,7 @@ export default function SobrePage() {
             encomenda, sempre com um resumo do pedido confirmado com você antes de começar.
           </p>
         </div>
-        <FramedWeave colorA="#BD502E" colorB="#15564C" cell={40} band={27} />
+        <FramedWeave imagemUrl="/photos/sand-texture.jpg" alt="Areia de praia com ondulações formadas pelo vento" />
       </section>
     </>
   );

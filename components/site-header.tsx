@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CloseIcon, MenuIcon, WhatsAppIcon } from "@/components/icons";
+import { CloseIcon, LockIcon, MenuIcon, WhatsAppIcon } from "@/components/icons";
 import { NAV_LINKS } from "@/lib/nav";
 import { whatsappUrl } from "@/lib/urls";
 
@@ -43,6 +43,14 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
             <WhatsAppIcon className="h-4 w-4" />
             WhatsApp
           </a>
+          <Link
+            href="/admin"
+            aria-label="Acessar painel administrativo"
+            title="Painel administrativo"
+            className="hidden text-ink-soft/40 transition-colors hover:text-ink-soft sm:block"
+          >
+            <LockIcon className="h-4 w-4" />
+          </Link>
           <button
             type="button"
             aria-label={open ? "Fechar menu" : "Abrir menu"}
