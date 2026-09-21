@@ -16,11 +16,12 @@ export const getContent = cache(async (): Promise<SiteContent> => {
     if (!match) return DEFAULT_CONTENT;
 
     // Vercel Blob's public URL sits behind a CDN that can serve a stale
-    // cached copy for a few seconds after put() — cache:"no-store" only
+    // cached copy for tens of seconds after put() — cache:"no-store" only
     // stops Next's own Data Cache, not that CDN edge cache. Busting with
-    // the blob's own uploadedAt timestamp forces a fresh fetch on every
-    // write without ever serving a stale read.
-    const res = await fetch(`${match.url}?v=${match.uploadedAt.getTime()}`, { cache: "no-store" });
+    // list()'s own `uploadedAt` isn't enough (that metadata can itself lag
+    // behind the write), so use Date.now() — a guaranteed-unique query on
+    // every single read forces a real origin fetch every time.
+    const res = await fetch(`${match.url}?v=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) return DEFAULT_CONTENT;
 
     const data = (await res.json()) as Partial<SiteContent>;
