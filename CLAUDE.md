@@ -139,15 +139,29 @@ customer name woven in.
 nome"/"Personalizado" toggle instead of two separate cards. This was a
 direct revision 2026-09-21 — building them as 12 separate cards (per the
 user's own earlier choice) read as cluttered once live ("não gostei
-muito"), so the toggle replaced it. `app/categoria/[slug]/page.tsx`,
-`app/busca/page.tsx`, and `components/home/team-showcase.tsx` all call
-`pairPersonalizados()` before rendering — any new listing of a category's
-`modelos` must do the same, or a personalizado model will render as its
-own duplicate card again. The toggle only appears when a personalizado
-sibling exists; a model with no `"<Nome> personalizado"` pair (e.g. "Trama
-lisa") renders exactly as before. `ModeloCard` is a client component now
+muito"), so the toggle replaced it. `ModeloCard` is a client component now
 (it needs the toggle's local state) — always pass the *base* model as
 `modelo` and the sibling (if any) as `personalizado`, never the reverse.
+The toggle only appears when a personalizado sibling exists; a model with
+no pair (e.g. "Trama lisa") renders exactly as before.
+
+**The six team models are curated out of "Cadeiras de praia"'s general grid
+and centralized at `/times`** (`app/times/page.tsx`) — also a same-day
+revision: showing all 6 teams inline in the category grid *and* behind
+"Time do coração" read as redundant once both existed. `lib/team-models.ts`
+is now the single source of truth for the team name list (`TIMES`) and
+`getTeamPairs(categorias)` (base+personalizado lookup); `components/
+team-grid.tsx` renders that list as a `ModeloCard` grid and is reused by
+both `/times` and the homepage's `TeamShowcase` section. In
+`app/categoria/[slug]/page.tsx`, the six team models (base + personalizado)
+are filtered out of the general grid entirely, and the "Time do coração"
+model renders as `components/team-link-card.tsx` — a card styled like
+`ModeloCard` but that's just a `Link` to `/times`, no add-to-cart. `/busca`
+still surfaces individual team models on a matching search — only the
+*browsing* grid excludes them, not search.
+
+If a 7th team gets added via `/admin` later, add its name to `TIMES` in
+`lib/team-models.ts` — that's the only place the list lives.
 
 Categories are flat (no parent/subcategory nesting) — each has its own
 `modelos` array. `/categoria/[slug]` and the homepage are `force-dynamic` and

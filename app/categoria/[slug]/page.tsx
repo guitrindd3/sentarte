@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ModeloCard } from "@/components/modelo-card";
+import { TeamLinkCard } from "@/components/team-link-card";
 import { WeavePattern } from "@/components/weave-pattern";
 import { getContent } from "@/lib/content-store";
 import { pairPersonalizados } from "@/lib/modelo-pairs";
+import { TIME_DO_CORACAO_NOME, TIMES } from "@/lib/team-models";
+
+// On "Cadeiras de praia", the individual team models (Flamengo, Corinthians,
+// ...) live at /times and the homepage showcase, not in this general grid —
+// "Time do coração" is the single link into that dedicated list instead.
+const TEAM_MODEL_NAMES = new Set(TIMES.flatMap((nome) => [nome, `${nome} personalizado`]));
 
 export const dynamic = "force-dynamic";
 
@@ -40,16 +47,21 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
       <section className="mx-auto max-w-6xl px-6 py-14">
         {categoria.modelos.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {pairPersonalizados(categoria.modelos).map(({ base, personalizado }) => (
-              <ModeloCard
-                key={base.id}
-                modelo={base}
-                personalizado={personalizado}
-                categoria={categoria.titulo}
-                categoriaSlug={categoria.slug}
-                whatsappNumero={content.site.whatsappNumero}
-              />
-            ))}
+            {pairPersonalizados(categoria.modelos.filter((m) => !TEAM_MODEL_NAMES.has(m.nome))).map(
+              ({ base, personalizado }) =>
+                base.nome === TIME_DO_CORACAO_NOME ? (
+                  <TeamLinkCard key={base.id} modelo={base} />
+                ) : (
+                  <ModeloCard
+                    key={base.id}
+                    modelo={base}
+                    personalizado={personalizado}
+                    categoria={categoria.titulo}
+                    categoriaSlug={categoria.slug}
+                    whatsappNumero={content.site.whatsappNumero}
+                  />
+                )
+            )}
           </div>
         ) : (
           <p className="text-sm text-ink-soft">Nenhum modelo cadastrado nessa categoria ainda.</p>
