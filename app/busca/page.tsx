@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ModeloCard } from "@/components/modelo-card";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
+import { pairPersonalizados } from "@/lib/modelo-pairs";
 
 export const dynamic = "force-dynamic";
 
@@ -23,14 +24,13 @@ export default async function BuscaPage({ searchParams }: PageProps<"/busca">) {
 
   const needle = fold(query);
   const resultados = query
-    ? content.categorias.flatMap((categoria) =>
-        categoria.modelos
-          .filter((modelo) => {
-            const haystack = fold(`${modelo.nome} ${modelo.descricao} ${categoria.titulo}`);
-            return haystack.includes(needle);
-          })
-          .map((modelo) => ({ modelo, categoria }))
-      )
+    ? content.categorias.flatMap((categoria) => {
+        const encontrados = categoria.modelos.filter((modelo) => {
+          const haystack = fold(`${modelo.nome} ${modelo.descricao} ${categoria.titulo}`);
+          return haystack.includes(needle);
+        });
+        return pairPersonalizados(encontrados).map((par) => ({ ...par, categoria }));
+      })
     : [];
 
   return (
@@ -71,10 +71,11 @@ export default async function BuscaPage({ searchParams }: PageProps<"/busca">) {
         ) : null}
         {resultados.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {resultados.map(({ modelo, categoria }) => (
+            {resultados.map(({ base, personalizado, categoria }) => (
               <ModeloCard
-                key={modelo.id}
-                modelo={modelo}
+                key={base.id}
+                modelo={base}
+                personalizado={personalizado}
                 categoria={categoria.titulo}
                 categoriaSlug={categoria.slug}
                 whatsappNumero={content.site.whatsappNumero}

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ModeloCard } from "@/components/modelo-card";
 import { WeavePattern } from "@/components/weave-pattern";
 import { getContent } from "@/lib/content-store";
+import { pairPersonalizados } from "@/lib/modelo-pairs";
 
 export const dynamic = "force-dynamic";
 
@@ -39,10 +40,11 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
       <section className="mx-auto max-w-6xl px-6 py-14">
         {categoria.modelos.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {categoria.modelos.map((modelo) => (
+            {pairPersonalizados(categoria.modelos).map(({ base, personalizado }) => (
               <ModeloCard
-                key={modelo.id}
-                modelo={modelo}
+                key={base.id}
+                modelo={base}
+                personalizado={personalizado}
                 categoria={categoria.titulo}
                 categoriaSlug={categoria.slug}
                 whatsappNumero={content.site.whatsappNumero}

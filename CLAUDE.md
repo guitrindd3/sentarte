@@ -128,7 +128,26 @@ customer-supplied WhatsApp photo the user sorted into per-team folders under
 via the real `/admin` file-upload flow (not committed to the repo, they live
 in Blob under `modelos/` like any other admin-uploaded photo). These sit
 alongside the earlier generic "Time do coração" model rather than replacing
-it.
+it. Each team also got a second admin-panel model named `"<Time>
+personalizado"` (e.g. "Vasco personalizado") holding a photo with a real
+customer name woven in.
+
+**"<Nome> personalizado" is a naming convention, not a schema field** —
+`lib/modelo-pairs.ts` (`pairPersonalizados()`) scans a category's flat
+`modelos` array and folds any `"<Nome> personalizado"` entry into its
+`"<Nome>"` sibling, so they render as *one* `ModeloCard` with a "Sem
+nome"/"Personalizado" toggle instead of two separate cards. This was a
+direct revision 2026-09-21 — building them as 12 separate cards (per the
+user's own earlier choice) read as cluttered once live ("não gostei
+muito"), so the toggle replaced it. `app/categoria/[slug]/page.tsx`,
+`app/busca/page.tsx`, and `components/home/team-showcase.tsx` all call
+`pairPersonalizados()` before rendering — any new listing of a category's
+`modelos` must do the same, or a personalizado model will render as its
+own duplicate card again. The toggle only appears when a personalizado
+sibling exists; a model with no `"<Nome> personalizado"` pair (e.g. "Trama
+lisa") renders exactly as before. `ModeloCard` is a client component now
+(it needs the toggle's local state) — always pass the *base* model as
+`modelo` and the sibling (if any) as `personalizado`, never the reverse.
 
 Categories are flat (no parent/subcategory nesting) — each has its own
 `modelos` array. `/categoria/[slug]` and the homepage are `force-dynamic` and
