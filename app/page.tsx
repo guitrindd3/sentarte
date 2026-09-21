@@ -5,6 +5,7 @@ import { ContactCta } from "@/components/home/contact-cta";
 import { MaterialSpec } from "@/components/home/material-spec";
 import { PersonalizationSteps } from "@/components/home/personalization-steps";
 import { PullQuote } from "@/components/home/pull-quote";
+import { TeamShowcase } from "@/components/home/team-showcase";
 import { getContent } from "@/lib/content-store";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export default async function Home() {
     <>
       <Carousel hero={content.hero} whatsappNumero={content.site.whatsappNumero} />
       <CategoryBento categorias={content.categorias} />
+      <TeamShowcase categorias={content.categorias} whatsappNumero={content.site.whatsappNumero} />
       <PersonalizationSteps />
       <Configurator categorias={content.categorias} whatsappNumero={content.site.whatsappNumero} />
       <PullQuote />
