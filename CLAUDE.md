@@ -91,6 +91,16 @@ and to backfill missing fields on read). `lib/content-store.ts` exports
 `getContent()` (React `cache()`-wrapped — safe to call from multiple
 components in one request, only one Blob read happens) and `saveContent()`.
 
+`getContent()` busts the blob's CDN cache with `?v=<uploadedAt>` on every
+read (fixed 2026-09-21). Without it, `fetch(match.url, {cache:"no-store"})`
+only skips Next's own Data Cache — the blob's public URL still sits behind
+a CDN edge cache, so a read shortly after a `saveContent()` write could
+silently return the pre-write content. This was the cause of admin saves
+that "didn't stick" when made in quick succession (e.g. editing several
+categories/models back to back): each save reads-modifies-writes the
+*whole* content object, so a stale read clobbers whatever the previous
+save just wrote. Don't remove the cache-busting query param.
+
 Categories are flat (no parent/subcategory nesting) — each has its own
 `modelos` array. `/categoria/[slug]` and the homepage are `force-dynamic` and
 read live from `getContent()`, so there's no `generateStaticParams`/build-time

@@ -15,7 +15,12 @@ export const getContent = cache(async (): Promise<SiteContent> => {
     const match = blobs.find((b) => b.pathname === CONTENT_PATH);
     if (!match) return DEFAULT_CONTENT;
 
-    const res = await fetch(match.url, { cache: "no-store" });
+    // Vercel Blob's public URL sits behind a CDN that can serve a stale
+    // cached copy for a few seconds after put() — cache:"no-store" only
+    // stops Next's own Data Cache, not that CDN edge cache. Busting with
+    // the blob's own uploadedAt timestamp forces a fresh fetch on every
+    // write without ever serving a stale read.
+    const res = await fetch(`${match.url}?v=${match.uploadedAt.getTime()}`, { cache: "no-store" });
     if (!res.ok) return DEFAULT_CONTENT;
 
     const data = (await res.json()) as Partial<SiteContent>;
