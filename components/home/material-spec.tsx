@@ -22,7 +22,7 @@ const SPECS = [
 
 export function MaterialSpec() {
   return (
-    <section className="bg-navy px-6 py-24 text-canvas">
+    <section className="bg-espresso px-6 py-24 text-canvas">
       <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2 md:items-center">
         <div>
           <h2 className="font-serif text-2xl font-medium tracking-tight">Por dentro do trançado</h2>

@@ -37,7 +37,7 @@ export function Carousel({
   }, []);
 
   return (
-    <section className="relative flex min-h-[92vh] items-center justify-center overflow-hidden bg-navy">
+    <section className="relative flex min-h-[92vh] items-center justify-center overflow-hidden bg-espresso">
       {SLIDES.map((slide, i) => (
         <Image
           key={slide.src}
@@ -51,7 +51,7 @@ export function Carousel({
           sizes="100vw"
         />
       ))}
-      <div className="absolute inset-0 bg-gradient-to-t from-navy/85 via-navy/25 to-navy/45" />
+      <div className="absolute inset-0 bg-gradient-to-t from-espresso/85 via-espresso/25 to-espresso/45" />
 
       <div className="relative mx-auto max-w-2xl px-6 text-center text-canvas">
         <p className="font-serif text-lg italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-xl">

@@ -9,7 +9,7 @@ export async function SiteFooter() {
   const { nome, whatsappNumero, instagramHandle } = content.site;
 
   return (
-    <footer className="border-t-2 border-rattan bg-navy text-canvas">
+    <footer className="border-t-2 border-rattan bg-espresso text-canvas">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-6 py-16 md:grid-cols-4">
         <div className="col-span-2 md:col-span-1">
           <p className="font-serif text-xl font-medium tracking-tight">{nome}</p>

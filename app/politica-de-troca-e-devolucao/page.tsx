@@ -43,7 +43,7 @@ export default async function PoliticaDeTrocaEDevolucaoPage() {
               href={whatsappUrl(site.whatsappNumero, "Oi! Preciso falar sobre uma troca ou devolução.")}
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-marine hover:underline"
+              className="font-medium text-wood hover:underline"
             >
               fale com a gente pelo WhatsApp
             </a>{" "}

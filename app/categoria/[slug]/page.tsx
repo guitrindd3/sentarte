@@ -53,7 +53,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
         )}
       </section>
 
-      <section className="relative overflow-hidden border-t border-line bg-navy px-6 py-14 text-canvas">
+      <section className="relative overflow-hidden border-t border-line bg-espresso px-6 py-14 text-canvas">
         <WeavePattern
           colorA={categoria.corA}
           colorB={categoria.corB}

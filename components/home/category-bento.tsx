@@ -2,7 +2,7 @@ import Link from "next/link";
 import { WeavePattern } from "@/components/weave-pattern";
 import type { Categoria } from "@/lib/content-schema";
 
-const TONES = ["bg-canvas-deep text-ink", "bg-navy text-canvas"];
+const TONES = ["bg-canvas-deep text-ink", "bg-espresso text-canvas"];
 
 export function CategoryBento({ categorias }: { categorias: Categoria[] }) {
   if (categorias.length === 0) return null;

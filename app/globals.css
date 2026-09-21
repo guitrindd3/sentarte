@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --canvas: #f5efdf;
-  --canvas-deep: #ecdfc0;
-  --paper: #ffffff;
-  --ink: #1c1710;
-  --ink-soft: #55493a;
-  --marine: #0e7a82;
-  --marine-dark: #0a5a61;
-  --clay: #d35b34;
-  --clay-dark: #a8431f;
+  --canvas: #f6f0e2;
+  --canvas-deep: #ecdfc4;
+  --paper: #fffdf8;
+  --ink: #241a10;
+  --ink-soft: #5c4c39;
+  --wood: #8a5636;
+  --wood-dark: #6b4126;
+  --clay: #c1622f;
+  --clay-dark: #96491f;
   --rattan: #c9973f;
-  --navy: #10202a;
-  --navy-soft: #1b2e39;
-  --line: #dcc98e;
+  --espresso: #241c14;
+  --espresso-soft: #382a1c;
+  --line: #d9c79a;
 }
 
 @theme inline {
@@ -22,13 +22,13 @@
   --color-paper: var(--paper);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
-  --color-marine: var(--marine);
-  --color-marine-dark: var(--marine-dark);
+  --color-wood: var(--wood);
+  --color-wood-dark: var(--wood-dark);
   --color-clay: var(--clay);
   --color-clay-dark: var(--clay-dark);
   --color-rattan: var(--rattan);
-  --color-navy: var(--navy);
-  --color-navy-soft: var(--navy-soft);
+  --color-espresso: var(--espresso);
+  --color-espresso-soft: var(--espresso-soft);
   --color-line: var(--line);
   --font-sans: var(--font-body);
   --font-serif: var(--font-display);

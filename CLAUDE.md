@@ -11,14 +11,19 @@ edits site content live; see "Content model" and "Admin panel" below.
 ## Design system
 
 - Tokens live in `app/globals.css` under `@theme inline` (`canvas`, `canvas-deep`,
-  `paper`, `ink`, `ink-soft`, `marine`, `clay`, `rattan`, `navy`, `line`). Use
-  these Tailwind classes (`bg-marine`, `text-ink-soft`, etc.) — never hardcode
+  `paper`, `ink`, `ink-soft`, `wood`, `clay`, `rattan`, `espresso`, `line`). Use
+  these Tailwind classes (`bg-wood`, `text-ink-soft`, etc.) — never hardcode
   hex colors in components except where `WeavePattern`/`Configurator` need raw
   hex strings for SVG fills. Token values were brightened 2026-09-21 (user felt
-  the original muted/desaturated version read as "apagado" — `paper` is now
-  true white, `canvas`/`canvas-deep` lighter, `marine`/`clay`/`rattan` more
-  saturated, `navy` deepened for more contrast) — don't drift back toward the
-  original dusty/muted hex values.
+  the original muted/desaturated version read as "apagado"), then recolored
+  again 2026-09-21 to a warmer "rustic ateliê" palette (user: "melhore a cor
+  deixa mais rustico") — the old `marine` token was a cool teal that clashed
+  with the brand's actual navy/terracotta logo, so it was renamed `wood` and
+  retinted to a warm coffee-brown; `navy` was renamed `espresso` and retinted
+  from nautical blue-black to a warm near-black brown; `canvas`/`paper` went
+  slightly warmer/ivory. Don't reintroduce teal or true navy-blue — the brand
+  reference is the circular "SA" logo (`public/brand/logo.png`): deep warm
+  navy-brown circle, burnt-orange/rattan ring, white wordmark.
 - Fonts: `font-serif` (Bodoni Moda — a high-contrast display serif, swapped
   2026-09-21 from Frank Ruhl Libre which the user found unappealing) for
   headings/display, `font-sans` (Archivo, the default body font) for
@@ -61,6 +66,16 @@ edits site content live; see "Content model" and "Admin panel" below.
     `components/home/carousel.tsx` slides (2026-09-21). Sources:
     unsplash.com/photos/Qe58SmRMcH4, /photo-1501696461415-6bd6660c6742,
     /6nxEDrj61CY.
+- `public/brand/` — the atelier's own brand assets, supplied directly by the
+  user (not sourced/licensed by Claude): `logo.png` (circular "SA" mark,
+  transparent background, 1024×1024) and `bem-vindo.png` (a 1792×592 "Bem
+  vindo ao Ateliê" photo banner of crochet thread/wooden bowls, with the
+  greeting text baked into the image). Added 2026-09-21 into
+  `components/site-header.tsx`: the logo sits next to the "Sentarte" wordmark
+  in the sticky nav row, and `bem-vindo.png` is a short non-sticky ribbon
+  above the nav (fades into `canvas` at the bottom edge via a gradient
+  overlay) — the user asked for both "no cabeçário", kept subtle/short so it
+  doesn't compete with the carousel's own welcome moment below it.
 - Avoid generic AI-page tells: no ALL-CAPS labels, no middle-dot-joined meta
   strings, no arrow-suffixed link text, no uniform rounded-card-with-grey-shadow
   kit. Hover states use a hard offset shadow (`hover:shadow-[6px_6px_0_0_var(--rattan)]`)
