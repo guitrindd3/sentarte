@@ -48,9 +48,12 @@ export async function updateHeroAction(formData: FormData) {
   const content = await getContent();
   content.hero.titulo = String(formData.get("titulo") ?? content.hero.titulo);
   content.hero.subtitulo = String(formData.get("subtitulo") ?? content.hero.subtitulo);
-  content.hero.tags = [0, 1, 2].map(
-    (i) => String(formData.get(`tag${i}`) ?? content.hero.tags[i] ?? "")
-  ) as [string, string, string];
+  const tags: string[] = [];
+  for (let i = 0; formData.has(`tag${i}`); i++) {
+    const value = String(formData.get(`tag${i}`) ?? "").trim();
+    if (value) tags.push(value);
+  }
+  content.hero.tags = tags;
   await saveContent(content);
   revalidateSite();
 }

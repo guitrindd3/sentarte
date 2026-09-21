@@ -28,7 +28,7 @@ export type SiteContent = {
   hero: {
     titulo: string;
     subtitulo: string;
-    tags: [string, string, string];
+    tags: string[];
   };
   categorias: Categoria[];
 };

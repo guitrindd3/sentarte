@@ -13,6 +13,7 @@ import {
   updateSiteAction,
 } from "./actions";
 import { ConfirmSubmitButton, Field, SaveButton, inputClass } from "./_ui";
+import { HeroTagsField } from "./hero-tags-field";
 
 export const dynamic = "force-dynamic";
 
@@ -45,13 +46,7 @@ export default async function AdminPage() {
           <Field label="Texto de apoio (abaixo do nome)">
             <textarea name="subtitulo" defaultValue={content.hero.subtitulo} rows={3} className={inputClass} />
           </Field>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {content.hero.tags.map((tag, i) => (
-              <Field key={i} label={`Selo ${i + 1}`}>
-                <input name={`tag${i}`} defaultValue={tag} className={inputClass} />
-              </Field>
-            ))}
-          </div>
+          <HeroTagsField initialTags={content.hero.tags} />
           <SaveButton />
         </form>
       </section>
