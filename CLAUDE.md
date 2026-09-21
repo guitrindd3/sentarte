@@ -91,15 +91,24 @@ and to backfill missing fields on read). `lib/content-store.ts` exports
 `getContent()` (React `cache()`-wrapped — safe to call from multiple
 components in one request, only one Blob read happens) and `saveContent()`.
 
-`getContent()` busts the blob's CDN cache with `?v=<uploadedAt>` on every
-read (fixed 2026-09-21). Without it, `fetch(match.url, {cache:"no-store"})`
-only skips Next's own Data Cache — the blob's public URL still sits behind
-a CDN edge cache, so a read shortly after a `saveContent()` write could
-silently return the pre-write content. This was the cause of admin saves
-that "didn't stick" when made in quick succession (e.g. editing several
-categories/models back to back): each save reads-modifies-writes the
-*whole* content object, so a stale read clobbers whatever the previous
-save just wrote. Don't remove the cache-busting query param.
+`getContent()` busts the blob's CDN cache with `?v=<Date.now()>` on every
+read (fixed 2026-09-21 — an earlier attempt busted with `list()`'s own
+`uploadedAt` instead, but that metadata can itself lag behind the write by
+10-30s, so the query stayed identical and the stale response kept being
+served; `Date.now()` has no such dependency). Without cache-busting at all,
+`fetch(match.url, {cache:"no-store"})` only skips Next's own Data Cache —
+the blob's public URL still sits behind a CDN edge cache.
+
+**Even with the fix, treat writes to this blob as eventually consistent —
+NOT immediately read-your-writes.** Every save does a read-modify-write of
+the *whole* content object, so if a second save's `getContent()` runs
+before the first save has propagated, the second save's write will
+silently revert the first save's change (confirmed empirically: the
+propagation window is variable, seen anywhere from ~8s to ~25-30s). When
+making several category/model edits back to back (by hand or via
+automation), wait for each save to be confirmed live (reload and check the
+actual value, don't just trust the "Salvo" state) before starting the
+next one — don't fire them in quick succession.
 
 Categories are flat (no parent/subcategory nesting) — each has its own
 `modelos` array. `/categoria/[slug]` and the homepage are `force-dynamic` and
