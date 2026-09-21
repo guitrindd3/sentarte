@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Archivo, Frank_Ruhl_Libre } from "next/font/google";
+import { Archivo, Bodoni_Moda } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getContent } from "@/lib/content-store";
 import { SITE_URL } from "@/lib/nav";
 import "./globals.css";
 
-const display = Frank_Ruhl_Libre({
+const display = Bodoni_Moda({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "700"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
 });
 
 const body = Archivo({

@@ -1,0 +1,109 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { WhatsAppIcon } from "@/components/icons";
+import { whatsappUrl } from "@/lib/urls";
+import type { SiteContent } from "@/lib/content-schema";
+
+const SLIDES = [
+  {
+    src: "/photos/carousel-palms.jpg",
+    alt: "Palmeiras à beira de uma praia de areia branca e mar azul-turquesa",
+  },
+  {
+    src: "/photos/carousel-wave.jpg",
+    alt: "Vista aérea de uma onda azul-turquesa quebrando na areia",
+  },
+  {
+    src: "/photos/carousel-sunset.jpg",
+    alt: "Pôr do sol dourado sobre o mar",
+  },
+];
+
+export function Carousel({
+  hero,
+  whatsappNumero,
+}: {
+  hero: SiteContent["hero"];
+  whatsappNumero: string;
+}) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), 6000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <section className="relative flex min-h-[92vh] items-center justify-center overflow-hidden bg-navy">
+      {SLIDES.map((slide, i) => (
+        <Image
+          key={slide.src}
+          src={slide.src}
+          alt={slide.alt}
+          fill
+          priority={i === 0}
+          className={`object-cover transition-opacity duration-[1600ms] ease-in-out ${
+            i === index ? "opacity-100" : "opacity-0"
+          }`}
+          sizes="100vw"
+        />
+      ))}
+      <div className="absolute inset-0 bg-gradient-to-t from-navy/85 via-navy/25 to-navy/45" />
+
+      <div className="relative mx-auto max-w-2xl px-6 text-center text-canvas">
+        <p className="font-serif text-xl italic text-canvas/90 md:text-2xl">Bem-vindo ao</p>
+        <h1 className="mt-1 font-serif text-5xl leading-[1.05] md:text-7xl">{hero.titulo}</h1>
+        <p className="mx-auto mt-6 max-w-[46ch] text-sm leading-relaxed text-canvas/85 md:text-base">
+          {hero.subtitulo}
+        </p>
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <Link
+            href="/categoria/cadeiras"
+            className="border border-canvas bg-canvas px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-transparent hover:text-canvas"
+          >
+            Ver modelos
+          </Link>
+          <a
+            href={whatsappUrl(whatsappNumero, "Oi! Vim pelo site e queria saber mais sobre as cadeiras.")}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 text-sm font-medium text-canvas hover:underline"
+          >
+            <WhatsAppIcon className="h-4 w-4" />
+            Falar no WhatsApp
+          </a>
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          {hero.tags.map((tag) => (
+            <span
+              key={tag}
+              className="border border-dashed border-canvas/50 px-3 py-1.5 text-xs leading-snug text-canvas/90"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-10 flex items-center justify-center gap-2">
+          {SLIDES.map((slide, i) => (
+            <button
+              key={slide.src}
+              type="button"
+              aria-label={`Ver imagem ${i + 1} de ${SLIDES.length}`}
+              aria-current={i === index}
+              onClick={() => setIndex(i)}
+              className={`h-1.5 rounded-full transition-all ${
+                i === index ? "w-6 bg-canvas" : "w-1.5 bg-canvas/40 hover:bg-canvas/70"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

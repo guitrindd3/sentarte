@@ -14,10 +14,15 @@ edits site content live; see "Content model" and "Admin panel" below.
   `paper`, `ink`, `ink-soft`, `marine`, `clay`, `rattan`, `navy`, `line`). Use
   these Tailwind classes (`bg-marine`, `text-ink-soft`, etc.) — never hardcode
   hex colors in components except where `WeavePattern`/`Configurator` need raw
-  hex strings for SVG fills.
-- Fonts: `font-serif` (Frank Ruhl Libre) for headings/display, `font-sans`
-  (Archivo, the default body font) for everything else. Don't add another
-  typeface.
+  hex strings for SVG fills. Token values were brightened 2026-09-21 (user felt
+  the original muted/desaturated version read as "apagado" — `paper` is now
+  true white, `canvas`/`canvas-deep` lighter, `marine`/`clay`/`rattan` more
+  saturated, `navy` deepened for more contrast) — don't drift back toward the
+  original dusty/muted hex values.
+- Fonts: `font-serif` (Bodoni Moda — a high-contrast display serif, swapped
+  2026-09-21 from Frank Ruhl Libre which the user found unappealing) for
+  headings/display, `font-sans` (Archivo, the default body font) for
+  everything else. Don't add another typeface.
 - The recurring visual motif is `components/weave-pattern.tsx`, a basket-weave
   SVG built from two colors — the fallback shown for any model/category that
   has no real photo yet. `components/framed-weave.tsx` wraps it (or a real
@@ -26,14 +31,26 @@ edits site content live; see "Content model" and "Admin panel" below.
   photos un-matted (catalog-card convention) instead.
 - Rope color palette for the homepage configurator lives in `lib/palette.ts`
   (`FIOS`) — a fixed brand palette, not admin-editable.
-- `public/photos/` — hero-beach.jpg, rope-texture.jpg, sand-texture.jpg. Real
-  Unsplash photos (Unsplash License — free for commercial use, no permission/
-  attribution required), picked and downloaded 2026-09-21 for hero/material-spec/
-  sobre. Source pages, for reference or swapping: hero-beach = unsplash.com/photos/9Itl-03hLao,
-  rope-texture = unsplash.com/photos/mbdOQS8SDnE, sand-texture = unsplash.com/photos/n5HOJGtYt4Q.
-  Don't add more site imagery by scraping arbitrary web/Pinterest results —
-  same reasoning as [[feedback-no-scraped-stock-photos]]: only pull from a
-  clearly commercial-use-licensed source like this, and record the source here.
+- The homepage opens with `components/home/carousel.tsx` (added 2026-09-21,
+  replacing the old two-column `hero.tsx`), a full-viewport-height
+  auto-advancing photo carousel ("Bem-vindo ao {hero.titulo}") — a fixed
+  "portal" welcome moment the user asked for by name. `hero.titulo`/
+  `subtitulo`/`tags` are still the admin-editable fields (via the "Boas-vindas"
+  section in `/admin`), just relabeled/repurposed for this new layout.
+- `public/photos/` — real Unsplash photos (Unsplash License — free for
+  commercial use, no permission/attribution required; always check the photo
+  page says "free" — Unsplash also sells paid "Unsplash+" photos mixed into
+  search results, skip those). Don't add more site imagery by scraping
+  arbitrary web/Pinterest results — same reasoning as
+  [[feedback-no-scraped-stock-photos]]: only pull from a clearly
+  commercial-use-licensed source like this, and record the source below.
+  - hero-beach.jpg, rope-texture.jpg, sand-texture.jpg — used in the old
+    two-column hero/material-spec/sobre (2026-09-21). Sources:
+    unsplash.com/photos/9Itl-03hLao, /mbdOQS8SDnE, /n5HOJGtYt4Q.
+  - carousel-palms.jpg, carousel-wave.jpg, carousel-sunset.jpg — the three
+    `components/home/carousel.tsx` slides (2026-09-21). Sources:
+    unsplash.com/photos/Qe58SmRMcH4, /photo-1501696461415-6bd6660c6742,
+    /6nxEDrj61CY.
 - Avoid generic AI-page tells: no ALL-CAPS labels, no middle-dot-joined meta
   strings, no arrow-suffixed link text, no uniform rounded-card-with-grey-shadow
   kit. Hover states use a hard offset shadow (`hover:shadow-[6px_6px_0_0_var(--rattan)]`)

@@ -37,12 +37,12 @@ export default async function AdminPage() {
       </div>
 
       <section className="mt-10 border border-line bg-paper p-6">
-        <h2 className="font-serif text-xl text-ink">Início (hero)</h2>
+        <h2 className="font-serif text-xl text-ink">Boas-vindas (carrossel de entrada)</h2>
         <form action={updateHeroAction} className="mt-4 space-y-4">
-          <Field label="Título principal">
+          <Field label={'Nome depois de "Bem-vindo ao"'}>
             <textarea name="titulo" defaultValue={content.hero.titulo} rows={2} className={inputClass} />
           </Field>
-          <Field label="Texto de apoio">
+          <Field label="Texto de apoio (abaixo do nome)">
             <textarea name="subtitulo" defaultValue={content.hero.subtitulo} rows={3} className={inputClass} />
           </Field>
           <div className="grid gap-3 sm:grid-cols-3">

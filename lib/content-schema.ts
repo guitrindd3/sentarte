@@ -42,9 +42,9 @@ export const DEFAULT_CONTENT: SiteContent = {
     instagramHandle: "ateliesentarte",
   },
   hero: {
-    titulo: "Trançada fio a fio para durar o verão inteiro — e os próximos.",
+    titulo: "Ateliê Sentarte",
     subtitulo:
-      "Cadeiras de praia, bolsas e espreguiçadeiras feitas à mão em corda náutica e alumínio, no modelo, na cor e na personalização que você escolher.",
+      "Cadeiras de praia, bolsas e espreguiçadeiras trançadas à mão, para durar o verão inteiro — e os próximos.",
     tags: ["Feito à mão", "Corda náutica e alumínio", "Resistente à maresia"],
   },
   categorias: [
