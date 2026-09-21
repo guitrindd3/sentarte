@@ -121,6 +121,15 @@ this cost real time misdiagnosing propagation delay on 2026-09-21 when it
 was actually just browser cache) before starting the next one — don't fire
 them in quick succession.
 
+**Server Actions default to a 1MB body limit** (`experimental.serverActions
+.bodySizeLimit` in `next.config.ts`, raised to `10mb` on 2026-09-21). A
+~2.9MB promo photo uploaded via the "Time do coração" Foto field silently
+failed for close to two minutes before this was diagnosed — the action
+never ran, so there was nothing to wait out, and no error surfaced through
+the admin UI or the browser-automation flow used to drive it. If a future
+photo upload never confirms no matter how long you wait, suspect this
+limit before suspecting Blob propagation delay again.
+
 2026-09-21: added six real "Cadeiras de praia" models, one per soccer team
 (Flamengo, Corinthians, Botafogo, Fluminense, Palmeiras, Vasco), each with a
 customer-supplied WhatsApp photo the user sorted into per-team folders under
