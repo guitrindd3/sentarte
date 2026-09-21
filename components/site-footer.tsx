@@ -12,7 +12,7 @@ export async function SiteFooter() {
     <footer className="border-t-2 border-rattan bg-navy text-canvas">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-6 py-16 md:grid-cols-4">
         <div className="col-span-2 md:col-span-1">
-          <p className="font-serif text-xl">{nome}</p>
+          <p className="font-serif text-xl font-medium tracking-tight">{nome}</p>
           <p className="mt-3 max-w-[26ch] text-sm text-canvas/70">
             Cadeiras de praia, bolsas e espreguiçadeiras trançadas à mão, com personalização sob
             medida.

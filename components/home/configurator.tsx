@@ -31,7 +31,7 @@ export function Configurator({
   return (
     <section id="personalizar" className="border-b border-line bg-paper px-6 py-24">
       <div className="mx-auto max-w-6xl">
-        <h2 className="font-serif text-2xl text-ink">Monte a sua trama</h2>
+        <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Monte a sua trama</h2>
         <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-ink-soft">
           Escolha o modelo e as cores para ver uma prévia da trama. Quando estiver do seu
           jeito, mande direto pra gente pelo WhatsApp.

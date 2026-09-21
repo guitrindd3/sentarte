@@ -15,7 +15,7 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">
         <Link
           href="/"
-          className="font-serif text-2xl tracking-tight text-ink"
+          className="font-serif text-2xl font-medium tracking-tight text-ink"
           onClick={() => setOpen(false)}
         >
           {siteName}

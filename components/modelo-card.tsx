@@ -29,7 +29,7 @@ export function ModeloCard({
         )}
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <p className="font-serif text-lg text-ink">{modelo.nome}</p>
+        <p className="font-serif text-lg font-medium text-ink">{modelo.nome}</p>
         <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-soft">{modelo.descricao}</p>
         <a
           href={whatsappUrl(

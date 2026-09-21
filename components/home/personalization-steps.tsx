@@ -25,7 +25,7 @@ export function PersonalizationSteps() {
   return (
     <section className="bg-canvas-deep px-6 py-24">
       <div className="mx-auto max-w-6xl">
-        <h2 className="font-serif text-2xl text-ink">Como funciona a personalização</h2>
+        <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Como funciona a personalização</h2>
         <ol className="mt-10 grid gap-8 md:grid-cols-4">
           {STEPS.map((step, i) => (
             <li key={step.numero}>
@@ -34,8 +34,8 @@ export function PersonalizationSteps() {
                   i === 0 ? "" : "md:border-l md:pl-6"
                 }`}
               >
-                <span className="font-serif text-3xl text-marine">{step.numero}</span>
-                <p className="mt-2 font-serif text-lg text-ink">{step.titulo}</p>
+                <span className="font-serif text-3xl font-medium text-marine">{step.numero}</span>
+                <p className="mt-2 font-serif text-lg font-medium tracking-tight text-ink">{step.titulo}</p>
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">{step.texto}</p>
               </div>
             </li>

@@ -54,9 +54,13 @@ export function Carousel({
       <div className="absolute inset-0 bg-gradient-to-t from-navy/85 via-navy/25 to-navy/45" />
 
       <div className="relative mx-auto max-w-2xl px-6 text-center text-canvas">
-        <p className="font-serif text-xl italic text-canvas/90 md:text-2xl">Bem-vindo ao</p>
-        <h1 className="mt-1 font-serif text-5xl leading-[1.05] md:text-7xl">{hero.titulo}</h1>
-        <p className="mx-auto mt-6 max-w-[46ch] text-sm leading-relaxed text-canvas/85 md:text-base">
+        <p className="font-serif text-lg italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-xl">
+          Bem-vindo ao
+        </p>
+        <h1 className="mt-2 font-serif text-6xl font-semibold leading-[1.08] tracking-tight text-canvas [text-shadow:0_2px_20px_rgba(16,32,42,0.45)] md:text-8xl">
+          {hero.titulo}
+        </h1>
+        <p className="mx-auto mt-7 max-w-[42ch] text-base font-normal leading-relaxed tracking-[0.01em] text-canvas/90 [text-shadow:0_1px_10px_rgba(16,32,42,0.4)] md:text-lg">
           {hero.subtitulo}
         </p>
 

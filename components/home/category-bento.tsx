@@ -9,7 +9,7 @@ export function CategoryBento({ categorias }: { categorias: Categoria[] }) {
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-24">
-      <h2 className="font-serif text-2xl text-ink">O que trançamos</h2>
+      <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">O que trançamos</h2>
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {categorias.map((cat, i) => (
           <Link
@@ -24,7 +24,7 @@ export function CategoryBento({ categorias }: { categorias: Categoria[] }) {
               band={19}
               className="pointer-events-none absolute -bottom-10 -right-10 h-40 w-40 opacity-25 transition-opacity group-hover:opacity-40"
             />
-            <span className="relative font-serif text-xl">{cat.titulo}</span>
+            <span className="relative font-serif text-xl font-medium tracking-tight">{cat.titulo}</span>
             <span className="relative max-w-[28ch] text-sm opacity-80">{cat.resumo}</span>
             <span className="relative mt-2 inline-block w-fit border-b border-current text-xs">
               Ver modelos

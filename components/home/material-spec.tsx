@@ -25,11 +25,11 @@ export function MaterialSpec() {
     <section className="bg-navy px-6 py-24 text-canvas">
       <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2 md:items-center">
         <div>
-          <h2 className="font-serif text-2xl">Por dentro do trançado</h2>
+          <h2 className="font-serif text-2xl font-medium tracking-tight">Por dentro do trançado</h2>
           <dl className="mt-8 space-y-6">
             {SPECS.map((spec) => (
               <div key={spec.rotulo} className="border-l-2 border-dashed border-rattan pl-4">
-                <dt className="font-serif text-base text-rattan">{spec.rotulo}</dt>
+                <dt className="font-serif text-base font-medium text-rattan">{spec.rotulo}</dt>
                 <dd className="mt-1 max-w-[52ch] text-sm leading-relaxed text-canvas/90">
                   {spec.valor}
                 </dd>

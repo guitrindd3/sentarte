@@ -23,6 +23,16 @@ edits site content live; see "Content model" and "Admin panel" below.
   2026-09-21 from Frank Ruhl Libre which the user found unappealing) for
   headings/display, `font-sans` (Archivo, the default body font) for
   everything else. Don't add another typeface.
+  - Bodoni Moda is loaded with only weights `500/600/700` (see
+    `app/layout.tsx`). Every `font-serif` heading must carry an explicit
+    Tailwind weight class (`font-medium`/`font-semibold`) — leaving it off
+    let Tailwind Preflight's heading reset fall back to a weight the font
+    never loaded, which read as thin/rough (user's 2026-09-21 "as fontes de
+    letras estão ruins" complaint). Fixed sitewide 2026-09-21 by adding
+    `font-medium tracking-tight` to secondary `font-serif` headings and
+    `font-semibold tracking-tight` to the carousel's big display title; also
+    added a subtle text-shadow to the carousel copy for legibility over
+    photos. Keep this convention for any new `font-serif` heading.
 - The recurring visual motif is `components/weave-pattern.tsx`, a basket-weave
   SVG built from two colors — the fallback shown for any model/category that
   has no real photo yet. `components/framed-weave.tsx` wraps it (or a real
