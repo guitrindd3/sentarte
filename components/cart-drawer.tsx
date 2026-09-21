@@ -17,6 +17,7 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
           ...items.map(
             (i) =>
               `- ${i.categoriaTitulo} — ${i.modeloNome} (x${i.quantidade})` +
+              (i.variante ? ` — cor: ${i.variante}` : "") +
               (i.nomePersonalizado ? ` — nome: "${i.nomePersonalizado}"` : "")
           ),
           "Pode me ajudar a confirmar valores e prazo?",
@@ -67,6 +68,9 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
                   <div className="flex flex-1 flex-col">
                     <p className="text-sm font-medium text-ink">{item.modeloNome}</p>
                     <p className="text-xs text-ink-soft">{item.categoriaTitulo}</p>
+                    {item.variante ? (
+                      <p className="text-xs italic text-ink-soft">Cor: {item.variante}</p>
+                    ) : null}
                     {item.nomePersonalizado ? (
                       <p className="text-xs italic text-ink-soft">Nome: {item.nomePersonalizado}</p>
                     ) : null}

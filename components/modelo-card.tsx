@@ -32,10 +32,11 @@ export function ModeloCard({
   const fotoAtiva =
     wantsNome && personalizado ? personalizado.imagemUrl : fotosBase[varianteIndex] ?? fotosBase[0];
   const nomeFinal = wantsNome ? nomeTexto.trim() : "";
+  const varianteLabel = !wantsNome && fotosBase.length > 1 ? `Variação ${varianteIndex + 1}` : "";
 
   const mensagemWhatsapp = `Oi! Quero pedir um orçamento de ${categoria} — modelo "${ativo.nome}".${
-    nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""
-  }`;
+    varianteLabel ? ` Cor: ${varianteLabel}.` : ""
+  }${nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""}`;
 
   return (
     <div className="group flex flex-col border border-line bg-paper transition-all duration-300 hover:-translate-y-1 hover:border-ink hover:shadow-[6px_6px_0_0_var(--line)]">
@@ -82,21 +83,24 @@ export function ModeloCard({
         ) : null}
 
         {!wantsNome && fotosBase.length > 1 ? (
-          <div className="mt-2 flex items-center gap-1.5" role="group" aria-label="Variação de cor">
-            {fotosBase.map((foto, i) => (
-              <button
-                key={foto}
-                type="button"
-                onClick={() => setVarianteIndex(i)}
-                aria-label={`Ver variação de cor ${i + 1}`}
-                aria-pressed={varianteIndex === i}
-                className={`relative h-9 w-9 overflow-hidden border transition-colors ${
-                  varianteIndex === i ? "border-ink" : "border-line hover:border-ink"
-                }`}
-              >
-                <Image src={foto} alt="" fill className="object-cover" sizes="36px" />
-              </button>
-            ))}
+          <div className="mt-2">
+            <span className="text-xs text-ink-soft">Cor: {varianteLabel}</span>
+            <div className="mt-1 flex items-center gap-1.5" role="group" aria-label="Variação de cor">
+              {fotosBase.map((foto, i) => (
+                <button
+                  key={foto}
+                  type="button"
+                  onClick={() => setVarianteIndex(i)}
+                  aria-label={`Ver variação de cor ${i + 1}`}
+                  aria-pressed={varianteIndex === i}
+                  className={`relative h-9 w-9 overflow-hidden border transition-colors ${
+                    varianteIndex === i ? "border-ink" : "border-line hover:border-ink"
+                  }`}
+                >
+                  <Image src={foto} alt="" fill className="object-cover" sizes="36px" />
+                </button>
+              ))}
+            </div>
           </div>
         ) : null}
 
@@ -116,7 +120,9 @@ export function ModeloCard({
         <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-soft">{ativo.descricao}</p>
         <AddToCartButton
           item={{
-            id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}`,
+            id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}${
+              varianteLabel ? `:${varianteLabel}` : ""
+            }`,
             categoriaSlug,
             categoriaTitulo: categoria,
             modeloId: ativo.id,
@@ -125,6 +131,7 @@ export function ModeloCard({
             corA: ativo.corA,
             corB: ativo.corB,
             nomePersonalizado: nomeFinal || undefined,
+            variante: varianteLabel || undefined,
           }}
         />
         <a
