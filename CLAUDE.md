@@ -111,11 +111,24 @@ NOT immediately read-your-writes.** Every save does a read-modify-write of
 the *whole* content object, so if a second save's `getContent()` runs
 before the first save has propagated, the second save's write will
 silently revert the first save's change (confirmed empirically: the
-propagation window is variable, seen anywhere from ~8s to ~25-30s). When
-making several category/model edits back to back (by hand or via
-automation), wait for each save to be confirmed live (reload and check the
-actual value, don't just trust the "Salvo" state) before starting the
-next one — don't fire them in quick succession.
+propagation window is variable, seen anywhere from ~8s to ~25-30s, and
+longer — up to ~40s — for a save that also uploads a photo). When making
+several category/model edits back to back (by hand or via automation),
+wait for each save to be confirmed live (**hard-reload**, e.g.
+ctrl+shift+r — a plain reload can itself serve a browser-cached `/admin`
+response and show stale data even once the blob write really has landed;
+this cost real time misdiagnosing propagation delay on 2026-09-21 when it
+was actually just browser cache) before starting the next one — don't fire
+them in quick succession.
+
+2026-09-21: added six real "Cadeiras de praia" models, one per soccer team
+(Flamengo, Corinthians, Botafogo, Fluminense, Palmeiras, Vasco), each with a
+customer-supplied WhatsApp photo the user sorted into per-team folders under
+`~/Pictures/cadeiras de praias/` and asked to have "cadastradas" — uploaded
+via the real `/admin` file-upload flow (not committed to the repo, they live
+in Blob under `modelos/` like any other admin-uploaded photo). These sit
+alongside the earlier generic "Time do coração" model rather than replacing
+it.
 
 Categories are flat (no parent/subcategory nesting) — each has its own
 `modelos` array. `/categoria/[slug]` and the homepage are `force-dynamic` and
