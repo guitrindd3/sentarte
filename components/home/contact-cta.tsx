@@ -1,7 +1,13 @@
 import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
-import { INSTAGRAM_URL, whatsappUrl } from "@/lib/site";
+import { instagramUrl, whatsappUrl } from "@/lib/urls";
 
-export function ContactCta() {
+export function ContactCta({
+  whatsappNumero,
+  instagramHandle,
+}: {
+  whatsappNumero: string;
+  instagramHandle: string;
+}) {
   return (
     <section className="bg-canvas px-6 py-28">
       <div className="mx-auto max-w-xl border border-rattan/60 bg-paper px-10 py-14 text-center">
@@ -14,7 +20,7 @@ export function ContactCta() {
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm font-medium">
           <a
-            href={whatsappUrl("Oi! Vim pelo site e queria saber mais sobre as cadeiras.")}
+            href={whatsappUrl(whatsappNumero, "Oi! Vim pelo site e queria saber mais sobre as cadeiras.")}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 border border-ink px-5 py-2.5 text-ink transition-colors hover:bg-ink hover:text-canvas"
@@ -23,7 +29,7 @@ export function ContactCta() {
             WhatsApp
           </a>
           <a
-            href={INSTAGRAM_URL}
+            href={instagramUrl(instagramHandle)}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 border border-line px-5 py-2.5 text-ink-soft transition-colors hover:border-ink hover:text-ink"

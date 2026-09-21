@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { FramedWeave } from "@/components/framed-weave";
 import { PageHeader } from "@/components/page-header";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Sobre",
   description: "Conheça a história e o processo por trás do Sentarte.",

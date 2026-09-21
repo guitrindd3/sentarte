@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Archivo, Frank_Ruhl_Libre } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { getContent } from "@/lib/content-store";
+import { SITE_URL } from "@/lib/nav";
 import "./globals.css";
 
 const display = Frank_Ruhl_Libre({
@@ -17,34 +18,41 @@ const body = Archivo({
   weight: ["400", "500", "600"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: {
-    default: `${SITE_NAME} — cadeiras de praia trançadas à mão`,
-    template: `%s · ${SITE_NAME}`,
-  },
-  description: SITE_DESCRIPTION,
-  alternates: { canonical: "/" },
-  openGraph: {
-    title: `${SITE_NAME} — cadeiras de praia trançadas à mão`,
-    description: SITE_DESCRIPTION,
-    siteName: SITE_NAME,
-    locale: "pt_BR",
-    type: "website",
-    url: SITE_URL,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: `${SITE_NAME} — cadeiras de praia trançadas à mão`,
-    description: SITE_DESCRIPTION,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { site } = await getContent();
+  const title = `${site.nome} — cadeiras de praia trançadas à mão`;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: title,
+      template: `%s · ${site.nome}`,
+    },
+    description: site.descricao,
+    alternates: { canonical: "/" },
+    openGraph: {
+      title,
+      description: site.descricao,
+      siteName: site.nome,
+      locale: "pt_BR",
+      type: "website",
+      url: SITE_URL,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: site.descricao,
+    },
+  };
+}
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { site } = await getContent();
+
   return (
     <html lang="pt-BR" className={`${display.variable} ${body.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans antialiased">
-        <SiteHeader />
+        <SiteHeader siteName={site.nome} whatsappNumero={site.whatsappNumero} />
         <main className="flex-1">{children}</main>
         <SiteFooter />
       </body>

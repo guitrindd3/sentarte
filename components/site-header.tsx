@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import { CloseIcon, MenuIcon, WhatsAppIcon } from "@/components/icons";
-import { NAV_LINKS, SITE_NAME, whatsappUrl } from "@/lib/site";
+import { NAV_LINKS } from "@/lib/nav";
+import { whatsappUrl } from "@/lib/urls";
 
-export function SiteHeader() {
+export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; whatsappNumero: string }) {
   const [open, setOpen] = useState(false);
+  const contactMsg = whatsappUrl(whatsappNumero, "Oi! Vim pelo site e queria saber mais sobre as cadeiras.");
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur">
@@ -16,7 +18,7 @@ export function SiteHeader() {
           className="font-serif text-2xl tracking-tight text-ink"
           onClick={() => setOpen(false)}
         >
-          {SITE_NAME}
+          {siteName}
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">
@@ -33,7 +35,7 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-3">
           <a
-            href={whatsappUrl("Oi! Vim pelo site e queria saber mais sobre as cadeiras.")}
+            href={contactMsg}
             target="_blank"
             rel="noreferrer"
             className="hidden items-center gap-2 border border-marine px-4 py-2 text-sm font-medium text-marine transition-colors hover:bg-marine hover:text-paper sm:inline-flex"
@@ -67,7 +69,7 @@ export function SiteHeader() {
               </Link>
             ))}
             <a
-              href={whatsappUrl("Oi! Vim pelo site e queria saber mais sobre as cadeiras.")}
+              href={contactMsg}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 border border-marine px-4 py-2 text-sm font-medium text-marine"

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/page-header";
-import { whatsappUrl } from "@/lib/site";
+import { getContent } from "@/lib/content-store";
+import { whatsappUrl } from "@/lib/urls";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Perguntas frequentes",
@@ -35,7 +38,9 @@ const PERGUNTAS = [
   },
 ];
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const { site } = await getContent();
+
   return (
     <>
       <PageHeader titulo="Perguntas frequentes" />
@@ -56,7 +61,7 @@ export default function FaqPage() {
         <p className="mt-8 text-sm text-ink-soft">
           Não achou sua dúvida aqui?{" "}
           <a
-            href={whatsappUrl("Oi! Tenho uma dúvida que não encontrei no FAQ do site.")}
+            href={whatsappUrl(site.whatsappNumero, "Oi! Tenho uma dúvida que não encontrei no FAQ do site.")}
             target="_blank"
             rel="noreferrer"
             className="font-medium text-marine hover:underline"

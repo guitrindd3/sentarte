@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/page-header";
-import { SITE_NAME } from "@/lib/site";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Envio",
-  description: `Como funciona o envio e a retirada das peças do ${SITE_NAME}.`,
+  description: "Como funciona o envio e a retirada das peças do Sentarte.",
 };
 
 export default function PoliticaDeEnvioPage() {

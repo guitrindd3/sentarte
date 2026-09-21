@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/page-header";
-import { SITE_NAME, whatsappUrl } from "@/lib/site";
+import { getContent } from "@/lib/content-store";
+import { whatsappUrl } from "@/lib/urls";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Trocas e devoluções",
-  description: `Regras de troca e devolução para peças feitas sob encomenda pelo ${SITE_NAME}.`,
+  description: "Regras de troca e devolução para peças feitas sob encomenda pelo Sentarte.",
 };
 
-export default function PoliticaDeTrocaEDevolucaoPage() {
+export default async function PoliticaDeTrocaEDevolucaoPage() {
+  const { site } = await getContent();
+
   return (
     <>
       <PageHeader titulo="Trocas e devoluções" />
@@ -35,7 +40,7 @@ export default function PoliticaDeTrocaEDevolucaoPage() {
           <p className="mt-2">
             Toda solicitação é feita pelo mesmo canal do pedido —{" "}
             <a
-              href={whatsappUrl("Oi! Preciso falar sobre uma troca ou devolução.")}
+              href={whatsappUrl(site.whatsappNumero, "Oi! Preciso falar sobre uma troca ou devolução.")}
               target="_blank"
               rel="noreferrer"
               className="font-medium text-marine hover:underline"

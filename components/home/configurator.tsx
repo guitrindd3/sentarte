@@ -4,12 +4,18 @@ import { useMemo, useState } from "react";
 import { FramedWeave } from "@/components/framed-weave";
 import { WhatsAppIcon } from "@/components/icons";
 import { FIOS } from "@/lib/palette";
-import { whatsappUrl } from "@/lib/site";
+import { whatsappUrl } from "@/lib/urls";
+import type { Categoria } from "@/lib/content-schema";
 
-const MODELOS = ["Cadeira de praia", "Bolsa", "Espreguiçadeira"] as const;
-
-export function Configurator() {
-  const [modelo, setModelo] = useState<(typeof MODELOS)[number]>(MODELOS[0]);
+export function Configurator({
+  categorias,
+  whatsappNumero,
+}: {
+  categorias: Categoria[];
+  whatsappNumero: string;
+}) {
+  const modelos = categorias.map((c) => c.titulo);
+  const [modelo, setModelo] = useState(modelos[0] ?? "");
   const [fioA, setFioA] = useState(FIOS[0]);
   const [fioB, setFioB] = useState(FIOS[1]);
   const [frase, setFrase] = useState("");
@@ -19,6 +25,8 @@ export function Configurator() {
     if (frase.trim()) msg += `\nFrase para trançar: "${frase.trim()}"`;
     return msg;
   }, [modelo, fioA, fioB, frase]);
+
+  if (modelos.length === 0) return null;
 
   return (
     <section id="personalizar" className="border-b border-line bg-paper px-6 py-24">
@@ -34,7 +42,7 @@ export function Configurator() {
             <fieldset>
               <legend className="font-serif text-base text-ink">Modelo</legend>
               <div className="mt-3 flex flex-wrap gap-2">
-                {MODELOS.map((m) => (
+                {modelos.map((m) => (
                   <button
                     key={m}
                     type="button"
@@ -109,7 +117,7 @@ export function Configurator() {
             </div>
 
             <a
-              href={whatsappUrl(mensagem)}
+              href={whatsappUrl(whatsappNumero, mensagem)}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 border border-ink bg-ink px-6 py-3 text-sm font-medium text-canvas transition-colors hover:bg-transparent hover:text-ink"

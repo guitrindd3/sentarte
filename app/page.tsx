@@ -5,17 +5,22 @@ import { Hero } from "@/components/home/hero";
 import { MaterialSpec } from "@/components/home/material-spec";
 import { PersonalizationSteps } from "@/components/home/personalization-steps";
 import { PullQuote } from "@/components/home/pull-quote";
+import { getContent } from "@/lib/content-store";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const content = await getContent();
+
   return (
     <>
-      <Hero />
-      <CategoryBento />
+      <Hero hero={content.hero} whatsappNumero={content.site.whatsappNumero} />
+      <CategoryBento categorias={content.categorias} />
       <PersonalizationSteps />
-      <Configurator />
+      <Configurator categorias={content.categorias} whatsappNumero={content.site.whatsappNumero} />
       <PullQuote />
       <MaterialSpec />
-      <ContactCta />
+      <ContactCta whatsappNumero={content.site.whatsappNumero} instagramHandle={content.site.instagramHandle} />
     </>
   );
 }

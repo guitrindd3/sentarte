@@ -1,21 +1,19 @@
 import Link from "next/link";
 import { FramedWeave } from "@/components/framed-weave";
 import { WhatsAppIcon } from "@/components/icons";
-import { whatsappUrl } from "@/lib/site";
+import { whatsappUrl } from "@/lib/urls";
+import type { SiteContent } from "@/lib/content-schema";
 
-const TAGS = ["Feito à mão", "Corda náutica e alumínio", "Resistente à maresia"];
-
-export function Hero() {
+export function Hero({ hero, whatsappNumero }: { hero: SiteContent["hero"]; whatsappNumero: string }) {
   return (
     <section className="border-b border-line bg-canvas">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:grid-cols-[1.1fr_1fr] md:items-center md:py-24">
         <div>
           <h1 className="max-w-[16ch] font-serif text-4xl leading-[1.1] text-ink md:text-6xl">
-            Trançada fio a fio para durar o verão inteiro — e os próximos.
+            {hero.titulo}
           </h1>
           <p className="mt-6 max-w-[46ch] text-base leading-relaxed text-ink-soft">
-            Cadeiras de praia, bolsas e espreguiçadeiras feitas à mão em corda náutica e
-            alumínio, no modelo, na cor e na personalização que você escolher.
+            {hero.subtitulo}
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <Link
@@ -31,7 +29,7 @@ export function Hero() {
               Montar minha trama
             </a>
             <a
-              href={whatsappUrl("Oi! Vim pelo site e queria saber mais sobre as cadeiras.")}
+              href={whatsappUrl(whatsappNumero, "Oi! Vim pelo site e queria saber mais sobre as cadeiras.")}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 text-sm font-medium text-marine hover:underline"
@@ -42,7 +40,7 @@ export function Hero() {
           </div>
 
           <dl className="mt-12 grid max-w-md grid-cols-1 gap-3 sm:grid-cols-3">
-            {TAGS.map((tag) => (
+            {hero.tags.map((tag) => (
               <dd
                 key={tag}
                 className="border border-dashed border-rattan px-3 py-2 text-xs leading-snug text-ink-soft"

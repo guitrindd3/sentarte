@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
-import { INSTAGRAM_HANDLE, INSTAGRAM_URL, whatsappUrl } from "@/lib/site";
+import { getContent } from "@/lib/content-store";
+import { instagramUrl, whatsappUrl } from "@/lib/urls";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Contato",
   description: "Fale com o Sentarte pelo WhatsApp ou Instagram.",
 };
 
-export default function ContatoPage() {
+export default async function ContatoPage() {
+  const { site } = await getContent();
+
   return (
     <>
       <PageHeader
@@ -18,7 +23,7 @@ export default function ContatoPage() {
       <section className="mx-auto max-w-3xl px-6 py-16">
         <div className="grid gap-4 sm:grid-cols-2">
           <a
-            href={whatsappUrl("Oi! Vim pelo site e queria falar sobre um pedido.")}
+            href={whatsappUrl(site.whatsappNumero, "Oi! Vim pelo site e queria falar sobre um pedido.")}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-3 border border-line bg-paper p-5 transition-colors hover:border-marine"
@@ -30,7 +35,7 @@ export default function ContatoPage() {
             </span>
           </a>
           <a
-            href={INSTAGRAM_URL}
+            href={instagramUrl(site.instagramHandle)}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-3 border border-line bg-paper p-5 transition-colors hover:border-marine"
@@ -38,7 +43,7 @@ export default function ContatoPage() {
             <InstagramIcon className="h-6 w-6 text-marine" />
             <span>
               <span className="block font-serif text-lg text-ink">Instagram</span>
-              <span className="block text-sm text-ink-soft">@{INSTAGRAM_HANDLE}</span>
+              <span className="block text-sm text-ink-soft">@{site.instagramHandle}</span>
             </span>
           </a>
         </div>

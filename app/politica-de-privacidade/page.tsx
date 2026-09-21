@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/page-header";
-import { SITE_NAME, whatsappUrl } from "@/lib/site";
+import { getContent } from "@/lib/content-store";
+import { whatsappUrl } from "@/lib/urls";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Política de privacidade",
-  description: `Como o ${SITE_NAME} trata os dados de quem entra em contato.`,
+  description: "Como o Sentarte trata os dados de quem entra em contato.",
 };
 
-export default function PoliticaDePrivacidadePage() {
+export default async function PoliticaDePrivacidadePage() {
+  const { site } = await getContent();
+
   return (
     <>
       <PageHeader titulo="Política de privacidade" />
       <section className="mx-auto max-w-3xl space-y-6 px-6 py-16 text-sm leading-relaxed text-ink-soft">
         <p>
-          O {SITE_NAME} não opera uma loja online com cadastro ou checkout: os pedidos são feitos
+          O {site.nome} não opera uma loja online com cadastro ou checkout: os pedidos são feitos
           diretamente pelo WhatsApp e pelo Instagram. Esta página explica quais dados são
           coletados nesse contato e como eles são usados.
         </p>
@@ -40,7 +45,7 @@ export default function PoliticaDePrivacidadePage() {
             ou solicitar a exclusão, conforme a Lei Geral de Proteção de Dados (LGPD). Basta
             {" "}
             <a
-              href={whatsappUrl("Oi! Quero falar sobre meus dados pessoais com o Sentarte.")}
+              href={whatsappUrl(site.whatsappNumero, "Oi! Quero falar sobre meus dados pessoais com o Sentarte.")}
               target="_blank"
               rel="noreferrer"
               className="font-medium text-marine hover:underline"

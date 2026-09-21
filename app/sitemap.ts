@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
-import { CATEGORIAS } from "@/lib/categories";
-import { SITE_URL } from "@/lib/site";
+import { getContent } from "@/lib/content-store";
+import { SITE_URL } from "@/lib/nav";
+
+export const dynamic = "force-dynamic";
 
 const STATIC_ROUTES = [
   "",
@@ -13,13 +15,15 @@ const STATIC_ROUTES = [
   "/politica-de-envio",
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const { categorias } = await getContent();
+
   const staticEntries = STATIC_ROUTES.map((route) => ({
     url: `${SITE_URL}${route}`,
     lastModified: new Date(),
   }));
 
-  const categoryEntries = CATEGORIAS.map((categoria) => ({
+  const categoryEntries = categorias.map((categoria) => ({
     url: `${SITE_URL}/categoria/${categoria.slug}`,
     lastModified: new Date(),
   }));
