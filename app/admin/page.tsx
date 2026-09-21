@@ -12,7 +12,7 @@ import {
   updateModeloAction,
   updateSiteAction,
 } from "./actions";
-import { ConfirmSubmitButton, Field, SaveButton, btnClass, inputClass } from "./_ui";
+import { ConfirmSubmitButton, Field, SaveButton, inputClass } from "./_ui";
 
 export const dynamic = "force-dynamic";
 
@@ -79,9 +79,7 @@ export default async function AdminPage() {
         <h2 className="font-serif text-xl text-ink">Categorias</h2>
         <form action={addCategoriaAction} className="mt-4 flex flex-wrap gap-2 border border-dashed border-rattan p-4">
           <input name="titulo" placeholder="Nome da nova categoria" required className={`flex-1 ${inputClass}`} />
-          <button type="submit" className={btnClass}>
-            Adicionar categoria
-          </button>
+          <SaveButton>Adicionar categoria</SaveButton>
         </form>
 
         <div className="mt-6 space-y-8">
@@ -172,9 +170,7 @@ export default async function AdminPage() {
                   className="mt-4 flex flex-wrap gap-2 border border-dashed border-rattan p-3"
                 >
                   <input name="nome" placeholder="Nome do novo modelo" required className={`flex-1 ${inputClass}`} />
-                  <button type="submit" className={btnClass}>
-                    Adicionar modelo
-                  </button>
+                  <SaveButton>Adicionar modelo</SaveButton>
                 </form>
               </div>
             </div>

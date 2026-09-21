@@ -1,6 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useFormStatus } from "react-dom";
 
 export const inputClass =
   "w-full border border-line bg-canvas px-3 py-2 text-sm text-ink focus:border-ink";
@@ -17,9 +18,27 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 }
 
 export function SaveButton({ children = "Salvar" }: { children?: ReactNode }) {
+  const { pending } = useFormStatus();
+  const [justSaved, setJustSaved] = useState(false);
+  const wasPending = useRef(false);
+
+  useEffect(() => {
+    if (wasPending.current && !pending) {
+      setJustSaved(true);
+      const t = setTimeout(() => setJustSaved(false), 2500);
+      return () => clearTimeout(t);
+    }
+    wasPending.current = pending;
+  }, [pending]);
+
   return (
-    <button type="submit" className={btnClass}>
-      {children}
+    <button
+      type="submit"
+      disabled={pending}
+      aria-live="polite"
+      className={`${btnClass} disabled:cursor-not-allowed disabled:opacity-60`}
+    >
+      {pending ? "Salvando…" : justSaved ? "Salvo ✓" : children}
     </button>
   );
 }
