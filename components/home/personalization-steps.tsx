@@ -30,11 +30,11 @@ export function PersonalizationSteps() {
           {STEPS.map((step, i) => (
             <li key={step.numero}>
               <div
-                className={`border-t-2 border-rattan pt-4 md:border-t-0 md:pt-0 ${
+                className={`border-t-2 border-line pt-4 md:border-t-0 md:pt-0 ${
                   i === 0 ? "" : "md:border-l md:pl-6"
                 }`}
               >
-                <span className="font-serif text-3xl font-medium text-wood">{step.numero}</span>
+                <span className="font-serif text-3xl font-medium text-ink">{step.numero}</span>
                 <p className="mt-2 font-serif text-lg font-medium tracking-tight text-ink">{step.titulo}</p>
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">{step.texto}</p>
               </div>

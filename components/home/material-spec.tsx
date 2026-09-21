@@ -22,15 +22,15 @@ const SPECS = [
 
 export function MaterialSpec() {
   return (
-    <section className="bg-espresso px-6 py-24 text-canvas">
+    <section className="bg-canvas-deep px-6 py-24 text-ink">
       <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2 md:items-center">
         <div>
           <h2 className="font-serif text-2xl font-medium tracking-tight">Por dentro do trançado</h2>
           <dl className="mt-8 space-y-6">
             {SPECS.map((spec) => (
-              <div key={spec.rotulo} className="border-l-2 border-dashed border-rattan pl-4">
-                <dt className="font-serif text-base font-medium text-rattan">{spec.rotulo}</dt>
-                <dd className="mt-1 max-w-[52ch] text-sm leading-relaxed text-canvas/90">
+              <div key={spec.rotulo} className="border-l-2 border-dashed border-line pl-4">
+                <dt className="font-serif text-base font-medium text-ink">{spec.rotulo}</dt>
+                <dd className="mt-1 max-w-[52ch] text-sm leading-relaxed text-ink-soft">
                   {spec.valor}
                 </dd>
               </div>
@@ -41,7 +41,7 @@ export function MaterialSpec() {
           <FramedWeave
             imagemUrl="/photos/rope-texture.jpg"
             alt="Corda náutica trançada à mão, de perto"
-            tone="canvas"
+            tone="paper"
           />
         </div>
       </div>

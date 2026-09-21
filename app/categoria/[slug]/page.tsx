@@ -44,6 +44,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
                 key={modelo.id}
                 modelo={modelo}
                 categoria={categoria.titulo}
+                categoriaSlug={categoria.slug}
                 whatsappNumero={content.site.whatsappNumero}
               />
             ))}
@@ -53,7 +54,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
         )}
       </section>
 
-      <section className="relative overflow-hidden border-t border-line bg-espresso px-6 py-14 text-canvas">
+      <section className="relative overflow-hidden border-t border-line bg-canvas-deep px-6 py-14 text-ink">
         <WeavePattern
           colorA={categoria.corA}
           colorB={categoria.corB}

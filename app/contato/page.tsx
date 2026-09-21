@@ -26,9 +26,9 @@ export default async function ContatoPage() {
             href={whatsappUrl(site.whatsappNumero, "Oi! Vim pelo site e queria falar sobre um pedido.")}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-3 border border-line bg-paper p-5 transition-colors hover:border-wood"
+            className="flex items-center gap-3 border border-line bg-paper p-5 transition-colors hover:border-ink"
           >
-            <WhatsAppIcon className="h-6 w-6 text-wood" />
+            <WhatsAppIcon className="h-6 w-6 text-ink" />
             <span>
               <span className="block font-serif text-lg text-ink">WhatsApp</span>
               <span className="block text-sm text-ink-soft">Resposta mais rápida</span>
@@ -38,9 +38,9 @@ export default async function ContatoPage() {
             href={instagramUrl(site.instagramHandle)}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-3 border border-line bg-paper p-5 transition-colors hover:border-wood"
+            className="flex items-center gap-3 border border-line bg-paper p-5 transition-colors hover:border-ink"
           >
-            <InstagramIcon className="h-6 w-6 text-wood" />
+            <InstagramIcon className="h-6 w-6 text-ink" />
             <span>
               <span className="block font-serif text-lg text-ink">Instagram</span>
               <span className="block text-sm text-ink-soft">@{site.instagramHandle}</span>

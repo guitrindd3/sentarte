@@ -3,10 +3,10 @@
 # Sentarte — project notes
 
 Marketing/catalog site for a handmade beach-chair atelier (Next.js 16 App
-Router, Tailwind v4). Every "order" is a WhatsApp deep link — there is no
-cart or checkout, and none should be added without the user explicitly
-asking for it. As of 2026-09-21 the site has an admin panel (`/admin`) that
-edits site content live; see "Content model" and "Admin panel" below.
+Router, Tailwind v4). As of 2026-09-21 the site has an admin panel (`/admin`)
+that edits site content live (see "Content model"/"Admin panel" below) and a
+client-only shopping cart (see "Cart & search" below) — every order still
+ends as a WhatsApp message, there's no payment processing.
 
 ## Design system
 
@@ -14,16 +14,23 @@ edits site content live; see "Content model" and "Admin panel" below.
   `paper`, `ink`, `ink-soft`, `wood`, `clay`, `rattan`, `espresso`, `line`). Use
   these Tailwind classes (`bg-wood`, `text-ink-soft`, etc.) — never hardcode
   hex colors in components except where `WeavePattern`/`Configurator` need raw
-  hex strings for SVG fills. Token values were brightened 2026-09-21 (user felt
-  the original muted/desaturated version read as "apagado"), then recolored
-  again 2026-09-21 to a warmer "rustic ateliê" palette (user: "melhore a cor
-  deixa mais rustico") — the old `marine` token was a cool teal that clashed
-  with the brand's actual navy/terracotta logo, so it was renamed `wood` and
-  retinted to a warm coffee-brown; `navy` was renamed `espresso` and retinted
-  from nautical blue-black to a warm near-black brown; `canvas`/`paper` went
-  slightly warmer/ivory. Don't reintroduce teal or true navy-blue — the brand
-  reference is the circular "SA" logo (`public/brand/logo.png`): deep warm
-  navy-brown circle, burnt-orange/rattan ring, white wordmark.
+  hex strings for SVG fills. Palette history: brightened 2026-09-21 (user felt
+  the original read as "apagado"); recolored to a warm "rustic ateliê" scheme
+  later that day (`marine`→`wood` coffee-brown, `navy`→`espresso` near-black
+  brown); then recolored a *third* time same day to a pale minimal palette
+  (`canvas`/`canvas-deep`/`paper`/`ink`/`ink-soft`/`line` sampled pixel-for-
+  pixel from a reference screenshot the user sent, wanting "essa mesma
+  paleta" applied site-wide). That third pass is current — `canvas` is now
+  very pale off-white (`#faf7f2`), `ink` near-black, `line` a muted tan
+  border. It also **removed `wood`/`clay`/`rattan` from customer-facing site
+  chrome** (nav hover, WhatsApp button, link colors, decorative rules/dashed
+  borders) in favor of plain `ink`/`line` — those three tokens' hex values
+  are kept only for literal product-color representation (`WeavePattern`
+  swatches, `lib/palette.ts` `FIOS`, admin `<input type="color">`) and for
+  `/admin`'s own UI (not reskinned to match, it's staff-only). Don't
+  reintroduce teal or true navy-blue (old `marine`/`navy`), and don't add
+  saturated accent color back into customer-facing chrome without the user
+  asking — the current look is intentionally close to monochrome.
 - Fonts: `font-serif` (Bodoni Moda — a high-contrast display serif, swapped
   2026-09-21 from Frank Ruhl Libre which the user found unappealing) for
   headings/display, `font-sans` (Archivo, the default body font) for
@@ -130,6 +137,35 @@ Copy is in Brazilian Portuguese, informal but not sloppy ("você", not "tu"
 or formal "senhor(a)"). Policy pages (`politica-de-*`, `termos-de-uso`) are
 intentionally honest about being a small WhatsApp-order business — don't add
 fabricated legal identifiers (CNPJ, address) unless the user supplies them.
+
+## Cart & search
+
+- Added 2026-09-21 (user: "quero a lupinha para as pessoas pesquisarem, o
+  carrinho... e o negócio de usuário adm"). Both are intentionally simple —
+  no backend, no accounts.
+- **Cart**: `lib/cart-context.tsx` (`CartProvider`/`useCart`, "use client")
+  holds cart state in memory and mirrors it to `localStorage` — there is no
+  server-side cart, no database table, nothing admin-editable. `CartProvider`
+  wraps everything in `app/layout.tsx`. `components/add-to-cart-button.tsx`
+  is the primary CTA on `ModeloCard` (adds one item, opens the drawer);
+  `components/cart-drawer.tsx` is the slide-over (qty steppers, remove,
+  "Esvaziar carrinho"). Checking out ("Finalizar pedido no WhatsApp") builds
+  *one* consolidated message listing every line item and opens
+  `whatsappUrl()`, then clears the cart — there's still no payment step, the
+  cart only changes how the WhatsApp message gets composed (one order vs.
+  one message per model). `ModeloCard` also keeps a small secondary "Ou
+  pedir direto pelo WhatsApp" link for a single-item order that skips the
+  cart entirely.
+- **Search**: `/busca?q=...` (`app/busca/page.tsx`, `force-dynamic`) flattens
+  every category's `modelos`, accent-insensitive-substring-matches against
+  `nome`/`descricao`/category `titulo`, and renders results with the same
+  `ModeloCard`. The page's own search box is a plain `<form method="get">` —
+  no client JS needed for the search itself. The header's search icon is
+  just a `Link` to `/busca`.
+- **Admin icon**: the header's admin-panel link icon was `LockIcon`, swapped
+  to `UserIcon` (a plain person glyph) to match the reference screenshot's
+  icon row (search / user / cart). It's still just a `Link` to `/admin` —
+  no customer accounts exist, this icon is staff-only, same as before.
 
 ## Admin panel
 

@@ -48,7 +48,7 @@ export default async function PoliticaDePrivacidadePage() {
               href={whatsappUrl(site.whatsappNumero, "Oi! Quero falar sobre meus dados pessoais com o Sentarte.")}
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-wood hover:underline"
+              className="font-medium text-ink hover:underline"
             >
               enviar uma mensagem no WhatsApp
             </a>

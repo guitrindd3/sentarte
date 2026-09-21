@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --canvas: #f6f0e2;
-  --canvas-deep: #ecdfc4;
-  --paper: #fffdf8;
-  --ink: #241a10;
-  --ink-soft: #5c4c39;
+  --canvas: #faf7f2;
+  --canvas-deep: #f2ece1;
+  --paper: #fffefb;
+  --ink: #241f1a;
+  --ink-soft: #5c584f;
   --wood: #8a5636;
   --wood-dark: #6b4126;
   --clay: #c1622f;
@@ -13,7 +13,7 @@
   --rattan: #c9973f;
   --espresso: #241c14;
   --espresso-soft: #382a1c;
-  --line: #d9c79a;
+  --line: #d9c9ac;
 }
 
 @theme inline {

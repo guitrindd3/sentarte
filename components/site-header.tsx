@@ -3,12 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { CloseIcon, LockIcon, MenuIcon, WhatsAppIcon } from "@/components/icons";
+import { CartIcon, CloseIcon, MenuIcon, SearchIcon, UserIcon, WhatsAppIcon } from "@/components/icons";
+import { useCart } from "@/lib/cart-context";
 import { NAV_LINKS } from "@/lib/nav";
 import { whatsappUrl } from "@/lib/urls";
 
 export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; whatsappNumero: string }) {
   const [open, setOpen] = useState(false);
+  const { count, openCart } = useCart();
   const contactMsg = whatsappUrl(whatsappNumero, "Oi! Vim pelo site e queria saber mais sobre as cadeiras.");
 
   return (
@@ -27,18 +29,8 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
 
       <div className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3">
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-            onClick={() => setOpen(false)}
-          >
-            <Image
-              src="/brand/logo.png"
-              alt=""
-              width={40}
-              height={40}
-              className="h-10 w-10"
-            />
+          <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
+            <Image src="/brand/logo.png" alt="" width={40} height={40} className="h-10 w-10" />
             <span className="font-serif text-2xl font-medium tracking-tight text-ink">{siteName}</span>
           </Link>
 
@@ -47,31 +39,57 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-[0.95rem] tracking-wide text-ink-soft transition-colors hover:text-wood"
+                className="text-[0.95rem] tracking-wide text-ink-soft transition-colors hover:text-ink"
               >
                 {link.label}
               </Link>
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <a
               href={contactMsg}
               target="_blank"
               rel="noreferrer"
-              className="hidden items-center gap-2 border border-wood px-4 py-2 text-sm font-medium text-wood transition-colors hover:bg-wood hover:text-paper sm:inline-flex"
+              className="hidden items-center gap-2 border border-ink px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-canvas sm:inline-flex"
             >
               <WhatsAppIcon className="h-4 w-4" />
               WhatsApp
             </a>
-            <Link
-              href="/admin"
-              aria-label="Acessar painel administrativo"
-              title="Painel administrativo"
-              className="hidden text-ink-soft/40 transition-colors hover:text-ink-soft sm:block"
-            >
-              <LockIcon className="h-4 w-4" />
-            </Link>
+
+            <div className="flex items-center gap-3">
+              <Link
+                href="/busca"
+                aria-label="Buscar"
+                title="Buscar"
+                className="text-ink-soft transition-colors hover:text-ink"
+              >
+                <SearchIcon className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/admin"
+                aria-label="Acessar painel administrativo"
+                title="Painel administrativo"
+                className="text-ink-soft transition-colors hover:text-ink"
+              >
+                <UserIcon className="h-5 w-5" />
+              </Link>
+              <button
+                type="button"
+                onClick={openCart}
+                aria-label={`Ver carrinho${count > 0 ? ` (${count} ${count === 1 ? "item" : "itens"})` : ""}`}
+                title="Carrinho"
+                className="relative text-ink-soft transition-colors hover:text-ink"
+              >
+                <CartIcon className="h-5 w-5" />
+                {count > 0 ? (
+                  <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[0.6rem] font-medium leading-none text-canvas">
+                    {count}
+                  </span>
+                ) : null}
+              </button>
+            </div>
+
             <button
               type="button"
               aria-label={open ? "Fechar menu" : "Abrir menu"}
@@ -101,7 +119,7 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
                 href={contactMsg}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 border border-wood px-4 py-2 text-sm font-medium text-wood"
+                className="inline-flex items-center gap-2 border border-ink px-4 py-2 text-sm font-medium text-ink"
               >
                 <WhatsAppIcon className="h-4 w-4" />
                 Falar no WhatsApp

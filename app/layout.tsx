@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Archivo, Bodoni_Moda } from "next/font/google";
+import { CartDrawer } from "@/components/cart-drawer";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { CartProvider } from "@/lib/cart-context";
 import { getContent } from "@/lib/content-store";
 import { SITE_URL } from "@/lib/nav";
 import "./globals.css";
@@ -53,9 +55,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`${display.variable} ${body.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans antialiased">
-        <SiteHeader siteName={site.nome} whatsappNumero={site.whatsappNumero} />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
+        <CartProvider>
+          <SiteHeader siteName={site.nome} whatsappNumero={site.whatsappNumero} />
+          <main className="flex-1">{children}</main>
+          <SiteFooter />
+          <CartDrawer whatsappNumero={site.whatsappNumero} />
+        </CartProvider>
       </body>
     </html>
   );

@@ -50,7 +50,7 @@ export default async function FaqPage() {
             <details key={item.pergunta} className="group py-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-serif text-lg text-ink">
                 {item.pergunta}
-                <span className="text-wood transition-transform group-open:rotate-45">+</span>
+                <span className="text-ink transition-transform group-open:rotate-45">+</span>
               </summary>
               <p className="mt-3 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
                 {item.resposta}
@@ -64,7 +64,7 @@ export default async function FaqPage() {
             href={whatsappUrl(site.whatsappNumero, "Oi! Tenho uma dúvida que não encontrei no FAQ do site.")}
             target="_blank"
             rel="noreferrer"
-            className="font-medium text-wood hover:underline"
+            className="font-medium text-ink hover:underline"
           >
             Fala com a gente no WhatsApp
           </a>

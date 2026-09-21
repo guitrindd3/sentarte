@@ -10,8 +10,8 @@ export function ContactCta({
 }) {
   return (
     <section className="bg-canvas px-6 py-28">
-      <div className="mx-auto max-w-xl border border-rattan/60 bg-paper px-10 py-14 text-center">
-        <span className="mx-auto block h-px w-10 bg-rattan" aria-hidden="true" />
+      <div className="mx-auto max-w-xl border border-line bg-paper px-10 py-14 text-center">
+        <span className="mx-auto block h-px w-10 bg-line" aria-hidden="true" />
         <h2 className="mt-6 font-serif text-2xl font-medium tracking-tight text-ink">
           Ficou com dúvida sobre modelo, cor ou prazo?
         </h2>
