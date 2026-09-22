@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BOHO_NOME } from "@/lib/boho-model";
+import { BOHO_NOME, BOHO_PADROES } from "@/lib/boho-model";
 import { CoverLinkCard } from "@/components/cover-link-card";
 import { ModeloCard } from "@/components/modelo-card";
 import { WeavePattern } from "@/components/weave-pattern";
@@ -11,7 +11,9 @@ import { TIME_DO_CORACAO_NOME, TIMES } from "@/lib/team-models";
 // On "Cadeiras de praia", the individual team models (Flamengo, Corinthians,
 // ...) live at /times and the homepage showcase, not in this general grid —
 // "Time do coração" is the single link into that dedicated list instead.
+// Same idea for the six boho patterns, linked from "Cadeiras boho" -> /boho.
 const TEAM_MODEL_NAMES = new Set(TIMES.flatMap((nome) => [nome, `${nome} personalizado`]));
+const HIDDEN_FROM_GRID = new Set([...TEAM_MODEL_NAMES, ...BOHO_PADROES]);
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +50,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
       <section className="mx-auto max-w-6xl px-6 py-14">
         {categoria.modelos.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {pairPersonalizados(categoria.modelos.filter((m) => !TEAM_MODEL_NAMES.has(m.nome))).map(
+            {pairPersonalizados(categoria.modelos.filter((m) => !HIDDEN_FROM_GRID.has(m.nome))).map(
               ({ base, personalizado }) => {
                 if (base.nome === TIME_DO_CORACAO_NOME) {
                   return <CoverLinkCard key={base.id} modelo={base} href="/times" linkLabel="Ver todos os times" />;

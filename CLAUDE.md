@@ -173,22 +173,40 @@ search.
 If a 7th team gets added via `/admin` later, add its name to `TIMES` in
 `lib/team-models.ts` — that's the only place the list lives.
 
-**"Cadeiras boho" (added 2026-09-21, same pattern applied 2026-09-22)** is
-a *single* `Modelo` using the `variantes` photo picker (6 patterns as one
-product with a color-swatch selector — see the `variantes` note above),
-not six separate models like the teams. It initially showed that picker +
-"Adicionar ao carrinho" directly in the general "Cadeiras de praia" grid;
-the user compared it to "Time do coração" (screenshot, circled) and wanted
-the exact same "just a cover + link" treatment there, with the real
-picker/add-to-cart moved to its own page. `app/boho/page.tsx` now holds
-the single interactive `ModeloCard` (centered, `max-w-md`, since it's one
-product not a grid); `lib/boho-model.ts` exports `BOHO_NOME` = "Cadeiras
-boho" the same way `TIME_DO_CORACAO_NOME` works, and
-`app/categoria/[slug]/page.tsx` renders it via `CoverLinkCard` (`href="/
-boho"`) instead of `ModeloCard` in the general grid. `CoverLinkCard` was
-generalized from the old team-only `TeamLinkCard` specifically to serve
-both of these — reuse it (don't build a third bespoke link-card) for any
-future "this product needs its own page" case.
+**"Cadeiras boho" ended up mirroring the team pattern exactly, after two
+false starts on 2026-09-21/22** — worth reading in order since each was a
+direct user correction:
+1. First built as a *single* `Modelo` using the `variantes` photo picker
+   (6 patterns as one product with a color-swatch selector), shown inline
+   in the general grid with its own "Adicionar ao carrinho".
+2. User compared it to "Time do coração" (screenshot, circled) and wanted
+   the same "just a cover + link" card in the grid — so the picker+cart
+   moved to a dedicated `/boho` page, but *still as one single `Modelo`*
+   with 6 photo variants selected by swatch.
+3. User sent two more screenshots: `/times` (six separate cards, each its
+   own product) vs. `/boho` (one card with a swatch picker) and said
+   "separa elas" — they wanted the *teams* structure, not the variant-
+   picker structure: **six standalone `Modelo`s**, not one model with
+   `variantes`.
+
+Current state matches step 3 / the teams exactly: `lib/boho-model.ts`
+exports `BOHO_NOME` ("Cadeiras boho", the cover-only model that renders
+via `CoverLinkCard` in the general grid, same as `TIME_DO_CORACAO_NOME`)
+and `BOHO_PADROES` (the six pattern names — "Diamante verde", "Degradê
+pôr do sol", "Diamante multicolor", "Totem espiral", "Losango terracota",
+"Sol" — each its own `Modelo`, no `personalizado` sibling, no
+`variantes`). `app/categoria/[slug]/page.tsx` hides both `TEAM_MODEL_NAMES`
+and `BOHO_PADROES` from the general grid (`HIDDEN_FROM_GRID`); `app/boho/
+page.tsx` renders `BOHO_PADROES` as a `ModeloCard` grid, structurally
+identical to `app/times/page.tsx` (that one uses `getTeamPairs()` for the
+personalizado pairing boho doesn't need — otherwise the same shape). If a
+7th boho pattern gets added, add its name to `BOHO_PADROES`, same as
+adding a team to `TIMES`. The `variantes` field/UI (photo-swatch picker)
+is still real and still used elsewhere — it just turned out to be the
+wrong fit for this specific "several distinct standalone products" case;
+reach for it only when there's genuinely *one* product in different
+colorways (Flamengo's alternate layouts), not a family of separate
+products.
 
 **`Modelo.variantes?: string[]` (added 2026-09-21)** holds extra photos of
 the same model in other color arrangements (e.g. Flamengo's alternate
