@@ -208,6 +208,17 @@ reach for it only when there's genuinely *one* product in different
 colorways (Flamengo's alternate layouts), not a family of separate
 products.
 
+**This is now the confirmed standard for any future product group**
+(2026-09-22: "ficou certo agora... quero que você mantenha isso como
+padrão para as coisas que vou te pedir" — after the boho detour above).
+When the user asks to add a new *group* of related products, go straight
+to: separate `Modelo`s + a curated name list in `lib/` + a generic cover
+`Modelo` rendered via `CoverLinkCard` in the general grid + a dedicated
+`app/<group>/page.tsx` grid page + excluding the group's names from
+`HIDDEN_FROM_GRID` in `app/categoria/[slug]/page.tsx`. Don't propose the
+`variantes` picker for a new group and don't re-derive this structure from
+scratch — copy `/times` or `/boho`.
+
 **`Modelo.variantes?: string[]` (added 2026-09-21)** holds extra photos of
 the same model in other color arrangements (e.g. Flamengo's alternate
 red/black layouts) — `imagemUrl` stays the primary/cover photo, `variantes`
