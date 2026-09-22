@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BOHO_NOME } from "@/lib/boho-model";
+import { CoverLinkCard } from "@/components/cover-link-card";
 import { ModeloCard } from "@/components/modelo-card";
-import { TeamLinkCard } from "@/components/team-link-card";
 import { WeavePattern } from "@/components/weave-pattern";
 import { getContent } from "@/lib/content-store";
 import { pairPersonalizados } from "@/lib/modelo-pairs";
@@ -48,10 +49,21 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
         {categoria.modelos.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {pairPersonalizados(categoria.modelos.filter((m) => !TEAM_MODEL_NAMES.has(m.nome))).map(
-              ({ base, personalizado }) =>
-                base.nome === TIME_DO_CORACAO_NOME ? (
-                  <TeamLinkCard key={base.id} modelo={base} />
-                ) : (
+              ({ base, personalizado }) => {
+                if (base.nome === TIME_DO_CORACAO_NOME) {
+                  return <CoverLinkCard key={base.id} modelo={base} href="/times" linkLabel="Ver todos os times" />;
+                }
+                if (base.nome === BOHO_NOME) {
+                  return (
+                    <CoverLinkCard
+                      key={base.id}
+                      modelo={base}
+                      href="/boho"
+                      linkLabel="Ver todas as estampas"
+                    />
+                  );
+                }
+                return (
                   <ModeloCard
                     key={base.id}
                     modelo={base}
@@ -60,7 +72,8 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
                     categoriaSlug={categoria.slug}
                     whatsappNumero={content.site.whatsappNumero}
                   />
-                )
+                );
+              }
             )}
           </div>
         ) : (

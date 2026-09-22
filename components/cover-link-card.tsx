@@ -3,10 +3,18 @@ import Link from "next/link";
 import { WeavePattern } from "@/components/weave-pattern";
 import type { Modelo } from "@/lib/content-schema";
 
-export function TeamLinkCard({ modelo }: { modelo: Modelo }) {
+export function CoverLinkCard({
+  modelo,
+  href,
+  linkLabel,
+}: {
+  modelo: Modelo;
+  href: string;
+  linkLabel: string;
+}) {
   return (
     <Link
-      href="/times"
+      href={href}
       className="group flex flex-col border border-line bg-paper transition-all duration-300 hover:-translate-y-1 hover:border-ink hover:shadow-[6px_6px_0_0_var(--line)] active:translate-y-0 active:shadow-[2px_2px_0_0_var(--line)] active:duration-75"
     >
       <div className="relative aspect-square overflow-hidden border-b border-line">
@@ -26,7 +34,7 @@ export function TeamLinkCard({ modelo }: { modelo: Modelo }) {
         <p className="font-serif text-lg font-medium text-ink">{modelo.nome}</p>
         <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-soft">{modelo.descricao}</p>
         <span className="mt-4 inline-block w-fit border-b border-current text-sm font-medium text-ink">
-          Ver todos os times
+          {linkLabel}
         </span>
       </div>
     </Link>

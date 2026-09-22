@@ -164,13 +164,31 @@ team-grid.tsx` renders that list as a `ModeloCard` grid and is reused by
 both `/times` and the homepage's `TeamShowcase` section. In
 `app/categoria/[slug]/page.tsx`, the six team models (base + personalizado)
 are filtered out of the general grid entirely, and the "Time do coração"
-model renders as `components/team-link-card.tsx` — a card styled like
-`ModeloCard` but that's just a `Link` to `/times`, no add-to-cart. `/busca`
-still surfaces individual team models on a matching search — only the
-*browsing* grid excludes them, not search.
+model renders as `components/cover-link-card.tsx` (`CoverLinkCard`) — a
+card styled like `ModeloCard` but that's just a `Link` (to whatever `href`
+it's given), no add-to-cart. `/busca` still surfaces individual team
+models on a matching search — only the *browsing* grid excludes them, not
+search.
 
 If a 7th team gets added via `/admin` later, add its name to `TIMES` in
 `lib/team-models.ts` — that's the only place the list lives.
+
+**"Cadeiras boho" (added 2026-09-21, same pattern applied 2026-09-22)** is
+a *single* `Modelo` using the `variantes` photo picker (6 patterns as one
+product with a color-swatch selector — see the `variantes` note above),
+not six separate models like the teams. It initially showed that picker +
+"Adicionar ao carrinho" directly in the general "Cadeiras de praia" grid;
+the user compared it to "Time do coração" (screenshot, circled) and wanted
+the exact same "just a cover + link" treatment there, with the real
+picker/add-to-cart moved to its own page. `app/boho/page.tsx` now holds
+the single interactive `ModeloCard` (centered, `max-w-md`, since it's one
+product not a grid); `lib/boho-model.ts` exports `BOHO_NOME` = "Cadeiras
+boho" the same way `TIME_DO_CORACAO_NOME` works, and
+`app/categoria/[slug]/page.tsx` renders it via `CoverLinkCard` (`href="/
+boho"`) instead of `ModeloCard` in the general grid. `CoverLinkCard` was
+generalized from the old team-only `TeamLinkCard` specifically to serve
+both of these — reuse it (don't build a third bespoke link-card) for any
+future "this product needs its own page" case.
 
 **`Modelo.variantes?: string[]` (added 2026-09-21)** holds extra photos of
 the same model in other color arrangements (e.g. Flamengo's alternate
