@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BOHO_NOME, BOHO_PADROES } from "@/lib/boho-model";
 import { CoverLinkCard } from "@/components/cover-link-card";
+import { DESENHO_NOME, DESENHO_TEMAS } from "@/lib/desenho-model";
 import { ModeloCard } from "@/components/modelo-card";
 import { WeavePattern } from "@/components/weave-pattern";
 import { getContent } from "@/lib/content-store";
@@ -11,9 +12,10 @@ import { TIME_DO_CORACAO_NOME, TIMES } from "@/lib/team-models";
 // On "Cadeiras de praia", the individual team models (Flamengo, Corinthians,
 // ...) live at /times and the homepage showcase, not in this general grid —
 // "Time do coração" is the single link into that dedicated list instead.
-// Same idea for the six boho patterns, linked from "Cadeiras boho" -> /boho.
+// Same idea for the six boho patterns (-> /boho) and the desenho/anime/frase
+// examples (-> /desenhos), linked from their own cover cards.
 const TEAM_MODEL_NAMES = new Set(TIMES.flatMap((nome) => [nome, `${nome} personalizado`]));
-const HIDDEN_FROM_GRID = new Set([...TEAM_MODEL_NAMES, ...BOHO_PADROES]);
+const HIDDEN_FROM_GRID = new Set([...TEAM_MODEL_NAMES, ...BOHO_PADROES, ...DESENHO_TEMAS]);
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +64,16 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
                       modelo={base}
                       href="/boho"
                       linkLabel="Ver todas as estampas"
+                    />
+                  );
+                }
+                if (base.nome === DESENHO_NOME) {
+                  return (
+                    <CoverLinkCard
+                      key={base.id}
+                      modelo={base}
+                      href="/desenhos"
+                      linkLabel="Ver todos os desenhos"
                     />
                   );
                 }
