@@ -1,5 +1,5 @@
 /** The "Cadeiras de praia" model whose card in the general grid just links to /desenhos. */
-export const DESENHO_NOME = "Desenho, anime e frases";
+export const DESENHO_NOME = "Animes e desenhos";
 
 // Curated by name, not stored as a flag in the schema — same approach as
 // BOHO_PADROES in lib/boho-model.ts and TIMES in lib/team-models.ts. Each of

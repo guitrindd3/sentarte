@@ -7,7 +7,7 @@ import { DESENHO_TEMAS } from "@/lib/desenho-model";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Desenho, anime e frases",
+  title: "Animes e desenhos",
   description: "Desenhos, personagens e frases tecidos na cadeira — cada peça é feita sob encomenda.",
 };
 
@@ -24,7 +24,7 @@ export default async function DesenhosPage() {
   return (
     <>
       <PageHeader
-        titulo="Desenho, anime e frases"
+        titulo="Animes e desenhos"
         resumo="Desenhos, personagens e frases tecidos na cadeira. Os exemplos abaixo são pedidos que já fizemos — conta pra gente o que você tem em mente e a gente tece."
       />
       <section className="mx-auto max-w-6xl px-6 py-14">
