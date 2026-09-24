@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { put } from "@vercel/blob";
 import { createSession, destroySession, verifyPassword, verifySession } from "@/lib/auth";
-import { getContent, saveContent } from "@/lib/content-store";
+import { getContentForWrite, saveContent } from "@/lib/content-store";
 import type { Categoria, Modelo } from "@/lib/content-schema";
 
 type LoginState = { error?: string } | undefined;
@@ -45,7 +45,7 @@ function revalidateSite() {
 
 export async function updateHeroAction(formData: FormData) {
   await requireAdmin();
-  const content = await getContent();
+  const content = await getContentForWrite();
   content.hero.titulo = String(formData.get("titulo") ?? content.hero.titulo);
   content.hero.subtitulo = String(formData.get("subtitulo") ?? content.hero.subtitulo);
   const tags: string[] = [];
@@ -60,7 +60,7 @@ export async function updateHeroAction(formData: FormData) {
 
 export async function updateSiteAction(formData: FormData) {
   await requireAdmin();
-  const content = await getContent();
+  const content = await getContentForWrite();
   content.site.nome = String(formData.get("nome") ?? content.site.nome);
   content.site.descricao = String(formData.get("descricao") ?? content.site.descricao);
   content.site.whatsappNumero = String(formData.get("whatsappNumero") ?? content.site.whatsappNumero).replace(
@@ -77,7 +77,7 @@ export async function updateSiteAction(formData: FormData) {
 
 export async function addCategoriaAction(formData: FormData) {
   await requireAdmin();
-  const content = await getContent();
+  const content = await getContentForWrite();
   const titulo = String(formData.get("titulo") ?? "Nova categoria").trim() || "Nova categoria";
 
   let slug = slugify(titulo);
@@ -103,7 +103,7 @@ export async function addCategoriaAction(formData: FormData) {
 
 export async function updateCategoriaAction(categoriaId: string, formData: FormData) {
   await requireAdmin();
-  const content = await getContent();
+  const content = await getContentForWrite();
   const cat = content.categorias.find((c) => c.id === categoriaId);
   if (!cat) return;
 
@@ -119,7 +119,7 @@ export async function updateCategoriaAction(categoriaId: string, formData: FormD
 
 export async function deleteCategoriaAction(categoriaId: string) {
   await requireAdmin();
-  const content = await getContent();
+  const content = await getContentForWrite();
   content.categorias = content.categorias.filter((c) => c.id !== categoriaId);
   await saveContent(content);
   revalidateSite();
@@ -127,7 +127,7 @@ export async function deleteCategoriaAction(categoriaId: string) {
 
 export async function addModeloAction(categoriaId: string, formData: FormData) {
   await requireAdmin();
-  const content = await getContent();
+  const content = await getContentForWrite();
   const cat = content.categorias.find((c) => c.id === categoriaId);
   if (!cat) return;
 
@@ -145,7 +145,7 @@ export async function addModeloAction(categoriaId: string, formData: FormData) {
 
 export async function updateModeloAction(categoriaId: string, modeloId: string, formData: FormData) {
   await requireAdmin();
-  const content = await getContent();
+  const content = await getContentForWrite();
   const cat = content.categorias.find((c) => c.id === categoriaId);
   const modelo = cat?.modelos.find((m) => m.id === modeloId);
   if (!cat || !modelo) return;
@@ -192,7 +192,7 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
 
 export async function deleteModeloAction(categoriaId: string, modeloId: string) {
   await requireAdmin();
-  const content = await getContent();
+  const content = await getContentForWrite();
   const cat = content.categorias.find((c) => c.id === categoriaId);
   if (!cat) return;
   cat.modelos = cat.modelos.filter((m) => m.id !== modeloId);
