@@ -8,13 +8,15 @@ export const DESENHO_NOME = "Desenho, anime e frases";
 // fixed option — customers request their own via the WhatsApp link on the
 // card.
 export const DESENHO_TEMAS = [
-  "Cauda de sereia",
-  "Gatinho pixelado",
-  "Borboleta com nome",
-  "Nome personalizado",
-  "Personagem anime",
-  "Frase personalizada",
-  "Deadpool",
+  "Sukuna",
+  "Itachi Uchiha",
+  "Borboleta",
+  "Coração leve",
+  "Homem-aranha",
+  "Gato",
   "Creeper",
-  "Terror com nome",
+  "Sereia arco-íris",
+  "JV Trindade",
+  "Satoru Gojo",
+  "Ghostface",
 ];
