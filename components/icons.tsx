@@ -172,6 +172,52 @@ export function CheckIcon({ className }: IconProps) {
   );
 }
 
+export function WaveIcon({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M3 9.5c1.5-1.8 3-1.8 4.5 0s3 1.8 4.5 0 3-1.8 4.5 0 3 1.8 4.5 0" />
+      <path d="M3 15c1.5-1.8 3-1.8 4.5 0s3 1.8 4.5 0 3-1.8 4.5 0 3 1.8 4.5 0" />
+    </svg>
+  );
+}
+
+export function FrameIcon({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M20 9V5.5A1.5 1.5 0 0 0 18.5 4H15M4 15v3.5A1.5 1.5 0 0 0 5.5 20H9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15" />
+    </svg>
+  );
+}
+
+export function HandIcon({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M8 12.5V6a1.4 1.4 0 0 1 2.8 0v5M10.8 11V4.8a1.4 1.4 0 0 1 2.8 0V11M13.6 11V6.3a1.4 1.4 0 0 1 2.8 0V13c0 3.6-2.3 6.2-6 6.2-2.7 0-4.5-1.3-5.5-3.5L3.4 12.8a1.3 1.3 0 0 1 2-1.7l2.6 2.6" />
+    </svg>
+  );
+}
+
 export function ChevronDownIcon({ className }: IconProps) {
   return (
     <svg
