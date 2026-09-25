@@ -40,7 +40,13 @@ export function WeavePattern({
   const horizontals = Array.from({ length: rows }, (_, r) => r * cell);
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className={className} role="presentation" aria-hidden="true">
+    <svg
+      viewBox={`0 0 ${size} ${size}`}
+      preserveAspectRatio="none"
+      className={className}
+      role="presentation"
+      aria-hidden="true"
+    >
       <g className={animated ? "sentarte-weave-in" : undefined}>
         {verticals.map((x) => (
           <rect key={`v-${x}`} x={x} y={0} width={band} height={size} fill={colorA} />
@@ -135,7 +141,13 @@ function ShapeWeave({
   }
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className={className} role="presentation" aria-hidden="true">
+    <svg
+      viewBox={`0 0 ${size} ${size}`}
+      preserveAspectRatio="none"
+      className={className}
+      role="presentation"
+      aria-hidden="true"
+    >
       <g className={animated ? "sentarte-weave-in" : undefined}>
         <rect x={0} y={0} width={size} height={size} fill={colorB} />
         {cells.map((cell, i) => (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FramedWeave } from "@/components/framed-weave";
+import { ChairPreview } from "@/components/chair-preview";
 import { WhatsAppIcon } from "@/components/icons";
 import { FIOS } from "@/lib/palette";
 import { whatsappUrl } from "@/lib/urls";
@@ -150,15 +150,11 @@ export function Configurator({
         </div>
 
         <div>
-          <FramedWeave
-            colorA={fioA.cor}
-            colorB={fioB.cor}
-            shape={forma}
-            cell={40}
-            band={27}
-            aspect="aspect-square"
-            tone="canvas"
-          />
+          <div className="border border-rattan/60 bg-canvas p-4">
+            <div className="aspect-square">
+              <ChairPreview colorA={fioA.cor} colorB={fioB.cor} shape={forma} />
+            </div>
+          </div>
           <p className="mt-3 text-sm text-ink-soft">
             {modelo} em {fioA.nome.toLowerCase()} e {fioB.nome.toLowerCase()}, trançado {formaRotulo.toLowerCase()}.
           </p>
