@@ -51,7 +51,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
 
       <section className="mx-auto max-w-6xl px-6 py-14">
         {categoria.modelos.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {pairPersonalizados(categoria.modelos.filter((m) => !HIDDEN_FROM_GRID.has(m.nome))).map(
               ({ base, personalizado }) => {
                 if (base.nome === "Monte a sua trama") {
