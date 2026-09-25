@@ -9,6 +9,13 @@ const NOME_Y: Record<NomePosicao, number> = {
 };
 
 const NOME_INNER_WIDTH = 106;
+const NOME_MAX_BLOCK_HEIGHT = 108;
+
+/** Line-break budget for the woven phrase — kept here so the `frase`
+ * textarea in `Configurator` can enforce the exact same limits live as
+ * the customer types, instead of silently truncating on render. */
+export const NOME_MAX_LINHAS = 3;
+export const NOME_MAX_CHARS_POR_LINHA = 18;
 
 /**
  * A folding beach-chair silhouette with the weave preview clipped into its
@@ -19,14 +26,17 @@ const NOME_INNER_WIDTH = 106;
  * flat illustration, not a 3D render, but reads as an actual beach chair
  * rather than a picture frame.
  *
- * When `nome` is set, it's woven into the backrest in the same blocky pixel
- * face the real chairs use (--font-pixel, see app/layout.tsx): the patch
- * behind it is `colorB` (the horizontal thread) and the letters are
- * `colorA` (the vertical thread) acting as the contrasting highlight — so
- * picking new thread colors re-colors the name too, the way it would on a
- * real chair. `textLength`/`lengthAdjust` force the run to fit inside
+ * `nome` can hold customer-entered line breaks (`\n`) — the customer
+ * decides where the phrase wraps, up to `NOME_MAX_LINHAS` lines. It's
+ * woven into the backrest in the same blocky pixel face the real chairs
+ * use (--font-pixel, see app/layout.tsx): the patch behind it is `colorB`
+ * (the horizontal thread) and the letters are `colorA` (the vertical
+ * thread) acting as the contrasting highlight — so picking new thread
+ * colors re-colors the name too, the way it would on a real chair. Font
+ * size is picked from the longest line and the line count, then every
+ * line's `textLength`/`lengthAdjust` forces it to fit inside
  * `NOME_INNER_WIDTH` regardless of how wide the real font metrics turn out
- * to be, so long names never spill past the panel.
+ * to be, so a long phrase never spills past the panel.
  */
 export function ChairPreview({
   colorA,
@@ -44,15 +54,35 @@ export function ChairPreview({
   const railTube =
     "M46 402 L74 254 V74 Q74 34 112 34 H188 Q226 34 226 74 V254 L254 402";
 
-  const texto = (nome ?? "").trim().toUpperCase().slice(0, 14);
+  const linhas = (nome ?? "")
+    .split("\n")
+    .map((linha) => linha.trim().toUpperCase().slice(0, NOME_MAX_CHARS_POR_LINHA))
+    .filter(Boolean)
+    .slice(0, NOME_MAX_LINHAS);
+
   const charWidth = 0.62;
   const baseFontSize = 17;
-  const minFontSize = 9;
-  const fontSize = texto
-    ? Math.max(minFontSize, Math.min(baseFontSize, NOME_INNER_WIDTH / (texto.length * charWidth)))
+  const minFontSize = 7;
+  const lineHeightFactor = 1.35;
+
+  const maxLineLen = Math.max(1, ...linhas.map((linha) => linha.length));
+  const widthFontSize = NOME_INNER_WIDTH / (maxLineLen * charWidth);
+  const heightFontSize = linhas.length
+    ? NOME_MAX_BLOCK_HEIGHT / (linhas.length * lineHeightFactor)
     : baseFontSize;
-  const textWidth = texto ? Math.min(texto.length * charWidth * fontSize, NOME_INNER_WIDTH) : 0;
-  const plateWidth = texto ? textWidth + 16 : 0;
+  const fontSize = linhas.length
+    ? Math.max(minFontSize, Math.min(baseFontSize, widthFontSize, heightFontSize))
+    : baseFontSize;
+  const lineHeight = fontSize * lineHeightFactor;
+
+  const linhasRenderizadas = linhas.map((linha) => ({
+    texto: linha,
+    largura: Math.min(linha.length * charWidth * fontSize, NOME_INNER_WIDTH),
+  }));
+  const plateWidth = linhasRenderizadas.length
+    ? Math.max(...linhasRenderizadas.map((linha) => linha.largura)) + 16
+    : 0;
+  const plateHeight = linhasRenderizadas.length ? linhas.length * lineHeight + 10 : 0;
   const plateY = NOME_Y[posicao];
 
   return (
@@ -110,31 +140,37 @@ export function ChairPreview({
       </g>
 
       {/* woven name/frase, clipped so it never spills past the backrest */}
-      {texto ? (
+      {linhasRenderizadas.length ? (
         <g clipPath="url(#chair-preview-backrest)">
           <rect
             x={150 - plateWidth / 2}
-            y={plateY - fontSize * 0.72}
+            y={plateY - plateHeight / 2}
             width={plateWidth}
-            height={fontSize * 1.5}
+            height={plateHeight}
             rx="3"
             fill={colorB}
             stroke={colorA}
             strokeWidth="2"
           />
-          <text
-            x={150}
-            y={plateY}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill={colorA}
-            fontSize={fontSize}
-            textLength={textWidth}
-            lengthAdjust="spacingAndGlyphs"
-            style={{ fontFamily: "var(--font-pixel)" }}
-          >
-            {texto}
-          </text>
+          {linhasRenderizadas.map((linha, i) => {
+            const y = plateY - ((linhasRenderizadas.length - 1) * lineHeight) / 2 + i * lineHeight;
+            return (
+              <text
+                key={i}
+                x={150}
+                y={y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill={colorA}
+                fontSize={fontSize}
+                textLength={linha.largura}
+                lengthAdjust="spacingAndGlyphs"
+                style={{ fontFamily: "var(--font-pixel)" }}
+              >
+                {linha.texto}
+              </text>
+            );
+          })}
         </g>
       ) : null}
     </svg>

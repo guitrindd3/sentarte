@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChairPreview, type NomePosicao } from "@/components/chair-preview";
+import {
+  ChairPreview,
+  NOME_MAX_CHARS_POR_LINHA,
+  NOME_MAX_LINHAS,
+  type NomePosicao,
+} from "@/components/chair-preview";
 import { WhatsAppIcon } from "@/components/icons";
 import { FIOS } from "@/lib/palette";
 import { whatsappUrl } from "@/lib/urls";
@@ -36,6 +41,14 @@ export function Configurator({
   const [forma, setForma] = useState<WeaveShape>("lisa");
   const [frase, setFrase] = useState("");
   const [posicaoNome, setPosicaoNome] = useState<NomePosicao>("meio");
+
+  const handleFraseChange = (valor: string) => {
+    const linhas = valor
+      .split("\n")
+      .slice(0, NOME_MAX_LINHAS)
+      .map((linha) => linha.slice(0, NOME_MAX_CHARS_POR_LINHA));
+    setFrase(linhas.join("\n"));
+  };
 
   const formaRotulo = FORMAS.find((f) => f.valor === forma)?.rotulo ?? "Lisa";
 
@@ -137,14 +150,18 @@ export function Configurator({
             <label htmlFor="frase" className="font-serif text-base text-ink">
               Uma frase para trançar (opcional)
             </label>
-            <input
+            <textarea
               id="frase"
-              type="text"
+              rows={3}
               value={frase}
-              onChange={(e) => setFrase(e.target.value.slice(0, 28))}
-              placeholder="Ex.: Família Silva"
-              className="mt-3 w-full border border-line bg-canvas px-3 py-2 text-sm text-ink placeholder:text-ink-soft/60 focus:border-ink"
+              onChange={(e) => handleFraseChange(e.target.value)}
+              placeholder={"Ex.: Família\nSilva"}
+              className="mt-3 w-full resize-none border border-line bg-canvas px-3 py-2 text-sm text-ink placeholder:text-ink-soft/60 focus:border-ink"
             />
+            <p className="mt-1.5 text-xs text-ink-soft">
+              Aperte Enter pra escolher onde quebrar a linha — até {NOME_MAX_LINHAS} linhas de{" "}
+              {NOME_MAX_CHARS_POR_LINHA} letras cada.
+            </p>
           </div>
 
           {frase.trim() ? (
