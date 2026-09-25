@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 import { BOHO_NOME, BOHO_PADROES } from "@/lib/boho-model";
 import { CoverLinkCard } from "@/components/cover-link-card";
 import { DESENHO_NOME, DESENHO_TEMAS } from "@/lib/desenho-model";
+import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
 import { ModeloCard } from "@/components/modelo-card";
 import { WeavePattern } from "@/components/weave-pattern";
 import { getContent } from "@/lib/content-store";
 import { pairPersonalizados } from "@/lib/modelo-pairs";
 import { TIME_DO_CORACAO_NOME, TIMES } from "@/lib/team-models";
+import { instagramUrl, whatsappUrl } from "@/lib/urls";
 
 // On "Cadeiras de praia", the individual team models (Flamengo, Corinthians,
 // ...) live at /times and the homepage showcase, not in this general grid —
@@ -16,6 +18,19 @@ import { TIME_DO_CORACAO_NOME, TIMES } from "@/lib/team-models";
 // examples (-> /desenhos), linked from their own cover cards.
 const TEAM_MODEL_NAMES = new Set(TIMES.flatMap((nome) => [nome, `${nome} personalizado`]));
 const HIDDEN_FROM_GRID = new Set([...TEAM_MODEL_NAMES, ...BOHO_PADROES, ...DESENHO_TEMAS]);
+
+const MONTE_A_SUA_TRAMA_NOME = "Monte a sua trama";
+
+// Fixed display order for the cover-link cards, independent of where they
+// sit in the admin-edited `modelos` array — the user asked for this exact
+// order (2026-09-25). Regular models (not one of these four) keep their
+// original relative order and render after them.
+const ORDEM_CARTOES_ESPECIAIS: Record<string, number> = {
+  [TIME_DO_CORACAO_NOME]: 0,
+  [BOHO_NOME]: 1,
+  [DESENHO_NOME]: 2,
+  [MONTE_A_SUA_TRAMA_NOME]: 3,
+};
 
 export const dynamic = "force-dynamic";
 
@@ -52,9 +67,14 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
       <section className="mx-auto max-w-6xl px-6 py-14">
         {categoria.modelos.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {pairPersonalizados(categoria.modelos.filter((m) => !HIDDEN_FROM_GRID.has(m.nome))).map(
-              ({ base, personalizado }) => {
-                if (base.nome === "Monte a sua trama") {
+            {[...pairPersonalizados(categoria.modelos.filter((m) => !HIDDEN_FROM_GRID.has(m.nome)))]
+              .sort((a, b) => {
+                const pa = ORDEM_CARTOES_ESPECIAIS[a.base.nome] ?? 100;
+                const pb = ORDEM_CARTOES_ESPECIAIS[b.base.nome] ?? 100;
+                return pa - pb;
+              })
+              .map(({ base, personalizado }) => {
+                if (base.nome === MONTE_A_SUA_TRAMA_NOME) {
                   return (
                     <CoverLinkCard
                       key={base.id}
@@ -98,8 +118,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
                     whatsappNumero={content.site.whatsappNumero}
                   />
                 );
-              }
-            )}
+              })}
           </div>
         ) : (
           <p className="text-sm text-ink-soft">Nenhum modelo cadastrado nessa categoria ainda.</p>
@@ -116,9 +135,31 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
         />
         <div className="relative mx-auto max-w-6xl">
           <p className="max-w-[50ch] font-serif text-xl">
-            Não achou exatamente o que procurava? Toda peça é feita sob encomenda — conta pra
-            gente o que você tem em mente.
+            Não encontrou a sua? Entre em contato e vamos produzir.
           </p>
+          <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <a
+              href={whatsappUrl(
+                content.site.whatsappNumero,
+                "Oi! Não encontrei a peça que eu queria no site e queria fazer uma sob encomenda."
+              )}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 transition-colors hover:text-ink-soft"
+            >
+              <WhatsAppIcon className="h-4 w-4" />
+              WhatsApp
+            </a>
+            <a
+              href={instagramUrl(content.site.instagramHandle)}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 transition-colors hover:text-ink-soft"
+            >
+              <InstagramIcon className="h-4 w-4" />
+              Instagram
+            </a>
+          </div>
         </div>
       </section>
     </>
