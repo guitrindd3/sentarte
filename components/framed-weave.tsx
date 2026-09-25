@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { WeavePattern } from "@/components/weave-pattern";
+import { WeavePattern, type WeaveShape } from "@/components/weave-pattern";
 
 type FramedWeaveProps = {
   colorA?: string;
@@ -11,6 +11,7 @@ type FramedWeaveProps = {
   tone?: "paper" | "canvas";
   imagemUrl?: string;
   alt?: string;
+  shape?: WeaveShape;
 };
 
 /**
@@ -29,6 +30,7 @@ export function FramedWeave({
   tone = "paper",
   imagemUrl,
   alt,
+  shape,
 }: FramedWeaveProps) {
   return (
     <div
@@ -44,7 +46,14 @@ export function FramedWeave({
             sizes="(min-width: 768px) 480px, 100vw"
           />
         ) : (
-          <WeavePattern colorA={colorA} colorB={colorB} cell={cell} band={band} className="h-full w-full" />
+          <WeavePattern
+            colorA={colorA}
+            colorB={colorB}
+            cell={cell}
+            band={band}
+            shape={shape}
+            className="h-full w-full"
+          />
         )}
       </div>
     </div>

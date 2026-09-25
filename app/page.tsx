@@ -1,6 +1,5 @@
 import { Carousel } from "@/components/home/carousel";
 import { CategoryBento } from "@/components/home/category-bento";
-import { Configurator } from "@/components/home/configurator";
 import { ContactCta } from "@/components/home/contact-cta";
 import { MaterialSpec } from "@/components/home/material-spec";
 import { PersonalizationSteps } from "@/components/home/personalization-steps";
@@ -19,7 +18,6 @@ export default async function Home() {
       <CategoryBento categorias={content.categorias} />
       <TeamShowcase categorias={content.categorias} whatsappNumero={content.site.whatsappNumero} />
       <PersonalizationSteps />
-      <Configurator categorias={content.categorias} whatsappNumero={content.site.whatsappNumero} />
       <PullQuote />
       <MaterialSpec />
       <ContactCta whatsappNumero={content.site.whatsappNumero} instagramHandle={content.site.instagramHandle} />
