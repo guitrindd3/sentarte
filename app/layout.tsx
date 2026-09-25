@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Bodoni_Moda } from "next/font/google";
+import { Archivo, Bodoni_Moda, Press_Start_2P } from "next/font/google";
 import { CartDrawer } from "@/components/cart-drawer";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -19,6 +19,15 @@ const body = Archivo({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
+});
+
+// Blocky pixel face used only where we mimic the woven cross-stitch
+// lettering the real chairs use for a name/frase (see ChairPreview) — not a
+// general-purpose font, so it isn't part of the font-sans/font-serif system.
+const pixel = Press_Start_2P({
+  variable: "--font-pixel",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -53,7 +62,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const { site } = await getContent();
 
   return (
-    <html lang="pt-BR" className={`${display.variable} ${body.variable} h-full`}>
+    <html lang="pt-BR" className={`${display.variable} ${body.variable} ${pixel.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans antialiased">
         <CartProvider>
           <SiteHeader siteName={site.nome} whatsappNumero={site.whatsappNumero} />

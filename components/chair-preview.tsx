@@ -1,5 +1,13 @@
 import { WeavePattern, type WeaveShape } from "@/components/weave-pattern";
 
+export type NomePosicao = "topo" | "meio" | "base";
+
+const NOME_Y: Record<NomePosicao, number> = {
+  topo: 82,
+  meio: 121,
+  base: 163,
+};
+
 /**
  * A folding beach-chair silhouette with the weave preview clipped into its
  * backrest and seat panels, so changing the shape/colors in the
@@ -8,18 +16,37 @@ import { WeavePattern, type WeaveShape } from "@/components/weave-pattern";
  * shadow and a highlight stroke on the tube for a touch of depth — still a
  * flat illustration, not a 3D render, but reads as an actual beach chair
  * rather than a picture frame.
+ *
+ * When `nome` is set, it's rendered in the same blocky pixel face the real
+ * chairs use for a woven name/frase (--font-pixel, see app/layout.tsx),
+ * on a solid backing patch so it stays legible over any shape/color combo,
+ * at one of three vertical spots on the backrest (`posicao`).
  */
 export function ChairPreview({
   colorA,
   colorB,
   shape,
+  nome,
+  posicao = "meio",
 }: {
   colorA: string;
   colorB: string;
   shape: WeaveShape;
+  nome?: string;
+  posicao?: NomePosicao;
 }) {
   const railTube =
     "M46 402 L74 254 V74 Q74 34 112 34 H188 Q226 34 226 74 V254 L254 402";
+
+  const texto = (nome ?? "").trim().toUpperCase().slice(0, 14);
+  const maxWidth = 122;
+  const charWidth = 0.68;
+  const baseFontSize = 17;
+  const fontSize = texto
+    ? Math.min(baseFontSize, maxWidth / Math.max(texto.length * charWidth, 1))
+    : baseFontSize;
+  const plateWidth = texto ? Math.min(maxWidth + 10, texto.length * charWidth * fontSize + 16) : 0;
+  const plateY = NOME_Y[posicao];
 
   return (
     <svg viewBox="0 0 300 430" role="img" aria-label="Prévia da cadeira" className="h-full w-full">
@@ -74,6 +101,31 @@ export function ChairPreview({
         <rect x="216" y="222" width="58" height="17" rx="8.5" fill="#DAD4C6" />
         <rect x="216" y="234" width="58" height="6" rx="3" fill="#C7C0AE" />
       </g>
+
+      {/* woven name/frase, clipped so it never spills past the backrest */}
+      {texto ? (
+        <g clipPath="url(#chair-preview-backrest)">
+          <rect
+            x={150 - plateWidth / 2}
+            y={plateY - fontSize * 0.72}
+            width={plateWidth}
+            height={fontSize * 1.5}
+            rx="3"
+            fill="#1B1B1B"
+          />
+          <text
+            x={150}
+            y={plateY}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="#F5F1E6"
+            fontSize={fontSize}
+            style={{ fontFamily: "var(--font-pixel)" }}
+          >
+            {texto}
+          </text>
+        </g>
+      ) : null}
     </svg>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChairPreview } from "@/components/chair-preview";
+import { ChairPreview, type NomePosicao } from "@/components/chair-preview";
 import { WhatsAppIcon } from "@/components/icons";
 import { FIOS } from "@/lib/palette";
 import { whatsappUrl } from "@/lib/urls";
@@ -14,6 +14,12 @@ const FORMAS: { valor: WeaveShape; rotulo: string }[] = [
   { valor: "ziguezague", rotulo: "Ziguezague" },
   { valor: "espiral", rotulo: "Triângulo caracol" },
   { valor: "sol", rotulo: "Sol" },
+];
+
+const POSICOES: { valor: NomePosicao; rotulo: string }[] = [
+  { valor: "topo", rotulo: "Topo do encosto" },
+  { valor: "meio", rotulo: "Meio do encosto" },
+  { valor: "base", rotulo: "Base do encosto" },
 ];
 
 export function Configurator({
@@ -29,14 +35,17 @@ export function Configurator({
   const [fioB, setFioB] = useState(FIOS[1]);
   const [forma, setForma] = useState<WeaveShape>("lisa");
   const [frase, setFrase] = useState("");
+  const [posicaoNome, setPosicaoNome] = useState<NomePosicao>("meio");
 
   const formaRotulo = FORMAS.find((f) => f.valor === forma)?.rotulo ?? "Lisa";
 
+  const posicaoRotulo = POSICOES.find((p) => p.valor === posicaoNome)?.rotulo ?? "Meio do encosto";
+
   const mensagem = useMemo(() => {
     let msg = `Oi! Montei uma trama no site e quero pedir um orçamento:\n\nModelo: ${modelo}\nForma: ${formaRotulo}\nCores: ${fioA.nome} + ${fioB.nome}`;
-    if (frase.trim()) msg += `\nFrase para trançar: "${frase.trim()}"`;
+    if (frase.trim()) msg += `\nFrase para trançar: "${frase.trim()}" (${posicaoRotulo.toLowerCase()})`;
     return msg;
-  }, [modelo, formaRotulo, fioA, fioB, frase]);
+  }, [modelo, formaRotulo, fioA, fioB, frase, posicaoRotulo]);
 
   if (modelos.length === 0) return null;
 
@@ -138,6 +147,29 @@ export function Configurator({
             />
           </div>
 
+          {frase.trim() ? (
+            <fieldset>
+              <legend className="font-serif text-base text-ink">Posição da frase</legend>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {POSICOES.map((p) => (
+                  <button
+                    key={p.valor}
+                    type="button"
+                    onClick={() => setPosicaoNome(p.valor)}
+                    aria-pressed={posicaoNome === p.valor}
+                    className={`border px-3 py-1.5 text-sm transition-colors ${
+                      posicaoNome === p.valor
+                        ? "border-ink bg-ink text-canvas"
+                        : "border-line text-ink-soft hover:border-ink"
+                    }`}
+                  >
+                    {p.rotulo}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+
           <a
             href={whatsappUrl(whatsappNumero, mensagem)}
             target="_blank"
@@ -152,7 +184,13 @@ export function Configurator({
         <div>
           <div className="border border-rattan/60 bg-canvas p-4">
             <div className="aspect-square">
-              <ChairPreview colorA={fioA.cor} colorB={fioB.cor} shape={forma} />
+              <ChairPreview
+                colorA={fioA.cor}
+                colorB={fioB.cor}
+                shape={forma}
+                nome={frase}
+                posicao={posicaoNome}
+              />
             </div>
           </div>
           <p className="mt-3 text-sm text-ink-soft">
