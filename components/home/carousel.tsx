@@ -9,16 +9,16 @@ import type { SiteContent } from "@/lib/content-schema";
 
 const SLIDES = [
   {
-    src: "/photos/carousel-palms.jpg",
-    alt: "Palmeiras à beira de uma praia de areia branca e mar azul-turquesa",
+    src: "/photos/carousel-times.jpg",
+    alt: "Cadeiras de time Sentarte numa varanda de frente para o mar",
   },
   {
-    src: "/photos/carousel-wave.jpg",
-    alt: "Vista aérea de uma onda azul-turquesa quebrando na areia",
+    src: "/photos/carousel-boho.jpg",
+    alt: "Cadeiras boho Sentarte num terraço ao pôr do sol",
   },
   {
-    src: "/photos/carousel-sunset.jpg",
-    alt: "Pôr do sol dourado sobre o mar",
+    src: "/photos/carousel-boho-2.jpg",
+    alt: "Cadeiras boho Sentarte numa varanda decorada",
   },
 ];
 

@@ -66,13 +66,23 @@ ends as a WhatsApp message, there's no payment processing.
   arbitrary web/Pinterest results — same reasoning as
   [[feedback-no-scraped-stock-photos]]: only pull from a clearly
   commercial-use-licensed source like this, and record the source below.
-  - hero-beach.jpg, rope-texture.jpg, sand-texture.jpg — used in the old
-    two-column hero/material-spec/sobre (2026-09-21). Sources:
-    unsplash.com/photos/9Itl-03hLao, /mbdOQS8SDnE, /n5HOJGtYt4Q.
-  - carousel-palms.jpg, carousel-wave.jpg, carousel-sunset.jpg — the three
-    `components/home/carousel.tsx` slides (2026-09-21). Sources:
-    unsplash.com/photos/Qe58SmRMcH4, /photo-1501696461415-6bd6660c6742,
-    /6nxEDrj61CY.
+  - hero-beach.jpg, sand-texture.jpg — used in the old two-column
+    hero/sobre (2026-09-21). Sources: unsplash.com/photos/9Itl-03hLao,
+    /n5HOJGtYt4Q.
+  - rope-texture.jpg — superseded 2026-09-25 by thread-spools.jpg below,
+    no longer referenced; left on disk in case a future section wants a
+    plain texture again.
+  - thread-spools.jpg — `components/home/material-spec.tsx`'s photo
+    (2026-09-25). Not stock — cropped from a screenshot the user supplied
+    of an old site/Instagram post of their own branded thread spools
+    (their "@ateliesentarte" tag is visible in it); the original file no
+    longer exists anywhere, this crop is the only copy.
+  - carousel-times.jpg, carousel-boho.jpg, carousel-boho-2.jpg — the three
+    `components/home/carousel.tsx` slides (2026-09-25, replacing the
+    original Unsplash carousel-palms/wave/sunset). Real product lifestyle
+    photos the user supplied directly (one AI-generated mockup of the
+    team chairs, two real photos of the boho chairs) — not stock, no
+    license needed.
 - `public/brand/` — the atelier's own brand assets, supplied directly by the
   user (not sourced/licensed by Claude): `logo.png` (circular "SA" mark,
   transparent background, 1024×1024) and `bem-vindo.png` (a 1792×592 "Bem
