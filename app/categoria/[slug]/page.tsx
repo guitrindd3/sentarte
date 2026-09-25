@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BOHO_NOME, BOHO_PADROES } from "@/lib/boho-model";
-import { Configurator } from "@/components/home/configurator";
 import { CoverLinkCard } from "@/components/cover-link-card";
 import { DESENHO_NOME, DESENHO_TEMAS } from "@/lib/desenho-model";
 import { ModeloCard } from "@/components/modelo-card";
@@ -55,11 +54,15 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {pairPersonalizados(categoria.modelos.filter((m) => !HIDDEN_FROM_GRID.has(m.nome))).map(
               ({ base, personalizado }) => {
-                if (base.nome === "Trama lisa" && categoria.slug === "cadeiras") {
+                if (base.nome === "Monte a sua trama") {
                   return (
-                    <div key={base.id} className="sm:col-span-2">
-                      <Configurator categorias={content.categorias} whatsappNumero={content.site.whatsappNumero} />
-                    </div>
+                    <CoverLinkCard
+                      key={base.id}
+                      modelo={base}
+                      href="/personalizar"
+                      linkLabel="Montar minha trama"
+                      shape="espiral"
+                    />
                   );
                 }
                 if (base.nome === TIME_DO_CORACAO_NOME) {

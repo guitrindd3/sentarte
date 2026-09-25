@@ -42,13 +42,7 @@ export function Configurator({
 
   return (
     <div className="border border-line bg-paper p-6">
-      <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Monte a sua trama</h2>
-      <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-ink-soft">
-        Escolha o modelo, a forma e as cores para ver uma prévia da trama. Quando estiver do seu
-        jeito, mande direto pra gente pelo WhatsApp.
-      </p>
-
-      <div className="mt-8 grid gap-8 md:grid-cols-[1fr_1fr] md:items-start">
+      <div className="grid gap-8 md:grid-cols-[1fr_1fr] md:items-start">
         <div className="space-y-7">
           <fieldset>
             <legend className="font-serif text-base text-ink">Modelo</legend>

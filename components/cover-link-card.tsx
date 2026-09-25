@@ -1,16 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
-import { WeavePattern } from "@/components/weave-pattern";
+import { WeavePattern, type WeaveShape } from "@/components/weave-pattern";
 import type { Modelo } from "@/lib/content-schema";
 
 export function CoverLinkCard({
   modelo,
   href,
   linkLabel,
+  shape,
 }: {
   modelo: Modelo;
   href: string;
   linkLabel: string;
+  shape?: WeaveShape;
 }) {
   return (
     <Link
@@ -27,7 +29,14 @@ export function CoverLinkCard({
             sizes="(min-width: 1024px) 360px, (min-width: 640px) 45vw, 100vw"
           />
         ) : (
-          <WeavePattern colorA={modelo.corA} colorB={modelo.corB} cell={30} band={20} className="h-full w-full" />
+          <WeavePattern
+            colorA={modelo.corA}
+            colorB={modelo.corB}
+            cell={30}
+            band={20}
+            shape={shape}
+            className="h-full w-full"
+          />
         )}
       </div>
       <div className="flex flex-1 flex-col p-5">
