@@ -37,7 +37,7 @@ export function Carousel({
   }, []);
 
   return (
-    <section className="relative flex min-h-[92vh] items-end justify-center overflow-hidden bg-espresso pb-16 md:pb-24">
+    <section className="relative flex min-h-[92vh] items-center justify-center overflow-hidden bg-espresso">
       {SLIDES.map((slide, i) => (
         <Image
           key={slide.src}
@@ -64,7 +64,23 @@ export function Carousel({
           {hero.subtitulo}
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          {hero.tags.map((tag) => (
+            <span
+              key={tag}
+              className="border border-dashed border-canvas/50 px-3 py-1.5 text-xs leading-snug text-canvas/90"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA buttons + carousel dots anchored near the bottom, away from the
+          busier middle of the photo, while the welcome/title/tags above stay
+          vertically centered as before. */}
+      <div className="absolute inset-x-0 bottom-10 flex flex-col items-center gap-6 px-6 md:bottom-16">
+        <div className="flex flex-wrap items-center justify-center gap-4">
           <Link
             href="/categoria/cadeiras"
             className="border border-canvas bg-canvas px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-transparent hover:text-canvas"
@@ -82,18 +98,7 @@ export function Carousel({
           </a>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {hero.tags.map((tag) => (
-            <span
-              key={tag}
-              className="border border-dashed border-canvas/50 px-3 py-1.5 text-xs leading-snug text-canvas/90"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-10 flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           {SLIDES.map((slide, i) => (
             <button
               key={slide.src}
