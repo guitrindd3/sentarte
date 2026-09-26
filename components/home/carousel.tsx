@@ -1,81 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { WhatsAppIcon } from "@/components/icons";
 import { whatsappUrl } from "@/lib/urls";
 import type { SiteContent } from "@/lib/content-schema";
-
-const BEM_VINDO_AO = "Bem-vindo ao";
-
-/**
- * Types `text` out over `durationMs`, starting after `delayMs`. Measures the
- * text's real rendered width (`scrollWidth`, unaffected by the element's own
- * clipped `width`) instead of animating to a percentage — a percentage
- * resolves against the *container*, which cut the phrase off whenever the
- * text itself (at this font size) was wider than that container. A blinking
- * caret shows until this line finishes typing.
- */
-function TypewriterLine({
-  as,
-  text,
-  className,
-  delayMs,
-  durationMs,
-}: {
-  as: "p" | "h1";
-  text: string;
-  className: string;
-  delayMs: number;
-  durationMs: number;
-}) {
-  const elRef = useRef<HTMLElement | null>(null);
-  const [width, setWidth] = useState(0);
-  const [typing, setTyping] = useState(true);
-
-  useEffect(() => {
-    const id = setTimeout(() => {
-      if (elRef.current) setWidth(elRef.current.scrollWidth);
-    }, delayMs);
-    return () => clearTimeout(id);
-  }, [delayMs, text]);
-
-  const boxClassName = `inline-block overflow-hidden whitespace-nowrap align-bottom border-r-2 ${
-    typing ? "sentarte-caret-blink border-canvas/80" : "border-transparent"
-  } ${className}`;
-  const style = {
-    width,
-    transition: `width ${durationMs}ms steps(${Math.max(text.length, 1)}, end)`,
-  };
-
-  if (as === "h1") {
-    return (
-      <h1
-        ref={(el) => {
-          elRef.current = el;
-        }}
-        className={boxClassName}
-        style={style}
-        onTransitionEnd={() => setTyping(false)}
-      >
-        {text}
-      </h1>
-    );
-  }
-  return (
-    <p
-      ref={(el) => {
-        elRef.current = el;
-      }}
-      className={boxClassName}
-      style={style}
-      onTransitionEnd={() => setTyping(false)}
-    >
-      {text}
-    </p>
-  );
-}
 
 const SLIDES = [
   {
@@ -123,25 +53,17 @@ export function Carousel({
       ))}
       <div className="absolute inset-0 bg-gradient-to-t from-espresso/85 via-espresso/25 to-espresso/45" />
 
-      {/* Welcome + title sit up near the top of the photo now; the phrase
-          moved down to join the buttons/dots at the bottom. */}
+      {/* Welcome + title sit up near the top of the photo; the phrase sits
+          down with the buttons/dots instead. */}
       <div className="absolute inset-x-0 top-3 mx-auto max-w-2xl px-6 text-center text-canvas md:top-6">
-        <TypewriterLine
-          as="p"
-          text={BEM_VINDO_AO}
-          delayMs={100}
-          durationMs={550}
-          className="font-serif text-xl italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-2xl"
-        />
-        <TypewriterLine
-          as="h1"
-          text={hero.titulo}
-          delayMs={700}
-          durationMs={750}
-          className="mt-2 font-serif text-6xl font-semibold leading-[1.08] tracking-tight text-canvas [text-shadow:0_2px_20px_rgba(16,32,42,0.45)] md:text-8xl"
-        />
+        <p className="font-serif text-xl italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-2xl">
+          Bem-vindo ao
+        </p>
+        <h1 className="mt-2 font-serif text-6xl font-semibold leading-[1.08] tracking-tight text-canvas [text-shadow:0_2px_20px_rgba(16,32,42,0.45)] md:text-8xl">
+          {hero.titulo}
+        </h1>
 
-        <div className="sentarte-hero-in mt-8 flex flex-wrap items-center justify-center gap-3 [animation-delay:1550ms]">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           {hero.tags.map((tag) => (
             <span
               key={tag}

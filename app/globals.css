@@ -86,31 +86,6 @@ body::before {
   }
 }
 
-.sentarte-hero-in {
-  animation: sentarte-hero-in 1s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes sentarte-hero-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.sentarte-caret-blink {
-  animation: sentarte-caret-blink 0.8s steps(1, end) infinite;
-}
-
-@keyframes sentarte-caret-blink {
-  50% {
-    border-color: transparent;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
