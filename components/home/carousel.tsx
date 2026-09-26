@@ -37,7 +37,7 @@ export function Carousel({
   }, []);
 
   return (
-    <section className="relative flex min-h-[92vh] items-center justify-center overflow-hidden bg-espresso">
+    <section className="relative min-h-[92vh] overflow-hidden bg-espresso">
       {SLIDES.map((slide, i) => (
         <Image
           key={slide.src}
@@ -53,16 +53,15 @@ export function Carousel({
       ))}
       <div className="absolute inset-0 bg-gradient-to-t from-espresso/85 via-espresso/25 to-espresso/45" />
 
-      <div className="relative mx-auto max-w-2xl px-6 text-center text-canvas">
+      {/* Welcome + title sit up near the top of the photo now; the phrase
+          moved down to join the buttons/dots at the bottom. */}
+      <div className="absolute inset-x-0 top-16 mx-auto max-w-2xl px-6 text-center text-canvas md:top-24">
         <p className="font-serif text-lg italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-xl">
           Bem-vindo ao
         </p>
         <h1 className="mt-2 font-serif text-6xl font-semibold leading-[1.08] tracking-tight text-canvas [text-shadow:0_2px_20px_rgba(16,32,42,0.45)] md:text-8xl">
           {hero.titulo}
         </h1>
-        <p className="mx-auto mt-7 max-w-[42ch] text-base font-normal leading-relaxed tracking-[0.01em] text-canvas/90 [text-shadow:0_1px_10px_rgba(16,32,42,0.4)] md:text-lg">
-          {hero.subtitulo}
-        </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           {hero.tags.map((tag) => (
@@ -76,10 +75,13 @@ export function Carousel({
         </div>
       </div>
 
-      {/* CTA buttons + carousel dots anchored near the bottom, away from the
-          busier middle of the photo, while the welcome/title/tags above stay
-          vertically centered as before. */}
-      <div className="absolute inset-x-0 bottom-10 flex flex-col items-center gap-6 px-6 md:bottom-16">
+      {/* Phrase + CTA buttons + carousel dots anchored near the bottom, away
+          from the busier middle of the photo. */}
+      <div className="absolute inset-x-0 bottom-10 mx-auto flex max-w-2xl flex-col items-center gap-6 px-6 text-center md:bottom-16">
+        <p className="mx-auto max-w-[42ch] text-base font-normal leading-relaxed tracking-[0.01em] text-canvas/90 [text-shadow:0_1px_10px_rgba(16,32,42,0.4)] md:text-lg">
+          {hero.subtitulo}
+        </p>
+
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Link
             href="/categoria/cadeiras"
