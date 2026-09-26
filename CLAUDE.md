@@ -85,14 +85,13 @@ ends as a WhatsApp message, there's no payment processing.
     license needed.
 - `public/brand/` — the atelier's own brand assets, supplied directly by the
   user (not sourced/licensed by Claude): `logo.png` (circular "SA" mark,
-  transparent background, 1024×1024) and `bem-vindo.png` (a 1792×592 "Bem
-  vindo ao Ateliê" photo banner of crochet thread/wooden bowls, with the
-  greeting text baked into the image). Added 2026-09-21 into
-  `components/site-header.tsx`: the logo sits next to the "Sentarte" wordmark
-  in the sticky nav row, and `bem-vindo.png` is a short non-sticky ribbon
-  above the nav (fades into `canvas` at the bottom edge via a gradient
-  overlay) — the user asked for both "no cabeçário", kept subtle/short so it
-  doesn't compete with the carousel's own welcome moment below it.
+  transparent background, 1024×1024), used next to the "Sentarte" wordmark in
+  `components/site-header.tsx`'s sticky nav row. `bem-vindo.png` (a 1792×592
+  "Bem vindo ao Ateliê" photo banner of crochet thread/wooden bowls) sat above
+  the nav as a short non-sticky ribbon from 2026-09-21 until 2026-09-26, when
+  the user asked to remove it and shrink the header down to just the nav row
+  ("o espaço está muito grande") — left on disk unreferenced in case a future
+  section wants it again.
 - Avoid generic AI-page tells: no ALL-CAPS labels, no middle-dot-joined meta
   strings, no arrow-suffixed link text, no uniform rounded-card-with-grey-shadow
   kit. Hover states use a hard offset shadow (`hover:shadow-[6px_6px_0_0_var(--rattan)]`)

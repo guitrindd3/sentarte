@@ -15,18 +15,6 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
 
   return (
     <header className="relative">
-      <div className="relative h-16 w-full overflow-hidden sm:h-24 md:h-32">
-        <Image
-          src="/brand/bem-vindo.png"
-          alt="Bem-vindo ao ateliê — linhas e crochê trançados à mão"
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-canvas/10 via-transparent to-canvas" />
-      </div>
-
       <div className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3">
           <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
