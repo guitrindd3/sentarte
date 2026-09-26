@@ -37,7 +37,7 @@ export function Carousel({
   }, []);
 
   return (
-    <section className="relative flex min-h-[92vh] items-center justify-center overflow-hidden bg-espresso">
+    <section className="relative flex min-h-[92vh] items-end justify-center overflow-hidden bg-espresso pb-16 md:pb-24">
       {SLIDES.map((slide, i) => (
         <Image
           key={slide.src}
