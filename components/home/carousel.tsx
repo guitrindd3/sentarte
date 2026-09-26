@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { WhatsAppIcon } from "@/components/icons";
@@ -8,6 +8,74 @@ import { whatsappUrl } from "@/lib/urls";
 import type { SiteContent } from "@/lib/content-schema";
 
 const BEM_VINDO_AO = "Bem-vindo ao";
+
+/**
+ * Types `text` out over `durationMs`, starting after `delayMs`. Measures the
+ * text's real rendered width (`scrollWidth`, unaffected by the element's own
+ * clipped `width`) instead of animating to a percentage — a percentage
+ * resolves against the *container*, which cut the phrase off whenever the
+ * text itself (at this font size) was wider than that container. A blinking
+ * caret shows until this line finishes typing.
+ */
+function TypewriterLine({
+  as,
+  text,
+  className,
+  delayMs,
+  durationMs,
+}: {
+  as: "p" | "h1";
+  text: string;
+  className: string;
+  delayMs: number;
+  durationMs: number;
+}) {
+  const elRef = useRef<HTMLElement | null>(null);
+  const [width, setWidth] = useState(0);
+  const [typing, setTyping] = useState(true);
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (elRef.current) setWidth(elRef.current.scrollWidth);
+    }, delayMs);
+    return () => clearTimeout(id);
+  }, [delayMs, text]);
+
+  const boxClassName = `inline-block overflow-hidden whitespace-nowrap align-bottom border-r-2 ${
+    typing ? "sentarte-caret-blink border-canvas/80" : "border-transparent"
+  } ${className}`;
+  const style = {
+    width,
+    transition: `width ${durationMs}ms steps(${Math.max(text.length, 1)}, end)`,
+  };
+
+  if (as === "h1") {
+    return (
+      <h1
+        ref={(el) => {
+          elRef.current = el;
+        }}
+        className={boxClassName}
+        style={style}
+        onTransitionEnd={() => setTyping(false)}
+      >
+        {text}
+      </h1>
+    );
+  }
+  return (
+    <p
+      ref={(el) => {
+        elRef.current = el;
+      }}
+      className={boxClassName}
+      style={style}
+      onTransitionEnd={() => setTyping(false)}
+    >
+      {text}
+    </p>
+  );
+}
 
 const SLIDES = [
   {
@@ -58,20 +126,22 @@ export function Carousel({
       {/* Welcome + title sit up near the top of the photo now; the phrase
           moved down to join the buttons/dots at the bottom. */}
       <div className="absolute inset-x-0 top-3 mx-auto max-w-2xl px-6 text-center text-canvas md:top-6">
-        <p
-          className="sentarte-typewriter font-serif text-xl italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-2xl"
-          style={{ animation: `sentarte-typewriter 1.1s steps(${BEM_VINDO_AO.length}, end) 0.2s forwards` }}
-        >
-          {BEM_VINDO_AO}
-        </p>
-        <h1
-          className="sentarte-typewriter mt-2 font-serif text-6xl font-semibold leading-[1.08] tracking-tight text-canvas [text-shadow:0_2px_20px_rgba(16,32,42,0.45)] md:text-8xl"
-          style={{ animation: `sentarte-typewriter 1.6s steps(${hero.titulo.length}, end) 1.5s forwards` }}
-        >
-          {hero.titulo}
-        </h1>
+        <TypewriterLine
+          as="p"
+          text={BEM_VINDO_AO}
+          delayMs={100}
+          durationMs={550}
+          className="font-serif text-xl italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-2xl"
+        />
+        <TypewriterLine
+          as="h1"
+          text={hero.titulo}
+          delayMs={700}
+          durationMs={750}
+          className="mt-2 font-serif text-6xl font-semibold leading-[1.08] tracking-tight text-canvas [text-shadow:0_2px_20px_rgba(16,32,42,0.45)] md:text-8xl"
+        />
 
-        <div className="sentarte-hero-in mt-8 flex flex-wrap items-center justify-center gap-3 [animation-delay:3200ms]">
+        <div className="sentarte-hero-in mt-8 flex flex-wrap items-center justify-center gap-3 [animation-delay:1550ms]">
           {hero.tags.map((tag) => (
             <span
               key={tag}

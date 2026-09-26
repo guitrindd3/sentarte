@@ -101,20 +101,13 @@ body::before {
   }
 }
 
-/* Typewriter reveal for the hero welcome line/title — box-model rules only,
-   the `animation` shorthand (duration/steps/delay depend on each string's
-   length) is set inline per element in Carousel. */
-.sentarte-typewriter {
-  display: inline-block;
-  overflow: hidden;
-  vertical-align: bottom;
-  white-space: nowrap;
-  width: 0;
+.sentarte-caret-blink {
+  animation: sentarte-caret-blink 0.8s steps(1, end) infinite;
 }
 
-@keyframes sentarte-typewriter {
-  to {
-    width: 100%;
+@keyframes sentarte-caret-blink {
+  50% {
+    border-color: transparent;
   }
 }
 
