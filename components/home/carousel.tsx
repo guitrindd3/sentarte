@@ -7,6 +7,8 @@ import { WhatsAppIcon } from "@/components/icons";
 import { whatsappUrl } from "@/lib/urls";
 import type { SiteContent } from "@/lib/content-schema";
 
+const BEM_VINDO_AO = "Bem-vindo ao";
+
 const SLIDES = [
   {
     src: "/photos/carousel-times.jpg",
@@ -56,16 +58,20 @@ export function Carousel({
       {/* Welcome + title sit up near the top of the photo now; the phrase
           moved down to join the buttons/dots at the bottom. */}
       <div className="absolute inset-x-0 top-3 mx-auto max-w-2xl px-6 text-center text-canvas md:top-6">
-        <p className="sentarte-hero-in font-serif text-xl italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-2xl">
-          Bem-vindo ao
+        <p
+          className="sentarte-typewriter font-serif text-xl italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-2xl"
+          style={{ animation: `sentarte-typewriter 1.1s steps(${BEM_VINDO_AO.length}, end) 0.2s forwards` }}
+        >
+          {BEM_VINDO_AO}
         </p>
         <h1
-          className="sentarte-hero-in mt-2 font-serif text-6xl font-semibold leading-[1.08] tracking-tight text-canvas [animation-delay:150ms] [text-shadow:0_2px_20px_rgba(16,32,42,0.45)] md:text-8xl"
+          className="sentarte-typewriter mt-2 font-serif text-6xl font-semibold leading-[1.08] tracking-tight text-canvas [text-shadow:0_2px_20px_rgba(16,32,42,0.45)] md:text-8xl"
+          style={{ animation: `sentarte-typewriter 1.6s steps(${hero.titulo.length}, end) 1.5s forwards` }}
         >
           {hero.titulo}
         </h1>
 
-        <div className="sentarte-hero-in mt-8 flex flex-wrap items-center justify-center gap-3 [animation-delay:320ms]">
+        <div className="sentarte-hero-in mt-8 flex flex-wrap items-center justify-center gap-3 [animation-delay:3200ms]">
           {hero.tags.map((tag) => (
             <span
               key={tag}
