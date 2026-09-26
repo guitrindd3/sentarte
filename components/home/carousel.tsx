@@ -55,7 +55,7 @@ export function Carousel({
 
       {/* Welcome + title sit up near the top of the photo now; the phrase
           moved down to join the buttons/dots at the bottom. */}
-      <div className="absolute inset-x-0 top-16 mx-auto max-w-2xl px-6 text-center text-canvas md:top-24">
+      <div className="absolute inset-x-0 top-6 mx-auto max-w-2xl px-6 text-center text-canvas md:top-10">
         <p className="font-serif text-lg italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-xl">
           Bem-vindo ao
         </p>
