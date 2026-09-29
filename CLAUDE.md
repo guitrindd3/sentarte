@@ -342,8 +342,10 @@ dev servers from earlier sessions can linger.
 
 ## Deploy
 
-Vercel project `sentarte` on team `guitrindd3` (slug `guitrindd4`), production
-alias `sentarte.vercel.app`, GitHub repo `guitrindd3/sentarte`. The Vercel
+Vercel project `sentarte` on the `ateliesentarte@gmail.com` account (team slug
+`ateliesentarte-4506`, since 2026-09-24), production alias `sentarte.vercel.app`
+(reclaimed 2026-09-29 after deleting the old `guitrindd3` project;
+`sentarte-ten.vercel.app` 308-redirects to it), GitHub repo `guitrindd3/sentarte`. The Vercel
 project is Git-connected (as of 2026-09-20) — push to `main` and it
 auto-builds/deploys; no need to hand-inline files through the Vercel MCP
 `create_deployment` tool anymore (that was the workaround used before the
