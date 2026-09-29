@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
-import { getContent } from "@/lib/content-store";
+import { getAdminContent } from "@/lib/content-store";
 import {
   addCategoriaAction,
   addModeloAction,
@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   if (!(await verifySession())) redirect("/admin/login");
-  const content = await getContent();
+  const content = await getAdminContent();
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">

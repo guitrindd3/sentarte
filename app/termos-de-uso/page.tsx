@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { PageHeader } from "@/components/page-header";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Termos de uso",
-  description: "Termos de uso do site do Sentarte.",
-};
+  description:
+    "Termos de uso do site do SentArte.",
+  path: "/termos-de-uso",
+});
 
 export default function TermosDeUsoPage() {
   return (
@@ -14,7 +17,7 @@ export default function TermosDeUsoPage() {
       <PageHeader titulo="Termos de uso" />
       <section className="mx-auto max-w-3xl space-y-6 px-6 py-16 text-sm leading-relaxed text-ink-soft">
         <p>
-          Este site apresenta os modelos, materiais e o processo de personalização do Sentarte.
+          Este site apresenta os modelos, materiais e o processo de personalização do SentArte.
           Ele funciona como catálogo — a compra é sempre combinada diretamente pelo WhatsApp ou
           Instagram, onde cor, trama e prazo são confirmados com você antes da produção.
         </p>
@@ -30,7 +33,7 @@ export default function TermosDeUsoPage() {
         <div>
           <h2 className="font-serif text-lg text-ink">Uso do conteúdo</h2>
           <p className="mt-2">
-            Textos, imagens e o material trançado apresentado neste site pertencem ao Sentarte e
+            Textos, imagens e o material trançado apresentado neste site pertencem ao SentArte e
             não podem ser reproduzidos comercialmente sem autorização.
           </p>
         </div>

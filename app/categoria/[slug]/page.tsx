@@ -7,6 +7,9 @@ import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
 import { ModeloCard } from "@/components/modelo-card";
 import { WeavePattern } from "@/components/weave-pattern";
 import { getContent } from "@/lib/content-store";
+import { pageMetadata } from "@/lib/seo";
+import { OfferStrip } from "@/components/offer-strip";
+import { CATEGORIA_COM_PRECO } from "@/lib/offer";
 import { pairPersonalizados } from "@/lib/modelo-pairs";
 import { TIME_DO_CORACAO_NOME, TIMES } from "@/lib/team-models";
 import { instagramUrl, whatsappUrl } from "@/lib/urls";
@@ -41,10 +44,11 @@ export async function generateMetadata({
   const { categorias } = await getContent();
   const categoria = categorias.find((c) => c.slug === slug);
   if (!categoria) return {};
-  return {
-    title: categoria.titulo,
+  return pageMetadata({
+    title: slug === "cadeiras" ? "Cadeiras de praia personalizadas" : categoria.titulo,
     description: categoria.intro,
-  };
+    path: `/categoria/${slug}`,
+  });
 }
 
 export default async function CategoriaPage({ params }: PageProps<"/categoria/[slug]">) {
@@ -64,6 +68,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
         </div>
       </section>
 
+      {categoria.slug === CATEGORIA_COM_PRECO ? <OfferStrip compact /> : null}
       <section className="mx-auto max-w-6xl px-6 py-14">
         {categoria.modelos.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

@@ -1,10 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { put } from "@vercel/blob";
 import { createSession, destroySession, verifyPassword, verifySession } from "@/lib/auth";
-import { getContentForWrite, saveContent } from "@/lib/content-store";
+import { CONTENT_TAG, getContentForWrite, saveContent } from "@/lib/content-store";
 import type { Categoria, Modelo } from "@/lib/content-schema";
 
 type LoginState = { error?: string } | undefined;
@@ -40,6 +40,7 @@ function slugify(text: string) {
 }
 
 function revalidateSite() {
+  updateTag(CONTENT_TAG);
   revalidatePath("/", "layout");
 }
 

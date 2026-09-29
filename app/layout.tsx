@@ -3,9 +3,14 @@ import { Archivo, Bodoni_Moda, Press_Start_2P } from "next/font/google";
 import { CartDrawer } from "@/components/cart-drawer";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { Analytics } from "@vercel/analytics/next";
+import { JsonLd } from "@/components/json-ld";
+import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { CartProvider } from "@/lib/cart-context";
 import { getContent } from "@/lib/content-store";
 import { SITE_URL } from "@/lib/nav";
+import { formatBRL, PRECO_CADEIRA } from "@/lib/offer";
+import { instagramUrl } from "@/lib/urls";
 import "./globals.css";
 
 const display = Bodoni_Moda({
@@ -28,11 +33,13 @@ const pixel = Press_Start_2P({
   variable: "--font-pixel",
   subsets: ["latin"],
   weight: "400",
+  // Only /personalizar uses it — don't make every page preload it.
+  preload: false,
 });
 
 export async function generateMetadata(): Promise<Metadata> {
   const { site } = await getContent();
-  const title = `${site.nome} — cadeiras de praia trançadas à mão`;
+  const title = `Cadeira de praia personalizada, trançada à mão | ${site.nome}`;
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -41,15 +48,18 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s · ${site.nome}`,
     },
     description: site.descricao,
-    alternates: { canonical: "/" },
+    // No site-wide canonical/og:url here: set in a layout, they were
+    // inherited by every page and told Google each one was the homepage.
+    // Each page sets its own `alternates.canonical` instead.
     openGraph: {
-      title,
       description: site.descricao,
       siteName: site.nome,
       locale: "pt_BR",
       type: "website",
-      url: SITE_URL,
     },
+    verification: process.env.GOOGLE_SITE_VERIFICATION
+      ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+      : undefined,
     twitter: {
       card: "summary_large_image",
       title,
@@ -69,7 +79,24 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <main className="flex-1">{children}</main>
           <SiteFooter />
           <CartDrawer whatsappNumero={site.whatsappNumero} />
+          <WhatsAppFloat whatsappNumero={site.whatsappNumero} />
         </CartProvider>
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Store",
+            name: site.nome,
+            url: SITE_URL,
+            logo: `${SITE_URL}/brand/logo.png`,
+            image: `${SITE_URL}/opengraph-image`,
+            description: site.descricao,
+            telephone: `+${site.whatsappNumero}`,
+            priceRange: formatBRL(PRECO_CADEIRA),
+            areaServed: "BR",
+            sameAs: [instagramUrl(site.instagramHandle)],
+          }}
+        />
+        <Analytics />
       </body>
     </html>
   );

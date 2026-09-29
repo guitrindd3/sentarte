@@ -5,6 +5,7 @@ import Image from "next/image";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { WeavePattern } from "@/components/weave-pattern";
 import { WhatsAppIcon } from "@/components/icons";
+import { CATEGORIA_COM_PRECO, formatBRL, PARCELAS_MAX, PRECO_CADEIRA } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 import type { Modelo } from "@/lib/content-schema";
 
@@ -34,7 +35,8 @@ export function ModeloCard({
   const nomeFinal = wantsNome ? nomeTexto.trim() : "";
   const varianteLabel = !wantsNome && fotosBase.length > 1 ? `Variação ${varianteIndex + 1}` : "";
 
-  const mensagemWhatsapp = `Oi! Quero pedir um orçamento de ${categoria} — modelo "${ativo.nome}".${
+  const temPreco = categoriaSlug === CATEGORIA_COM_PRECO;
+  const mensagemWhatsapp = `Oi! Quero pedir uma peça de ${categoria}, modelo "${ativo.nome}".${
     varianteLabel ? ` Cor: ${varianteLabel}.` : ""
   }${nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""}`;
 
@@ -56,6 +58,12 @@ export function ModeloCard({
       </div>
       <div className="flex flex-1 flex-col p-5">
         <p className="font-serif text-lg font-medium text-ink">{modelo.nome}</p>
+        {temPreco ? (
+          <p className="mt-1 text-sm text-ink">
+            <span className="font-medium">{formatBRL(PRECO_CADEIRA)}</span>
+            <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
+          </p>
+        ) : null}
 
         {personalizado ? (
           <div className="mt-2 inline-flex w-fit border border-line text-xs" role="group" aria-label="Personalização">

@@ -4,10 +4,41 @@ import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
 import { CloseIcon, MinusIcon, PlusIcon, WhatsAppIcon } from "@/components/icons";
 import { WeavePattern } from "@/components/weave-pattern";
+import {
+  CATEGORIA_COM_PRECO,
+  CUPOM_CODIGO,
+  CUPOM_DESCONTO,
+  CUPOM_MIN_ITENS,
+  formatBRL,
+  PARCELAS_MAX,
+  PRECO_CADEIRA,
+} from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 
 export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
   const { items, count, isOpen, closeCart, removeItem, setQuantidade, clear } = useCart();
+
+  // Only chairs have a fixed price; anything else is priced over WhatsApp.
+  const qtdCadeiras = items
+    .filter((i) => i.categoriaSlug === CATEGORIA_COM_PRECO)
+    .reduce((soma, i) => soma + i.quantidade, 0);
+  const subtotal = qtdCadeiras * PRECO_CADEIRA;
+  const temCupom = qtdCadeiras >= CUPOM_MIN_ITENS;
+  const desconto = temCupom ? subtotal * CUPOM_DESCONTO : 0;
+  const total = subtotal - desconto;
+  const faltamParaCupom = CUPOM_MIN_ITENS - qtdCadeiras;
+
+  const resumoValores =
+    qtdCadeiras === 0
+      ? []
+      : [
+          "",
+          `Subtotal: ${formatBRL(subtotal)}`,
+          ...(temCupom
+            ? [`Cupom ${CUPOM_CODIGO} (${Math.round(CUPOM_DESCONTO * 100)}%): -${formatBRL(desconto)}`]
+            : []),
+          `Total: ${formatBRL(total)} com frete grátis`,
+        ];
 
   const mensagem =
     items.length === 0
@@ -20,7 +51,9 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
               (i.variante ? ` — cor: ${i.variante}` : "") +
               (i.nomePersonalizado ? ` — nome: "${i.nomePersonalizado}"` : "")
           ),
-          "Pode me ajudar a confirmar valores e prazo?",
+          ...resumoValores,
+          "",
+          "Pode me ajudar a finalizar?",
         ].join("\n");
 
   return (
@@ -111,9 +144,43 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
 
         {items.length > 0 ? (
           <div className="border-t border-line px-6 py-4">
-            <p className="text-sm text-ink-soft">
-              {count} {count === 1 ? "item" : "itens"} no carrinho
-            </p>
+            {qtdCadeiras > 0 ? (
+              <dl className="space-y-1 text-sm">
+                <div className="flex justify-between text-ink-soft">
+                  <dt>
+                    Subtotal ({count} {count === 1 ? "item" : "itens"})
+                  </dt>
+                  <dd>{formatBRL(subtotal)}</dd>
+                </div>
+                {temCupom ? (
+                  <div className="flex justify-between text-ink">
+                    <dt>
+                      Cupom {CUPOM_CODIGO} ({Math.round(CUPOM_DESCONTO * 100)}%)
+                    </dt>
+                    <dd>-{formatBRL(desconto)}</dd>
+                  </div>
+                ) : null}
+                <div className="flex justify-between text-ink-soft">
+                  <dt>Frete</dt>
+                  <dd>Grátis</dd>
+                </div>
+                <div className="flex justify-between border-t border-line pt-2 font-medium text-ink">
+                  <dt>Total</dt>
+                  <dd>{formatBRL(total)}</dd>
+                </div>
+                <p className="text-xs text-ink-soft">ou em até {PARCELAS_MAX}x no cartão</p>
+                {faltamParaCupom > 0 ? (
+                  <p className="pt-1 text-xs text-ink">
+                    Leve mais {faltamParaCupom} e ganhe {Math.round(CUPOM_DESCONTO * 100)}% de desconto com o
+                    cupom {CUPOM_CODIGO}.
+                  </p>
+                ) : null}
+              </dl>
+            ) : (
+              <p className="text-sm text-ink-soft">
+                {count} {count === 1 ? "item" : "itens"} no carrinho
+              </p>
+            )}
             <a
               href={whatsappUrl(whatsappNumero, mensagem)}
               target="_blank"

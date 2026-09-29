@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { chairListJsonLd, pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/json-ld";
+import { OfferStrip } from "@/components/offer-strip";
 import { ModeloCard } from "@/components/modelo-card";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
@@ -6,10 +9,12 @@ import { BOHO_PADROES } from "@/lib/boho-model";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Cadeiras boho",
-  description: "Estampas boho exclusivas, em tons terrosos — cada padrão é uma trama diferente.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Cadeira de praia boho",
+  description:
+    "Cadeiras de praia boho trançadas à mão, com estampas exclusivas em tons terrosos. R$ 449,90, frete grátis para todo o Brasil.",
+  path: "/boho",
+});
 
 export default async function BohoPage() {
   const content = await getContent();
@@ -27,6 +32,8 @@ export default async function BohoPage() {
         titulo="Cadeiras boho"
         resumo="Estampas boho exclusivas, em tons terrosos — cada padrão é uma trama diferente."
       />
+      <OfferStrip compact />
+      {modelos.length > 0 ? <JsonLd data={chairListJsonLd(modelos)} /> : null}
       <section className="mx-auto max-w-6xl px-6 py-14">
         {modelos.length > 0 && cadeiras ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

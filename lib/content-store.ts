@@ -1,7 +1,9 @@
 import "server-only";
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { list, put } from "@vercel/blob";
 import { DEFAULT_CONTENT, type SiteContent } from "./content-schema";
+import { CATEGORIAS_OCULTAS } from "./offer";
 
 const CONTENT_PATH = "content/site-content.json";
 
@@ -33,22 +35,57 @@ async function fetchContent(): Promise<SiteContent | null> {
   };
 }
 
+export const CONTENT_TAG = "site-content";
+
+// Cross-request cache for public pages. Before 2026-09-29 every page view
+// did a list() + an uncached origin fetch (two Blob operations per visit),
+// which is what burned through the free-tier quota. Now the (still
+// cache-busted) origin fetch runs at most once per REVALIDATE window, or
+// right after an admin save — every admin action calls
+// updateTag(CONTENT_TAG) via revalidateSite() in app/admin/actions.ts, so
+// saves still show up on the next request. A throw inside is not cached.
+const fetchContentCached = unstable_cache(fetchContent, ["site-content"], {
+  tags: [CONTENT_TAG],
+  revalidate: 300,
+});
+
+function withoutHiddenCategories(content: SiteContent): SiteContent {
+  return {
+    ...content,
+    categorias: content.categorias.filter((c) => !CATEGORIAS_OCULTAS.has(c.slug)),
+  };
+}
+
 /**
- * Cached per request (React cache()) so layout/page/components that each
- * need site content only trigger one Blob read per request.
+ * Public-site content: cached across requests (see above) and per request
+ * (React cache()), with categories in CATEGORIAS_OCULTAS removed.
  *
- * Used for READING/rendering (public pages, the admin page's own display).
  * Resilient by design: falls back to DEFAULT_CONTENT on any read failure so
  * a Blob hiccup degrades to a stale/default-looking page instead of taking
  * the whole site down. NEVER use this as the read half of a
  * read-modify-write — use getContentForWrite() instead, see the note there.
  */
 export const getContent = cache(async (): Promise<SiteContent> => {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return withoutHiddenCategories(DEFAULT_CONTENT);
+  try {
+    return withoutHiddenCategories((await fetchContentCached()) ?? DEFAULT_CONTENT);
+  } catch (err) {
+    console.error("getContent: read failed, falling back to default content", err);
+    return withoutHiddenCategories(DEFAULT_CONTENT);
+  }
+});
+
+/**
+ * For the /admin page's own display: uncached (always the latest save) and
+ * unfiltered (hidden categories stay editable). Same fallback behavior as
+ * getContent(); still never the read half of a read-modify-write.
+ */
+export const getAdminContent = cache(async (): Promise<SiteContent> => {
   if (!process.env.BLOB_READ_WRITE_TOKEN) return DEFAULT_CONTENT;
   try {
     return (await fetchContent()) ?? DEFAULT_CONTENT;
   } catch (err) {
-    console.error("getContent: read failed, falling back to default content", err);
+    console.error("getAdminContent: read failed, falling back to default content", err);
     return DEFAULT_CONTENT;
   }
 });

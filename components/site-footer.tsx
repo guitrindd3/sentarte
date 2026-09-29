@@ -14,8 +14,8 @@ export async function SiteFooter() {
         <div className="col-span-2 md:col-span-1">
           <p className="font-serif text-xl font-medium tracking-tight">{nome}</p>
           <p className="mt-3 max-w-[26ch] text-sm text-ink-soft">
-            Cadeiras de praia, bolsas e espreguiçadeiras trançadas à mão, com personalização sob
-            medida.
+            Cadeiras de praia trançadas à mão, personalizadas do seu jeito. Frete grátis para todo o
+            Brasil.
           </p>
         </div>
 

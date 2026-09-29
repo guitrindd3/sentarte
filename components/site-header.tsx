@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { CartIcon, CloseIcon, MenuIcon, SearchIcon, UserIcon, WhatsAppIcon } from "@/components/icons";
+import { CartIcon, CloseIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "@/components/icons";
 import { useCart } from "@/lib/cart-context";
 import { NAV_LINKS } from "@/lib/nav";
 import { whatsappUrl } from "@/lib/urls";
@@ -22,7 +22,7 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
             <span className="font-serif text-2xl font-medium tracking-tight text-ink">{siteName}</span>
           </Link>
 
-          <nav className="hidden items-center gap-7 md:flex">
+          <nav className="hidden items-center gap-6 lg:flex">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -54,14 +54,6 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
               >
                 <SearchIcon className="h-5 w-5" />
               </Link>
-              <Link
-                href="/admin"
-                aria-label="Acessar painel administrativo"
-                title="Painel administrativo"
-                className="text-ink-soft transition-colors hover:text-ink"
-              >
-                <UserIcon className="h-5 w-5" />
-              </Link>
               <button
                 type="button"
                 onClick={openCart}
@@ -83,7 +75,7 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
               aria-label={open ? "Fechar menu" : "Abrir menu"}
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
-              className="text-ink md:hidden"
+              className="text-ink lg:hidden"
             >
               {open ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
             </button>
@@ -91,7 +83,7 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
         </div>
 
         {open ? (
-          <div className="border-t border-line bg-canvas px-6 py-4 md:hidden">
+          <div className="border-t border-line bg-canvas px-6 py-4 lg:hidden">
             <nav className="flex flex-col gap-4">
               {NAV_LINKS.map((link) => (
                 <Link

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { ModeloCard } from "@/components/modelo-card";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
@@ -6,9 +7,11 @@ import { pairPersonalizados } from "@/lib/modelo-pairs";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Busca",
-};
+  path: "/busca",
+  noindex: true,
+});
 
 // Accent-insensitive fold: decompose accented letters (NFD) then drop every
 // non-ASCII codepoint left behind (the combining marks), same approach as
@@ -49,7 +52,7 @@ export default async function BuscaPage({ searchParams }: PageProps<"/busca">) {
             type="search"
             name="q"
             defaultValue={query}
-            placeholder="Buscar cadeira, bolsa, time..."
+            placeholder="Buscar cadeira, time, boho..."
             autoFocus
             className="w-full border border-line bg-paper px-4 py-2.5 text-sm text-ink focus:border-ink focus:outline-none"
           />
@@ -66,7 +69,7 @@ export default async function BuscaPage({ searchParams }: PageProps<"/busca">) {
         {query && resultados.length === 0 ? (
           <p className="text-sm text-ink-soft">
             Nada encontrado para &quot;{query}&quot;. Tenta o nome de uma categoria, como
-            &quot;cadeira&quot;, &quot;bolsa&quot; ou o nome de um time.
+            &quot;cadeira&quot;, &quot;boho&quot; ou o nome de um time.
           </p>
         ) : null}
         {resultados.length > 0 ? (

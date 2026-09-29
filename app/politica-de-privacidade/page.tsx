@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
 import { whatsappUrl } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Política de privacidade",
-  description: "Como o Sentarte trata os dados de quem entra em contato.",
-};
+  description:
+    "Como o SentArte trata os dados de quem entra em contato.",
+  path: "/politica-de-privacidade",
+});
 
 export default async function PoliticaDePrivacidadePage() {
   const { site } = await getContent();
@@ -45,7 +48,7 @@ export default async function PoliticaDePrivacidadePage() {
             ou solicitar a exclusão, conforme a Lei Geral de Proteção de Dados (LGPD). Basta
             {" "}
             <a
-              href={whatsappUrl(site.whatsappNumero, "Oi! Quero falar sobre meus dados pessoais com o Sentarte.")}
+              href={whatsappUrl(site.whatsappNumero, "Oi! Quero falar sobre meus dados pessoais com o SentArte.")}
               target="_blank"
               rel="noreferrer"
               className="font-medium text-ink hover:underline"

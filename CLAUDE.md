@@ -279,6 +279,38 @@ or formal "senhor(a)"). Policy pages (`politica-de-*`, `termos-de-uso`) are
 intentionally honest about being a small WhatsApp-order business — don't add
 fabricated legal identifiers (CNPJ, address) unless the user supplies them.
 
+## Offer, SEO & caching (2026-09-29 improvement pass)
+
+- **Commercial terms live in `lib/offer.ts`**, not in admin content: chair
+  price R$ 449,90, up to 4x on card (with the card fee, so never write "sem
+  juros"), free shipping to all of Brazil, production in up to 5 business
+  days, coupon `SENTARTE` = 5% off from 2 chairs. Only the `cadeiras`
+  category shows a price (`CATEGORIA_COM_PRECO`). Used by `OfferStrip`
+  (homepage band + compact under catalog headers), `ModeloCard`, the cart
+  drawer totals/WhatsApp message, the FAQ and `politica-de-envio`.
+- **`CATEGORIAS_OCULTAS` (bolsas, espreguicadeiras)** are filtered out inside
+  `getContent()` itself, so every public page/nav/sitemap/search drops them
+  while the data stays in Blob and editable in `/admin` (which reads via
+  `getAdminContent()`, unfiltered and uncached). User: "ainda não" — they may
+  come back; remove the slug from the set to restore.
+- **Public content reads are cached across requests** (`unstable_cache`, tag
+  `site-content`, 5 min) — see the comment in `lib/content-store.ts`. Admin
+  saves call `updateTag` via `revalidateSite()`, so edits still appear on the
+  next request. Functions are pinned to `gru1` (São Paulo) in `vercel.json`.
+- SEO: no canonical/og:url in the root layout (it made every page claim to
+  be the homepage); each page uses `pageMetadata()` from `lib/seo.ts`.
+  JSON-LD via `components/json-ld.tsx`: `Store` in the layout, `FAQPage` on
+  /faq, product `ItemList` with the price on /times, /boho, /desenhos.
+  `GOOGLE_SITE_VERIFICATION` env var (optional) feeds the Search Console
+  meta tag. `@vercel/analytics` is mounted in the layout.
+- Brand is spelled **SentArte** (matches `site.nome` in the admin content).
+- The header's admin (person) icon was removed — it read as a customer
+  login. Reach the panel directly at `/admin`.
+- Homepage: `CategoryBento` now shows the four collection cover cards
+  (times/boho/desenhos/monte a sua) instead of category tiles, and
+  `PreviewPromo` is a mini live preview (name + colors) linking to
+  /personalizar. `WhatsAppFloat` is the fixed bottom-right contact button.
+
 ## Cart & search
 
 - Added 2026-09-21 (user: "quero a lupinha para as pessoas pesquisarem, o

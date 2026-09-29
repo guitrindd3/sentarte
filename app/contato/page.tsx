@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
@@ -6,10 +7,12 @@ import { instagramUrl, whatsappUrl } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Contato",
-  description: "Fale com o Sentarte pelo WhatsApp ou Instagram.",
-};
+  description:
+    "Fale com o SentArte pelo WhatsApp ou Instagram.",
+  path: "/contato",
+});
 
 export default async function ContatoPage() {
   const { site } = await getContent();

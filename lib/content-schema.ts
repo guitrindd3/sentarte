@@ -37,16 +37,16 @@ export type SiteContent = {
 
 export const DEFAULT_CONTENT: SiteContent = {
   site: {
-    nome: "Sentarte",
+    nome: "SentArte",
     descricao:
-      "Cadeiras de praia, bolsas e espreguiçadeiras trançadas à mão, em corda náutica e alumínio, com modelo, cor e personalização escolhidos por você.",
+      "Cadeiras de praia personalizadas, trançadas à mão em corda náutica e alumínio: de time, boho, com desenho ou com o seu nome. Frete grátis para todo o Brasil.",
     whatsappNumero: "5527995201669",
     instagramHandle: "ateliesentarte",
   },
   hero: {
-    titulo: "Ateliê Sentarte",
+    titulo: "Ateliê SentArte",
     subtitulo:
-      "Cadeiras de praia, bolsas e espreguiçadeiras trançadas à mão, para durar o verão inteiro — e os próximos.",
+      "Cadeiras de praia artesanais personalizadas, feitas para durar o verão inteiro — e os próximos.",
     tags: ["Feito à mão", "Corda náutica e alumínio", "Resistente à maresia"],
   },
   categorias: [
@@ -56,14 +56,14 @@ export const DEFAULT_CONTENT: SiteContent = {
       titulo: "Cadeiras de praia",
       resumo: "Personalizadas, de time ou em tramas exclusivas.",
       intro:
-        "A peça que começou o Sentarte. Estrutura em alumínio, assento e encosto trançados à mão em corda náutica, dobrável para caber no porta-malas e resistente para durar temporadas de sol e maresia.",
+        "A peça que começou o SentArte. Estrutura em alumínio, assento e encosto trançados à mão em corda náutica, dobrável para caber no porta-malas e resistente para durar temporadas de sol e maresia.",
       corA: "#15564C",
       corB: "#EDE3D0",
       modelos: [
         {
           id: "mod-trama-lisa",
           nome: "Trama lisa",
-          descricao: "Um fio, uma cor, acabamento limpo. A base de toda cadeira Sentarte.",
+          descricao: "Um fio, uma cor, acabamento limpo. A base de toda cadeira SentArte.",
           corA: "#15564C",
           corB: "#0E3E37",
         },

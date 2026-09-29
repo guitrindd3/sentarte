@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { chairListJsonLd, pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/json-ld";
+import { OfferStrip } from "@/components/offer-strip";
 import { ModeloCard } from "@/components/modelo-card";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
@@ -6,10 +9,12 @@ import { DESENHO_TEMAS } from "@/lib/desenho-model";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Animes e desenhos",
-  description: "Desenhos, personagens e frases tecidos na cadeira — cada peça é feita sob encomenda.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Cadeira de praia com desenho, anime ou nome",
+  description:
+    "Cadeira de praia personalizada com o seu desenho, personagem de anime, nome ou frase, trançados à mão. Frete grátis para todo o Brasil.",
+  path: "/desenhos",
+});
 
 export default async function DesenhosPage() {
   const content = await getContent();
@@ -27,6 +32,8 @@ export default async function DesenhosPage() {
         titulo="Animes e desenhos"
         resumo="Desenhos, personagens e frases tecidos na cadeira. Os exemplos abaixo são pedidos que já fizemos — conta pra gente o que você tem em mente e a gente tece."
       />
+      <OfferStrip compact />
+      {modelos.length > 0 ? <JsonLd data={chairListJsonLd(modelos)} /> : null}
       <section className="mx-auto max-w-6xl px-6 py-14">
         {modelos.length > 0 && cadeiras ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

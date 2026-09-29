@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
 import { whatsappUrl } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Trocas e devoluções",
-  description: "Regras de troca e devolução para peças feitas sob encomenda pelo Sentarte.",
-};
+  description:
+    "Regras de troca e devolução para peças feitas sob encomenda pelo SentArte.",
+  path: "/politica-de-troca-e-devolucao",
+});
 
 export default async function PoliticaDeTrocaEDevolucaoPage() {
   const { site } = await getContent();

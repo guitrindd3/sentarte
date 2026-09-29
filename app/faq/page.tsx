@@ -1,14 +1,27 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
+import { JsonLd } from "@/components/json-ld";
+import {
+  CUPOM_CODIGO,
+  CUPOM_DESCONTO,
+  CUPOM_MIN_ITENS,
+  formatBRL,
+  PARCELAS_MAX,
+  PRAZO_PRODUCAO_DIAS_UTEIS,
+  PRECO_CADEIRA,
+} from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Perguntas frequentes",
-  description: "Prazo, personalização, cuidados e trocas das peças Sentarte.",
-};
+  description:
+    "Prazo, personalização, cuidados e trocas das peças SentArte.",
+  path: "/faq",
+});
 
 const PERGUNTAS = [
   {
@@ -17,9 +30,20 @@ const PERGUNTAS = [
       "Pelo WhatsApp. Você escolhe o modelo, a cor e a personalização (quando o modelo permitir), e a gente confirma um resumo completo antes de começar a trançar.",
   },
   {
+    pergunta: "Quanto custa uma cadeira?",
+    resposta: `A cadeira de praia sai por ${formatBRL(PRECO_CADEIRA)}, com ou sem personalização. Dá para parcelar em até ${PARCELAS_MAX}x no cartão (com a taxa do cartão).`,
+  },
+  {
+    pergunta: "O frete é pago?",
+    resposta: "Não. O frete é grátis para todo o Brasil.",
+  },
+  {
     pergunta: "Qual o prazo de produção?",
-    resposta:
-      "Cada peça é feita sob encomenda, à mão. O prazo varia com a fila de produção e a complexidade da personalização — a gente informa uma data estimada assim que o pedido é confirmado.",
+    resposta: `Cada cadeira é feita sob encomenda, à mão, e fica pronta em até ${PRAZO_PRODUCAO_DIAS_UTEIS} dias úteis depois que o pedido é confirmado. Depois disso, é só o tempo de entrega até você.`,
+  },
+  {
+    pergunta: "Tem desconto levando mais de uma?",
+    resposta: `Tem. Na compra de ${CUPOM_MIN_ITENS} cadeiras ou mais, use o cupom ${CUPOM_CODIGO} e ganhe ${Math.round(CUPOM_DESCONTO * 100)}% de desconto no pedido.`,
   },
   {
     pergunta: "Posso escolher as cores do meu time?",
@@ -44,6 +68,17 @@ export default async function FaqPage() {
   return (
     <>
       <PageHeader titulo="Perguntas frequentes" />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: PERGUNTAS.map((item) => ({
+            "@type": "Question",
+            name: item.pergunta,
+            acceptedAnswer: { "@type": "Answer", text: item.resposta },
+          })),
+        }}
+      />
       <section className="mx-auto max-w-3xl px-6 py-16">
         <div className="divide-y divide-line border-y border-line">
           {PERGUNTAS.map((item) => (

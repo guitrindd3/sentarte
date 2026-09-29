@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { Configurator } from "@/components/home/configurator";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Monte a sua trama",
-  description: "Escolha o modelo, a forma do trançado e as cores para ver uma prévia da sua cadeira.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Monte a sua cadeira de praia",
+  description:
+    "Escolha as cores e o trançado, escreva um nome e veja a prévia da sua cadeira de praia personalizada antes de pedir.",
+  path: "/personalizar",
+});
 
 // The configurator's preview is a chair illustration — bags and lounge
 // chairs don't fit it, so only the chair category is offered as a "Modelo".

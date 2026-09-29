@@ -10,15 +10,15 @@ import type { SiteContent } from "@/lib/content-schema";
 const SLIDES = [
   {
     src: "/photos/carousel-times.jpg",
-    alt: "Cadeiras de time Sentarte numa varanda de frente para o mar",
+    alt: "Cadeiras de praia de time SentArte numa varanda de frente para o mar",
   },
   {
     src: "/photos/carousel-boho.jpg",
-    alt: "Cadeiras boho Sentarte num terraço ao pôr do sol",
+    alt: "Cadeiras de praia boho SentArte num terraço ao pôr do sol",
   },
   {
     src: "/photos/carousel-boho-2.jpg",
-    alt: "Cadeiras boho Sentarte numa varanda decorada",
+    alt: "Cadeiras de praia boho SentArte numa varanda decorada",
   },
 ];
 
@@ -30,14 +30,25 @@ export function Carousel({
   whatsappNumero: string;
 }) {
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
 
+  // Auto-advance, except while the visitor is hovering/focused on the
+  // carousel or has asked the OS for reduced motion.
   useEffect(() => {
+    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), 6000);
     return () => clearInterval(id);
-  }, []);
+  }, [paused]);
 
   return (
-    <section className="relative min-h-[92vh] overflow-hidden bg-espresso">
+    <section
+      className="relative min-h-[92vh] overflow-hidden bg-espresso"
+      aria-roledescription="carrossel"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
       {SLIDES.map((slide, i) => (
         <Image
           key={slide.src}

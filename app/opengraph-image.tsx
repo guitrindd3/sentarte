@@ -1,12 +1,12 @@
 import { ImageResponse } from "next/og";
 import type { ReactNode } from "react";
 
-const SITE_NAME = "Sentarte";
+const SITE_NAME = "SentArte";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const TAGLINE = "Cadeiras de praia trançadas à mão";
+const TAGLINE = "Cadeiras de praia personalizadas, trançadas à mão";
 
 function weaveRects() {
   const cell = 60;

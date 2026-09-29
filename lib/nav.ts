@@ -2,15 +2,16 @@ export const SITE_URL = "https://sentarte.vercel.app";
 
 export const NAV_LINKS = [
   { label: "Cadeiras", href: "/categoria/cadeiras" },
-  { label: "Bolsas", href: "/categoria/bolsas" },
-  { label: "Espreguiçadeiras", href: "/categoria/espreguicadeiras" },
+  { label: "Times", href: "/times" },
+  { label: "Boho", href: "/boho" },
+  { label: "Desenhos", href: "/desenhos" },
+  { label: "Monte a sua", href: "/personalizar" },
   { label: "Sobre", href: "/sobre" },
-  { label: "Contato", href: "/contato" },
 ] as const;
 
 export const FOOTER_LINKS = {
   institucional: [
-    { label: "Sobre o Sentarte", href: "/sobre" },
+    { label: "Sobre o SentArte", href: "/sobre" },
     { label: "Contato", href: "/contato" },
     { label: "Perguntas frequentes", href: "/faq" },
   ],

@@ -2,7 +2,7 @@ const STEPS = [
   {
     numero: "1",
     titulo: "Escolha o modelo",
-    texto: "Cadeira, bolsa ou espreguiçadeira, no tamanho que você precisa.",
+    texto: "De time, boho, com desenho ou uma trama montada do seu jeito.",
   },
   {
     numero: "2",
@@ -17,7 +17,7 @@ const STEPS = [
   {
     numero: "4",
     titulo: "Confirme o resumo",
-    texto: "Você revê tudo pelo WhatsApp antes de fechar. Nada se perde no processo.",
+    texto: "Você revê tudo pelo WhatsApp antes de fechar. Em até 5 dias úteis ela fica pronta e vai com frete grátis.",
   },
 ];
 
