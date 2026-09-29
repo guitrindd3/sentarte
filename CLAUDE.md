@@ -350,7 +350,10 @@ empty frame) → "Começar a montar" plays the clip up to `FIM_DA_TRAMA`
 photo's brightness (strand texture, light) and is recolored as main thread
 (A, originally black) or detail thread (B, originally white); the backrest
 panel also gets the weave shape and the name (`lib/pixel-font.ts`, 5x7
-bitmap). Regions (ENCOSTO/LATERAIS/ASSENTO) are hand-measured pixel
+bitmap; size slider; position set by dragging on the canvas in the Nome
+step — `posicaoNoEncosto()`, clamped to the area between the plain
+MARGEM_TOPO/MARGEM_BASE bands, which the weave shape never enters either;
+). Regions (ENCOSTO/LATERAIS/ASSENTO) are hand-measured pixel
 coordinates of that 480x848 frame — re-measure if the base photo changes.
 The clip's frames aren't pixel-aligned (it's AI-generated; the background
 shifts), so the webbing can't be found by diffing the two frames.

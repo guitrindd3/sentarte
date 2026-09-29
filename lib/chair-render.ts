@@ -15,7 +15,9 @@
 import { GLYPH_H, GLYPH_W, glyphPixel, normalizarTexto } from "./pixel-font";
 
 export type Forma = "lisa" | "diamante" | "ziguezague" | "espiral" | "sol";
-export type NomePosicao = "topo" | "meio" | "base";
+/** Where the name block's center sits, 0-1 across/down the name area
+ * (the backrest between its plain margins). Set by dragging in the builder. */
+export type NomePosicao = { x: number; y: number };
 
 export const IMG_W = 480;
 export const IMG_H = 848;
@@ -190,15 +192,17 @@ function rasterizarNome(nome: string, posicao: NomePosicao, tamanho = 1): Nome {
   const gapLinha = gap * escala;
   const alturaBloco = pxs.reduce((s, px) => s + GLYPH_H * px, 0) + gapLinha * (linhas.length - 1);
   const px = Math.min(...pxs);
-  const centroY = { topo: 0.24, meio: 0.5, base: 0.76 }[posicao] * h;
+  const centroY = posicao.y * h;
   const topo = MARGEM_TOPO + Math.max(px, Math.min(h - alturaBloco - px, centroY - alturaBloco / 2));
+  const larguraBloco = Math.max(...linhas.map((l, li) => (l.length * (GLYPH_W + 1) - 1) * pxs[li]));
+  const centroX = Math.max(larguraBloco / 2 + px, Math.min(w - larguraBloco / 2 - px, posicao.x * w));
 
   const mascara = new Uint8Array(w * hTotal);
   let y0 = topo;
   linhas.forEach((linha, li) => {
     const px = pxs[li];
     const larguraLinha = (linha.length * (GLYPH_W + 1) - 1) * px;
-    const x0 = (w - larguraLinha) / 2;
+    const x0 = centroX - larguraLinha / 2;
     for (let y = Math.floor(y0); y < Math.ceil(y0 + GLYPH_H * px); y++) {
       for (let x = Math.floor(x0); x < Math.ceil(x0 + larguraLinha); x++) {
         if (x < 0 || y < 0 || x >= w || y >= hTotal) continue;
@@ -232,6 +236,15 @@ function rasterizarNome(nome: string, posicao: NomePosicao, tamanho = 1): Nome {
   // The weave shape is kept off a band behind the name (like the plain
   // strip the real chairs weave the name on), so letters never fight it.
   return { mascara, contorno, faixaY0: topo - 10, faixaY1: topo + alturaBloco + 10 };
+}
+
+/** Converts a point on the source photo into a name position (0-1 within
+ * the name area), clamped to it. */
+export function posicaoNoEncosto(sx: number, sy: number): NomePosicao {
+  const w = ENCOSTO.x1 - ENCOSTO.x0;
+  const h = ENCOSTO.y1 - ENCOSTO.y0 - MARGEM_TOPO - MARGEM_BASE;
+  const clamp = (v: number) => Math.max(0, Math.min(1, v));
+  return { x: clamp((sx - ENCOSTO.x0) / w), y: clamp((sy - ENCOSTO.y0 - MARGEM_TOPO) / h) };
 }
 
 /** Writes the recolored chair into `saida` (same size as `foto`). */

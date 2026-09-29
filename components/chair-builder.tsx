@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckIcon, WhatsAppIcon } from "@/components/icons";
 import { VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { useCart } from "@/lib/cart-context";
-import { IMG_H, IMG_W, pintarCadeira, type Forma, type NomePosicao } from "@/lib/chair-render";
+import { IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix } from "@/lib/offer";
 import { FIOS, type Fio } from "@/lib/palette";
 import { whatsappUrl } from "@/lib/urls";
@@ -31,11 +31,6 @@ const FORMAS: { valor: Forma; rotulo: string }[] = [
   { valor: "sol", rotulo: "Sol" },
 ];
 
-const POSICOES: { valor: NomePosicao; rotulo: string }[] = [
-  { valor: "topo", rotulo: "Em cima" },
-  { valor: "meio", rotulo: "No meio" },
-  { valor: "base", rotulo: "Embaixo" },
-];
 
 const PASSOS = ["Trançado", "Cores", "Nome", "Pronto"] as const;
 const MAX_LINHAS = 2;
@@ -80,7 +75,8 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [fioA, setFioA] = useState<Fio>(FIOS[0]);
   const [fioB, setFioB] = useState<Fio>(FIOS[1]);
   const [nome, setNome] = useState("");
-  const [posicao, setPosicao] = useState<NomePosicao>("meio");
+  const [posicao, setPosicao] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
+  const [arrastando, setArrastando] = useState(false);
   const [tamanhoNome, setTamanhoNome] = useState(1);
   const [adicionado, setAdicionado] = useState(false);
 
@@ -142,6 +138,14 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     if (animando && v && v.currentTime >= FIM_DA_TRAMA) terminarAnimacao();
   };
 
+  // Name step: press/drag on the chair to move the name.
+  const podeArrastar = passo === 3 && Boolean(nome.trim());
+  const moverNome = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const escala = IMG_W / r.width;
+    setPosicao(posicaoNoEncosto((e.clientX - r.left) * escala, (e.clientY - r.top) * escala + CORTE_Y0));
+  };
+
   const recomecar = () => {
     setPasso(0);
     setAdicionado(false);
@@ -161,7 +165,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const preco = precoCadeira(temNome);
   const formaRotulo = FORMAS.find((f) => f.valor === forma)?.rotulo ?? "Lisa";
   const tamanhoRotulo = tamanhoNome <= 0.45 ? "Pequeno" : tamanhoNome <= 0.75 ? "Médio" : "Grande";
-  const posicaoRotulo = POSICOES.find((p) => p.valor === posicao)?.rotulo ?? "No meio";
+  const posicaoRotulo = posicao.y < 0.34 ? "Em cima" : posicao.y > 0.66 ? "Embaixo" : "No meio";
 
   const mensagem = [
     "Oi! Montei a minha cadeira no site e quero pedir:",
@@ -194,7 +198,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
   const adicionarAoCarrinho = () => {
     addItem({
-      id: `cadeiras:monte:${forma}:${fioA.nome}:${fioB.nome}:${nomeLimpo}:${posicao}`,
+      id: `cadeiras:monte:${forma}:${fioA.nome}:${fioB.nome}:${nomeLimpo}:${posicao.x.toFixed(2)},${posicao.y.toFixed(2)}`,
       categoriaSlug: "cadeiras",
       categoriaTitulo: "Cadeiras de praia",
       modeloId: "monte-a-sua-trama",
@@ -246,13 +250,33 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             width={IMG_W}
             height={CORTE_H}
             role="img"
+            onPointerDown={(e) => {
+              if (!podeArrastar) return;
+              try {
+                e.currentTarget.setPointerCapture(e.pointerId);
+              } catch {
+                // capture is a nicety (keeps the drag when leaving the canvas)
+              }
+              setArrastando(true);
+              moverNome(e);
+            }}
+            onPointerMove={(e) => {
+              if (arrastando) moverNome(e);
+            }}
+            onPointerUp={() => setArrastando(false)}
+            onPointerCancel={() => setArrastando(false)}
             aria-label={`Prévia da cadeira: trançado ${formaRotulo.toLowerCase()}, ${fioA.nome} e ${fioB.nome}${
               temNome ? `, com o nome ${nomeLimpo}` : ""
             }`}
             className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${
               passo > 0 && !animando ? "opacity-100" : "opacity-0"
-            }`}
+            } ${podeArrastar ? (arrastando ? "cursor-grabbing touch-none" : "cursor-grab touch-none") : ""}`}
           />
+          {podeArrastar && !arrastando ? (
+            <p className="pointer-events-none absolute inset-x-0 top-3 mx-auto w-fit bg-ink/80 px-3 py-1 text-xs text-canvas">
+              Arraste para mover o nome
+            </p>
+          ) : null}
 
           {passo === 0 && !animando ? (
             <div className="absolute inset-x-4 bottom-4 border border-line bg-paper/95 p-5 text-center backdrop-blur">
@@ -406,26 +430,9 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                 </label>
               ) : null}
               {temNome ? (
-                <fieldset>
-                  <legend className="text-sm text-ink">Onde fica no encosto</legend>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {POSICOES.map((p) => (
-                      <button
-                        key={p.valor}
-                        type="button"
-                        onClick={() => setPosicao(p.valor)}
-                        aria-pressed={posicao === p.valor}
-                        className={`border px-3 py-1.5 text-sm transition-colors ${
-                          posicao === p.valor
-                            ? "border-ink bg-ink text-canvas"
-                            : "border-line text-ink-soft hover:border-ink"
-                        }`}
-                      >
-                        {p.rotulo}
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
+                <p className="border border-dashed border-line px-3 py-2 text-sm text-ink-soft">
+                  Arraste o nome na cadeira para escolher onde ele fica.
+                </p>
               ) : null}
             </div>
           ) : null}
