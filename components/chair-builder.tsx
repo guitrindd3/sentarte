@@ -81,6 +81,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [fioB, setFioB] = useState<Fio>(FIOS[1]);
   const [nome, setNome] = useState("");
   const [posicao, setPosicao] = useState<NomePosicao>("meio");
+  const [tamanhoNome, setTamanhoNome] = useState(1);
   const [adicionado, setAdicionado] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -92,16 +93,16 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     carregarFoto(FOTO_TRANCADA).then(setFoto).catch(() => setFoto(null));
   }, []);
 
-  const opcoes = { forma, corA: fioA.cor, corB: fioB.cor, nome, posicao };
+  const opcoes = { forma, corA: fioA.cor, corB: fioB.cor, nome, posicao, tamanhoNome };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, corA: fioA.cor, corB: fioB.cor, nome, posicao }, {
+    desenhar(canvasRef.current, foto, { forma, corA: fioA.cor, corB: fioB.cor, nome, posicao, tamanhoNome }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
-  }, [foto, passo, forma, fioA, fioB, nome, posicao]);
+  }, [foto, passo, forma, fioA, fioB, nome, posicao, tamanhoNome]);
 
   // Shape thumbnails (just the backrest), in the chosen colors.
   useEffect(() => {
@@ -159,6 +160,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const temNome = Boolean(nomeLimpo);
   const preco = precoCadeira(temNome);
   const formaRotulo = FORMAS.find((f) => f.valor === forma)?.rotulo ?? "Lisa";
+  const tamanhoRotulo = tamanhoNome <= 0.45 ? "Pequeno" : tamanhoNome <= 0.75 ? "Médio" : "Grande";
   const posicaoRotulo = POSICOES.find((p) => p.valor === posicao)?.rotulo ?? "No meio";
 
   const mensagem = [
@@ -167,7 +169,9 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     `Trançado: ${formaRotulo}`,
     `Cor principal: ${fioA.nome}`,
     `Cor dos detalhes: ${fioB.nome}`,
-    temNome ? `Nome: "${nomeLimpo.replace(/\n/g, " / ")}" (${posicaoRotulo.toLowerCase()})` : "Sem nome",
+    temNome
+      ? `Nome: "${nomeLimpo.replace(/\n/g, " / ")}" (${posicaoRotulo.toLowerCase()}, tamanho ${tamanhoRotulo.toLowerCase()})`
+      : "Sem nome",
     `Valor: ${formatBRL(preco)}`,
   ].join("\n");
 
@@ -380,6 +384,27 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   className="mt-2 w-full resize-none border border-line bg-canvas px-3 py-2 text-base uppercase tracking-wide text-ink focus:border-ink focus:outline-none"
                 />
               </label>
+              {temNome ? (
+                <label className="block">
+                  <span className="flex justify-between text-sm text-ink">
+                    Tamanho do nome
+                    <span className="text-ink-soft">{tamanhoRotulo}</span>
+                  </span>
+                  <input
+                    type="range"
+                    min={0.3}
+                    max={1}
+                    step={0.05}
+                    value={tamanhoNome}
+                    onChange={(e) => setTamanhoNome(Number(e.target.value))}
+                    className="mt-2 w-full accent-ink"
+                  />
+                  <span className="flex justify-between text-xs text-ink-soft">
+                    <span>Menor</span>
+                    <span>Maior</span>
+                  </span>
+                </label>
+              ) : null}
               {temNome ? (
                 <fieldset>
                   <legend className="text-sm text-ink">Onde fica no encosto</legend>

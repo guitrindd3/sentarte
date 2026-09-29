@@ -39,6 +39,30 @@ const ASSENTO: [number, number][] = [
   [100, 544],
 ];
 
+/** Where the seat webbing wraps around the left/right side tubes (the dark
+ * triangles at the seat corners) — outside the seat polygon, so only dark
+ * thread pixels there are recolored, never the aluminum around them. */
+const PONTAS_ASSENTO: [number, number][][] = [
+  [
+    [97, 521],
+    [130, 521],
+    [130, 582],
+    [63, 575],
+  ],
+  [
+    [383, 521],
+    [350, 521],
+    [350, 582],
+    [417, 575],
+  ],
+];
+
+/** Plain bands at the top and bottom of the backrest (where the rope wraps
+ * the frame tubes on the real chairs): the weave shape never enters them,
+ * only the main thread — user 2026-09-29. In source pixels. */
+const MARGEM_TOPO = 30;
+const MARGEM_BASE = 26;
+
 /** Size of one "woven cell" of the backrest pattern, in source pixels. */
 const CELULA = 6;
 
@@ -48,6 +72,8 @@ export type Opcoes = {
   corB: string; // detail thread
   nome: string; // may contain \n
   posicao: NomePosicao;
+  /** Name size, 0.3 (small) to 1 (as big as fits). */
+  tamanhoNome?: number;
 };
 
 function hexRgb(hex: string): [number, number, number] {
@@ -133,7 +159,7 @@ type Nome = { mascara: Uint8Array; contorno: Uint8Array; faixaY0: number; faixaY
 /** Rasterizes the name into two backrest-sized masks: letters and a
  * one-pixel outline in the main color, so letters stay legible on any
  * weave shape. */
-function rasterizarNome(nome: string, posicao: NomePosicao): Nome {
+function rasterizarNome(nome: string, posicao: NomePosicao, tamanho = 1): Nome {
   const linhas = nome
     .split("\n")
     .map((l) => normalizarTexto(l).trim())
@@ -142,12 +168,13 @@ function rasterizarNome(nome: string, posicao: NomePosicao): Nome {
   if (linhas.length === 0) return null;
 
   const w = ENCOSTO.x1 - ENCOSTO.x0;
-  const h = ENCOSTO.y1 - ENCOSTO.y0;
+  const hTotal = ENCOSTO.y1 - ENCOSTO.y0;
+  const h = hTotal - MARGEM_TOPO - MARGEM_BASE;
   // Each line gets its own font pixel size — as big as fits the panel width
   // (with margin), capped so a short word doesn't take over the backrest —
   // so "JU" over "TRINDADE" reads big-over-small like the real chairs. Then
   // everything shrinks together if the block is too tall.
-  const tamanhos = linhas.map((l) => Math.min(9, (w * 0.86) / (l.length * (GLYPH_W + 1) - 1)));
+  const tamanhos = linhas.map((l) => Math.min(9, (w * 0.86) / (l.length * (GLYPH_W + 1) - 1)) * tamanho);
   const gap = 12;
   const alturaNatural = tamanhos.reduce((s, px) => s + GLYPH_H * px, 0) + gap * (linhas.length - 1);
   const escala = Math.min(1, (h * 0.8) / alturaNatural);
@@ -156,9 +183,9 @@ function rasterizarNome(nome: string, posicao: NomePosicao): Nome {
   const alturaBloco = pxs.reduce((s, px) => s + GLYPH_H * px, 0) + gapLinha * (linhas.length - 1);
   const px = Math.min(...pxs);
   const centroY = { topo: 0.24, meio: 0.5, base: 0.76 }[posicao] * h;
-  const topo = Math.max(px, Math.min(h - alturaBloco - px, centroY - alturaBloco / 2));
+  const topo = MARGEM_TOPO + Math.max(px, Math.min(h - alturaBloco - px, centroY - alturaBloco / 2));
 
-  const mascara = new Uint8Array(w * h);
+  const mascara = new Uint8Array(w * hTotal);
   let y0 = topo;
   linhas.forEach((linha, li) => {
     const px = pxs[li];
@@ -166,7 +193,7 @@ function rasterizarNome(nome: string, posicao: NomePosicao): Nome {
     const x0 = (w - larguraLinha) / 2;
     for (let y = Math.floor(y0); y < Math.ceil(y0 + GLYPH_H * px); y++) {
       for (let x = Math.floor(x0); x < Math.ceil(x0 + larguraLinha); x++) {
-        if (x < 0 || y < 0 || x >= w || y >= h) continue;
+        if (x < 0 || y < 0 || x >= w || y >= hTotal) continue;
         const gx = Math.floor((x - x0) / px);
         const gy = Math.floor((y - y0) / px);
         const ci = Math.floor(gx / (GLYPH_W + 1));
@@ -178,15 +205,15 @@ function rasterizarNome(nome: string, posicao: NomePosicao): Nome {
   });
 
   const r = Math.max(2, Math.round(px * 0.8));
-  const contorno = new Uint8Array(w * h);
-  for (let y = 0; y < h; y++) {
+  const contorno = new Uint8Array(w * hTotal);
+  for (let y = 0; y < hTotal; y++) {
     for (let x = 0; x < w; x++) {
       if (mascara[y * w + x]) continue;
       search: for (let dy = -r; dy <= r; dy++) {
         for (let dx = -r; dx <= r; dx++) {
           const xx = x + dx;
           const yy = y + dy;
-          if (xx >= 0 && yy >= 0 && xx < w && yy < h && mascara[yy * w + xx]) {
+          if (xx >= 0 && yy >= 0 && xx < w && yy < hTotal && mascara[yy * w + xx]) {
             contorno[y * w + x] = 1;
             break search;
           }
@@ -220,14 +247,17 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   const w = ENCOSTO.x1 - ENCOSTO.x0;
   const h = ENCOSTO.y1 - ENCOSTO.y0;
   const cols = Math.ceil(w / CELULA);
-  const rows = Math.ceil(h / CELULA);
-  const nome = rasterizarNome(op.nome, op.posicao);
+  const rows = Math.ceil((h - MARGEM_TOPO - MARGEM_BASE) / CELULA);
+  const nome = rasterizarNome(op.nome, op.posicao, op.tamanhoNome ?? 1);
   for (let y = ENCOSTO.y0; y < ENCOSTO.y1; y++) {
     for (let x = ENCOSTO.x0; x < ENCOSTO.x1; x++) {
       const i = (y * IMG_W + x) * 4;
       const lx = x - ENCOSTO.x0;
       const ly = y - ENCOSTO.y0;
-      let detalhe = celulaDaForma(op.forma, Math.floor(lx / CELULA), Math.floor(ly / CELULA), cols, rows);
+      const naMargem = ly < MARGEM_TOPO || ly >= h - MARGEM_BASE;
+      let detalhe =
+        !naMargem &&
+        celulaDaForma(op.forma, Math.floor(lx / CELULA), Math.floor((ly - MARGEM_TOPO) / CELULA), cols, rows);
       if (nome) {
         const k = ly * w + lx;
         if (ly >= nome.faixaY0 && ly <= nome.faixaY1) detalhe = false;
@@ -245,6 +275,20 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
         const i = (y * IMG_W + x) * 4;
         const l = brilho(i);
         if (l > 120 && saturacao(i) < 45) pinta(i, B, sombraClaro(l));
+      }
+    }
+  }
+
+  // Seat corners wrapped around the side tubes: dark thread only.
+  for (const poly of PONTAS_ASSENTO) {
+    const xs = poly.map((p) => p[0]);
+    const ys = poly.map((p) => p[1]);
+    for (let y = Math.min(...ys); y < Math.max(...ys); y++) {
+      for (let x = Math.min(...xs); x < Math.max(...xs); x++) {
+        if (!dentroPoligono(x, y, poly) || dentroPoligono(x, y, ASSENTO)) continue;
+        const i = (y * IMG_W + x) * 4;
+        const l = brilho(i);
+        if (l < 115 && saturacao(i) < 55) pinta(i, A, sombraEscuro(l));
       }
     }
   }
