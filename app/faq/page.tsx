@@ -13,6 +13,7 @@ import {
   precoPix,
   PRAZO_PRODUCAO_DIAS_UTEIS,
   PRECO_CADEIRA,
+  PRECO_CADEIRA_COM_NOME,
 } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 
@@ -33,7 +34,7 @@ const PERGUNTAS = [
   },
   {
     pergunta: "Quanto custa uma cadeira?",
-    resposta: `A cadeira de praia sai por ${formatBRL(PRECO_CADEIRA)}, com ou sem personalização. No Pix tem ${Math.round(PIX_DESCONTO * 100)}% de desconto (${formatBRL(precoPix(PRECO_CADEIRA))}), e no cartão dá para parcelar em até ${PARCELAS_MAX}x (com a taxa do cartão).`,
+    resposta: `A cadeira de praia sai por ${formatBRL(PRECO_CADEIRA)}. Com um nome ou outra personalização trançada, sai por ${formatBRL(PRECO_CADEIRA_COM_NOME)}. No Pix tem ${Math.round(PIX_DESCONTO * 100)}% de desconto (${formatBRL(precoPix(PRECO_CADEIRA))}), e no cartão dá para parcelar em até ${PARCELAS_MAX}x (com a taxa do cartão).`,
   },
   {
     pergunta: "O frete é pago?",

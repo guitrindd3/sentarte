@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = pageMetadata({
   title: "Cadeira de praia de time personalizada",
   description:
-    "Cadeira de praia do seu time trançada à mão, nas cores do Flamengo, Vasco, Botafogo, Fluminense, Corinthians ou Palmeiras, com ou sem o seu nome. R$ 449,90, frete grátis para todo o Brasil.",
+    "Cadeira de praia do seu time trançada à mão, nas cores do Flamengo, Vasco, Botafogo, Fluminense, Corinthians ou Palmeiras, com ou sem o seu nome. A partir de R$ 449,90, frete grátis para todo o Brasil.",
   path: "/times",
 });
 

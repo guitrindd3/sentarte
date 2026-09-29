@@ -7,12 +7,13 @@ import {
   PIX_DESCONTO,
   PRAZO_PRODUCAO_DIAS_UTEIS,
   PRECO_CADEIRA,
+  PRECO_CADEIRA_COM_NOME,
 } from "@/lib/offer";
 
 const ITENS = [
   {
     destaque: formatBRL(PRECO_CADEIRA),
-    texto: `em até ${PARCELAS_MAX}x no cartão ou ${Math.round(PIX_DESCONTO * 100)}% off no Pix`,
+    texto: `com nome, ${formatBRL(PRECO_CADEIRA_COM_NOME)}. Até ${PARCELAS_MAX}x no cartão ou ${Math.round(PIX_DESCONTO * 100)}% off no Pix`,
   },
   {
     destaque: "Frete grátis",

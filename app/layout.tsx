@@ -9,7 +9,7 @@ import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { CartProvider } from "@/lib/cart-context";
 import { getContent } from "@/lib/content-store";
 import { SITE_URL } from "@/lib/nav";
-import { formatBRL, PRECO_CADEIRA } from "@/lib/offer";
+import { formatBRL, PRECO_CADEIRA, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
 import { instagramUrl } from "@/lib/urls";
 import "./globals.css";
 
@@ -91,7 +91,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             image: `${SITE_URL}/opengraph-image`,
             description: site.descricao,
             telephone: `+${site.whatsappNumero}`,
-            priceRange: formatBRL(PRECO_CADEIRA),
+            priceRange: `${formatBRL(PRECO_CADEIRA)} a ${formatBRL(PRECO_CADEIRA_COM_NOME)}`,
             areaServed: "BR",
             sameAs: [instagramUrl(site.instagramHandle)],
           }}

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
-import { CATEGORIA_COM_PRECO, formatBRL, PARCELAS_MAX, precoPix, PRECO_CADEIRA } from "@/lib/offer";
+import { CATEGORIA_COM_PRECO, formatBRL, PARCELAS_MAX, precoCadeira, precoPix, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 import type { Modelo } from "@/lib/content-schema";
 
@@ -30,13 +30,16 @@ export function ModeloCard({
   // Color options (a real choice, sent with the order) come first, then
   // extra photos that are just for looking (angles, other customers' names).
   const cores = [modelo.imagemUrl, ...(modelo.variantes ?? [])].filter((f): f is string => Boolean(f));
-  const fotosBase = wantsNome && personalizado
+  const usaFotosPersonalizado = wantsNome && Boolean(personalizado);
+  const fotosBase = usaFotosPersonalizado && personalizado
     ? [personalizado.imagemUrl, ...(personalizado.fotosExtras ?? [])].filter((f): f is string => Boolean(f))
     : [...cores, ...(modelo.fotosExtras ?? [])];
   const fotoAtiva = fotosBase[varianteIndex] ?? fotosBase[0];
   const nomeFinal = wantsNome ? nomeTexto.trim() : "";
   const temVariantes = fotosBase.length > 1;
-  const escolheCor = !wantsNome && cores.length > 1;
+  // Without a dedicated personalizado photo the customer still picks a color
+  // for the chair the name goes on.
+  const escolheCor = !usaFotosPersonalizado && cores.length > 1;
   const varianteLabel = escolheCor && varianteIndex < cores.length ? `Opção ${varianteIndex + 1}` : "";
   const contagemFotos =
     escolheCor && fotosBase.length === cores.length ? `${cores.length} cores` : `${fotosBase.length} fotos`;
@@ -44,7 +47,14 @@ export function ModeloCard({
     setVarianteIndex((i) => (i + passo + fotosBase.length) % fotosBase.length);
 
   const temPreco = categoriaSlug === CATEGORIA_COM_PRECO;
-  const mensagemWhatsapp = `Oi! Quero pedir uma peça de ${categoria}, modelo "${ativo.nome}".${
+  // Every chair can take a woven name (user 2026-09-29), not only the ones
+  // with a "<Nome> personalizado" photo.
+  const podePersonalizar = temPreco || Boolean(personalizado);
+  const preco = precoCadeira(wantsNome);
+  const faltaNome = wantsNome && !nomeFinal;
+  const mensagemWhatsapp = `Oi! Quero pedir uma peça de ${categoria}, modelo "${ativo.nome}"${
+    temPreco ? ` (${formatBRL(preco)})` : ""
+  }.${
     varianteLabel ? ` Cor: ${varianteLabel}.` : ""
   }${nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""}`;
 
@@ -114,13 +124,16 @@ export function ModeloCard({
         <p className="font-serif text-lg font-medium text-ink">{modelo.nome}</p>
         {temPreco ? (
           <p className="mt-1 text-sm text-ink">
-            <span className="font-medium">{formatBRL(PRECO_CADEIRA)}</span>
+            <span className="font-medium">{formatBRL(preco)}</span>
             <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
-            <span className="block text-xs text-ink-soft">{formatBRL(precoPix(PRECO_CADEIRA))} no Pix</span>
+            <span className="block text-xs text-ink-soft">
+              {formatBRL(precoPix(preco))} no Pix
+              {wantsNome ? null : <>. Com nome: {formatBRL(PRECO_CADEIRA_COM_NOME)}</>}
+            </span>
           </p>
         ) : null}
 
-        {personalizado ? (
+        {podePersonalizar ? (
           <div className="mt-2 inline-flex w-fit border border-line text-xs" role="group" aria-label="Personalização">
             <button
               type="button"
@@ -146,7 +159,7 @@ export function ModeloCard({
         ) : null}
 
 
-        {wantsNome && personalizado ? (
+        {wantsNome ? (
           <label className="mt-2 block">
             <span className="text-xs text-ink-soft">Nome ou apelido para trançar</span>
             <input
@@ -154,6 +167,7 @@ export function ModeloCard({
               value={nomeTexto}
               onChange={(e) => setNomeTexto(e.target.value)}
               placeholder="Ex: João"
+              maxLength={24}
               className="mt-1 w-full border border-line bg-canvas px-2.5 py-1.5 text-sm text-ink focus:border-ink focus:outline-none"
             />
           </label>
@@ -175,7 +189,11 @@ export function ModeloCard({
             nomePersonalizado: nomeFinal || undefined,
             variante: varianteLabel || undefined,
           }}
+          disabled={faltaNome}
         />
+        {faltaNome ? (
+          <p className="mt-1.5 text-xs text-ink-soft">Escreva o nome para adicionar ao carrinho.</p>
+        ) : null}
         <a
           href={whatsappUrl(whatsappNumero, mensagemWhatsapp)}
           target="_blank"

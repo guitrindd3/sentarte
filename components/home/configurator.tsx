@@ -9,6 +9,7 @@ import {
 } from "@/components/chair-preview";
 import { WhatsAppIcon } from "@/components/icons";
 import { FIOS } from "@/lib/palette";
+import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 import type { WeaveShape } from "@/components/weave-pattern";
 import type { Categoria } from "@/lib/content-schema";
@@ -50,15 +51,19 @@ export function Configurator({
     setFrase(linhas.join("\n"));
   };
 
+  const temNome = Boolean(frase.trim());
+  const preco = precoCadeira(temNome);
+
   const formaRotulo = FORMAS.find((f) => f.valor === forma)?.rotulo ?? "Lisa";
 
   const posicaoRotulo = POSICOES.find((p) => p.valor === posicaoNome)?.rotulo ?? "Meio do encosto";
 
   const mensagem = useMemo(() => {
-    let msg = `Oi! Montei uma trama no site e quero pedir um orçamento:\n\nModelo: ${modelo}\nForma: ${formaRotulo}\nCores: ${fioA.nome} + ${fioB.nome}`;
+    let msg = `Oi! Montei uma trama no site e quero pedir:\n\nModelo: ${modelo}\nForma: ${formaRotulo}\nCores: ${fioA.nome} + ${fioB.nome}`;
     if (frase.trim()) msg += `\nFrase para trançar: "${frase.trim()}" (${posicaoRotulo.toLowerCase()})`;
+    msg += `\nValor: ${formatBRL(preco)}`;
     return msg;
-  }, [modelo, formaRotulo, fioA, fioB, frase, posicaoRotulo]);
+  }, [modelo, formaRotulo, fioA, fioB, frase, posicaoRotulo, preco]);
 
   if (modelos.length === 0) return null;
 
@@ -187,6 +192,13 @@ export function Configurator({
             </fieldset>
           ) : null}
 
+          <p className="text-sm text-ink">
+            <span className="font-serif text-2xl font-medium tracking-tight">{formatBRL(preco)}</span>
+            <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão, {formatBRL(precoPix(preco))} no Pix.</span>
+            <span className="block text-xs text-ink-soft">
+              {temNome ? "Valor com nome trançado." : `Com nome trançado: ${formatBRL(precoCadeira(true))}.`} Frete grátis.
+            </span>
+          </p>
           <a
             href={whatsappUrl(whatsappNumero, mensagem)}
             target="_blank"
@@ -194,7 +206,7 @@ export function Configurator({
             className="inline-flex items-center gap-2 border border-ink bg-ink px-6 py-3 text-sm font-medium text-canvas transition-colors hover:bg-transparent hover:text-ink"
           >
             <WhatsAppIcon className="h-4 w-4" />
-            Pedir esse orçamento
+            Pedir pelo WhatsApp
           </a>
         </div>
 

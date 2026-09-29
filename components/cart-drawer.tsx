@@ -13,7 +13,7 @@ import {
   PARCELAS_MAX,
   PIX_DESCONTO,
   precoPix,
-  PRECO_CADEIRA,
+  precoCadeira,
 } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 
@@ -21,10 +21,13 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
   const { items, count, isOpen, closeCart, removeItem, setQuantidade, clear } = useCart();
 
   // Only chairs have a fixed price; anything else is priced over WhatsApp.
-  const qtdCadeiras = items
-    .filter((i) => i.categoriaSlug === CATEGORIA_COM_PRECO)
-    .reduce((soma, i) => soma + i.quantidade, 0);
-  const subtotal = qtdCadeiras * PRECO_CADEIRA;
+  // A chair with a woven name costs PRECO_CADEIRA_COM_NOME.
+  const cadeiras = items.filter((i) => i.categoriaSlug === CATEGORIA_COM_PRECO);
+  const qtdCadeiras = cadeiras.reduce((soma, i) => soma + i.quantidade, 0);
+  const subtotal = cadeiras.reduce(
+    (soma, i) => soma + i.quantidade * precoCadeira(Boolean(i.nomePersonalizado)),
+    0
+  );
   const temCupom = qtdCadeiras >= CUPOM_MIN_ITENS;
   const desconto = temCupom ? subtotal * CUPOM_DESCONTO : 0;
   const total = subtotal - desconto;
@@ -51,6 +54,9 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
           ...items.map(
             (i) =>
               `- ${i.categoriaTitulo} — ${i.modeloNome} (x${i.quantidade})` +
+              (i.categoriaSlug === CATEGORIA_COM_PRECO
+                ? ` — ${formatBRL(precoCadeira(Boolean(i.nomePersonalizado)))} cada`
+                : "") +
               (i.variante ? ` — cor: ${i.variante}` : "") +
               (i.nomePersonalizado ? ` — nome: "${i.nomePersonalizado}"` : "")
           ),
@@ -109,6 +115,9 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
                     ) : null}
                     {item.nomePersonalizado ? (
                       <p className="text-xs italic text-ink-soft">Nome: {item.nomePersonalizado}</p>
+                    ) : null}
+                    {item.categoriaSlug === CATEGORIA_COM_PRECO ? (
+                      <p className="text-xs text-ink">{formatBRL(precoCadeira(Boolean(item.nomePersonalizado)))}</p>
                     ) : null}
                     <div className="mt-2 flex items-center gap-3">
                       <div className="flex items-center border border-line">

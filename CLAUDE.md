@@ -295,7 +295,11 @@ fabricated legal identifiers (CNPJ, address) unless the user supplies them.
   price R$ 449,90, up to 4x on card (with the card fee, so never write "sem
   juros"), free shipping to all of Brazil, production in up to 5 business
   days, coupon `SENTARTE` = 5% off from 2 chairs, 2% off paying with Pix (stacked on the final total). Only the `cadeiras`
-  category shows a price (`CATEGORIA_COM_PRECO`). Used by `OfferStrip`
+  category shows a price (`CATEGORIA_COM_PRECO`). A chair with a woven name
+  costs `PRECO_CADEIRA_COM_NOME` (R$ 489,90) — `precoCadeira(comNome)`; the
+  cart prices each line by whether it has `nomePersonalizado`, and every
+  chair card offers the Sem nome/Personalizado toggle (name required to add
+  to cart), not only models with a "<Nome> personalizado" sibling photo. Used by `OfferStrip`
   (homepage band + compact under catalog headers), `ModeloCard`, the cart
   drawer totals/WhatsApp message, the FAQ and `politica-de-envio`.
 - **`CATEGORIAS_OCULTAS` (bolsas, espreguicadeiras)** are filtered out inside

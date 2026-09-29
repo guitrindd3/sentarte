@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ChairPreview, NOME_MAX_CHARS_POR_LINHA } from "@/components/chair-preview";
+import { formatBRL, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
 import { FIOS } from "@/lib/palette";
 
 // Homepage teaser for /personalizar: type a name, see it on the chair right
@@ -29,7 +30,8 @@ export function PreviewPromo() {
           </h2>
           <p className="mt-4 max-w-[48ch] text-sm leading-relaxed text-ink-soft">
             Escreva um nome, troque as cores e veja na hora como fica. No montador completo você
-            escolhe também a forma do trançado e onde o nome entra no encosto.
+            escolhe também a forma do trançado e onde o nome entra no encosto. Com nome, a cadeira
+            sai por {formatBRL(PRECO_CADEIRA_COM_NOME)}.
           </p>
 
           <label className="mt-8 block max-w-xs">

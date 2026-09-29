@@ -4,6 +4,8 @@
 // has a price; other categories show no price.
 
 export const PRECO_CADEIRA = 449.9;
+// Any chair with a name (or other personalization) woven in — user 2026-09-29.
+export const PRECO_CADEIRA_COM_NOME = 489.9;
 export const PARCELAS_MAX = 4; // no cartão, com a taxa da maquininha (não é "sem juros")
 export const PIX_DESCONTO = 0.02; // user 2026-09-29; stacks with the coupon (applied on the final total)
 export const PRAZO_PRODUCAO_DIAS_UTEIS = 5;
@@ -17,6 +19,10 @@ export const CATEGORIA_COM_PRECO = "cadeiras";
 // (user 2026-09-29: "espreguiçadeiras ainda não e bolsas ainda não"). Remove
 // a slug from here to bring that category back everywhere at once.
 export const CATEGORIAS_OCULTAS = new Set(["bolsas", "espreguicadeiras"]);
+
+export function precoCadeira(comNome: boolean) {
+  return comNome ? PRECO_CADEIRA_COM_NOME : PRECO_CADEIRA;
+}
 
 export function precoPix(valor: number) {
   return Math.round(valor * (1 - PIX_DESCONTO) * 100) / 100;

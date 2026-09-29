@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PRECO_CADEIRA } from "./offer";
+import { PRECO_CADEIRA, PRECO_CADEIRA_COM_NOME } from "./offer";
 
 const SITE_NOME = "SentArte";
 
@@ -49,8 +49,10 @@ export function chairListJsonLd(modelos: { nome: string; descricao: string; imag
         ...(m.imagemUrl ? { image: m.imagemUrl } : {}),
         brand: { "@type": "Brand", name: SITE_NOME },
         offers: {
-          "@type": "Offer",
-          price: PRECO_CADEIRA.toFixed(2),
+          "@type": "AggregateOffer",
+          lowPrice: PRECO_CADEIRA.toFixed(2),
+          highPrice: PRECO_CADEIRA_COM_NOME.toFixed(2),
+          offerCount: 2,
           priceCurrency: "BRL",
           availability: "https://schema.org/MadeToOrder",
           shippingDetails: {
