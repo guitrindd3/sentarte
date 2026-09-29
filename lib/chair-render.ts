@@ -60,8 +60,8 @@ const PONTAS_ASSENTO: [number, number][][] = [
 /** Plain bands at the top and bottom of the backrest (where the rope wraps
  * the frame tubes on the real chairs): the weave shape never enters them,
  * only the main thread — user 2026-09-29. In source pixels. */
-const MARGEM_TOPO = 30;
-const MARGEM_BASE = 26;
+const MARGEM_TOPO = 56;
+const MARGEM_BASE = 50;
 
 /** Size of one "woven cell" of the backrest pattern, in source pixels. */
 const CELULA = 6;
@@ -108,8 +108,16 @@ function celulaDaForma(forma: Forma, i: number, j: number, cols: number, rows: n
       return Math.floor(d) % 7 < 2;
     }
     case "ziguezague": {
+      // Only whole zigzag lines (a line k spans rows P*k-5..P*k+1), so the
+      // top/bottom margins never cut one into loose tips.
+      // Then center the whole lines vertically in the available rows.
+      const P = 7; // rows between lines
+      const K = Math.floor((rows - 2 + 5 - P) / P) ; // lines that fit whole
+      const alturaUsada = P * K - (P - 6); // rows from first tip to last base
+      const jj = j - Math.floor((rows - alturaUsada) / 2) + (P - 5);
       const tri = Math.abs((i % 10) - 5);
-      return (j + tri) % 9 < 2;
+      const k = Math.floor((jj + tri) / P);
+      return (jj + tri) % P < 2 && k >= 1 && k <= K;
     }
     case "espiral":
       // Square spiral ("triângulo caracol"), one continuous line.
