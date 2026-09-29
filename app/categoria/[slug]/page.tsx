@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BOHO_NOME, BOHO_PADROES } from "@/lib/boho-model";
-import { CoverLinkCard } from "@/components/cover-link-card";
+import { CoverLinkCard, VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { DESENHO_NOME, DESENHO_TEMAS } from "@/lib/desenho-model";
 import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
 import { ModeloCard } from "@/components/modelo-card";
@@ -87,6 +87,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
                       href="/personalizar"
                       linkLabel="Montar minha trama"
                       shape="espiral"
+                      videoUrl={VIDEO_MONTE_SUA_CADEIRA}
                     />
                   );
                 }

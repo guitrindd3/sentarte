@@ -3,16 +3,21 @@ import Link from "next/link";
 import { WeavePattern, type WeaveShape } from "@/components/weave-pattern";
 import type { Modelo } from "@/lib/content-schema";
 
+export const VIDEO_MONTE_SUA_CADEIRA = "/videos/monte-sua-cadeira.mp4";
+
 export function CoverLinkCard({
   modelo,
   href,
   linkLabel,
   shape,
+  videoUrl,
 }: {
   modelo: Modelo;
   href: string;
   linkLabel: string;
   shape?: WeaveShape;
+  /** Looping muted clip shown instead of the photo/pattern (e.g. "Monte a sua trama"). */
+  videoUrl?: string;
 }) {
   return (
     <Link
@@ -20,7 +25,18 @@ export function CoverLinkCard({
       className="group flex flex-col border border-line bg-paper transition-all duration-300 hover:-translate-y-1 hover:border-ink hover:shadow-[6px_6px_0_0_var(--line)] active:translate-y-0 active:shadow-[2px_2px_0_0_var(--line)] active:duration-75"
     >
       <div className="relative aspect-square overflow-hidden border-b border-line">
-        {modelo.imagemUrl ? (
+        {videoUrl ? (
+          <video
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : modelo.imagemUrl ? (
           <Image
             src={modelo.imagemUrl}
             alt={modelo.nome}

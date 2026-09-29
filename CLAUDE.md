@@ -85,7 +85,9 @@ ends as a WhatsApp message, there's no payment processing.
     license needed.
 - `public/videos/monte-sua-cadeira.mp4` — the user's own clip (480x848,
   ~3.5s, a chair being woven), shown looping/muted/autoplay in the
-  /personalizar header since 2026-09-29 ("sempre fica rodando"). Source:
+  /personalizar header and on the "Monte a sua trama" CoverLinkCard (`videoUrl`
+  prop, homepage + /categoria/cadeiras) since 2026-09-29 ("sempre fica
+  rodando"). Source:
   `~/Pictures/cadeiras de praias/Video monte sua cadeira/`.
 - `public/brand/` — the atelier's own brand assets, supplied directly by the
   user (not sourced/licensed by Claude): `logo.png` (circular "SA" mark,

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
+import { VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { Configurator } from "@/components/home/configurator";
 import { getContent } from "@/lib/content-store";
 
@@ -37,7 +38,7 @@ export default async function PersonalizarPage() {
           </div>
           <div className="mx-auto w-full max-w-[15rem] border border-line bg-paper p-2 shadow-[6px_6px_0_0_var(--line)] md:max-w-[17rem]">
             <video
-              src="/videos/monte-sua-cadeira.mp4"
+              src={VIDEO_MONTE_SUA_CADEIRA}
               width={480}
               height={848}
               autoPlay

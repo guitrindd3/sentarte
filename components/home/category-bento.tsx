@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CoverLinkCard } from "@/components/cover-link-card";
+import { CoverLinkCard, VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { BOHO_NOME } from "@/lib/boho-model";
 import { DESENHO_NOME } from "@/lib/desenho-model";
 import { TIME_DO_CORACAO_NOME } from "@/lib/team-models";
@@ -42,6 +42,7 @@ export function CategoryBento({ categorias }: { categorias: Categoria[] }) {
             href={href}
             linkLabel={linkLabel}
             shape={href === "/personalizar" ? "espiral" : undefined}
+            videoUrl={href === "/personalizar" ? VIDEO_MONTE_SUA_CADEIRA : undefined}
           />
         ))}
       </div>
