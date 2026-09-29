@@ -7,7 +7,6 @@ import { PullQuote } from "@/components/home/pull-quote";
 import { TeamShowcase } from "@/components/home/team-showcase";
 import type { Metadata } from "next";
 import { OfferStrip } from "@/components/offer-strip";
-import { PreviewPromo } from "@/components/home/preview-promo";
 import { getContent } from "@/lib/content-store";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +24,6 @@ export default async function Home() {
       <OfferStrip />
       <CategoryBento categorias={content.categorias} />
       <TeamShowcase categorias={content.categorias} whatsappNumero={content.site.whatsappNumero} />
-      <PreviewPromo />
       <PersonalizationSteps />
       <PullQuote />
       <MaterialSpec />

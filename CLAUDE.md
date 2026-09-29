@@ -331,9 +331,9 @@ fabricated legal identifiers (CNPJ, address) unless the user supplies them.
 - The header's admin (person) icon was removed — it read as a customer
   login. Reach the panel directly at `/admin`.
 - Homepage: `CategoryBento` now shows the four collection cover cards
-  (times/boho/desenhos/monte a sua) instead of category tiles, and
-  `PreviewPromo` is a mini live preview (name + colors) linking to
-  /personalizar. `WhatsAppFloat` is the fixed bottom-right contact button.
+  (times/boho/desenhos/monte a sua) instead of category tiles. (A homepage
+  mini live preview, `PreviewPromo`, was added and then removed the same day
+  at the user's request — the flat chair illustration didn't look good.) `WhatsAppFloat` is the fixed bottom-right contact button.
 
 ## Cart & search
 
