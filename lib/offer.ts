@@ -24,6 +24,11 @@ export function precoCadeira(comNome: boolean) {
   return comNome ? PRECO_CADEIRA_COM_NOME : PRECO_CADEIRA;
 }
 
+/** Price of one cart line: personalized if it has a name or is a desenho design. */
+export function precoItemCadeira(item: { nomePersonalizado?: string; personalizada?: boolean }) {
+  return precoCadeira(Boolean(item.nomePersonalizado) || Boolean(item.personalizada));
+}
+
 export function precoPix(valor: number) {
   return Math.round(valor * (1 - PIX_DESCONTO) * 100) / 100;
 }

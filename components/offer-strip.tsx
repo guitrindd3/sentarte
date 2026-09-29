@@ -10,28 +10,37 @@ import {
   PRECO_CADEIRA_COM_NOME,
 } from "@/lib/offer";
 
-const ITENS = [
-  {
-    destaque: formatBRL(PRECO_CADEIRA),
-    texto: `com nome, ${formatBRL(PRECO_CADEIRA_COM_NOME)}. Até ${PARCELAS_MAX}x no cartão ou ${Math.round(PIX_DESCONTO * 100)}% off no Pix`,
-  },
-  {
-    destaque: "Frete grátis",
-    texto: "para todo o Brasil",
-  },
-  {
-    destaque: `Até ${PRAZO_PRODUCAO_DIAS_UTEIS} dias úteis`,
-    texto: "para ficar pronta",
-  },
-  {
-    destaque: `${Math.round(CUPOM_DESCONTO * 100)}% de desconto`,
-    texto: `levando ${CUPOM_MIN_ITENS} ou mais, cupom ${CUPOM_CODIGO}`,
-  },
-];
+function itens(soPersonalizada: boolean) {
+  return [
+    soPersonalizada
+      ? {
+          destaque: formatBRL(PRECO_CADEIRA_COM_NOME),
+          texto: `em até ${PARCELAS_MAX}x no cartão ou ${Math.round(PIX_DESCONTO * 100)}% off no Pix`,
+        }
+      : {
+          destaque: formatBRL(PRECO_CADEIRA),
+          texto: `com nome, ${formatBRL(PRECO_CADEIRA_COM_NOME)}. Até ${PARCELAS_MAX}x no cartão ou ${Math.round(PIX_DESCONTO * 100)}% off no Pix`,
+        },
+    {
+      destaque: "Frete grátis",
+      texto: "para todo o Brasil",
+    },
+    {
+      destaque: `Até ${PRAZO_PRODUCAO_DIAS_UTEIS} dias úteis`,
+      texto: "para ficar pronta",
+    },
+    {
+      destaque: `${Math.round(CUPOM_DESCONTO * 100)}% de desconto`,
+      texto: `levando ${CUPOM_MIN_ITENS} ou mais, cupom ${CUPOM_CODIGO}`,
+    },
+  ];
+}
 
 // The commercial terms in one glanceable band. Used full-size on the
 // homepage and compact under the header of the catalog pages.
-export function OfferStrip({ compact = false }: { compact?: boolean }) {
+// `soPersonalizada`: for pages where every chair is already personalized
+// (/desenhos), lead with the personalized price instead.
+export function OfferStrip({ compact = false, soPersonalizada = false }: { compact?: boolean; soPersonalizada?: boolean }) {
   return (
     <section aria-label="Condições" className={compact ? "border-b border-line bg-paper" : "border-y border-line bg-paper"}>
       <ul
@@ -39,7 +48,7 @@ export function OfferStrip({ compact = false }: { compact?: boolean }) {
           compact ? "px-6 py-4" : "px-6 py-8"
         }`}
       >
-        {ITENS.map((item, i) => (
+        {itens(soPersonalizada).map((item, i) => (
           <li
             key={item.destaque}
             className={`px-4 py-2 ${i % 2 === 1 ? "border-l border-line" : ""} ${

@@ -6,6 +6,7 @@ import { AddToCartButton } from "@/components/add-to-cart-button";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
 import { CATEGORIA_COM_PRECO, formatBRL, PARCELAS_MAX, precoCadeira, precoPix, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
+import { DESENHO_TEMAS } from "@/lib/desenho-model";
 import { whatsappUrl } from "@/lib/urls";
 import type { Modelo } from "@/lib/content-schema";
 
@@ -49,8 +50,11 @@ export function ModeloCard({
   const temPreco = categoriaSlug === CATEGORIA_COM_PRECO;
   // Every chair can take a woven name (user 2026-09-29), not only the ones
   // with a "<Nome> personalizado" photo.
-  const podePersonalizar = temPreco || Boolean(personalizado);
-  const preco = precoCadeira(wantsNome);
+  // Desenho/anime chairs are already a personalized design: fixed
+  // personalized price, and no name on top (user 2026-09-29).
+  const ehDesenho = DESENHO_TEMAS.includes(modelo.nome);
+  const podePersonalizar = !ehDesenho && (temPreco || Boolean(personalizado));
+  const preco = precoCadeira(wantsNome || ehDesenho);
   const faltaNome = wantsNome && !nomeFinal;
   const mensagemWhatsapp = `Oi! Quero pedir uma peça de ${categoria}, modelo "${ativo.nome}"${
     temPreco ? ` (${formatBRL(preco)})` : ""
@@ -128,7 +132,7 @@ export function ModeloCard({
             <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
             <span className="block text-xs text-ink-soft">
               {formatBRL(precoPix(preco))} no Pix
-              {wantsNome ? null : <>. Com nome: {formatBRL(PRECO_CADEIRA_COM_NOME)}</>}
+              {wantsNome || !podePersonalizar ? null : <>. Com nome: {formatBRL(PRECO_CADEIRA_COM_NOME)}</>}
             </span>
           </p>
         ) : null}
@@ -187,6 +191,7 @@ export function ModeloCard({
             corA: ativo.corA,
             corB: ativo.corB,
             nomePersonalizado: nomeFinal || undefined,
+            personalizada: ehDesenho || undefined,
             variante: varianteLabel || undefined,
           }}
           disabled={faltaNome}

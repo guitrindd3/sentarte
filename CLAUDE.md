@@ -299,7 +299,11 @@ fabricated legal identifiers (CNPJ, address) unless the user supplies them.
   costs `PRECO_CADEIRA_COM_NOME` (R$ 489,90) — `precoCadeira(comNome)`; the
   cart prices each line by whether it has `nomePersonalizado`, and every
   chair card offers the Sem nome/Personalizado toggle (name required to add
-  to cart), not only models with a "<Nome> personalizado" sibling photo. Used by `OfferStrip`
+  to cart), not only models with a "<Nome> personalizado" sibling photo.
+  Exception: `DESENHO_TEMAS` models (animes/desenhos) are already a
+  personalized design — always the personalized price, no name toggle
+  (`ehDesenho` in `ModeloCard`, `CartItem.personalizada`,
+  `precoItemCadeira()`); /desenhos uses `<OfferStrip soPersonalizada />`. Used by `OfferStrip`
   (homepage band + compact under catalog headers), `ModeloCard`, the cart
   drawer totals/WhatsApp message, the FAQ and `politica-de-envio`.
 - **`CATEGORIAS_OCULTAS` (bolsas, espreguicadeiras)** are filtered out inside

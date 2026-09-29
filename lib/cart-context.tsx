@@ -14,6 +14,8 @@ export type CartItem = {
   quantidade: number;
   /** Name/nickname the customer typed for a "personalizado" item, if any. */
   nomePersonalizado?: string;
+  /** Already a personalized design (desenho/anime) — priced as personalized, no name. */
+  personalizada?: boolean;
   /** Which color variant the customer picked, if the model has more than one. */
   variante?: string;
 };

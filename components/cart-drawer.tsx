@@ -13,7 +13,7 @@ import {
   PARCELAS_MAX,
   PIX_DESCONTO,
   precoPix,
-  precoCadeira,
+  precoItemCadeira,
 } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 
@@ -25,7 +25,7 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
   const cadeiras = items.filter((i) => i.categoriaSlug === CATEGORIA_COM_PRECO);
   const qtdCadeiras = cadeiras.reduce((soma, i) => soma + i.quantidade, 0);
   const subtotal = cadeiras.reduce(
-    (soma, i) => soma + i.quantidade * precoCadeira(Boolean(i.nomePersonalizado)),
+    (soma, i) => soma + i.quantidade * precoItemCadeira(i),
     0
   );
   const temCupom = qtdCadeiras >= CUPOM_MIN_ITENS;
@@ -55,7 +55,7 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
             (i) =>
               `- ${i.categoriaTitulo} — ${i.modeloNome} (x${i.quantidade})` +
               (i.categoriaSlug === CATEGORIA_COM_PRECO
-                ? ` — ${formatBRL(precoCadeira(Boolean(i.nomePersonalizado)))} cada`
+                ? ` — ${formatBRL(precoItemCadeira(i))} cada`
                 : "") +
               (i.variante ? ` — cor: ${i.variante}` : "") +
               (i.nomePersonalizado ? ` — nome: "${i.nomePersonalizado}"` : "")
@@ -117,7 +117,7 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
                       <p className="text-xs italic text-ink-soft">Nome: {item.nomePersonalizado}</p>
                     ) : null}
                     {item.categoriaSlug === CATEGORIA_COM_PRECO ? (
-                      <p className="text-xs text-ink">{formatBRL(precoCadeira(Boolean(item.nomePersonalizado)))}</p>
+                      <p className="text-xs text-ink">{formatBRL(precoItemCadeira(item))}</p>
                     ) : null}
                     <div className="mt-2 flex items-center gap-3">
                       <div className="flex items-center border border-line">

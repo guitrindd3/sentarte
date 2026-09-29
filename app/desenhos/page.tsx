@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = pageMetadata({
   title: "Cadeira de praia com desenho, anime ou nome",
   description:
-    "Cadeira de praia personalizada com o seu desenho, personagem de anime, nome ou frase, trançados à mão. Frete grátis para todo o Brasil.",
+    "Cadeira de praia personalizada com o seu desenho ou personagem de anime, trançado à mão. R$ 489,90, frete grátis para todo o Brasil.",
   path: "/desenhos",
 });
 
@@ -32,8 +32,8 @@ export default async function DesenhosPage() {
         titulo="Animes e desenhos"
         resumo="Desenhos, personagens e frases tecidos na cadeira. Os exemplos abaixo são pedidos que já fizemos — conta pra gente o que você tem em mente e a gente tece."
       />
-      <OfferStrip compact />
-      {modelos.length > 0 ? <JsonLd data={chairListJsonLd(modelos)} /> : null}
+      <OfferStrip compact soPersonalizada />
+      {modelos.length > 0 ? <JsonLd data={chairListJsonLd(modelos, { soPersonalizada: true })} /> : null}
       <section className="mx-auto max-w-6xl px-6 py-14">
         {modelos.length > 0 && cadeiras ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

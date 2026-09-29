@@ -35,7 +35,10 @@ export function pageMetadata({
 
 // schema.org ItemList of chair Products (with the fixed chair price), so
 // catalog pages can show up with price info in search results.
-export function chairListJsonLd(modelos: { nome: string; descricao: string; imagemUrl?: string }[]) {
+export function chairListJsonLd(
+  modelos: { nome: string; descricao: string; imagemUrl?: string }[],
+  { soPersonalizada = false }: { soPersonalizada?: boolean } = {}
+) {
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -50,9 +53,9 @@ export function chairListJsonLd(modelos: { nome: string; descricao: string; imag
         brand: { "@type": "Brand", name: SITE_NOME },
         offers: {
           "@type": "AggregateOffer",
-          lowPrice: PRECO_CADEIRA.toFixed(2),
+          lowPrice: (soPersonalizada ? PRECO_CADEIRA_COM_NOME : PRECO_CADEIRA).toFixed(2),
           highPrice: PRECO_CADEIRA_COM_NOME.toFixed(2),
-          offerCount: 2,
+          offerCount: soPersonalizada ? 1 : 2,
           priceCurrency: "BRL",
           availability: "https://schema.org/MadeToOrder",
           shippingDetails: {
