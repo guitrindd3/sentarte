@@ -242,6 +242,16 @@ but **only in the "Sem nome" state** — a personalizado model always shows
 its own single photo, no variant picker, since no personalizado model has
 more than one photo yet.
 
+**`Modelo.fotosExtras?: string[]` (added 2026-09-29)** holds extra photos
+that are NOT a choice — other angles, or other customers' names on a
+"personalizado" model. The card gallery shows `imagemUrl`, then `variantes`
+(counted as "N cores", sent with the order as "Opção N"), then
+`fotosExtras` (counted as "N fotos", never sent as a choice). A
+personalizado sibling's gallery is its own `imagemUrl` + `fotosExtras`.
+Populated once by a script from `~/Pictures/cadeiras de praias/` (the
+user: "faz do mesmo jeito para todas as cadeiras"); there is no admin UI
+for it yet, but admin saves mutate models in place so they don't wipe it.
+
 **Personalizado now has a real name input.** When "Personalizado" is
 selected, `ModeloCard` shows a text field for the customer's name/apelido;
 it's threaded into both the cart (`CartItem.nomePersonalizado`, shown in

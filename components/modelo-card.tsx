@@ -27,14 +27,19 @@ export function ModeloCard({
   const [nomeTexto, setNomeTexto] = useState("");
 
   const ativo = wantsNome && personalizado ? personalizado : modelo;
-  const fotosBase = [modelo.imagemUrl, ...(modelo.variantes ?? [])].filter(
-    (f): f is string => Boolean(f)
-  );
-  const fotoAtiva =
-    wantsNome && personalizado ? personalizado.imagemUrl : fotosBase[varianteIndex] ?? fotosBase[0];
+  // Color options (a real choice, sent with the order) come first, then
+  // extra photos that are just for looking (angles, other customers' names).
+  const cores = [modelo.imagemUrl, ...(modelo.variantes ?? [])].filter((f): f is string => Boolean(f));
+  const fotosBase = wantsNome && personalizado
+    ? [personalizado.imagemUrl, ...(personalizado.fotosExtras ?? [])].filter((f): f is string => Boolean(f))
+    : [...cores, ...(modelo.fotosExtras ?? [])];
+  const fotoAtiva = fotosBase[varianteIndex] ?? fotosBase[0];
   const nomeFinal = wantsNome ? nomeTexto.trim() : "";
-  const temVariantes = !wantsNome && fotosBase.length > 1;
-  const varianteLabel = temVariantes ? `Opção ${varianteIndex + 1}` : "";
+  const temVariantes = fotosBase.length > 1;
+  const escolheCor = !wantsNome && cores.length > 1;
+  const varianteLabel = escolheCor && varianteIndex < cores.length ? `Opção ${varianteIndex + 1}` : "";
+  const contagemFotos =
+    escolheCor && fotosBase.length === cores.length ? `${cores.length} cores` : `${fotosBase.length} fotos`;
   const mudarVariante = (passo: number) =>
     setVarianteIndex((i) => (i + passo + fotosBase.length) % fotosBase.length);
 
@@ -63,7 +68,7 @@ export function ModeloCard({
             <button
               type="button"
               onClick={() => mudarVariante(-1)}
-              aria-label="Cor anterior"
+              aria-label="Foto anterior"
               className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-paper/90 text-ink backdrop-blur transition-colors hover:border-ink"
             >
               <ChevronDownIcon className="h-4 w-4 rotate-90" />
@@ -71,7 +76,7 @@ export function ModeloCard({
             <button
               type="button"
               onClick={() => mudarVariante(1)}
-              aria-label="Próxima cor"
+              aria-label="Próxima foto"
               className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-paper/90 text-ink backdrop-blur transition-colors hover:border-ink"
             >
               <ChevronDownIcon className="h-4 w-4 -rotate-90" />
@@ -79,7 +84,7 @@ export function ModeloCard({
             <div
               className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-ink/45 to-transparent px-3 pb-3 pt-8"
               role="group"
-              aria-label="Opções de cor"
+              aria-label="Fotos"
             >
               <div className="flex gap-1.5">
                 {fotosBase.map((foto, i) => (
@@ -88,7 +93,7 @@ export function ModeloCard({
                     type="button"
                     onClick={() => setVarianteIndex(i)}
                     onMouseEnter={() => setVarianteIndex(i)}
-                    aria-label={`Ver opção de cor ${i + 1}`}
+                    aria-label={`Ver foto ${i + 1}`}
                     aria-pressed={varianteIndex === i}
                     className={`relative h-11 w-11 overflow-hidden border-2 transition-all ${
                       varianteIndex === i ? "border-canvas" : "border-canvas/40 opacity-75 hover:opacity-100"
@@ -99,7 +104,7 @@ export function ModeloCard({
                 ))}
               </div>
               <span className="text-[0.7rem] font-medium text-canvas [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">
-                {fotosBase.length} cores
+                {contagemFotos}
               </span>
             </div>
           </>
@@ -119,7 +124,7 @@ export function ModeloCard({
           <div className="mt-2 inline-flex w-fit border border-line text-xs" role="group" aria-label="Personalização">
             <button
               type="button"
-              onClick={() => setWantsNome(false)}
+              onClick={() => { setWantsNome(false); setVarianteIndex(0); }}
               aria-pressed={!wantsNome}
               className={`px-3 py-1.5 transition-colors ${
                 !wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"
@@ -129,7 +134,7 @@ export function ModeloCard({
             </button>
             <button
               type="button"
-              onClick={() => setWantsNome(true)}
+              onClick={() => { setWantsNome(true); setVarianteIndex(0); }}
               aria-pressed={wantsNome}
               className={`border-l border-line px-3 py-1.5 transition-colors ${
                 wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"

@@ -7,6 +7,13 @@ export type Modelo = {
   imagemUrl?: string;
   /** Extra photos showing the same model in other color arrangements. */
   variantes?: string[];
+  /**
+   * More photos of the same product that are NOT a choice (other angles, or
+   * other customers' names on a "personalizado"). Shown in the card's photo
+   * gallery after `variantes`. Not editable in /admin yet — added
+   * 2026-09-29 by a one-off script from the user's local photo folders.
+   */
+  fotosExtras?: string[];
 };
 
 export type Categoria = {
