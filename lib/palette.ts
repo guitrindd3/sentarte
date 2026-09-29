@@ -4,6 +4,10 @@ export type Fio = {
 };
 
 export const FIOS: Fio[] = [
+  // Black and white first: the real chairs (and the builder's base photo)
+  // are most often woven in these two. Added 2026-09-29.
+  { nome: "Preto", cor: "#1C1C1E" },
+  { nome: "Branco", cor: "#F3F1EC" },
   { nome: "Verde-marinho", cor: "#15564C" },
   { nome: "Terracota", cor: "#BD502E" },
   { nome: "Rattan", cor: "#A9835A" },

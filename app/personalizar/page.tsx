@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
-import { Configurator } from "@/components/home/configurator";
+import { ChairBuilder } from "@/components/chair-builder";
 import { getContent } from "@/lib/content-store";
 
 export const dynamic = "force-dynamic";
@@ -13,13 +13,8 @@ export const metadata: Metadata = pageMetadata({
   path: "/personalizar",
 });
 
-// The configurator's preview is a chair illustration — bags and lounge
-// chairs don't fit it, so only the chair category is offered as a "Modelo".
-const CATEGORIAS_EXCLUIDAS = ["bolsas", "espreguicadeiras"];
-
 export default async function PersonalizarPage() {
   const content = await getContent();
-  const categorias = content.categorias.filter((c) => !CATEGORIAS_EXCLUIDAS.includes(c.slug));
 
   return (
     <>
@@ -53,7 +48,7 @@ export default async function PersonalizarPage() {
         </div>
       </section>
       <section className="mx-auto max-w-6xl px-6 py-14">
-        <Configurator categorias={categorias} whatsappNumero={content.site.whatsappNumero} />
+        <ChairBuilder whatsappNumero={content.site.whatsappNumero} />
       </section>
     </>
   );

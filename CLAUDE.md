@@ -335,6 +335,29 @@ fabricated legal identifiers (CNPJ, address) unless the user supplies them.
   mini live preview, `PreviewPromo`, was added and then removed the same day
   at the user's request — the flat chair illustration didn't look good.) `WhatsAppFloat` is the fixed bottom-right contact button.
 
+## Monte a sua trama builder (2026-09-29)
+
+`/personalizar` is `components/chair-builder.tsx`, a 4-step builder
+(trançado, cores, nome, pronto) built on the REAL chair from the user's
+weaving clip instead of a drawn illustration (the old flat SVG
+`Configurator`/`ChairPreview` and the Press Start 2P font were removed —
+the user said it "não ta legal" and didn't want anything paid, e.g. AI 3D
+services). Flow: shows `public/monte/cadeira-vazia.jpg` (clip frame 1,
+empty frame) → "Começar a montar" plays the clip up to `FIM_DA_TRAMA`
+(1.72s) → from then on a canvas repaints `public/monte/cadeira-trancada.jpg`
+(clip frame at ~1.75s, black/white weave, no name) via
+`lib/chair-render.ts` `pintarCadeira()`: every webbing pixel keeps the
+photo's brightness (strand texture, light) and is recolored as main thread
+(A, originally black) or detail thread (B, originally white); the backrest
+panel also gets the weave shape and the name (`lib/pixel-font.ts`, 5x7
+bitmap). Regions (ENCOSTO/LATERAIS/ASSENTO) are hand-measured pixel
+coordinates of that 480x848 frame — re-measure if the base photo changes.
+The clip's frames aren't pixel-aligned (it's AI-generated; the background
+shifts), so the webbing can't be found by diffing the two frames.
+Frames were extracted with `ffmpeg-static` (npm, free) — not a project
+dependency. A sharper pair of real photos (empty frame + fully white-woven,
+same camera position) would look better; the user was told this.
+
 ## Cart & search
 
 - Added 2026-09-21 (user: "quero a lupinha para as pessoas pesquisarem, o
