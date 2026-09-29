@@ -11,6 +11,8 @@ import {
   CUPOM_MIN_ITENS,
   formatBRL,
   PARCELAS_MAX,
+  PIX_DESCONTO,
+  precoPix,
   PRECO_CADEIRA,
 } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
@@ -38,6 +40,7 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
             ? [`Cupom ${CUPOM_CODIGO} (${Math.round(CUPOM_DESCONTO * 100)}%): -${formatBRL(desconto)}`]
             : []),
           `Total: ${formatBRL(total)} com frete grátis`,
+          `No Pix (${Math.round(PIX_DESCONTO * 100)}% off): ${formatBRL(precoPix(total))}`,
         ];
 
   const mensagem =
@@ -167,6 +170,10 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
                 <div className="flex justify-between border-t border-line pt-2 font-medium text-ink">
                   <dt>Total</dt>
                   <dd>{formatBRL(total)}</dd>
+                </div>
+                <div className="flex justify-between text-ink">
+                  <dt>No Pix ({Math.round(PIX_DESCONTO * 100)}% off)</dt>
+                  <dd>{formatBRL(precoPix(total))}</dd>
                 </div>
                 <p className="text-xs text-ink-soft">ou em até {PARCELAS_MAX}x no cartão</p>
                 {faltamParaCupom > 0 ? (

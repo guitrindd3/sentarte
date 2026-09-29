@@ -5,7 +5,7 @@ import Image from "next/image";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { WeavePattern } from "@/components/weave-pattern";
 import { WhatsAppIcon } from "@/components/icons";
-import { CATEGORIA_COM_PRECO, formatBRL, PARCELAS_MAX, PRECO_CADEIRA } from "@/lib/offer";
+import { CATEGORIA_COM_PRECO, formatBRL, PARCELAS_MAX, precoPix, PRECO_CADEIRA } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 import type { Modelo } from "@/lib/content-schema";
 
@@ -62,6 +62,7 @@ export function ModeloCard({
           <p className="mt-1 text-sm text-ink">
             <span className="font-medium">{formatBRL(PRECO_CADEIRA)}</span>
             <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
+            <span className="block text-xs text-ink-soft">{formatBRL(precoPix(PRECO_CADEIRA))} no Pix</span>
           </p>
         ) : null}
 

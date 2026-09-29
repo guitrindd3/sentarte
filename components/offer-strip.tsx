@@ -4,6 +4,7 @@ import {
   CUPOM_MIN_ITENS,
   formatBRL,
   PARCELAS_MAX,
+  PIX_DESCONTO,
   PRAZO_PRODUCAO_DIAS_UTEIS,
   PRECO_CADEIRA,
 } from "@/lib/offer";
@@ -11,7 +12,7 @@ import {
 const ITENS = [
   {
     destaque: formatBRL(PRECO_CADEIRA),
-    texto: `em até ${PARCELAS_MAX}x no cartão`,
+    texto: `em até ${PARCELAS_MAX}x no cartão ou ${Math.round(PIX_DESCONTO * 100)}% off no Pix`,
   },
   {
     destaque: "Frete grátis",

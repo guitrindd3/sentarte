@@ -284,7 +284,7 @@ fabricated legal identifiers (CNPJ, address) unless the user supplies them.
 - **Commercial terms live in `lib/offer.ts`**, not in admin content: chair
   price R$ 449,90, up to 4x on card (with the card fee, so never write "sem
   juros"), free shipping to all of Brazil, production in up to 5 business
-  days, coupon `SENTARTE` = 5% off from 2 chairs. Only the `cadeiras`
+  days, coupon `SENTARTE` = 5% off from 2 chairs, 2% off paying with Pix (stacked on the final total). Only the `cadeiras`
   category shows a price (`CATEGORIA_COM_PRECO`). Used by `OfferStrip`
   (homepage band + compact under catalog headers), `ModeloCard`, the cart
   drawer totals/WhatsApp message, the FAQ and `politica-de-envio`.
