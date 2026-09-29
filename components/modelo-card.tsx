@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { WeavePattern } from "@/components/weave-pattern";
-import { WhatsAppIcon } from "@/components/icons";
+import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
 import { CATEGORIA_COM_PRECO, formatBRL, PARCELAS_MAX, precoPix, PRECO_CADEIRA } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 import type { Modelo } from "@/lib/content-schema";
@@ -33,7 +33,10 @@ export function ModeloCard({
   const fotoAtiva =
     wantsNome && personalizado ? personalizado.imagemUrl : fotosBase[varianteIndex] ?? fotosBase[0];
   const nomeFinal = wantsNome ? nomeTexto.trim() : "";
-  const varianteLabel = !wantsNome && fotosBase.length > 1 ? `Variação ${varianteIndex + 1}` : "";
+  const temVariantes = !wantsNome && fotosBase.length > 1;
+  const varianteLabel = temVariantes ? `Opção ${varianteIndex + 1}` : "";
+  const mudarVariante = (passo: number) =>
+    setVarianteIndex((i) => (i + passo + fotosBase.length) % fotosBase.length);
 
   const temPreco = categoriaSlug === CATEGORIA_COM_PRECO;
   const mensagemWhatsapp = `Oi! Quero pedir uma peça de ${categoria}, modelo "${ativo.nome}".${
@@ -55,6 +58,52 @@ export function ModeloCard({
         ) : (
           <WeavePattern colorA={ativo.corA} colorB={ativo.corB} cell={30} band={20} className="h-full w-full" />
         )}
+        {temVariantes ? (
+          <>
+            <button
+              type="button"
+              onClick={() => mudarVariante(-1)}
+              aria-label="Cor anterior"
+              className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-paper/90 text-ink backdrop-blur transition-colors hover:border-ink"
+            >
+              <ChevronDownIcon className="h-4 w-4 rotate-90" />
+            </button>
+            <button
+              type="button"
+              onClick={() => mudarVariante(1)}
+              aria-label="Próxima cor"
+              className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-paper/90 text-ink backdrop-blur transition-colors hover:border-ink"
+            >
+              <ChevronDownIcon className="h-4 w-4 -rotate-90" />
+            </button>
+            <div
+              className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-ink/45 to-transparent px-3 pb-3 pt-8"
+              role="group"
+              aria-label="Opções de cor"
+            >
+              <div className="flex gap-1.5">
+                {fotosBase.map((foto, i) => (
+                  <button
+                    key={foto}
+                    type="button"
+                    onClick={() => setVarianteIndex(i)}
+                    onMouseEnter={() => setVarianteIndex(i)}
+                    aria-label={`Ver opção de cor ${i + 1}`}
+                    aria-pressed={varianteIndex === i}
+                    className={`relative h-11 w-11 overflow-hidden border-2 transition-all ${
+                      varianteIndex === i ? "border-canvas" : "border-canvas/40 opacity-75 hover:opacity-100"
+                    }`}
+                  >
+                    <Image src={foto} alt="" fill className="object-cover" sizes="44px" />
+                  </button>
+                ))}
+              </div>
+              <span className="text-[0.7rem] font-medium text-canvas [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">
+                {fotosBase.length} cores
+              </span>
+            </div>
+          </>
+        ) : null}
       </div>
       <div className="flex flex-1 flex-col p-5">
         <p className="font-serif text-lg font-medium text-ink">{modelo.nome}</p>
@@ -91,27 +140,6 @@ export function ModeloCard({
           </div>
         ) : null}
 
-        {!wantsNome && fotosBase.length > 1 ? (
-          <div className="mt-2">
-            <span className="text-xs text-ink-soft">Cor: {varianteLabel}</span>
-            <div className="mt-1 flex items-center gap-1.5" role="group" aria-label="Variação de cor">
-              {fotosBase.map((foto, i) => (
-                <button
-                  key={foto}
-                  type="button"
-                  onClick={() => setVarianteIndex(i)}
-                  aria-label={`Ver variação de cor ${i + 1}`}
-                  aria-pressed={varianteIndex === i}
-                  className={`relative h-9 w-9 overflow-hidden border transition-colors ${
-                    varianteIndex === i ? "border-ink" : "border-line hover:border-ink"
-                  }`}
-                >
-                  <Image src={foto} alt="" fill className="object-cover" sizes="36px" />
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
 
         {wantsNome && personalizado ? (
           <label className="mt-2 block">

@@ -237,7 +237,7 @@ via a `[2,3,4,5,6].map(...)` in `app/admin/page.tsx`, so 6 total photos per
 model) rather than an open-ended list — raised from an initial cap of 2 the
 same day to fit "Cadeiras boho" (6 distinct patterns). Bump the array
 literal in both files together if a model ever needs more than 6.
-`ModeloCard` shows a row of small photo-swatch buttons to pick a variant,
+`ModeloCard` shows the variants as a gallery on the photo itself (prev/next arrows plus a thumbnail row overlaid at the bottom, hover previews; redesigned 2026-09-29 after the user found the old below-the-photo "Cor: Variação 1" swatch row "estranho" — kept on the photo so cards with/without variants stay the same height),
 but **only in the "Sem nome" state** — a personalizado model always shows
 its own single photo, no variant picker, since no personalizado model has
 more than one photo yet.
