@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
 import { getAdminContent } from "@/lib/content-store";
@@ -155,6 +156,37 @@ export default async function AdminPage() {
                               ) : null}
                             </Field>
                           ))}
+                        </div>
+                        <div>
+                          <p className="text-sm text-ink-soft">
+                            Mais fotos (outros ângulos ou outros nomes — só para ver, não é opção de cor)
+                          </p>
+                          <div className="mt-1">
+                          {m.fotosExtras?.length ? (
+                            <div className="mb-2 flex flex-wrap gap-3">
+                              {m.fotosExtras.map((url) => (
+                                <label key={url} className="flex w-20 flex-col items-center gap-1 text-[0.7rem] text-ink-soft">
+                                  <span className="relative block h-20 w-20 overflow-hidden border border-line">
+                                    <Image src={url} alt="" fill className="object-cover" sizes="80px" />
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <input type="checkbox" name="removerExtra" value={url} /> remover
+                                  </span>
+                                </label>
+                              ))}
+                            </div>
+                          ) : null}
+                          <input
+                            type="file"
+                            name="fotosExtrasNovas"
+                            accept="image/*"
+                            multiple
+                            className="text-sm text-ink-soft"
+                          />
+                          <p className="mt-1 text-xs text-ink-soft">
+                            Pode escolher várias de uma vez (até 8 no total, e até 10 MB por salvamento).
+                          </p>
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <Field label="Cor 1 (usada se não tiver foto)">

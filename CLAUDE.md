@@ -248,9 +248,9 @@ that are NOT a choice — other angles, or other customers' names on a
 (counted as "N cores", sent with the order as "Opção N"), then
 `fotosExtras` (counted as "N fotos", never sent as a choice). A
 personalizado sibling's gallery is its own `imagemUrl` + `fotosExtras`.
-Populated once by a script from `~/Pictures/cadeiras de praias/` (the
-user: "faz do mesmo jeito para todas as cadeiras"); there is no admin UI
-for it yet, but admin saves mutate models in place so they don't wipe it.
+First populated by a script from `~/Pictures/cadeiras de praias/` (the
+user: "faz do mesmo jeito para todas as cadeiras");
+editable in /admin since 2026-09-29 ("Mais fotos": thumbnails with a remover checkbox + a multi-file input, capped at 8 per model in updateModeloAction).
 
 **Personalizado now has a real name input.** When "Personalizado" is
 selected, `ModeloCard` shows a text field for the customer's name/apelido;

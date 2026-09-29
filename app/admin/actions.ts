@@ -144,6 +144,8 @@ export async function addModeloAction(categoriaId: string, formData: FormData) {
   revalidateSite();
 }
 
+const MAX_FOTOS_EXTRAS = 8;
+
 export async function updateModeloAction(categoriaId: string, modeloId: string, formData: FormData) {
   await requireAdmin();
   const content = await getContentForWrite();
@@ -186,6 +188,19 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
     }
   }
   modelo.variantes = variantes.filter((v): v is string => Boolean(v));
+
+  // "Mais fotos" (fotosExtras): tick to remove, multi-file input to add.
+  const remover = new Set(formData.getAll("removerExtra").map(String));
+  const extras = (modelo.fotosExtras ?? []).filter((url) => !remover.has(url));
+  for (const nova of formData.getAll("fotosExtrasNovas")) {
+    if (!(nova instanceof File) || nova.size === 0 || extras.length >= MAX_FOTOS_EXTRAS) continue;
+    const blob = await put(`modelos/${crypto.randomUUID()}-${nova.name}`, nova, {
+      access: "public",
+      contentType: nova.type || undefined,
+    });
+    extras.push(blob.url);
+  }
+  modelo.fotosExtras = extras.length > 0 ? extras : undefined;
 
   await saveContent(content);
   revalidateSite();
