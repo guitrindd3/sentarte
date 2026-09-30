@@ -30,7 +30,12 @@ export default async function PedidoPage({ searchParams }: PageProps<"/pedido">)
   const q = await searchParams;
   const pick = (k: string) => (typeof q[k] === "string" ? (q[k] as string) : undefined);
   const pagamentoId = pick("payment_id") ?? pick("collection_id");
-  const pagamento = await confirmarPagamento(pagamentoId);
+  const confirmado = await confirmarPagamento(pagamentoId);
+  // Only trust a payment whose own reference matches the order in the URL
+  // (Mercado Pago sends both back), so a random payment id can't be used to
+  // show "aprovado" or someone else's amount.
+  const refUrl = pick("external_reference");
+  const pagamento = confirmado && refUrl && confirmado.external_reference === refUrl ? confirmado : null;
   const { site } = await getContent();
 
   const status = pagamento?.status ?? pick("status") ?? pick("collection_status");

@@ -3,19 +3,68 @@
 import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { put } from "@vercel/blob";
-import { createSession, destroySession, verifyPassword, verifySession } from "@/lib/auth";
+import { headers } from "next/headers";
+import { createSession, destroySession, revogarTodasAsSessoes, verifyPassword, verifySession } from "@/lib/auth";
 import { CONTENT_TAG, getContentForWrite, saveContent } from "@/lib/content-store";
 import type { Categoria, Modelo } from "@/lib/content-schema";
 
 type LoginState = { error?: string } | undefined;
 
+// Brute-force brake for the single admin password: every wrong attempt waits
+// a second, and an IP is locked out for 15 minutes after 5 wrong ones.
+// In-memory, so it's per server instance — a speed bump, not a wall; the
+// real protection is a long password.
+const MAX_TENTATIVAS = 5;
+const JANELA_MS = 15 * 60 * 1000;
+const tentativas = new Map<string, { n: number; desde: number }>();
+
+async function ipDoPedido() {
+  const h = await headers();
+  return (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || h.get("x-real-ip") || "desconhecido";
+}
+
 export async function loginAction(_prevState: LoginState, formData: FormData): Promise<LoginState> {
+  const ip = await ipDoPedido();
+  const agora = Date.now();
+  const reg = tentativas.get(ip);
+  if (reg && agora - reg.desde > JANELA_MS) tentativas.delete(ip);
+  const atual = tentativas.get(ip);
+  if (atual && atual.n >= MAX_TENTATIVAS) {
+    const min = Math.ceil((JANELA_MS - (agora - atual.desde)) / 60000);
+    return { error: `Muitas tentativas erradas. Tente de novo em ${min} min.` };
+  }
+
   const password = String(formData.get("password") ?? "");
-  if (!password || !verifyPassword(password)) {
+  if (!password || password.length > 200 || !verifyPassword(password)) {
+    tentativas.set(ip, { n: (atual?.n ?? 0) + 1, desde: atual?.desde ?? agora });
+    if (tentativas.size > 5000) tentativas.clear();
+    await new Promise((r) => setTimeout(r, 1000));
     return { error: "Senha incorreta." };
   }
+  tentativas.delete(ip);
   await createSession();
   redirect("/admin");
+}
+
+/** Signs out every device (the current one included). */
+export async function logoutTodosAction() {
+  await requireAdmin();
+  await revogarTodasAsSessoes();
+  await destroySession();
+  redirect("/admin/login");
+}
+
+// Only real images go to the public Blob store: checked by declared type,
+// size, and the file's first bytes (so a renamed .html/.svg is refused).
+const TIPOS_OK = ["image/jpeg", "image/png", "image/webp"];
+const MAX_BYTES = 10 * 1024 * 1024;
+async function imagemValida(f: FormDataEntryValue | null): Promise<File | null> {
+  if (!(f instanceof File) || f.size === 0 || f.size > MAX_BYTES || !TIPOS_OK.includes(f.type)) return null;
+  const b = new Uint8Array(await f.slice(0, 12).arrayBuffer());
+  const jpg = b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+  const png = b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
+  const webp = b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50;
+  return jpg || png || webp ? f : null;
 }
 
 export async function logoutAction() {
@@ -158,8 +207,8 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
   modelo.corA = String(formData.get("corA") ?? modelo.corA);
   modelo.corB = String(formData.get("corB") ?? modelo.corB);
 
-  const foto = formData.get("foto");
-  if (foto instanceof File && foto.size > 0) {
+  const foto = await imagemValida(formData.get("foto"));
+  if (foto) {
     const blob = await put(`modelos/${crypto.randomUUID()}-${foto.name}`, foto, {
       access: "public",
       contentType: foto.type || undefined,
@@ -176,8 +225,8 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
     remover: `removerVariante${n}`,
   }));
   for (const [i, { foto: campoFoto, remover: campoRemover }] of camposVariante.entries()) {
-    const fotoVariante = formData.get(campoFoto);
-    if (fotoVariante instanceof File && fotoVariante.size > 0) {
+    const fotoVariante = await imagemValida(formData.get(campoFoto));
+    if (fotoVariante) {
       const blob = await put(`modelos/${crypto.randomUUID()}-${fotoVariante.name}`, fotoVariante, {
         access: "public",
         contentType: fotoVariante.type || undefined,
@@ -192,8 +241,9 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
   // "Mais fotos" (fotosExtras): tick to remove, multi-file input to add.
   const remover = new Set(formData.getAll("removerExtra").map(String));
   const extras = (modelo.fotosExtras ?? []).filter((url) => !remover.has(url));
-  for (const nova of formData.getAll("fotosExtrasNovas")) {
-    if (!(nova instanceof File) || nova.size === 0 || extras.length >= MAX_FOTOS_EXTRAS) continue;
+  for (const entrada of formData.getAll("fotosExtrasNovas")) {
+    const nova = extras.length < MAX_FOTOS_EXTRAS ? await imagemValida(entrada) : null;
+    if (!nova) continue;
     const blob = await put(`modelos/${crypto.randomUUID()}-${nova.name}`, nova, {
       access: "public",
       contentType: nova.type || undefined,

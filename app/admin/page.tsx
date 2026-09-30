@@ -8,6 +8,7 @@ import {
   deleteCategoriaAction,
   deleteModeloAction,
   logoutAction,
+  logoutTodosAction,
   updateCategoriaAction,
   updateHeroAction,
   updateModeloAction,
@@ -31,11 +32,18 @@ export default async function AdminPage() {
             Alterações aparecem no site assim que você salva.
           </p>
         </div>
-        <form action={logoutAction}>
-          <button type="submit" className="text-sm text-ink-soft underline hover:text-ink">
-            Sair
-          </button>
-        </form>
+        <div className="flex flex-col items-end gap-1">
+          <form action={logoutAction}>
+            <button type="submit" className="text-sm text-ink-soft underline hover:text-ink">
+              Sair
+            </button>
+          </form>
+          <form action={logoutTodosAction}>
+            <button type="submit" className="text-xs text-ink-soft underline hover:text-ink">
+              Sair de todos os aparelhos
+            </button>
+          </form>
+        </div>
       </div>
 
       <section className="mt-10 border border-line bg-paper p-6">

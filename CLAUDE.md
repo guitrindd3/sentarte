@@ -474,6 +474,23 @@ same camera position) would look better; the user was told this.
   history around 2026-09-21), then update the env var on Vercel — there's no
   in-app "change password" flow.
 
+## Security (2026-09-30 pass)
+
+- Security headers + CSP in `next.config.ts` (`headers()`), `poweredByHeader:
+  false`. If you add a new external resource (script, image host, fetch
+  target), add it to the CSP or it will be silently blocked.
+- Admin login: 1s delay per wrong password, 15-min lockout per IP after 5
+  (in-memory per instance). Sessions last 7 days; "Sair de todos os
+  aparelhos" writes `admin/sessoes-revogadas.json` to Blob and
+  `verifySession()` rejects tokens issued up to that time (proxy.ts only
+  checks the signature; the page/actions enforce revocation).
+- Admin uploads accept only real JPEG/PNG/WebP (type + magic bytes), ≤10MB.
+- `/admin`, `/api/`, `/pedido` are disallowed in robots and `/admin` is
+  noindex. `/pedido` only trusts a payment whose external_reference matches
+  the URL's.
+- Keep `next` patched (`npm audit --omit=dev`) — upgraded 16.3.5 → 16.3.8 for
+  GHSA-vcvr-r3jv-pc5j.
+
 ## Before shipping a change
 
 Run `npm run build` (Next 16 + Turbopack; also runs the TypeScript check) and
