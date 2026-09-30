@@ -1,6 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
+import { CheckoutForm } from "@/components/checkout-form";
+import { calcularPedido } from "@/lib/pedido";
 import { useCart } from "@/lib/cart-context";
 import { CloseIcon, MinusIcon, PlusIcon, WhatsAppIcon } from "@/components/icons";
 import { WeavePattern } from "@/components/weave-pattern";
@@ -17,8 +20,11 @@ import {
 } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 
-export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
+export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero: string; pagamentoAtivo: boolean }) {
   const { items, count, isOpen, closeCart, removeItem, setQuantidade, clear } = useCart();
+  const [etapa, setEtapa] = useState<"carrinho" | "entrega">("carrinho");
+  const podePagar = pagamentoAtivo && calcularPedido(items).pagavel;
+  const naEntrega = etapa === "entrega" && podePagar;
 
   // Only chairs have a fixed price; anything else is priced over WhatsApp.
   // A chair with a woven name costs PRECO_CADEIRA_COM_NOME.
@@ -93,7 +99,12 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        {naEntrega ? (
+          <div className="min-h-0 flex-1">
+            <CheckoutForm items={items} onVoltar={() => setEtapa("carrinho")} />
+          </div>
+        ) : null}
+        <div className={`flex-1 overflow-y-auto px-6 py-4 ${naEntrega ? "hidden" : ""}`}>
           {items.length === 0 ? (
             <p className="mt-8 text-center text-sm text-ink-soft">Seu carrinho está vazio.</p>
           ) : (
@@ -154,7 +165,7 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
           )}
         </div>
 
-        {items.length > 0 ? (
+        {items.length > 0 && !naEntrega ? (
           <div className="border-t border-line px-6 py-4">
             {qtdCadeiras > 0 ? (
               <dl className="space-y-1 text-sm">
@@ -197,6 +208,15 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
                 {count} {count === 1 ? "item" : "itens"} no carrinho
               </p>
             )}
+            {podePagar ? (
+              <button
+                type="button"
+                onClick={() => setEtapa("entrega")}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-verde px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-verde-escuro"
+              >
+                Pagar agora (Pix ou cartão)
+              </button>
+            ) : null}
             <a
               href={whatsappUrl(whatsappNumero, mensagem)}
               target="_blank"
@@ -205,10 +225,14 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
                 clear();
                 closeCart();
               }}
-              className="mt-3 flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-3 text-sm font-medium text-canvas transition-colors hover:bg-transparent hover:text-ink"
+              className={`mt-2 flex items-center justify-center gap-2 border px-4 py-3 text-sm font-medium transition-colors ${
+                podePagar
+                  ? "border-line text-ink hover:border-ink"
+                  : "border-ink bg-ink text-canvas hover:bg-transparent hover:text-ink"
+              }`}
             >
               <WhatsAppIcon className="h-4 w-4" />
-              Finalizar pedido no WhatsApp
+              {podePagar ? "Ou fechar pelo WhatsApp" : "Finalizar pedido no WhatsApp"}
             </a>
             <button
               type="button"

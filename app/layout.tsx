@@ -68,7 +68,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <SiteHeader siteName={site.nome} whatsappNumero={site.whatsappNumero} />
           <main className="flex-1">{children}</main>
           <SiteFooter />
-          <CartDrawer whatsappNumero={site.whatsappNumero} />
+          <CartDrawer
+            whatsappNumero={site.whatsappNumero}
+            pagamentoAtivo={Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN)}
+          />
           <WhatsAppFloat whatsappNumero={site.whatsappNumero} />
         </CartProvider>
         <JsonLd

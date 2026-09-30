@@ -403,6 +403,25 @@ same camera position) would look better; the user was told this.
   scratchpad, not a project dependency) with the iPhone 13 profile at
   deviceScaleFactor 1 — full-page shots at 3x blank out past ~16k px.
 
+## Online payment — Mercado Pago Checkout Pro (2026-09-30)
+
+- The cart drawer shows "Pagar agora (Pix ou cartão)" only when the
+  `MERCADOPAGO_ACCESS_TOKEN` env var is set on Vercel AND the cart has only
+  chairs (fixed price). It opens `CheckoutForm` (delivery details, ViaCEP
+  lookup) → POST `/api/checkout` → Mercado Pago preference → redirect.
+  Pix: Pix-only preference at `totalPix`; card: card-only, up to
+  `PARCELAS_MAX` installments at `total` (installment interest is whatever
+  the Mercado Pago account is set to charge the buyer).
+- `/api/checkout` recomputes every amount from `lib/pedido.ts`
+  (`calcularPedido`) — never trusts browser prices.
+- Mercado Pago sends the buyer back to `/pedido?payment_id=…`; that page
+  confirms the status with `GET /v1/payments/{id}` before saying "aprovado",
+  clears the cart, and offers a WhatsApp message with items + paid amount +
+  payment id + delivery address (summary kept in localStorage under
+  `sentarte-pedido` before redirect). WhatsApp stays the confirmation
+  channel (user's choice). No order database and no webhook yet — the
+  Mercado Pago dashboard is the record of payments.
+
 ## Cart & search
 
 - Added 2026-09-21 (user: "quero a lupinha para as pessoas pesquisarem, o
