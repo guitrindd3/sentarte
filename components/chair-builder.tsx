@@ -136,6 +136,8 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [posicao, setPosicao] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
   const [arrastando, setArrastando] = useState(false);
   const [tamanhoNome, setTamanhoNome] = useState(1);
+  const [escalaForma, setEscalaForma] = useState(1);
+  const [posForma, setPosForma] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
   const [adicionado, setAdicionado] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -165,16 +167,16 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     carregarFoto(FOTO_TRANCADA).then(setFoto).catch(() => setFoto(null));
   }, []);
 
-  const opcoes = { forma, corA: fioA.cor, corB: fioB.cor, corC, corLaterais, nome, posicao, tamanhoNome };
+  const opcoes = { forma, corA: fioA.cor, corB: fioB.cor, corC, corLaterais, nome, posicao, tamanhoNome, escalaForma, posForma };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, corA: fioA.cor, corB: fioB.cor, corC, corLaterais, nome, posicao, tamanhoNome }, {
+    desenhar(canvasRef.current, foto, { forma, corA: fioA.cor, corB: fioB.cor, corC, corLaterais, nome, posicao, tamanhoNome, escalaForma, posForma }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
-  }, [foto, passo, forma, fioA, fioB, corC, corLaterais, nome, posicao, tamanhoNome]);
+  }, [foto, passo, forma, fioA, fioB, corC, corLaterais, nome, posicao, tamanhoNome, escalaForma, posForma]);
 
   // Shape thumbnails (just the backrest), in the chosen colors.
   useEffect(() => {
@@ -215,11 +217,15 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   };
 
   // Name step: press/drag on the chair to move the name.
-  const podeArrastar = passo === 3 && Boolean(nome.trim());
+  // Step 1 with a reduced shape: drag moves the shape instead.
+  const arrastaForma = passo === 1 && escalaForma < 0.97 && forma !== "meio-a-meio";
+  const podeArrastar = arrastaForma || (passo === 3 && Boolean(nome.trim()));
   const moverNome = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     const escala = IMG_W / r.width;
-    setPosicao(posicaoNoEncosto((e.clientX - r.left) * escala, (e.clientY - r.top) * escala + CORTE_Y0));
+    const p = posicaoNoEncosto((e.clientX - r.left) * escala, (e.clientY - r.top) * escala + CORTE_Y0);
+    if (arrastaForma) setPosForma(p);
+    else setPosicao(p);
   };
 
   const recomecar = () => {
@@ -227,7 +233,12 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     setAdicionado(false);
   };
 
-  const handleNome = (valor: string) =>
+  const handleNome = (valor: string) => {
+    // First letters typed with a reduced shape: start the name on the
+    // opposite half of the backrest so the two don't overlap.
+    if (!nome.trim() && valor.trim() && escalaForma < 0.97) {
+      setPosicao({ x: 0.5, y: posForma.y < 0.5 ? 0.8 : 0.2 });
+    }
     setNome(
       valor
         .split("\n")
@@ -235,6 +246,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
         .map((l) => l.slice(0, MAX_CHARS))
         .join("\n")
     );
+  };
 
   const nomeLimpo = nome.trim().toUpperCase();
   const temNome = Boolean(nomeLimpo);
@@ -246,7 +258,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const mensagem = [
     "Oi! Montei a minha cadeira no site e quero pedir:",
     "",
-    `Trançado: ${formaRotulo}`,
+    `Trançado: ${formaRotulo}${escalaForma < 0.97 ? ` (tamanho ${Math.round(escalaForma * 100)}%)` : ""}`,
     tresCores ? `Cor principal: ${fioA.nome} (metade esquerda) e ${fioC.nome} (metade direita)` : `Cor principal: ${fioA.nome}`,
     `Cor dos detalhes: ${fioB.nome}`,
     `Cor das laterais: ${lateraisProprias ? fioL.nome : fioB.nome}`,
@@ -367,7 +379,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
           />
           {podeArrastar && !arrastando ? (
             <p className="pointer-events-none absolute inset-x-0 top-3 mx-auto w-fit bg-ink/80 px-3 py-1 text-xs text-canvas">
-              Arraste para mover o nome
+              {arrastaForma ? "Arraste para mover o desenho" : "Arraste para mover o nome"}
             </p>
           ) : null}
 
@@ -489,6 +501,32 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   </button>
                 ))}
               </div>
+              {forma !== "lisa" && forma !== "meio-a-meio" ? (
+                <label className="mt-6 block">
+                  <span className="flex justify-between text-sm text-ink">
+                    Tamanho do trançado
+                    <span className="text-ink-soft">{Math.round(escalaForma * 100)}%</span>
+                  </span>
+                  <input
+                    type="range"
+                    min={0.35}
+                    max={1}
+                    step={0.05}
+                    value={escalaForma}
+                    onChange={(e) => setEscalaForma(Number(e.target.value))}
+                    className="mt-2 w-full accent-verde"
+                  />
+                  <span className="flex justify-between text-xs text-ink-soft">
+                    <span>Menor</span>
+                    <span>Maior</span>
+                  </span>
+                  {escalaForma < 0.97 ? (
+                    <span className="mt-2 block text-xs text-ink-soft">
+                      Arraste o desenho na cadeira para escolher onde ele fica. Assim sobra espaço para o nome.
+                    </span>
+                  ) : null}
+                </label>
+              ) : null}
             </fieldset>
           ) : null}
 

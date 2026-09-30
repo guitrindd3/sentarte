@@ -125,6 +125,10 @@ export type Opcoes = {
   corC?: string;
   /** Color of the side straps; defaults to the detail color (corB). */
   corLaterais?: string;
+  /** Weave shape size, 0.35-1 of the name area, and where its center sits
+   * (0-1, like the name) — so a smaller shape and a name both fit. */
+  escalaForma?: number;
+  posForma?: NomePosicao;
 };
 
 function hexRgb(hex: string): [number, number, number] {
@@ -670,20 +674,34 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   const cols = Math.ceil(w / CELULA);
   const rows = Math.ceil((h - MARGEM_TOPO - MARGEM_BASE) / CELULA);
   const nome = rasterizarNome(op.nome, op.posicao, op.tamanhoNome ?? 1);
+  // The shape is drawn as a scaled-down copy inside a box of the name area.
+  const escala = Math.max(0.35, Math.min(1, op.escalaForma ?? 1));
+  const areaH = h - MARGEM_TOPO - MARGEM_BASE;
+  const caixaW = w * escala;
+  const caixaH = areaH * escala;
+  const pf = op.posForma ?? { x: 0.5, y: 0.5 };
+  const caixaX0 = Math.max(0, Math.min(w - caixaW, pf.x * w - caixaW / 2));
+  const caixaY0 = MARGEM_TOPO + Math.max(0, Math.min(areaH - caixaH, pf.y * areaH - caixaH / 2));
   for (let y = ENCOSTO.y0; y < ENCOSTO.y1; y++) {
     for (let x = ENCOSTO.x0; x < ENCOSTO.x1; x++) {
       const i = (y * IMG_W + x) * 4;
       const lx = x - ENCOSTO.x0;
       const ly = y - ENCOSTO.y0;
       const naMargem = ly < MARGEM_TOPO || ly >= h - MARGEM_BASE;
+      const u = (lx - caixaX0) / escala;
+      const v = (ly - caixaY0) / escala;
+      const naCaixa = u >= 0 && v >= 0 && u < w && v < areaH;
       let detalhe =
         op.forma === "meio-a-meio"
           ? lx >= w / 2
           : !naMargem &&
-        celulaDaForma(op.forma, Math.floor(lx / CELULA), Math.floor((ly - MARGEM_TOPO) / CELULA), cols, rows);
+            naCaixa &&
+            celulaDaForma(op.forma, Math.floor(u / CELULA), Math.floor(v / CELULA), cols, rows);
       if (nome) {
         const k = ly * w + lx;
-        if (ly >= nome.faixaY0 && ly <= nome.faixaY1) detalhe = false;
+        // Full-size shapes get a plain band behind the name; a reduced shape
+        // was placed apart from the name on purpose, so leave it alone.
+        if (escala >= 0.97 && ly >= nome.faixaY0 && ly <= nome.faixaY1) detalhe = false;
         if (nome.mascara[k]) detalhe = true;
         else if (nome.contorno[k]) detalhe = false;
       }

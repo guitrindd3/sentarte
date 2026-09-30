@@ -359,7 +359,10 @@ step) splits the main/vertical thread down the middle (left corA, right
 corC) on the backrest and seat — works with every shape; "triangulo-grande"
 reproduces the three-color chair the user showed; a separate side-strap
 color (`Opcoes.corLaterais`, "Cor diferente nas laterais" toggle) defaults
-to corB; shapes
+to corB; shape size `escalaForma` (0.35-1, draws a scaled copy in a box of
+the name area) + `posForma` set by dragging in step 1 when reduced — a
+reduced shape is not cleared by the name band, and a new name starts on
+the opposite half; shapes
 are grouped in tabs (Básicos / Estilo time / Estilo boho / Divertidos) via
 `FORMAS[].grupo` in the builder;
 ). Regions (ENCOSTO/LATERAIS/ASSENTO) are hand-measured pixel
