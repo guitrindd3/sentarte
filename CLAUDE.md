@@ -352,7 +352,10 @@ photo's brightness (strand texture, light) and is recolored as main thread
 panel also gets the weave shape and the name (`lib/pixel-font.ts`, 5x7
 bitmap; size slider; position set by dragging on the canvas in the Nome
 step — `posicaoNoEncosto()`, clamped to the area between the plain
-MARGEM_TOPO/MARGEM_BASE bands, which the weave shape never enters either;
+MARGEM_TOPO/MARGEM_BASE bands, which the weave shape never enters either
+(except "meio-a-meio", split top to bottom like real team chairs); shapes
+are grouped in tabs (Básicos / Estilo time / Estilo boho / Divertidos) via
+`FORMAS[].grupo` in the builder;
 ). Regions (ENCOSTO/LATERAIS/ASSENTO) are hand-measured pixel
 coordinates of that 480x848 frame — re-measure if the base photo changes.
 The clip's frames aren't pixel-aligned (it's AI-generated; the background

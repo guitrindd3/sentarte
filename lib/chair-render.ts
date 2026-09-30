@@ -27,7 +27,16 @@ export type Forma =
   | "setas"
   | "ondas"
   | "coracao"
-  | "estrela";
+  | "estrela"
+  | "bolinhas"
+  | "meio-a-meio"
+  | "faixa-diagonal"
+  | "faixa-central"
+  | "listras-largas"
+  | "escudo"
+  | "triangulos"
+  | "totem"
+  | "mandala";
 /** Where the name block's center sits, 0-1 across/down the name area
  * (the backrest between its plain margins). Set by dragging in the builder. */
 export type NomePosicao = { x: number; y: number };
@@ -193,6 +202,84 @@ function celulaDaForma(forma: Forma, i: number, j: number, cols: number, rows: n
       const t = Math.abs(setor / ((2 * Math.PI) / 5) - 0.5) * 2; // 1 at a tip, 0 between
       return r <= 4.5 + (11 - 4.5) * t;
     }
+    case "bolinhas": {
+      // Staggered polka dots.
+      const linha = Math.floor(j / 5);
+      const desloc = linha % 2 === 0 ? 0 : 3;
+      const di = ((i + desloc) % 6) - 2.5;
+      const dj = (j % 5) - 2;
+      return j < rows - 1 && di * di + dj * dj <= 2.2;
+    }
+    case "meio-a-meio":
+      // Half and half, like a two-color team chair split down the middle.
+      return i >= cols / 2;
+    case "faixa-diagonal": {
+      // One wide diagonal sash, top-left to bottom-right (Vasco style).
+      const t = i / (cols - 1) - j / (rows - 1);
+      return Math.abs(t) < 0.18;
+    }
+    case "faixa-central": {
+      const cy = (rows - 1) / 2;
+      return Math.abs(j - cy) <= 3;
+    }
+    case "listras-largas": {
+      // Wide vertical stripes (alvinegro style), symmetric around the center.
+      return Math.floor((Math.abs(i - cx) + 2) / 4) % 2 === 1;
+    }
+    case "escudo": {
+      // A filled shield with a thin inset outline — a generic crest.
+      const cy = (rows - 1) / 2;
+      const escudo = (x: number, y: number) => {
+        if (y < 0 || y > 1) return false;
+        const meia = y < 0.5 ? 1 : 1 - (y - 0.5) / 0.5;
+        return x <= meia;
+      };
+      const x = Math.abs(i - cx) / 10;
+      const y = (j - (cy - 10)) / 21; // 0 at the top edge, 1 at the point
+      if (!escudo(x, y)) return false;
+      // inset outline: inside the shield but outside a slightly smaller one
+      const xi = Math.abs(i - cx) / 8;
+      const yi = (j - (cy - 8)) / 17;
+      const naBorda = escudo(xi * 1.0, yi) && !escudo(Math.abs(i - cx) / 7, (j - (cy - 7)) / 15);
+      return !naBorda;
+    }
+    case "triangulos": {
+      // Rows of pointed peaks, whole rows only.
+      const alt = 6;
+      const n = Math.floor((rows - 1) / (alt + 2));
+      const topo = Math.floor((rows - n * (alt + 2) + 2) / 2);
+      const k = Math.floor((j - topo) / (alt + 2));
+      const jj = (j - topo) % (alt + 2);
+      if (j < topo || k >= n || jj >= alt) return false;
+      // one peak centered on the backrest, the rest repeating every 9 cells
+      const meio = Math.abs(((((i - Math.round(cx) + 4) % 9) + 9) % 9) - 4);
+      const inteiro = Math.abs(i - cx) <= Math.floor((cx - 4) / 9) * 9 + 4;
+      return inteiro && meio <= jj * 0.7;
+    }
+    case "totem": {
+      // A central column mixing chevrons and diamonds, flanked by two thin
+      // lines — like the "Totem espiral" boho chair.
+      const dx = Math.abs(i - cx);
+      if (dx === 9) return j % 2 === 0;
+      if (dx > 6) return false;
+      const bloco = Math.floor(j / 9) % 2;
+      const jj = j % 9;
+      if (bloco === 0) return Math.abs(jj - 4) + dx === 4 || (dx === 0 && jj === 4);
+      return jj - dx * 0.8 >= 1 && jj - dx * 0.8 < 3;
+    }
+    case "mandala": {
+      const cy = (rows - 1) / 2;
+      const r = Math.hypot(i - cx, (j - cy) * 1.05);
+      const ang = Math.atan2(j - cy, i - cx);
+      if (r < 2) return true;
+      if (r >= 4 && r < 5) return true;
+      if (r >= 8 && r < 9) return true;
+      if (r >= 12 && r < 13) return true;
+      // petals between the rings
+      if (r >= 5.5 && r < 7.5) return Math.floor(((ang + Math.PI) / (2 * Math.PI)) * 12) % 2 === 0;
+      if (r >= 9.5 && r < 11.5) return Math.floor(((ang + Math.PI) / (2 * Math.PI)) * 20) % 2 === 1;
+      return false;
+    }
     case "sol": {
       const cy = rows * 0.42;
       const dx = i - cx;
@@ -346,7 +433,9 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
       const ly = y - ENCOSTO.y0;
       const naMargem = ly < MARGEM_TOPO || ly >= h - MARGEM_BASE;
       let detalhe =
-        !naMargem &&
+        op.forma === "meio-a-meio"
+          ? lx >= w / 2
+          : !naMargem &&
         celulaDaForma(op.forma, Math.floor(lx / CELULA), Math.floor((ly - MARGEM_TOPO) / CELULA), cols, rows);
       if (nome) {
         const k = ly * w + lx;

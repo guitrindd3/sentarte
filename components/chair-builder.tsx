@@ -23,20 +23,38 @@ const FIM_DA_TRAMA = 1.72;
 const CORTE_Y0 = 170;
 const CORTE_H = 560;
 
-const FORMAS: { valor: Forma; rotulo: string }[] = [
-  { valor: "lisa", rotulo: "Lisa" },
-  { valor: "diamante", rotulo: "Diamante" },
-  { valor: "ziguezague", rotulo: "Ziguezague" },
-  { valor: "espiral", rotulo: "Caracol" },
-  { valor: "sol", rotulo: "Sol" },
-  { valor: "xadrez", rotulo: "Xadrez" },
-  { valor: "listras", rotulo: "Listras" },
-  { valor: "faixas", rotulo: "Faixas" },
-  { valor: "losangos", rotulo: "Losangos" },
-  { valor: "setas", rotulo: "Setas" },
-  { valor: "ondas", rotulo: "Ondas" },
-  { valor: "coracao", rotulo: "Coração" },
-  { valor: "estrela", rotulo: "Estrela" },
+type Grupo = "basicos" | "time" | "boho" | "divertidos";
+
+const GRUPOS: { valor: Grupo; rotulo: string }[] = [
+  { valor: "basicos", rotulo: "Básicos" },
+  { valor: "time", rotulo: "Estilo time" },
+  { valor: "boho", rotulo: "Estilo boho" },
+  { valor: "divertidos", rotulo: "Divertidos" },
+];
+
+const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
+  { valor: "lisa", rotulo: "Lisa", grupo: "basicos" },
+  { valor: "listras", rotulo: "Listras", grupo: "basicos" },
+  { valor: "faixas", rotulo: "Faixas", grupo: "basicos" },
+  { valor: "xadrez", rotulo: "Xadrez", grupo: "basicos" },
+  { valor: "bolinhas", rotulo: "Bolinhas", grupo: "basicos" },
+  { valor: "meio-a-meio", rotulo: "Meio a meio", grupo: "time" },
+  { valor: "faixa-diagonal", rotulo: "Faixa diagonal", grupo: "time" },
+  { valor: "faixa-central", rotulo: "Faixa no meio", grupo: "time" },
+  { valor: "listras-largas", rotulo: "Listras largas", grupo: "time" },
+  { valor: "escudo", rotulo: "Escudo", grupo: "time" },
+  { valor: "diamante", rotulo: "Diamante", grupo: "boho" },
+  { valor: "ziguezague", rotulo: "Ziguezague", grupo: "boho" },
+  { valor: "espiral", rotulo: "Caracol", grupo: "boho" },
+  { valor: "sol", rotulo: "Sol", grupo: "boho" },
+  { valor: "losangos", rotulo: "Losangos", grupo: "boho" },
+  { valor: "setas", rotulo: "Setas", grupo: "boho" },
+  { valor: "ondas", rotulo: "Ondas", grupo: "boho" },
+  { valor: "triangulos", rotulo: "Triângulos", grupo: "boho" },
+  { valor: "totem", rotulo: "Totem", grupo: "boho" },
+  { valor: "mandala", rotulo: "Mandala", grupo: "boho" },
+  { valor: "coracao", rotulo: "Coração", grupo: "divertidos" },
+  { valor: "estrela", rotulo: "Estrela", grupo: "divertidos" },
 ];
 
 
@@ -80,6 +98,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [animando, setAnimando] = useState(false);
   const [foto, setFoto] = useState<ImageData | null>(null);
   const [forma, setForma] = useState<Forma>("lisa");
+  const [grupo, setGrupo] = useState<Grupo>("basicos");
   const [fioA, setFioA] = useState<Fio>(FIOS[0]);
   const [fioB, setFioB] = useState<Fio>(FIOS[1]);
   const [nome, setNome] = useState("");
@@ -112,14 +131,14 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   useEffect(() => {
     if (!foto || passo > 1) return;
     FORMAS.forEach((f, i) =>
-      desenhar(miniaturasRef.current[i], foto, { forma: f.valor, corA: fioA.cor, corB: fioB.cor, nome: "", posicao }, {
+      f.grupo !== grupo ? null : desenhar(miniaturasRef.current[i], foto, { forma: f.valor, corA: fioA.cor, corB: fioB.cor, nome: "", posicao }, {
         x0: 143,
         y0: 245,
         w: 181,
         h: 267,
       })
     );
-  }, [foto, passo, fioA, fioB, posicao]);
+  }, [foto, passo, fioA, fioB, posicao, grupo]);
 
   const fimTimer = useRef<number | undefined>(undefined);
   const terminarAnimacao = useCallback(() => {
@@ -334,8 +353,24 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             <fieldset disabled={passo === 0}>
               <legend className="font-serif text-2xl font-medium tracking-tight text-ink">Escolha o trançado</legend>
               <p className="mt-1 text-sm text-ink-soft">É o desenho que aparece no encosto.</p>
-              <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-5">
-                {FORMAS.map((f, i) => (
+              <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Estilos">
+                {GRUPOS.map((g) => (
+                  <button
+                    key={g.valor}
+                    type="button"
+                    role="tab"
+                    aria-selected={grupo === g.valor}
+                    onClick={() => setGrupo(g.valor)}
+                    className={`border-b-2 px-1 pb-1 text-sm transition-colors ${
+                      grupo === g.valor ? "border-ink text-ink" : "border-transparent text-ink-soft hover:text-ink"
+                    }`}
+                  >
+                    {g.rotulo}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
+                {FORMAS.map((f, i) => f.grupo !== grupo ? null : (
                   <button
                     key={f.valor}
                     type="button"
