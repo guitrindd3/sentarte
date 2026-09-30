@@ -129,6 +129,24 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [adicionado, setAdicionado] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const passosRef = useRef<HTMLDivElement>(null);
+  const faixaRef = useRef<HTMLDivElement>(null);
+  const passoAnterior = useRef(0);
+
+  // On phones the options sit under the pinned chair band: when the step
+  // changes and its top is hidden behind header+band, scroll it into view.
+  useEffect(() => {
+    const antes = passoAnterior.current;
+    passoAnterior.current = passo;
+    if (antes === 0 || passo === 0) return;
+    const el = passosRef.current;
+    if (!el || window.matchMedia("(min-width: 768px)").matches) return;
+    const topo =
+      parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--altura-topo")) || 64;
+    const faixa = faixaRef.current?.getBoundingClientRect().height ?? 0;
+    const alvo = el.getBoundingClientRect().top + window.scrollY - topo - faixa - 8;
+    if (el.getBoundingClientRect().top < topo + faixa) window.scrollTo({ top: alvo, behavior: "smooth" });
+  }, [passo]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const miniaturasRef = useRef<(HTMLCanvasElement | null)[]>([]);
   const { addItem, openCart } = useCart();
@@ -265,9 +283,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       {/* On phones, once building, the chair stays pinned in a band under the
           header so every choice is visible while scrolling the options. */}
       <div
+        ref={faixaRef}
         className={
           passo > 0
-            ? "sticky top-[calc(env(safe-area-inset-top,0px)+4.2rem)] z-20 -mx-4 -mt-4 border-b border-line bg-paper px-4 py-3 md:static md:m-0 md:border-0 md:p-0"
+            ? "sticky top-[var(--altura-topo,4rem)] z-20 -mx-4 -mt-4 border-b border-line bg-paper px-4 py-3 md:static md:m-0 md:border-0 md:p-0"
             : ""
         }
       >
@@ -359,8 +378,8 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       </div>
 
       {/* The steps */}
-      <div className="flex flex-col">
-        <ol className="flex flex-wrap gap-2" aria-label="Passos">
+      <div ref={passosRef} className="flex scroll-mt-4 flex-col">
+        <ol className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2" aria-label="Passos">
           {PASSOS.map((rotulo, i) => {
             const n = i + 1;
             const ativo = passo === n;
@@ -372,7 +391,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   disabled={passo === 0 || animando}
                   onClick={() => setPasso(n)}
                   aria-current={ativo ? "step" : undefined}
-                  className={`inline-flex items-center gap-2 border px-3 py-1.5 text-sm transition-colors disabled:opacity-40 ${
+                  className={`inline-flex w-full items-center justify-center gap-1 whitespace-nowrap border px-1 py-1.5 text-[0.8rem] transition-colors disabled:opacity-40 sm:w-auto sm:gap-2 sm:px-3 sm:text-sm ${
                     ativo ? "border-ink bg-ink text-canvas" : "border-line text-ink-soft hover:border-ink hover:text-ink"
                   }`}
                 >

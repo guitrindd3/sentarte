@@ -203,7 +203,7 @@ export function ModeloCard({
           href={whatsappUrl(whatsappNumero, mensagemWhatsapp)}
           target="_blank"
           rel="noreferrer"
-          className="mt-2 inline-flex items-center gap-2 text-xs text-ink-soft underline transition-colors hover:text-ink"
+          className="mt-1 inline-flex items-center gap-2 py-2 text-xs text-ink-soft underline transition-colors hover:text-ink"
         >
           <WhatsAppIcon className="h-3.5 w-3.5" />
           Ou pedir direto pelo WhatsApp

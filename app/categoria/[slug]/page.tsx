@@ -139,7 +139,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
           colorB={categoria.corB}
           cell={48}
           band={32}
-          className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 opacity-20"
+          className="pointer-events-none absolute -right-24 -top-24 hidden h-72 w-72 opacity-20 sm:block"
         />
         <div className="relative mx-auto max-w-6xl">
           <p className="max-w-[50ch] font-serif text-xl">
@@ -153,7 +153,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
               )}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 transition-colors hover:text-ink-soft"
+              className="inline-flex items-center gap-2 py-2 transition-colors hover:text-ink-soft"
             >
               <WhatsAppIcon className="h-4 w-4" />
               WhatsApp
@@ -162,7 +162,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
               href={instagramUrl(content.site.instagramHandle)}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 transition-colors hover:text-ink-soft"
+              className="inline-flex items-center gap-2 py-2 transition-colors hover:text-ink-soft"
             >
               <InstagramIcon className="h-4 w-4" />
               Instagram

@@ -23,7 +23,7 @@ export function TeamShowcase({
               estampa. Também personalizamos com um nome no encosto.
             </p>
           </div>
-          <Link href="/times" className="shrink-0 border-b border-current text-sm font-medium text-ink">
+          <Link href="/times" className="shrink-0 border-b border-current py-1 text-sm font-medium text-ink">
             Ver todos os times
           </Link>
         </div>

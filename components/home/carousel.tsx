@@ -104,7 +104,7 @@ export function Carousel({
             href={whatsappUrl(whatsappNumero, "Oi! Vim pelo site e queria saber mais sobre as cadeiras.")}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-medium text-canvas hover:underline"
+            className="inline-flex items-center gap-2 py-3 text-sm font-medium text-canvas hover:underline"
           >
             <WhatsAppIcon className="h-4 w-4" />
             Falar no WhatsApp
@@ -119,10 +119,14 @@ export function Carousel({
               aria-label={`Ver imagem ${i + 1} de ${SLIDES.length}`}
               aria-current={i === index}
               onClick={() => setIndex(i)}
-              className={`h-1.5 rounded-full transition-all ${
-                i === index ? "w-6 bg-canvas" : "w-1.5 bg-canvas/40 hover:bg-canvas/70"
-              }`}
-            />
+              className="group/dot flex h-8 items-center px-1"
+            >
+              <span
+                className={`block h-1.5 rounded-full transition-all ${
+                  i === index ? "w-6 bg-canvas" : "w-1.5 bg-canvas/40 group-hover/dot:bg-canvas/70"
+                }`}
+              />
+            </button>
           ))}
         </div>
       </div>

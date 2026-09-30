@@ -88,7 +88,7 @@ export default async function FaqPage() {
             <details key={item.pergunta} className="group py-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-serif text-lg text-ink">
                 {item.pergunta}
-                <span className="text-ink transition-transform group-open:rotate-45">+</span>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line font-sans text-xl leading-none text-ink transition-transform group-open:rotate-45">+</span>
               </summary>
               <p className="mt-3 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
                 {item.resposta}

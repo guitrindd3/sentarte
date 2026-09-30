@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CartIcon, CloseIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "@/components/icons";
 import { useCart } from "@/lib/cart-context";
 import { NAV_LINKS } from "@/lib/nav";
@@ -13,10 +13,29 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
   const { count, openCart } = useCart();
   const contactMsg = whatsappUrl(whatsappNumero, "Oi! Vim pelo site e queria saber mais sobre as cadeiras.");
 
+  // Publishes the header's real height as --altura-topo so things pinned
+  // under it (the builder's chair band) sit flush on every phone.
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const publicar = () =>
+      document.documentElement.style.setProperty("--altura-topo", `${el.getBoundingClientRect().height}px`);
+    publicar();
+    const ro = new ResizeObserver(publicar);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     // Sticky on the <header> itself: sticky on its only child never stuck,
     // because a sticky element can't leave its parent's box.
-    <header className="sticky top-0 z-40">
+    // The ::before strip paints the header color above it, so page content
+    // never shows through behind a translucent phone status bar.
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-40 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-40 before:bg-canvas"
+    >
       <div className="border-b border-line bg-canvas/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3">
           <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
@@ -52,7 +71,7 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
                 href="/busca"
                 aria-label="Buscar"
                 title="Buscar"
-                className="text-ink-soft transition-colors hover:text-ink"
+                className="-m-2 p-2 text-ink-soft transition-colors hover:text-ink"
               >
                 <SearchIcon className="h-5 w-5" />
               </Link>
@@ -61,11 +80,11 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
                 onClick={openCart}
                 aria-label={`Ver carrinho${count > 0 ? ` (${count} ${count === 1 ? "item" : "itens"})` : ""}`}
                 title="Carrinho"
-                className="relative text-ink-soft transition-colors hover:text-ink"
+                className="relative -m-2 p-2 text-ink-soft transition-colors hover:text-ink"
               >
                 <CartIcon className="h-5 w-5" />
                 {count > 0 ? (
-                  <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[0.6rem] font-medium leading-none text-canvas">
+                  <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[0.6rem] font-medium leading-none text-canvas">
                     {count}
                   </span>
                 ) : null}
@@ -77,7 +96,7 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
               aria-label={open ? "Fechar menu" : "Abrir menu"}
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
-              className="text-ink lg:hidden"
+              className="-m-2 p-2 text-ink lg:hidden"
             >
               {open ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
             </button>

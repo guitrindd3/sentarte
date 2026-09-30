@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
+import { CoverLinkCard } from "@/components/cover-link-card";
 import { ModeloCard } from "@/components/modelo-card";
+import { CAPAS } from "@/lib/cover-links";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
 import { pairPersonalizados } from "@/lib/modelo-pairs";
@@ -74,7 +76,10 @@ export default async function BuscaPage({ searchParams }: PageProps<"/busca">) {
         ) : null}
         {resultados.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {resultados.map(({ base, personalizado, categoria }) => (
+            {resultados.map(({ base, personalizado, categoria }) =>
+              CAPAS[base.nome] ? (
+                <CoverLinkCard key={base.id} modelo={base} {...CAPAS[base.nome]} />
+              ) : (
               <ModeloCard
                 key={base.id}
                 modelo={base}
@@ -83,7 +88,8 @@ export default async function BuscaPage({ searchParams }: PageProps<"/busca">) {
                 categoriaSlug={categoria.slug}
                 whatsappNumero={content.site.whatsappNumero}
               />
-            ))}
+              )
+            )}
           </div>
         ) : null}
       </section>

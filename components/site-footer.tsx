@@ -21,10 +21,10 @@ export async function SiteFooter() {
 
         <div>
           <p className="text-sm font-medium tracking-wide text-ink">Institucional</p>
-          <ul className="mt-3 space-y-2 text-sm text-ink-soft">
+          <ul className="mt-2 text-sm text-ink-soft">
             {FOOTER_LINKS.institucional.map((link) => (
               <li key={link.href}>
-                <Link href={link.href} className="transition-colors hover:text-ink">
+                <Link href={link.href} className="inline-block py-1.5 transition-colors hover:text-ink">
                   {link.label}
                 </Link>
               </li>
@@ -34,10 +34,10 @@ export async function SiteFooter() {
 
         <div>
           <p className="text-sm font-medium tracking-wide text-ink">Políticas</p>
-          <ul className="mt-3 space-y-2 text-sm text-ink-soft">
+          <ul className="mt-2 text-sm text-ink-soft">
             {FOOTER_LINKS.politicas.map((link) => (
               <li key={link.href}>
-                <Link href={link.href} className="transition-colors hover:text-ink">
+                <Link href={link.href} className="inline-block py-1.5 transition-colors hover:text-ink">
                   {link.label}
                 </Link>
               </li>
@@ -47,12 +47,12 @@ export async function SiteFooter() {
 
         <div>
           <p className="text-sm font-medium tracking-wide text-ink">Fale conosco</p>
-          <div className="mt-3 flex flex-col gap-2 text-sm text-ink-soft">
+          <div className="mt-2 flex flex-col text-sm text-ink-soft">
             <a
               href={whatsappUrl(whatsappNumero, "Oi! Vim pelo site e queria saber mais sobre as cadeiras.")}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 transition-colors hover:text-ink"
+              className="inline-flex items-center gap-2 py-1.5 transition-colors hover:text-ink"
             >
               <WhatsAppIcon className="h-4 w-4" />
               WhatsApp
@@ -61,7 +61,7 @@ export async function SiteFooter() {
               href={instagramUrl(instagramHandle)}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 transition-colors hover:text-ink"
+              className="inline-flex items-center gap-2 py-1.5 transition-colors hover:text-ink"
             >
               <InstagramIcon className="h-4 w-4" />
               Instagram

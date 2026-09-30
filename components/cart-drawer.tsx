@@ -87,7 +87,7 @@ export function CartDrawer({ whatsappNumero }: { whatsappNumero: string }) {
             type="button"
             onClick={closeCart}
             aria-label="Fechar carrinho"
-            className="text-ink-soft transition-colors hover:text-ink"
+            className="-m-2 p-2 text-ink-soft transition-colors hover:text-ink"
           >
             <CloseIcon className="h-5 w-5" />
           </button>
