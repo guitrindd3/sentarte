@@ -67,6 +67,7 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   { valor: "escamas", rotulo: "Escamas", grupo: "boho" },
   { valor: "flechas", rotulo: "Flechas", grupo: "boho" },
   { valor: "bandeirinhas", rotulo: "Bandeirinhas", grupo: "boho" },
+  { valor: "triangulo-grande", rotulo: "Triângulo grande", grupo: "boho" },
   { valor: "coracao", rotulo: "Coração", grupo: "divertidos" },
   { valor: "estrela", rotulo: "Estrela", grupo: "divertidos" },
   { valor: "ancora", rotulo: "Âncora", grupo: "divertidos" },
@@ -123,6 +124,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [grupo, setGrupo] = useState<Grupo>("basicos");
   const [fioA, setFioA] = useState<Fio>(FIOS[0]);
   const [fioB, setFioB] = useState<Fio>(FIOS[1]);
+  // Optional third color: splits the main (vertical) thread down the middle.
+  const [tresCores, setTresCores] = useState(false);
+  const [fioC, setFioC] = useState<Fio>(FIOS.find((f) => f.nome === "Mostarda") ?? FIOS[2]);
+  const corC = tresCores ? fioC.cor : undefined;
   const [nome, setNome] = useState("");
   const [posicao, setPosicao] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
   const [arrastando, setArrastando] = useState(false);
@@ -156,29 +161,29 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     carregarFoto(FOTO_TRANCADA).then(setFoto).catch(() => setFoto(null));
   }, []);
 
-  const opcoes = { forma, corA: fioA.cor, corB: fioB.cor, nome, posicao, tamanhoNome };
+  const opcoes = { forma, corA: fioA.cor, corB: fioB.cor, corC, nome, posicao, tamanhoNome };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, corA: fioA.cor, corB: fioB.cor, nome, posicao, tamanhoNome }, {
+    desenhar(canvasRef.current, foto, { forma, corA: fioA.cor, corB: fioB.cor, corC, nome, posicao, tamanhoNome }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
-  }, [foto, passo, forma, fioA, fioB, nome, posicao, tamanhoNome]);
+  }, [foto, passo, forma, fioA, fioB, corC, nome, posicao, tamanhoNome]);
 
   // Shape thumbnails (just the backrest), in the chosen colors.
   useEffect(() => {
     if (!foto || passo > 1) return;
     FORMAS.forEach((f, i) =>
-      f.grupo !== grupo ? null : desenhar(miniaturasRef.current[i], foto, { forma: f.valor, corA: fioA.cor, corB: fioB.cor, nome: "", posicao }, {
+      f.grupo !== grupo ? null : desenhar(miniaturasRef.current[i], foto, { forma: f.valor, corA: fioA.cor, corB: fioB.cor, corC, nome: "", posicao }, {
         x0: 143,
         y0: 245,
         w: 181,
         h: 267,
       })
     );
-  }, [foto, passo, fioA, fioB, posicao, grupo]);
+  }, [foto, passo, fioA, fioB, corC, posicao, grupo]);
 
   const fimTimer = useRef<number | undefined>(undefined);
   const terminarAnimacao = useCallback(() => {
@@ -238,7 +243,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     "Oi! Montei a minha cadeira no site e quero pedir:",
     "",
     `Trançado: ${formaRotulo}`,
-    `Cor principal: ${fioA.nome}`,
+    tresCores ? `Cor principal: ${fioA.nome} (metade esquerda) e ${fioC.nome} (metade direita)` : `Cor principal: ${fioA.nome}`,
     `Cor dos detalhes: ${fioB.nome}`,
     temNome
       ? `Nome: "${nomeLimpo.replace(/\n/g, " / ")}" (${posicaoRotulo.toLowerCase()}, tamanho ${tamanhoRotulo.toLowerCase()})`
@@ -265,11 +270,13 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
   const adicionarAoCarrinho = () => {
     addItem({
-      id: `cadeiras:monte:${forma}:${fioA.nome}:${fioB.nome}:${nomeLimpo}:${posicao.x.toFixed(2)},${posicao.y.toFixed(2)}`,
+      id: `cadeiras:monte:${forma}:${fioA.nome}:${tresCores ? fioC.nome : ""}:${fioB.nome}:${nomeLimpo}:${posicao.x.toFixed(2)},${posicao.y.toFixed(2)}`,
       categoriaSlug: "cadeiras",
       categoriaTitulo: "Cadeiras de praia",
       modeloId: "monte-a-sua-trama",
-      modeloNome: `Monte a sua trama: ${formaRotulo}, ${fioA.nome.toLowerCase()} e ${fioB.nome.toLowerCase()}`,
+      modeloNome: `Monte a sua trama: ${formaRotulo}, ${fioA.nome.toLowerCase()}${
+        tresCores ? `/${fioC.nome.toLowerCase()}` : ""
+      } e ${fioB.nome.toLowerCase()}`,
       corA: fioA.cor,
       corB: fioB.cor,
       nomePersonalizado: nomeLimpo ? nomeLimpo.replace(/\n/g, " / ") : undefined,
@@ -486,8 +493,21 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                 <p className="font-serif text-2xl font-medium tracking-tight text-ink">Escolha as cores</p>
                 <p className="mt-1 text-sm text-ink-soft">A cor principal cobre quase toda a cadeira; a dos detalhes faz o desenho, as laterais e as faixas do assento.</p>
               </div>
+              <label className="flex cursor-pointer items-center justify-between gap-4 border border-line bg-canvas px-4 py-3">
+                <span>
+                  <span className="block text-sm font-medium text-ink">Usar 3 cores</span>
+                  <span className="block text-xs text-ink-soft">Divide a cor principal ao meio: uma cor em cada metade.</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={tresCores}
+                  onChange={(e) => setTresCores(e.target.checked)}
+                  className="h-5 w-5 shrink-0 accent-verde"
+                />
+              </label>
               {[
-                { rotulo: "Cor principal", fio: fioA, set: setFioA },
+                { rotulo: tresCores ? "Cor principal (metade esquerda)" : "Cor principal", fio: fioA, set: setFioA },
+                ...(tresCores ? [{ rotulo: "Cor principal (metade direita)", fio: fioC, set: setFioC }] : []),
                 { rotulo: "Cor dos detalhes", fio: fioB, set: setFioB },
               ].map(({ rotulo, fio, set }) => {
                 const personalizada = !FIOS.some((f) => f.cor === fio.cor);
@@ -590,7 +610,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
               <dl className="mt-4 divide-y divide-line border-y border-line text-sm">
                 {[
                   ["Trançado", formaRotulo],
-                  ["Cor principal", fioA.nome],
+                  ["Cor principal", tresCores ? `${fioA.nome} e ${fioC.nome}` : fioA.nome],
                   ["Cor dos detalhes", fioB.nome],
                   ["Nome", temNome ? nomeLimpo.replace(/\n/g, " / ") : "Sem nome"],
                 ].map(([k, v]) => (

@@ -57,7 +57,8 @@ export type Forma =
   | "peixe"
   | "oculos"
   | "borboleta"
-  | "coqueiro";
+  | "coqueiro"
+  | "triangulo-grande";
 /** Where the name block's center sits, 0-1 across/down the name area
  * (the backrest between its plain margins). Set by dragging in the builder. */
 export type NomePosicao = { x: number; y: number };
@@ -119,6 +120,9 @@ export type Opcoes = {
   posicao: NomePosicao;
   /** Name size, 0.3 (small) to 1 (as big as fits). */
   tamanhoNome?: number;
+  /** Three-color chairs: the main (vertical) thread is split down the
+   * middle — left half corA, right half corC (user 2026-09-30). */
+  corC?: string;
 };
 
 function hexRgb(hex: string): [number, number, number] {
@@ -507,6 +511,13 @@ function celulaDaForma(forma: Forma, i: number, j: number, cols: number, rows: n
       return noDesenho(DESENHOS.borboleta, 1.5, i, j, cols, rows);
     case "coqueiro":
       return noDesenho(DESENHOS.coqueiro, 1.45, i, j, cols, rows);
+    case "triangulo-grande": {
+      // The detail color fills the top and comes down to a point in the
+      // middle — the three-color chair the user showed (green over a
+      // cream/mustard split).
+      const alto = rows * 0.62;
+      return j <= alto - (Math.abs(i - cx) / cx) * alto;
+    }
     case "sol": {
       const cy = rows * 0.42;
       const dx = i - cx;
@@ -638,6 +649,9 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
 
   const A = hexRgb(op.corA);
   const B = hexRgb(op.corB);
+  // Right half of the main thread (three-color chairs); same as A otherwise.
+  const C = op.corC ? hexRgb(op.corC) : A;
+  const MEIO_X = (ENCOSTO.x0 + ENCOSTO.x1) / 2;
   const pinta = (i: number, cor: [number, number, number], s: number) => {
     out[i] = Math.min(255, cor[0] * s);
     out[i + 1] = Math.min(255, cor[1] * s);
@@ -670,7 +684,7 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
         if (nome.mascara[k]) detalhe = true;
         else if (nome.contorno[k]) detalhe = false;
       }
-      pinta(i, detalhe ? B : A, sombraEscuro(brilho(i)));
+      pinta(i, detalhe ? B : x >= MEIO_X ? C : A, sombraEscuro(brilho(i)));
     }
   }
 
@@ -694,7 +708,7 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
         if (!dentroPoligono(x, y, poly) || dentroPoligono(x, y, ASSENTO)) continue;
         const i = (y * IMG_W + x) * 4;
         const l = brilho(i);
-        if (l < 115 && saturacao(i) < 55) pinta(i, A, sombraEscuro(l));
+        if (l < 115 && saturacao(i) < 55) pinta(i, x >= MEIO_X ? C : A, sombraEscuro(l));
       }
     }
   }
@@ -706,12 +720,13 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
       const i = (y * IMG_W + x) * 4;
       const l = brilho(i);
       if (saturacao(i) > 60) continue; // pool/tiles peeking through
-      if (l < 110) pinta(i, A, sombraEscuro(l));
+      const P = x >= MEIO_X ? C : A;
+      if (l < 110) pinta(i, P, sombraEscuro(l));
       else if (l > 170) pinta(i, B, sombraClaro(l));
       else {
         const t = (l - 110) / 60;
         const s = sombraEscuro(l) * (1 - t) + sombraClaro(l) * t;
-        pinta(i, [A[0] * (1 - t) + B[0] * t, A[1] * (1 - t) + B[1] * t, A[2] * (1 - t) + B[2] * t], s);
+        pinta(i, [P[0] * (1 - t) + B[0] * t, P[1] * (1 - t) + B[1] * t, P[2] * (1 - t) + B[2] * t], s);
       }
     }
   }

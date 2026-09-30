@@ -353,7 +353,11 @@ panel also gets the weave shape and the name (`lib/pixel-font.ts`, 5x7
 bitmap; size slider; position set by dragging on the canvas in the Nome
 step — `posicaoNoEncosto()`, clamped to the area between the plain
 MARGEM_TOPO/MARGEM_BASE bands, which the weave shape never enters either
-(except "meio-a-meio", split top to bottom like real team chairs); shapes
+(except "meio-a-meio", split top to bottom like real team chairs);
+optional third color (`Opcoes.corC`, "Usar 3 cores" toggle in the Cores
+step) splits the main/vertical thread down the middle (left corA, right
+corC) on the backrest and seat — works with every shape; "triangulo-grande"
+reproduces the three-color chair the user showed; shapes
 are grouped in tabs (Básicos / Estilo time / Estilo boho / Divertidos) via
 `FORMAS[].grupo` in the builder;
 ). Regions (ENCOSTO/LATERAIS/ASSENTO) are hand-measured pixel
