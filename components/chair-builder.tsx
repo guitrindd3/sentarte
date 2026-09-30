@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CheckIcon, WhatsAppIcon } from "@/components/icons";
+import { CheckIcon, ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
 import { VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { useCart } from "@/lib/cart-context";
 import { IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
@@ -366,9 +366,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                 type="button"
                 onClick={comecar}
                 disabled={!foto}
-                className="mt-4 border border-ink bg-ink px-6 py-3 text-sm font-medium text-canvas transition-colors hover:bg-transparent hover:text-ink disabled:opacity-50"
+                className="pulso-verde mt-4 inline-flex items-center gap-2 rounded-full bg-verde px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-verde-escuro disabled:opacity-50"
               >
                 Começar a montar
+                <ChevronDownIcon className="h-4 w-4 -rotate-90" />
               </button>
             </div>
           ) : null}
@@ -582,7 +583,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   href={whatsappUrl(whatsappNumero, mensagem)}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-6 py-3 text-sm font-medium text-canvas transition-colors hover:bg-transparent hover:text-ink"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-verde px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-verde-escuro"
                 >
                   <WhatsAppIcon className="h-4 w-4" />
                   Pedir pelo WhatsApp
@@ -628,7 +629,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             <button
               type="button"
               onClick={() => setPasso((p) => p + 1)}
-              className="border border-ink bg-ink px-6 py-2.5 text-sm font-medium text-canvas transition-colors hover:bg-transparent hover:text-ink"
+              className="rounded-full bg-verde px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-verde-escuro"
             >
               {passo === 3 ? "Ver minha cadeira" : "Próximo"}
             </button>

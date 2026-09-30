@@ -377,6 +377,16 @@ same camera position) would look better; the user was told this.
   (`TeamGrid deslizar`), product photos square below `sm`, smaller section
   padding below `md`, /personalizar hides its header clip below `md` and the
   builder pins the chair in a band under the header while choosing.
+- The one saturated color allowed in customer-facing chrome is `verde`
+  (`--verde` in globals.css), and only on the builder's go-buttons
+  (Começar a montar with the `.pulso-verde` ring, Próximo, Pedir pelo
+  WhatsApp) — the user asked for a "cor chamativa verde, de validação".
+- Homepage carousel: 4s per photo, order boho-2 / boho / times (user's
+  pick); phones show the whole (square-ish) photo in a square frame with a
+  blurred copy behind and the phrase/buttons below it; desktop unchanged.
+- Homepage team row on phones drifts by itself and loops (`AutoScrollRow`:
+  a duplicated, `inert` second set marked `data-loop-start`; pauses 3.5s
+  after touch). No scroll-snap there — snap fights the sub-pixel drift.
 - Mobile check workflow: Playwright (installed only in the session
   scratchpad, not a project dependency) with the iPhone 13 profile at
   deviceScaleFactor 1 — full-page shots at 3x blank out past ~16k px.

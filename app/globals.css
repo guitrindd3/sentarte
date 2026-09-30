@@ -14,6 +14,11 @@
   --espresso: #241c14;
   --espresso-soft: #382a1c;
   --line: #d9c9ac;
+  /* Call-to-action green for the builder's "go" buttons (user 2026-09-30:
+     "cor chamativa verde, de validação"). The only saturated color in the
+     customer-facing chrome — keep it to primary actions. */
+  --verde: #1f9d55;
+  --verde-escuro: #177a42;
 }
 
 @theme inline {
@@ -30,6 +35,8 @@
   --color-espresso: var(--espresso);
   --color-espresso-soft: var(--espresso-soft);
   --color-line: var(--line);
+  --color-verde: var(--verde);
+  --color-verde-escuro: var(--verde-escuro);
   --font-sans: var(--font-body);
   --font-serif: var(--font-display);
 }
@@ -98,3 +105,12 @@ body::before {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Soft pulsing ring that invites a first tap (builder's "Começar a montar"). */
+@keyframes pulso-verde {
+  0% { box-shadow: 0 0 0 0 rgb(31 157 85 / 0.55); }
+  70% { box-shadow: 0 0 0 14px rgb(31 157 85 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(31 157 85 / 0); }
+}
+.pulso-verde { animation: pulso-verde 1.8s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .pulso-verde { animation: none; } }
