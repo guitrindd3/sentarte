@@ -41,6 +41,8 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   { valor: "moldura", rotulo: "Moldura", grupo: "basicos" },
   { valor: "diagonais", rotulo: "Diagonais", grupo: "basicos" },
   { valor: "quadriculado", rotulo: "Quadriculado", grupo: "basicos" },
+  { valor: "pontilhado", rotulo: "Pontilhado", grupo: "basicos" },
+  { valor: "faixas-duplas", rotulo: "Faixas duplas", grupo: "basicos" },
   { valor: "meio-a-meio", rotulo: "Meio a meio", grupo: "time" },
   { valor: "faixa-diagonal", rotulo: "Faixa diagonal", grupo: "time" },
   { valor: "faixa-central", rotulo: "Faixa no meio", grupo: "time" },
@@ -50,6 +52,7 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   { valor: "faixa-vertical", rotulo: "Faixa em pé", grupo: "time" },
   { valor: "cruz", rotulo: "Cruz", grupo: "time" },
   { valor: "coroa", rotulo: "Coroa", grupo: "time" },
+  { valor: "estrelas", rotulo: "Estrelas", grupo: "time" },
   { valor: "diamante", rotulo: "Diamante", grupo: "boho" },
   { valor: "ziguezague", rotulo: "Ziguezague", grupo: "boho" },
   { valor: "espiral", rotulo: "Caracol", grupo: "boho" },
@@ -69,6 +72,10 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   { valor: "flor", rotulo: "Flor", grupo: "divertidos" },
   { valor: "lua", rotulo: "Lua", grupo: "divertidos" },
   { valor: "sorriso", rotulo: "Sorriso", grupo: "divertidos" },
+  { valor: "peixe", rotulo: "Peixe", grupo: "divertidos" },
+  { valor: "oculos", rotulo: "Óculos", grupo: "divertidos" },
+  { valor: "borboleta", rotulo: "Borboleta", grupo: "divertidos" },
+  { valor: "coqueiro", rotulo: "Coqueiro", grupo: "divertidos" },
 ];
 
 

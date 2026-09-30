@@ -50,7 +50,14 @@ export type Forma =
   | "ancora"
   | "flor"
   | "lua"
-  | "sorriso";
+  | "sorriso"
+  | "pontilhado"
+  | "faixas-duplas"
+  | "estrelas"
+  | "peixe"
+  | "oculos"
+  | "borboleta"
+  | "coqueiro";
 /** Where the name block's center sits, 0-1 across/down the name area
  * (the backrest between its plain margins). Set by dragging in the builder. */
 export type NomePosicao = { x: number; y: number };
@@ -156,6 +163,59 @@ const DESENHOS = {
     "....XXXXXXX....",
     "......XXX......",
   ],
+  peixe: [
+    "......XXXX.....",
+    "....XXXXXXXX..X",
+    "..XXXXXXXXXXXXX",
+    ".XX.XXXXXXXXXX.",
+    "XXXXXXXXXXXXX..",
+    ".XXXXXXXXXXXXX.",
+    "..XXXXXXXXXXXXX",
+    "....XXXXXXXX..X",
+    "......XXXX.....",
+  ],
+  oculos: [
+    "XXXXXXXXXXXXXXXXX",
+    "XXXXXXX...XXXXXXX",
+    "XXXXXXX...XXXXXXX",
+    "XXXXXXX...XXXXXXX",
+    ".XXXXX.....XXXXX.",
+    "..XXX.......XXX..",
+  ],
+  borboleta: [
+    "......X...X......",
+    ".......X.X.......",
+    "XXX.....X.....XXX",
+    "XXXXX...X...XXXXX",
+    "XXXXXX..X..XXXXXX",
+    "XXXXXXX.X.XXXXXXX",
+    ".XXXXXX.X.XXXXXX.",
+    "..XXXXX.X.XXXXX..",
+    "...XXX..X..XXX...",
+    "..XXXXX.X.XXXXX..",
+    ".XXXXXX.X.XXXXXX.",
+    ".XXXXX..X..XXXXX.",
+    "..XXX...X...XXX..",
+  ],
+  coqueiro: [
+    "...XXXX...XXXX...",
+    ".XXXXXXX.XXXXXXX.",
+    "XX....XXXXX....XX",
+    "X...XXX.X.XXX...X",
+    "...XX...X...XX...",
+    "..XX....X....XX..",
+    "..X.....X.....X..",
+    "........X........",
+    "........XX.......",
+    ".........X.......",
+    ".........X.......",
+    ".........X.......",
+    "........XX.......",
+    "........X........",
+    ".......XXX.......",
+    "....XXXXXXXXX....",
+  ],
+  estrelinha: ["...X...", "...X...", "..XXX..", "XXXXXXX", ".XXXXX.", "..XXX..", ".XX.XX.", ".X...X."],
   coroa: [
     "X.....X.....X",
     "XX...XXX...XX",
@@ -420,6 +480,33 @@ function celulaDaForma(forma: Forma, i: number, j: number, cols: number, rows: n
       if (Math.hypot(i - (cx + 4), j - (cy - 3)) < 1.7) return true;
       return r >= 5.2 && r < 6.6 && j > cy + 1; // smile
     }
+    case "pontilhado":
+      return Math.abs(i - Math.round(cx)) % 4 === 0 && j % 4 === 2;
+    case "faixas-duplas": {
+      const y = (j + 1) % 9;
+      return (y === 1 || y === 3) && j < rows - 1;
+    }
+    case "estrelas": {
+      // Three "champion" stars across the upper part.
+      const esc = 1.15;
+      const lado = Math.round(7 * esc);
+      const y0 = Math.max(0, Math.floor(rows * 0.18) - 1);
+      const sy = Math.floor((j - y0) / esc);
+      if (j < y0 || sy >= 8) return false;
+      return [-10, 0, 10].some((d) => {
+        const x0 = Math.round(cx) + d - Math.floor(lado / 2);
+        const sx = Math.floor((i - x0) / esc);
+        return i >= x0 && sx < 7 && DESENHOS.estrelinha[sy][sx] === "X";
+      });
+    }
+    case "peixe":
+      return noDesenho(DESENHOS.peixe, 1.7, i, j, cols, rows);
+    case "oculos":
+      return noDesenho(DESENHOS.oculos, 1.6, i, j, cols, rows);
+    case "borboleta":
+      return noDesenho(DESENHOS.borboleta, 1.5, i, j, cols, rows);
+    case "coqueiro":
+      return noDesenho(DESENHOS.coqueiro, 1.45, i, j, cols, rows);
     case "sol": {
       const cy = rows * 0.42;
       const dx = i - cx;
