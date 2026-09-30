@@ -379,7 +379,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
           ) : null}
 
           {passo === 0 && !animando ? (
-            <div className="absolute inset-x-4 bottom-4 border border-line bg-paper/95 p-5 text-center backdrop-blur">
+            <div className="absolute inset-x-4 bottom-4 border border-line bg-paper/95 p-5 text-center backdrop-blur md:hidden">
               <p className="font-serif text-xl font-medium tracking-tight text-ink">Vamos montar a sua cadeira?</p>
               <p className="mt-1 text-sm text-ink-soft">São 3 passos: trançado, cores e nome.</p>
               <button
@@ -400,6 +400,23 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
       {/* The steps */}
       <div ref={passosRef} className="flex scroll-mt-4 flex-col">
+        {passo === 0 && !animando ? (
+          <div className="mb-8 hidden items-center justify-between gap-6 border border-verde/40 bg-verde/5 p-5 md:flex">
+            <div>
+              <p className="font-serif text-xl font-medium tracking-tight text-ink">Vamos montar a sua cadeira?</p>
+              <p className="mt-1 text-sm text-ink-soft">São 3 passos: trançado, cores e nome.</p>
+            </div>
+            <button
+              type="button"
+              onClick={comecar}
+              disabled={!foto}
+              className="pulso-verde inline-flex shrink-0 items-center gap-2 rounded-full bg-verde px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-verde-escuro disabled:opacity-50"
+            >
+              Começar a montar
+              <ChevronDownIcon className="h-4 w-4 -rotate-90" />
+            </button>
+          </div>
+        ) : null}
         <ol className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2" aria-label="Passos">
           {PASSOS.map((rotulo, i) => {
             const n = i + 1;
