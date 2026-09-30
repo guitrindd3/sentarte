@@ -25,11 +25,12 @@ const CORTE_H = 560;
 
 type Grupo = "basicos" | "time" | "boho" | "divertidos";
 
-const GRUPOS: { valor: Grupo; rotulo: string }[] = [
-  { valor: "basicos", rotulo: "Básicos" },
-  { valor: "time", rotulo: "Estilo time" },
-  { valor: "boho", rotulo: "Estilo boho" },
-  { valor: "divertidos", rotulo: "Divertidos" },
+// `curto` is what phones show, so the four tabs fit on one line.
+const GRUPOS: { valor: Grupo; rotulo: string; curto: string }[] = [
+  { valor: "basicos", rotulo: "Básicos", curto: "Básicos" },
+  { valor: "time", rotulo: "Estilo time", curto: "Time" },
+  { valor: "boho", rotulo: "Estilo boho", curto: "Boho" },
+  { valor: "divertidos", rotulo: "Divertidos", curto: "Divertidos" },
 ];
 
 const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
@@ -409,21 +410,42 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             <fieldset disabled={passo === 0}>
               <legend className="font-serif text-2xl font-medium tracking-tight text-ink">Escolha o trançado</legend>
               <p className="mt-1 text-sm text-ink-soft">É o desenho que aparece no encosto.</p>
-              <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Estilos">
-                {GRUPOS.map((g) => (
-                  <button
-                    key={g.valor}
-                    type="button"
-                    role="tab"
-                    aria-selected={grupo === g.valor}
-                    onClick={() => setGrupo(g.valor)}
-                    className={`border-b-2 px-1 pb-1 text-sm transition-colors ${
-                      grupo === g.valor ? "border-ink text-ink" : "border-transparent text-ink-soft hover:text-ink"
-                    }`}
-                  >
-                    {g.rotulo}
-                  </button>
-                ))}
+              <p className="mt-2 text-sm text-ink" aria-live="polite">
+                Escolhido: <strong className="font-semibold text-verde-escuro">{formaRotulo}</strong>
+              </p>
+              {/* Style tabs: the open one is filled; a green dot marks the tab
+                  holding the chosen shape when another tab is open. */}
+              <div
+                className="mt-4 grid grid-cols-4 gap-1 rounded-full border border-line bg-canvas p-1 sm:flex"
+                role="tablist"
+                aria-label="Estilos"
+              >
+                {GRUPOS.map((g) => {
+                  const aberto = grupo === g.valor;
+                  const temEscolhido = FORMAS.some((f) => f.grupo === g.valor && f.valor === forma);
+                  return (
+                    <button
+                      key={g.valor}
+                      type="button"
+                      role="tab"
+                      aria-selected={aberto}
+                      onClick={() => setGrupo(g.valor)}
+                      aria-label={g.rotulo}
+                      className={`relative flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-[0.8rem] transition-colors sm:px-3 sm:text-sm ${
+                        aberto ? "bg-ink font-medium text-canvas" : "text-ink-soft hover:bg-paper hover:text-ink"
+                      }`}
+                    >
+                      <span className="sm:hidden">{g.curto}</span>
+                      <span className="hidden sm:inline">{g.rotulo}</span>
+                      {temEscolhido && !aberto ? (
+                        <span
+                          className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-verde"
+                          aria-label="(tem o trançado escolhido)"
+                        />
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
                 {FORMAS.map((f, i) => f.grupo !== grupo ? null : (
@@ -432,10 +454,17 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                     type="button"
                     onClick={() => setForma(f.valor)}
                     aria-pressed={forma === f.valor}
-                    className={`flex flex-col items-center gap-1.5 border p-1.5 text-xs transition-colors ${
-                      forma === f.valor ? "border-ink text-ink" : "border-line text-ink-soft hover:border-ink"
+                    className={`relative flex flex-col items-center gap-1.5 border-2 p-1.5 text-xs transition-all ${
+                      forma === f.valor
+                        ? "border-verde bg-verde/5 font-semibold text-verde-escuro shadow-[0_0_0_3px_rgb(31_157_85/0.18)]"
+                        : "border-line text-ink-soft hover:border-ink"
                     }`}
                   >
+                    {forma === f.valor ? (
+                      <span className="absolute -right-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-verde text-white shadow">
+                        <CheckIcon className="h-3.5 w-3.5" />
+                      </span>
+                    ) : null}
                     <canvas
                       ref={(el) => {
                         miniaturasRef.current[i] = el;
