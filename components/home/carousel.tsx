@@ -61,21 +61,16 @@ export function Carousel({
               i === index ? "opacity-100" : "opacity-0"
             }`}
           >
-            {/* phones: blurred fill behind the uncropped photo */}
-            <Image
-              src={slide.src}
-              alt=""
-              aria-hidden="true"
-              fill
-              className="scale-110 object-cover opacity-60 blur-2xl md:hidden"
-              sizes="100vw"
-            />
+            {/* Fills the frame on every size (user 2026-09-30: the square
+                photo "ficou certo", the wider ones letterboxed). On phones
+                the frame is square, so the 4:3 / 5:4 photos only lose a
+                little of each side. */}
             <Image
               src={slide.src}
               alt={slide.alt}
               fill
               priority={i === 0}
-              className="object-contain md:object-cover"
+              className="object-cover"
               sizes="100vw"
             />
           </div>
