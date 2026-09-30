@@ -357,7 +357,9 @@ MARGEM_TOPO/MARGEM_BASE bands, which the weave shape never enters either
 optional third color (`Opcoes.corC`, "Usar 3 cores" toggle in the Cores
 step) splits the main/vertical thread down the middle (left corA, right
 corC) on the backrest and seat — works with every shape; "triangulo-grande"
-reproduces the three-color chair the user showed; shapes
+reproduces the three-color chair the user showed; a separate side-strap
+color (`Opcoes.corLaterais`, "Cor diferente nas laterais" toggle) defaults
+to corB; shapes
 are grouped in tabs (Básicos / Estilo time / Estilo boho / Divertidos) via
 `FORMAS[].grupo` in the builder;
 ). Regions (ENCOSTO/LATERAIS/ASSENTO) are hand-measured pixel

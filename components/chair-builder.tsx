@@ -128,6 +128,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [tresCores, setTresCores] = useState(false);
   const [fioC, setFioC] = useState<Fio>(FIOS.find((f) => f.nome === "Mostarda") ?? FIOS[2]);
   const corC = tresCores ? fioC.cor : undefined;
+  // Optional separate color for the side straps (otherwise the detail color).
+  const [lateraisProprias, setLateraisProprias] = useState(false);
+  const [fioL, setFioL] = useState<Fio>(FIOS.find((f) => f.nome === "Branco") ?? FIOS[1]);
+  const corLaterais = lateraisProprias ? fioL.cor : undefined;
   const [nome, setNome] = useState("");
   const [posicao, setPosicao] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
   const [arrastando, setArrastando] = useState(false);
@@ -161,29 +165,29 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     carregarFoto(FOTO_TRANCADA).then(setFoto).catch(() => setFoto(null));
   }, []);
 
-  const opcoes = { forma, corA: fioA.cor, corB: fioB.cor, corC, nome, posicao, tamanhoNome };
+  const opcoes = { forma, corA: fioA.cor, corB: fioB.cor, corC, corLaterais, nome, posicao, tamanhoNome };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, corA: fioA.cor, corB: fioB.cor, corC, nome, posicao, tamanhoNome }, {
+    desenhar(canvasRef.current, foto, { forma, corA: fioA.cor, corB: fioB.cor, corC, corLaterais, nome, posicao, tamanhoNome }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
-  }, [foto, passo, forma, fioA, fioB, corC, nome, posicao, tamanhoNome]);
+  }, [foto, passo, forma, fioA, fioB, corC, corLaterais, nome, posicao, tamanhoNome]);
 
   // Shape thumbnails (just the backrest), in the chosen colors.
   useEffect(() => {
     if (!foto || passo > 1) return;
     FORMAS.forEach((f, i) =>
-      f.grupo !== grupo ? null : desenhar(miniaturasRef.current[i], foto, { forma: f.valor, corA: fioA.cor, corB: fioB.cor, corC, nome: "", posicao }, {
+      f.grupo !== grupo ? null : desenhar(miniaturasRef.current[i], foto, { forma: f.valor, corA: fioA.cor, corB: fioB.cor, corC, corLaterais, nome: "", posicao }, {
         x0: 143,
         y0: 245,
         w: 181,
         h: 267,
       })
     );
-  }, [foto, passo, fioA, fioB, corC, posicao, grupo]);
+  }, [foto, passo, fioA, fioB, corC, corLaterais, posicao, grupo]);
 
   const fimTimer = useRef<number | undefined>(undefined);
   const terminarAnimacao = useCallback(() => {
@@ -245,6 +249,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     `Trançado: ${formaRotulo}`,
     tresCores ? `Cor principal: ${fioA.nome} (metade esquerda) e ${fioC.nome} (metade direita)` : `Cor principal: ${fioA.nome}`,
     `Cor dos detalhes: ${fioB.nome}`,
+    `Cor das laterais: ${lateraisProprias ? fioL.nome : fioB.nome}`,
     temNome
       ? `Nome: "${nomeLimpo.replace(/\n/g, " / ")}" (${posicaoRotulo.toLowerCase()}, tamanho ${tamanhoRotulo.toLowerCase()})`
       : "Sem nome",
@@ -270,7 +275,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
   const adicionarAoCarrinho = () => {
     addItem({
-      id: `cadeiras:monte:${forma}:${fioA.nome}:${tresCores ? fioC.nome : ""}:${fioB.nome}:${nomeLimpo}:${posicao.x.toFixed(2)},${posicao.y.toFixed(2)}`,
+      id: `cadeiras:monte:${forma}:${fioA.nome}:${tresCores ? fioC.nome : ""}:${fioB.nome}:${lateraisProprias ? fioL.nome : ""}:${nomeLimpo}:${posicao.x.toFixed(2)},${posicao.y.toFixed(2)}`,
       categoriaSlug: "cadeiras",
       categoriaTitulo: "Cadeiras de praia",
       modeloId: "monte-a-sua-trama",
@@ -505,10 +510,23 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   className="h-5 w-5 shrink-0 accent-verde"
                 />
               </label>
+              <label className="flex cursor-pointer items-center justify-between gap-4 border border-line bg-canvas px-4 py-3">
+                <span>
+                  <span className="block text-sm font-medium text-ink">Cor diferente nas laterais</span>
+                  <span className="block text-xs text-ink-soft">As faixas dos lados do encosto em outra cor.</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={lateraisProprias}
+                  onChange={(e) => setLateraisProprias(e.target.checked)}
+                  className="h-5 w-5 shrink-0 accent-verde"
+                />
+              </label>
               {[
                 { rotulo: tresCores ? "Cor principal (metade esquerda)" : "Cor principal", fio: fioA, set: setFioA },
                 ...(tresCores ? [{ rotulo: "Cor principal (metade direita)", fio: fioC, set: setFioC }] : []),
                 { rotulo: "Cor dos detalhes", fio: fioB, set: setFioB },
+                ...(lateraisProprias ? [{ rotulo: "Cor das laterais", fio: fioL, set: setFioL }] : []),
               ].map(({ rotulo, fio, set }) => {
                 const personalizada = !FIOS.some((f) => f.cor === fio.cor);
                 return (
@@ -612,6 +630,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   ["Trançado", formaRotulo],
                   ["Cor principal", tresCores ? `${fioA.nome} e ${fioC.nome}` : fioA.nome],
                   ["Cor dos detalhes", fioB.nome],
+                  ["Cor das laterais", lateraisProprias ? fioL.nome : fioB.nome],
                   ["Nome", temNome ? nomeLimpo.replace(/\n/g, " / ") : "Sem nome"],
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-4 py-2">

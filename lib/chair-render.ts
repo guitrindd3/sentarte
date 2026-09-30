@@ -123,6 +123,8 @@ export type Opcoes = {
   /** Three-color chairs: the main (vertical) thread is split down the
    * middle — left half corA, right half corC (user 2026-09-30). */
   corC?: string;
+  /** Color of the side straps; defaults to the detail color (corB). */
+  corLaterais?: string;
 };
 
 function hexRgb(hex: string): [number, number, number] {
@@ -652,6 +654,7 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   // Right half of the main thread (three-color chairs); same as A otherwise.
   const C = op.corC ? hexRgb(op.corC) : A;
   const MEIO_X = (ENCOSTO.x0 + ENCOSTO.x1) / 2;
+  const L = op.corLaterais ? hexRgb(op.corLaterais) : B;
   const pinta = (i: number, cor: [number, number, number], s: number) => {
     out[i] = Math.min(255, cor[0] * s);
     out[i + 1] = Math.min(255, cor[1] * s);
@@ -694,7 +697,7 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
       for (let x = r.x0; x < r.x1; x++) {
         const i = (y * IMG_W + x) * 4;
         const l = brilho(i);
-        if (l > 120 && saturacao(i) < 45) pinta(i, B, sombraClaro(l));
+        if (l > 120 && saturacao(i) < 45) pinta(i, L, sombraClaro(l));
       }
     }
   }
