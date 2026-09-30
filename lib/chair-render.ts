@@ -14,7 +14,20 @@
 
 import { GLYPH_H, GLYPH_W, glyphPixel, normalizarTexto } from "./pixel-font";
 
-export type Forma = "lisa" | "diamante" | "ziguezague" | "espiral" | "sol";
+export type Forma =
+  | "lisa"
+  | "diamante"
+  | "ziguezague"
+  | "espiral"
+  | "sol"
+  | "xadrez"
+  | "listras"
+  | "faixas"
+  | "losangos"
+  | "setas"
+  | "ondas"
+  | "coracao"
+  | "estrela";
 /** Where the name block's center sits, 0-1 across/down the name area
  * (the backrest between its plain margins). Set by dragging in the builder. */
 export type NomePosicao = { x: number; y: number };
@@ -124,6 +137,62 @@ function celulaDaForma(forma: Forma, i: number, j: number, cols: number, rows: n
     case "espiral":
       // Square spiral ("triângulo caracol"), one continuous line.
       return espiral(cols, rows).has(j * cols + i);
+    case "xadrez":
+      return (Math.floor(i / 4) + Math.floor(j / 4)) % 2 === 0;
+    case "listras": {
+      // Vertical stripes, centered so both sides end the same.
+      const off = Math.floor(((cols % 6) + 6) / 2);
+      return (i + off) % 6 < 2;
+    }
+    case "faixas":
+      return (j + 2) % 6 < 2 && j > 0 && j < rows - 1;
+    case "losangos": {
+      // A column of diamond outlines with a dot inside (like the "Losango
+      // terracota" boho chair), stacked tip to tip.
+      const raio = 4;
+      const passo = 2 * raio + 1;
+      const n = Math.floor((rows + 1) / passo);
+      const topo = Math.floor((rows - (n * passo - 1)) / 2);
+      const k = Math.floor((j - topo) / passo);
+      if (j < topo || k >= n) return false;
+      const cyk = topo + raio + k * passo;
+      const d = Math.abs(i - cx) + Math.abs(j - cyk);
+      return d === raio || d === raio - 1 || d === 0;
+    }
+    case "setas": {
+      // Stacked V chevrons pointing down — only whole ones, centered.
+      const abertura = 0.6 * cx; // how much lower a chevron's arms end than its tip
+      const n = Math.floor((rows - 3 - abertura) / 6) + 1;
+      const topo = Math.floor((rows - 1 - abertura - (6 * (n - 1) + 2)) / 2);
+      const v = j - topo - Math.abs(i - cx) * 0.6;
+      const k = Math.floor(v / 6);
+      return v >= 0 && v % 6 < 2 && k < n;
+    }
+    case "ondas": {
+      // Whole waves only (amplitude 2 rows), centered.
+      const n = Math.floor((rows - 6) / 7) + 1;
+      const topo = Math.floor((rows - (7 * (n - 1) + 6)) / 2) + 2;
+      const onda = j - topo - 2 * Math.sin((i * Math.PI) / 6);
+      const k = Math.floor((onda + 0.5) / 7);
+      return onda > -0.5 && (((Math.round(onda) % 7) + 7) % 7) < 2 && k < n;
+    }
+    case "coracao": {
+      const cy = (rows - 1) / 2;
+      const x = (i - cx) / 10;
+      const y = -(j - cy) / 10 + 0.15;
+      return Math.pow(x * x + y * y - 1, 3) - x * x * y * y * y <= 0;
+    }
+    case "estrela": {
+      const cy = (rows - 1) / 2;
+      const dx = i - cx;
+      const dy = j - cy;
+      const r = Math.hypot(dx, dy);
+      // Radius of a 5-point star at this angle (outer 11, inner 4.5).
+      const a = Math.atan2(dy, dx) + Math.PI / 2;
+      const setor = ((a % ((2 * Math.PI) / 5)) + (2 * Math.PI) / 5) % ((2 * Math.PI) / 5);
+      const t = Math.abs(setor / ((2 * Math.PI) / 5) - 0.5) * 2; // 1 at a tip, 0 between
+      return r <= 4.5 + (11 - 4.5) * t;
+    }
     case "sol": {
       const cy = rows * 0.42;
       const dx = i - cx;

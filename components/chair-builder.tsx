@@ -29,6 +29,14 @@ const FORMAS: { valor: Forma; rotulo: string }[] = [
   { valor: "ziguezague", rotulo: "Ziguezague" },
   { valor: "espiral", rotulo: "Caracol" },
   { valor: "sol", rotulo: "Sol" },
+  { valor: "xadrez", rotulo: "Xadrez" },
+  { valor: "listras", rotulo: "Listras" },
+  { valor: "faixas", rotulo: "Faixas" },
+  { valor: "losangos", rotulo: "Losangos" },
+  { valor: "setas", rotulo: "Setas" },
+  { valor: "ondas", rotulo: "Ondas" },
+  { valor: "coracao", rotulo: "Coração" },
+  { valor: "estrela", rotulo: "Estrela" },
 ];
 
 
