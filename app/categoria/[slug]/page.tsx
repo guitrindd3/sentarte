@@ -60,8 +60,8 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
 
   return (
     <>
-      <section className="border-b border-line bg-canvas-deep px-6 pb-10 pt-4 md:pb-14 md:pt-6">
-        <div className="mx-auto max-w-6xl">
+      <section className="border-b border-line bg-canvas-deep pb-10 pt-4 md:pb-14 md:pt-6">
+        <div className="mx-auto max-w-6xl px-6">
           <BackLink />
           <h1 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{categoria.titulo}</h1>
           <p className="mt-4 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
@@ -133,7 +133,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
         )}
       </section>
 
-      <section className="relative overflow-hidden border-t border-line bg-canvas-deep px-6 py-14 text-ink">
+      <section className="relative overflow-hidden border-t border-line bg-canvas-deep py-14 text-ink">
         <WeavePattern
           colorA={categoria.corA}
           colorB={categoria.corB}
@@ -141,7 +141,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
           band={32}
           className="pointer-events-none absolute -right-24 -top-24 hidden h-72 w-72 opacity-20 sm:block"
         />
-        <div className="relative mx-auto max-w-6xl">
+        <div className="relative mx-auto max-w-6xl px-6">
           <p className="max-w-[50ch] font-serif text-xl">
             Não encontrou a sua? Entre em contato e vamos produzir.
           </p>

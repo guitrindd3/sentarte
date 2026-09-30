@@ -11,8 +11,8 @@ export function PageHeader({
   voltarPara?: string;
 }) {
   return (
-    <section className="border-b border-line bg-canvas-deep px-6 pb-10 pt-4 md:pb-14 md:pt-6">
-      <div className="mx-auto max-w-3xl">
+    <section className="border-b border-line bg-canvas-deep pb-10 pt-4 md:pb-14 md:pt-6">
+      <div className="mx-auto max-w-6xl px-6">
         <BackLink fallback={voltarPara} />
         <div className="mt-2" />
         <h1 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{titulo}</h1>

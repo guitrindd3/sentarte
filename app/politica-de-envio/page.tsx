@@ -16,7 +16,7 @@ export default function PoliticaDeEnvioPage() {
   return (
     <>
       <PageHeader titulo="Envio" />
-      <section className="mx-auto max-w-3xl space-y-6 px-6 py-16 text-sm leading-relaxed text-ink-soft">
+      <section className="mx-auto max-w-6xl space-y-6 px-6 py-16 [&>*]:max-w-3xl text-sm leading-relaxed text-ink-soft">
         <div>
           <h2 className="font-serif text-lg text-ink">Produção sob encomenda</h2>
           <p className="mt-2">

@@ -19,7 +19,7 @@ export default async function PoliticaDeTrocaEDevolucaoPage() {
   return (
     <>
       <PageHeader titulo="Trocas e devoluções" />
-      <section className="mx-auto max-w-3xl space-y-6 px-6 py-16 text-sm leading-relaxed text-ink-soft">
+      <section className="mx-auto max-w-6xl space-y-6 px-6 py-16 [&>*]:max-w-3xl text-sm leading-relaxed text-ink-soft">
         <div>
           <h2 className="font-serif text-lg text-ink">Defeito de fabricação</h2>
           <p className="mt-2">

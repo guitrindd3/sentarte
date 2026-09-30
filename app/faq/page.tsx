@@ -82,7 +82,7 @@ export default async function FaqPage() {
           })),
         }}
       />
-      <section className="mx-auto max-w-3xl px-6 py-16">
+      <section className="mx-auto max-w-6xl px-6 py-16 [&>*]:max-w-3xl">
         <div className="divide-y divide-line border-y border-line">
           {PERGUNTAS.map((item) => (
             <details key={item.pergunta} className="group py-5">

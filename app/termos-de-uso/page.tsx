@@ -15,7 +15,7 @@ export default function TermosDeUsoPage() {
   return (
     <>
       <PageHeader titulo="Termos de uso" />
-      <section className="mx-auto max-w-3xl space-y-6 px-6 py-16 text-sm leading-relaxed text-ink-soft">
+      <section className="mx-auto max-w-6xl space-y-6 px-6 py-16 [&>*]:max-w-3xl text-sm leading-relaxed text-ink-soft">
         <p>
           Este site apresenta os modelos, materiais e o processo de personalização do SentArte.
           Ele funciona como catálogo — a compra é sempre combinada diretamente pelo WhatsApp ou

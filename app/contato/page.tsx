@@ -23,7 +23,7 @@ export default async function ContatoPage() {
         titulo="Fale com a gente"
         resumo="Todo pedido — orçamento, dúvida de modelo ou prazo — passa pelo WhatsApp. É por lá que a gente confirma cor, trama e personalização antes de começar a trançar."
       />
-      <section className="mx-auto max-w-3xl px-6 py-16">
+      <section className="mx-auto max-w-6xl px-6 py-16 [&>*]:max-w-3xl">
         <div className="grid gap-4 sm:grid-cols-2">
           <a
             href={whatsappUrl(site.whatsappNumero, "Oi! Vim pelo site e queria falar sobre um pedido.")}

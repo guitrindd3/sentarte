@@ -19,7 +19,7 @@ export default async function PoliticaDePrivacidadePage() {
   return (
     <>
       <PageHeader titulo="Política de privacidade" />
-      <section className="mx-auto max-w-3xl space-y-6 px-6 py-16 text-sm leading-relaxed text-ink-soft">
+      <section className="mx-auto max-w-6xl space-y-6 px-6 py-16 [&>*]:max-w-3xl text-sm leading-relaxed text-ink-soft">
         <p>
           O {site.nome} não opera uma loja online com cadastro ou checkout: os pedidos são feitos
           diretamente pelo WhatsApp e pelo Instagram. Esta página explica quais dados são

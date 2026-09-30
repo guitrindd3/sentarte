@@ -22,11 +22,11 @@ export default async function PersonalizarPage() {
       {/* Header with the looping "chair being woven" clip the user supplied
           (2026-09-29, public/videos/monte-sua-cadeira.mp4, 480x848, ~3.5s).
           Muted + playsInline so mobile browsers allow autoplay. */}
-      <section className="border-b border-line bg-canvas-deep px-6 pb-10 pt-4 md:pb-12 md:pt-6">
-        <div className="mx-auto max-w-6xl">
+      <section className="border-b border-line bg-canvas-deep pb-10 pt-4 md:pb-12 md:pt-6">
+        <div className="mx-auto max-w-6xl px-6">
           <BackLink />
         </div>
-        <div className="mx-auto mt-2 grid max-w-6xl items-center gap-10 md:grid-cols-[1fr_auto]">
+        <div className="mx-auto mt-2 grid max-w-6xl items-center gap-10 px-6 md:grid-cols-[1fr_auto]">
           <div className="max-w-2xl">
             <h1 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">Monte a sua trama</h1>
             <p className="mt-4 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
