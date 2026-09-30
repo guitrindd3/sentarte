@@ -36,7 +36,21 @@ export type Forma =
   | "escudo"
   | "triangulos"
   | "totem"
-  | "mandala";
+  | "mandala"
+  | "moldura"
+  | "diagonais"
+  | "quadriculado"
+  | "duas-faixas"
+  | "faixa-vertical"
+  | "cruz"
+  | "coroa"
+  | "escamas"
+  | "flechas"
+  | "bandeirinhas"
+  | "ancora"
+  | "flor"
+  | "lua"
+  | "sorriso";
 /** Where the name block's center sits, 0-1 across/down the name area
  * (the backrest between its plain margins). Set by dragging in the builder. */
 export type NomePosicao = { x: number; y: number };
@@ -120,6 +134,50 @@ function dentroPoligono(x: number, y: number, poly: [number, number][]) {
 // color keeps the strands' highlights and gaps.
 const sombraEscuro = (l: number) => 0.72 + (Math.min(l, 75) / 75) * 0.45;
 const sombraClaro = (l: number) => 0.68 + (Math.max(0, Math.min(l, 250) - 140) / 110) * 0.4;
+
+// Small pixel drawings for the figurative shapes ("X" = detail thread).
+const DESENHOS = {
+  ancora: [
+    ".......X.......",
+    "......XXX......",
+    "......X.X......",
+    "......XXX......",
+    ".......X.......",
+    "...XXXXXXXXX...",
+    ".......X.......",
+    ".......X.......",
+    ".......X.......",
+    ".......X.......",
+    ".......X.......",
+    "X......X......X",
+    "XX.....X.....XX",
+    ".XX....X....XX.",
+    "..XXX..X..XXX..",
+    "....XXXXXXX....",
+    "......XXX......",
+  ],
+  coroa: [
+    "X.....X.....X",
+    "XX...XXX...XX",
+    "XXX.XXXXX.XXX",
+    "XXXXXXXXXXXXX",
+    "XXXXXXXXXXXXX",
+    ".............",
+    "XXXXXXXXXXXXX",
+    "XXXXXXXXXXXXX",
+  ],
+};
+
+/** Whether cell (i,j) is set in a pixel drawing scaled and centered on the backrest. */
+function noDesenho(desenho: string[], escala: number, i: number, j: number, cols: number, rows: number) {
+  const h = desenho.length;
+  const w = desenho[0].length;
+  const x0 = Math.floor((cols - w * escala) / 2);
+  const y0 = Math.floor((rows - h * escala) / 2);
+  const sx = Math.floor((i - x0) / escala);
+  const sy = Math.floor((j - y0) / escala);
+  return sy >= 0 && sy < h && sx >= 0 && sx < w && desenho[sy][sx] === "X";
+}
 
 /** Whether backrest cell (i,j) shows the detail thread for this shape. */
 function celulaDaForma(forma: Forma, i: number, j: number, cols: number, rows: number): boolean {
@@ -279,6 +337,88 @@ function celulaDaForma(forma: Forma, i: number, j: number, cols: number, rows: n
       if (r >= 5.5 && r < 7.5) return Math.floor(((ang + Math.PI) / (2 * Math.PI)) * 12) % 2 === 0;
       if (r >= 9.5 && r < 11.5) return Math.floor(((ang + Math.PI) / (2 * Math.PI)) * 20) % 2 === 1;
       return false;
+    }
+    case "moldura": {
+      const borda = Math.min(i, cols - 1 - i, j, rows - 1 - j);
+      return borda === 2 || borda === 3;
+    }
+    case "diagonais":
+      return (i + j) % 7 < 2;
+    case "quadriculado": {
+      const cy = Math.round((rows - 1) / 2);
+      return Math.abs(i - Math.round(cx)) % 6 === 0 || Math.abs(j - cy) % 6 === 0;
+    }
+    case "duas-faixas": {
+      const cy = (rows - 1) / 2;
+      return Math.abs(Math.abs(j - cy) - 6) <= 1.5;
+    }
+    case "faixa-vertical":
+      return Math.abs(i - cx) <= 4;
+    case "cruz": {
+      // A cross whose arms widen outward (cruz pátea, like on the Vasco crest).
+      const cy = (rows - 1) / 2;
+      const dx = Math.abs(i - cx);
+      const dy = Math.abs(j - cy);
+      const lim = Math.min(11, cy - 1);
+      return (dy <= lim && dx <= 1.5 + dy * 0.4) || (dx <= lim && dy <= 1.5 + dx * 0.4);
+    }
+    case "coroa":
+      return noDesenho(DESENHOS.coroa, 1.8, i, j, cols, rows);
+    case "escamas": {
+      // Rows of scallops (fish scales), alternate rows shifted half a scale.
+      const linha = Math.floor(j / 4);
+      const x = (i + (linha % 2 === 0 ? 0 : 4)) % 8;
+      const y = j % 4;
+      const r = Math.hypot(x - 3.5, y);
+      return j < rows - 1 && r >= 3 && r < 4.2;
+    }
+    case "flechas": {
+      // Three columns of arrows pointing up.
+      const colunas = [Math.round(cx) - 9, Math.round(cx), Math.round(cx) + 9];
+      const jj = j % 9;
+      return colunas.some((c) => {
+        const dx = Math.abs(i - c);
+        if (dx > 3) return false;
+        if (jj < 4) return jj === dx || jj === dx + 1;
+        return dx === 0 && jj < 8;
+      });
+    }
+    case "bandeirinhas": {
+      // Bunting: a line with little hanging flags, whole rows only.
+      const alt = 7;
+      const n = Math.floor(rows / alt);
+      const topo = Math.floor((rows - n * alt) / 2);
+      const k = Math.floor((j - topo) / alt);
+      const y = (j - topo) % alt;
+      if (j < topo || k >= n) return false;
+      if (y === 0) return true;
+      if (y > 5) return false;
+      const x = (i + (k % 2 === 0 ? 0 : 3)) % 6;
+      return Math.abs(x - 2.5) <= (5 - y) * 0.55;
+    }
+    case "ancora":
+      return noDesenho(DESENHOS.ancora, 1.4, i, j, cols, rows);
+    case "flor": {
+      // Eight rounded petals around an open center with a dot.
+      const cy = (rows - 1) / 2;
+      const r = Math.hypot(i - cx, j - cy);
+      const ang = Math.atan2(j - cy, i - cx);
+      const petala = 3.5 + 7.5 * Math.pow(Math.abs(Math.cos(4 * ang)), 0.7);
+      return (r > 3 && r <= petala) || r < 1.5;
+    }
+    case "lua": {
+      const cy = (rows - 1) / 2;
+      const r1 = Math.hypot(i - cx, j - cy);
+      const r2 = Math.hypot(i - (cx + 5), j - (cy - 3));
+      return r1 < 11 && r2 >= 9;
+    }
+    case "sorriso": {
+      const cy = (rows - 1) / 2;
+      const r = Math.hypot(i - cx, j - cy);
+      if (r >= 10 && r < 11.4) return true; // face outline
+      if (Math.hypot(i - (cx - 4), j - (cy - 3)) < 1.7) return true; // eyes
+      if (Math.hypot(i - (cx + 4), j - (cy - 3)) < 1.7) return true;
+      return r >= 5.2 && r < 6.6 && j > cy + 1; // smile
     }
     case "sol": {
       const cy = rows * 0.42;
