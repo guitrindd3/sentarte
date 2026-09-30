@@ -140,6 +140,21 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const passosRef = useRef<HTMLDivElement>(null);
   const faixaRef = useRef<HTMLDivElement>(null);
   const passoAnterior = useRef(0);
+  const miniRef = useRef<HTMLCanvasElement>(null);
+  const [cadeiraFora, setCadeiraFora] = useState(false);
+
+  // Phones: when the big chair scrolls out of view, a small live copy fades
+  // in at the top so the customer still sees each choice.
+  useEffect(() => {
+    const el = faixaRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => setCadeiraFora(!e.isIntersecting && e.boundingClientRect.top < 0),
+      { rootMargin: "-80px 0px 0px 0px", threshold: 0.25 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   // On phones the options sit under the pinned chair band: when the step
   // changes and its top is hidden behind header+band, scroll it into view.
@@ -151,9 +166,8 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     if (!el || window.matchMedia("(min-width: 768px)").matches) return;
     const topo =
       parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--altura-topo")) || 64;
-    const faixa = faixaRef.current?.getBoundingClientRect().height ?? 0;
-    const alvo = el.getBoundingClientRect().top + window.scrollY - topo - faixa - 8;
-    if (el.getBoundingClientRect().top < topo + faixa) window.scrollTo({ top: alvo, behavior: "smooth" });
+    const alvo = el.getBoundingClientRect().top + window.scrollY - topo - 8;
+    if (el.getBoundingClientRect().top < topo) window.scrollTo({ top: alvo, behavior: "smooth" });
   }, [passo]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const miniaturasRef = useRef<(HTMLCanvasElement | null)[]>([]);
@@ -172,6 +186,12 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
+    const mini = miniRef.current;
+    if (mini && canvasRef.current) {
+      const ctx = mini.getContext("2d");
+      ctx?.clearRect(0, 0, mini.width, mini.height);
+      ctx?.drawImage(canvasRef.current, 0, 0, mini.width, mini.height);
+    }
   }, [foto, passo, forma, fioA, fioB, corC, nome, posicao, tamanhoNome, escalaForma, posForma]);
 
   // Shape thumbnails (just the backrest), in the chosen colors.
@@ -299,22 +319,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
   return (
     <div className="grid gap-8 border border-line bg-paper p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:p-8">
-      {/* The chair */}
-      {/* On phones, once building, the chair stays pinned in a band under the
-          header so every choice is visible while scrolling the options. */}
-      <div
-        ref={faixaRef}
-        className={
-          passo > 0
-            ? "sticky top-[var(--altura-topo,4rem)] z-20 -mx-4 -mt-4 border-b border-line bg-paper px-4 py-3 md:static md:m-0 md:border-0 md:p-0"
-            : ""
-        }
-      >
-      <div
-        className={`relative mx-auto w-full overflow-hidden border border-line bg-canvas md:max-w-md ${
-          passo > 0 ? "max-w-[12.5rem]" : "max-w-md"
-        }`}
-      >
+      {/* The chair — same size before and after the weaving clip (a
+          shrinking pinned band felt jumpy on phones, user 2026-09-30). */}
+      <div ref={faixaRef}>
+      <div className="relative mx-auto w-full max-w-md overflow-hidden border border-line bg-canvas">
         <div className="relative aspect-[480/560]">
           {/* eslint-disable-next-line @next/next/no-img-element -- fixed local frame, same crop as the canvas */}
           <img
@@ -397,6 +405,21 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       </div>
 
       </div>
+
+      {/* Mini preview (phones only) */}
+      <button
+        type="button"
+        onClick={() => faixaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+        aria-label="Ver a cadeira"
+        tabIndex={cadeiraFora && passo > 0 ? 0 : -1}
+        className={`fixed right-3 top-[calc(var(--altura-topo,4rem)+0.5rem)] z-30 w-24 overflow-hidden rounded-md border border-line bg-paper p-1 shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-300 md:hidden ${
+          cadeiraFora && passo > 0 && !animando
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-3 opacity-0"
+        }`}
+      >
+        <canvas ref={miniRef} width={240} height={280} className="block aspect-[480/560] w-full rounded-sm" />
+      </button>
 
       {/* The steps */}
       <div ref={passosRef} className="flex scroll-mt-4 flex-col">

@@ -385,7 +385,9 @@ same camera position) would look better; the user was told this.
   compacto`), homepage team showcase is a sideways-swipe row
   (`TeamGrid deslizar`), product photos square below `sm`, smaller section
   padding below `md`, /personalizar hides its header clip below `md` and the
-  builder pins the chair in a band under the header while choosing.
+  builder keeps the chair full size (a shrinking pinned band felt jumpy —
+  user video 2026-09-30) and instead fades in a small live mini preview at
+  the top-right while the big chair is scrolled out of view.
 - The one saturated color allowed in customer-facing chrome is `verde`
   (`--verde` in globals.css), and only on the builder's go-buttons
   (Começar a montar with the `.pulso-verde` ring, Próximo, Pedir pelo
