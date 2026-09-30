@@ -6,7 +6,7 @@ import { VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { useCart } from "@/lib/cart-context";
 import { IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix } from "@/lib/offer";
-import { FIOS, type Fio } from "@/lib/palette";
+import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
 import { whatsappUrl } from "@/lib/urls";
 
 // Step-by-step "Monte a sua trama" builder (2026-09-29). Instead of a drawn
@@ -425,31 +425,50 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
               {[
                 { rotulo: "Cor principal", fio: fioA, set: setFioA },
                 { rotulo: "Cor dos detalhes", fio: fioB, set: setFioB },
-              ].map(({ rotulo, fio, set }) => (
-                <fieldset key={rotulo}>
-                  <legend className="text-sm text-ink">
-                    {rotulo}: <span className="text-ink-soft">{fio.nome}</span>
-                  </legend>
-                  <div className="mt-3 flex flex-wrap gap-3">
-                    {FIOS.map((f) => (
-                      <button
-                        key={f.nome}
-                        type="button"
-                        aria-label={f.nome}
-                        title={f.nome}
-                        aria-pressed={fio.nome === f.nome}
-                        onClick={() => set(f)}
-                        className={`h-9 w-9 rounded-full transition-shadow ${
-                          fio.nome === f.nome
-                            ? "ring-2 ring-ink ring-offset-2 ring-offset-paper"
-                            : "ring-1 ring-line ring-offset-2 ring-offset-paper hover:ring-ink"
-                        }`}
-                        style={{ background: f.cor }}
-                      />
-                    ))}
-                  </div>
-                </fieldset>
-              ))}
+              ].map(({ rotulo, fio, set }) => {
+                const personalizada = !FIOS.some((f) => f.cor === fio.cor);
+                return (
+                  <fieldset key={rotulo}>
+                    <legend className="text-sm text-ink">
+                      {rotulo}: <span className="text-ink-soft">{fio.nome}</span>
+                    </legend>
+                    <div className="mt-3 space-y-2.5">
+                      {FAMILIAS.map((familia) => (
+                        <div key={familia.nome} className="flex flex-wrap items-center gap-2">
+                          <span className="w-full text-[0.7rem] text-ink-soft sm:w-24 sm:shrink-0">{familia.nome}</span>
+                          {familia.fios.map((f) => (
+                            <button
+                              key={f.nome}
+                              type="button"
+                              aria-label={f.nome}
+                              title={f.nome}
+                              aria-pressed={fio.cor === f.cor}
+                              onClick={() => set(f)}
+                              className={`h-7 w-7 rounded-full transition-shadow ${
+                                fio.cor === f.cor
+                                  ? "ring-2 ring-ink ring-offset-2 ring-offset-paper"
+                                  : "ring-1 ring-line ring-offset-1 ring-offset-paper hover:ring-ink"
+                              }`}
+                              style={{ background: f.cor }}
+                            />
+                          ))}
+                        </div>
+                      ))}
+                      <label className="flex flex-wrap items-center gap-2 pt-1">
+                        <span className="w-full text-[0.7rem] text-ink-soft sm:w-24 sm:shrink-0">Outra cor</span>
+                        <input
+                          type="color"
+                          value={fio.cor}
+                          onChange={(e) => set({ nome: `Cor personalizada (${e.target.value.toUpperCase()})`, cor: e.target.value })}
+                          className={`h-8 w-12 cursor-pointer border bg-paper p-0.5 ${personalizada ? "border-ink" : "border-line"}`}
+                          aria-label={`${rotulo}: escolher qualquer cor`}
+                        />
+                        <span className="text-xs text-ink-soft">qualquer cor (a gente confirma se tem o fio)</span>
+                      </label>
+                    </div>
+                  </fieldset>
+                );
+              })}
             </div>
           ) : null}
 
