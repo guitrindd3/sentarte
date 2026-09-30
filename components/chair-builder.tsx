@@ -262,7 +262,20 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   return (
     <div className="grid gap-8 border border-line bg-paper p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:p-8">
       {/* The chair */}
-      <div className="relative mx-auto w-full max-w-md overflow-hidden border border-line bg-canvas">
+      {/* On phones, once building, the chair stays pinned in a band under the
+          header so every choice is visible while scrolling the options. */}
+      <div
+        className={
+          passo > 0
+            ? "sticky top-[calc(env(safe-area-inset-top,0px)+4.2rem)] z-20 -mx-4 -mt-4 border-b border-line bg-paper px-4 py-3 md:static md:m-0 md:border-0 md:p-0"
+            : ""
+        }
+      >
+      <div
+        className={`relative mx-auto w-full overflow-hidden border border-line bg-canvas md:max-w-md ${
+          passo > 0 ? "max-w-[12.5rem]" : "max-w-md"
+        }`}
+      >
         <div className="relative aspect-[480/560]">
           {/* eslint-disable-next-line @next/next/no-img-element -- fixed local frame, same crop as the canvas */}
           <img
@@ -341,6 +354,8 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             </div>
           ) : null}
         </div>
+      </div>
+
       </div>
 
       {/* The steps */}

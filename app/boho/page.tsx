@@ -29,6 +29,7 @@ export default async function BohoPage() {
   return (
     <>
       <PageHeader
+        voltarPara="/categoria/cadeiras"
         titulo="Cadeiras boho"
         resumo="Estampas boho exclusivas, em tons terrosos — cada padrão é uma trama diferente."
       />

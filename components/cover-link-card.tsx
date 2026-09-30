@@ -11,6 +11,7 @@ export function CoverLinkCard({
   linkLabel,
   shape,
   videoUrl,
+  compacto = false,
 }: {
   modelo: Modelo;
   href: string;
@@ -18,6 +19,8 @@ export function CoverLinkCard({
   shape?: WeaveShape;
   /** Looping muted clip shown instead of the photo/pattern (e.g. "Monte a sua trama"). */
   videoUrl?: string;
+  /** Two-per-row phone layout: smaller padding, no description on phones. */
+  compacto?: boolean;
 }) {
   return (
     <Link
@@ -55,10 +58,20 @@ export function CoverLinkCard({
           />
         )}
       </div>
-      <div className="flex flex-1 flex-col p-5">
-        <p className="font-serif text-lg font-medium text-ink">{modelo.nome}</p>
-        <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-soft">{modelo.descricao}</p>
-        <span className="mt-4 inline-block w-fit border-b border-current text-sm font-medium text-ink">
+      <div className={`flex flex-1 flex-col ${compacto ? "p-3 sm:p-5" : "p-5"}`}>
+        <p className={`font-serif font-medium text-ink ${compacto ? "text-base leading-tight sm:text-lg" : "text-lg"}`}>
+          {modelo.nome}
+        </p>
+        <p
+          className={`mt-2 flex-1 text-sm leading-relaxed text-ink-soft ${compacto ? "hidden sm:block" : ""}`}
+        >
+          {modelo.descricao}
+        </p>
+        <span
+          className={`inline-block w-fit border-b border-current font-medium text-ink ${
+            compacto ? "mt-2 text-xs sm:mt-4 sm:text-sm" : "mt-4 text-sm"
+          }`}
+        >
           {linkLabel}
         </span>
       </div>

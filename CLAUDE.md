@@ -364,6 +364,23 @@ Frames were extracted with `ffmpeg-static` (npm, free) — not a project
 dependency. A sharper pair of real photos (empty frame + fully white-woven,
 same camera position) would look better; the user was told this.
 
+## Mobile & navigation (2026-09-30)
+
+- Every inner page has a "Voltar" (`components/back-link.tsx`) at the top —
+  `PageHeader` renders it (prop `voltarPara` = fallback when the visitor
+  didn't come from another page of the site; /times, /boho, /desenhos fall
+  back to /categoria/cadeiras). The user had been tapping the logo to go back.
+- The site header is `sticky` on the `<header>` element itself (before this
+  the sticky class sat on its only child, so it never actually stuck).
+- Phone layout choices: homepage collection cards 2 per row (`CoverLinkCard
+  compacto`), homepage team showcase is a sideways-swipe row
+  (`TeamGrid deslizar`), product photos square below `sm`, smaller section
+  padding below `md`, /personalizar hides its header clip below `md` and the
+  builder pins the chair in a band under the header while choosing.
+- Mobile check workflow: Playwright (installed only in the session
+  scratchpad, not a project dependency) with the iPhone 13 profile at
+  deviceScaleFactor 1 — full-page shots at 3x blank out past ~16k px.
+
 ## Cart & search
 
 - Added 2026-09-21 (user: "quero a lupinha para as pessoas pesquisarem, o

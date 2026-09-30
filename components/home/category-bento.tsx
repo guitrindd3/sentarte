@@ -27,20 +27,21 @@ export function CategoryBento({ categorias }: { categorias: Categoria[] }) {
   if (cards.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-24">
+    <section className="mx-auto max-w-6xl px-6 py-14 md:py-24">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Escolha a sua cadeira</h2>
         <Link href="/categoria/cadeiras" className="shrink-0 border-b border-current text-sm font-medium text-ink">
           Ver todos os modelos
         </Link>
       </div>
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
         {cards.map(({ modelo, href, linkLabel }) => (
           <CoverLinkCard
             key={modelo.id}
             modelo={modelo}
             href={href}
             linkLabel={linkLabel}
+            compacto
             shape={href === "/personalizar" ? "espiral" : undefined}
             videoUrl={href === "/personalizar" ? VIDEO_MONTE_SUA_CADEIRA : undefined}
           />

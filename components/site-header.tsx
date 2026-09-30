@@ -14,8 +14,10 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
   const contactMsg = whatsappUrl(whatsappNumero, "Oi! Vim pelo site e queria saber mais sobre as cadeiras.");
 
   return (
-    <header className="relative">
-      <div className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur">
+    // Sticky on the <header> itself: sticky on its only child never stuck,
+    // because a sticky element can't leave its parent's box.
+    <header className="sticky top-0 z-40">
+      <div className="border-b border-line bg-canvas/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3">
           <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
             <Image src="/brand/logo.png" alt="" width={40} height={40} className="h-10 w-10" />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BOHO_NOME, BOHO_PADROES } from "@/lib/boho-model";
+import { BackLink } from "@/components/back-link";
 import { CoverLinkCard, VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { DESENHO_NOME, DESENHO_TEMAS } from "@/lib/desenho-model";
 import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
@@ -59,8 +60,9 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
 
   return (
     <>
-      <section className="border-b border-line bg-canvas-deep px-6 py-14">
+      <section className="border-b border-line bg-canvas-deep px-6 pb-10 pt-4 md:pb-14 md:pt-6">
         <div className="mx-auto max-w-6xl">
+          <BackLink />
           <h1 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{categoria.titulo}</h1>
           <p className="mt-4 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
             {categoria.intro}

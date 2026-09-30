@@ -21,7 +21,7 @@ const FEATURES = [
 
 export function MaterialSpec() {
   return (
-    <section className="bg-canvas-deep px-6 py-24 text-ink">
+    <section className="bg-canvas-deep px-6 py-14 text-ink md:py-24">
       <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2 md:items-center">
         <div>
           <h2 className="font-serif text-2xl font-medium tracking-tight">A linha que sustenta cada peça</h2>

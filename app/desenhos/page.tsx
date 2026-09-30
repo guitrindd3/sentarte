@@ -29,6 +29,7 @@ export default async function DesenhosPage() {
   return (
     <>
       <PageHeader
+        voltarPara="/categoria/cadeiras"
         titulo="Animes e desenhos"
         resumo="Desenhos, personagens e frases tecidos na cadeira. Os exemplos abaixo são pedidos que já fizemos — conta pra gente o que você tem em mente e a gente tece."
       />

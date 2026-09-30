@@ -64,7 +64,7 @@ export function ModeloCard({
 
   return (
     <div className="group flex flex-col border border-line bg-paper transition-all duration-300 hover:-translate-y-1 hover:border-ink hover:shadow-[6px_6px_0_0_var(--line)]">
-      <div className="relative aspect-[4/5] overflow-hidden border-b border-line bg-canvas">
+      <div className="relative aspect-square overflow-hidden border-b border-line bg-canvas sm:aspect-[4/5]">
         {fotoAtiva ? (
           <Image
             key={fotoAtiva}

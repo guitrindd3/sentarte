@@ -13,7 +13,7 @@ export function TeamShowcase({
   if (getTeamPairs(categorias).length === 0) return null;
 
   return (
-    <section className="border-t border-line px-6 py-24">
+    <section className="border-t border-line px-6 py-14 md:py-24">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -28,7 +28,7 @@ export function TeamShowcase({
           </Link>
         </div>
         <div className="mt-8">
-          <TeamGrid categorias={categorias} whatsappNumero={whatsappNumero} />
+          <TeamGrid categorias={categorias} whatsappNumero={whatsappNumero} deslizar />
         </div>
       </div>
     </section>

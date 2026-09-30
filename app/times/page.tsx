@@ -22,6 +22,7 @@ export default async function TimesPage() {
   return (
     <>
       <PageHeader
+        voltarPara="/categoria/cadeiras"
         titulo="Cadeiras de time"
         resumo="As cores e o escudo do seu time, trançados direto na estrutura — sem adesivo, sem estampa. Escolha com ou sem um nome no encosto."
       />
