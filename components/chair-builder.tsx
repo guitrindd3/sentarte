@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart-context";
 import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix } from "@/lib/offer";
 import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
+import { ROTULOS_EXTRAS } from "@/lib/formas-extras";
 import { codificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
 import { whatsappUrl } from "@/lib/urls";
@@ -116,6 +117,7 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   { valor: "melancia", rotulo: "Melancia", grupo: "divertidos" },
   { valor: "gatinho", rotulo: "Gatinho", grupo: "divertidos" },
   { valor: "cacto", rotulo: "Cacto", grupo: "divertidos" },
+  ...ROTULOS_EXTRAS,
 ];
 
 

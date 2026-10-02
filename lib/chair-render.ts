@@ -12,6 +12,7 @@
 // the frame (see CLAUDE.md "Monte a sua trama builder") — if the base photo
 // is ever replaced, these regions must be re-measured.
 
+import { FORMAS_EXTRAS } from "./formas-extras";
 import { GLYPH_H, GLYPH_W, glyphPixel, normalizarTexto } from "./pixel-font";
 
 export type Forma =
@@ -94,7 +95,9 @@ export type Forma =
   | "concha"
   | "melancia"
   | "gatinho"
-  | "cacto";
+  | "cacto"
+  // + every key of FORMAS_EXTRAS (lib/formas-extras.ts)
+  | (string & {});
 /** Where the name block's center sits, 0-1 across/down the name area
  * (the backrest between its plain margins). Set by dragging in the builder. */
 export type NomePosicao = { x: number; y: number };
@@ -144,16 +147,19 @@ const ASSENTO_DESENHO_Y1 = 612;
 // Kept well inside the side curves (user 2026-10-02 marked the curved
 // edges as a margin) and slanted like the seat itself, so figures follow
 // the seat's perspective.
+// Centered on the chair's middle (x≈223, same as the backrest).
+const ASSENTO_MEIO_X = 223;
 const ASSENTO_PAINEL: [number, number][] = [
-  [122, ASSENTO_DESENHO_Y0],
-  [340, ASSENTO_DESENHO_Y0],
-  [362, ASSENTO_DESENHO_Y1],
-  [102, ASSENTO_DESENHO_Y1],
+  [ASSENTO_MEIO_X - 107, ASSENTO_DESENHO_Y0],
+  [ASSENTO_MEIO_X + 107, ASSENTO_DESENHO_Y0],
+  [ASSENTO_MEIO_X + 128, ASSENTO_DESENHO_Y1],
+  [ASSENTO_MEIO_X - 128, ASSENTO_DESENHO_Y1],
 ];
 /** Seat pattern grid. Same row count as the backrest's pattern area, so the
  * figures (heart, anchor…) fit whole and centered; cells come out roughly
  * square on screen. */
-export const ASSENTO_COLS = 60;
+// odd, so the grid has a true center column (centered shapes need it)
+export const ASSENTO_COLS = 61;
 export const ASSENTO_ROWS = 27;
 /** Backrest pattern grid, for flat thumbnails. */
 export const ENCOSTO_COLS = 33;
@@ -541,10 +547,12 @@ function celulaDaForma(forma: Forma, i: number, j: number, cols: number, rows: n
     }
     case "setas": {
       // Stacked V chevrons pointing down — only whole ones, centered.
-      const abertura = 0.6 * cx; // how much lower a chevron's arms end than its tip
+      // slope limited so wide grids (the seat) still fit a couple of chevrons
+      const incl = Math.min(0.6, (rows * 0.35) / cx);
+      const abertura = incl * cx; // how much lower a chevron's arms end than its tip
       const n = Math.floor((rows - 3 - abertura) / 6) + 1;
       const topo = Math.floor((rows - 1 - abertura - (6 * (n - 1) + 2)) / 2);
-      const v = j - topo - Math.abs(i - cx) * 0.6;
+      const v = j - topo - Math.abs(i - cx) * incl;
       const k = Math.floor(v / 6);
       return v >= 0 && v % 6 < 2 && k < n;
     }
@@ -899,6 +907,7 @@ function celulaDaForma(forma: Forma, i: number, j: number, cols: number, rows: n
       return r > 7 && r < 12 && raio;
     }
   }
+  return FORMAS_EXTRAS[forma]?.(i, j, cols, rows) ?? false;
 }
 
 const espirais = new Map<string, Set<number>>();
@@ -1181,7 +1190,7 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
       const i = (y * IMG_W + x) * 4;
       const l = brilho(i);
       if (saturacao(i) > 60 || l > 140) continue; // floor/pool through the gaps
-      const P = (x - esq) / (dir - esq) >= 0.5 ? C : A;
+      const P = x >= ASSENTO_MEIO_X ? C : A;
       let detalhe = false;
       if (Number.isFinite(pEsq) && x + 0.5 >= pEsq && x + 0.5 < pDir) {
         const u = (x + 0.5 - pEsq) / (pDir - pEsq);
