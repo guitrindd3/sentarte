@@ -180,6 +180,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [tamanhoNome, setTamanhoNome] = useState(1);
   /** Where the name goes: backrest (default) or the middle of the seat. */
   const [nomeNoAssento, setNomeNoAssento] = useState(false);
+  const [tamanhoNomeAssento, setTamanhoNomeAssento] = useState(1);
   const [escalaForma, setEscalaForma] = useState(1);
   const [posForma, setPosForma] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
   const [adicionado, setAdicionado] = useState(false);
@@ -227,12 +228,12 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
   const nomeEncosto = nomeNoAssento ? "" : nome;
   const nomeAssento = nomeNoAssento ? nome : "";
-  const opcoes = { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma };
+  const opcoes = { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma }, {
+    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
@@ -242,7 +243,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       ctx?.clearRect(0, 0, mini.width, mini.height);
       ctx?.drawImage(canvasRef.current, 0, 0, mini.width, mini.height);
     }
-  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma]);
+  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma]);
 
   // Shape thumbnails: flat and straight (just the figure), in the chosen
   // colors — the photo's perspective made them look slanted.
@@ -291,6 +292,60 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     if (arrastaForma) setPosForma(p);
     else setPosicao(p);
   };
+
+  // The size control next to the chair edits whatever is being worked on:
+  // backrest shape / seat figure in step 1, the name in step 3.
+  type Controle = { rotulo: string; valor: number; min: number; max: number; set: (v: number) => void };
+  const controle: Controle | null =
+    passo === 1 && parte === "encosto" && forma !== "lisa" && forma !== "meio-a-meio"
+      ? { rotulo: "Tamanho do trançado", valor: escalaForma, min: 0.35, max: 1, set: setEscalaForma }
+      : passo === 1 && parte === "assento" && formaAssento !== "lisa" && formaAssento !== "meio-a-meio"
+        ? { rotulo: "Tamanho do desenho", valor: escalaAssento, min: 0.4, max: 2, set: setEscalaAssento }
+        : passo === 3 && Boolean(nome.trim())
+          ? nomeNoAssento
+            ? { rotulo: "Tamanho do nome", valor: tamanhoNomeAssento, min: 0.4, max: 2, set: setTamanhoNomeAssento }
+            : { rotulo: "Tamanho do nome", valor: tamanhoNome, min: 0.3, max: 1, set: setTamanhoNome }
+          : null;
+  const ajustar = (delta: number) => {
+    if (!controle) return;
+    const v = Math.round((controle.valor + delta) * 100) / 100;
+    controle.set(Math.max(controle.min, Math.min(controle.max, v)));
+  };
+  const controleTamanho = (compacto = false) =>
+    controle ? (
+      <div
+        className={`flex items-center gap-2 border border-line bg-paper/95 backdrop-blur ${
+          compacto ? "justify-center px-1 py-1" : "px-3 py-2"
+        }`}
+      >
+        {!compacto ? <span className="mr-auto text-xs text-ink-soft">{controle.rotulo}</span> : null}
+        <button
+          type="button"
+          onClick={() => ajustar(-0.1)}
+          disabled={controle.valor <= controle.min}
+          aria-label={`Diminuir ${controle.rotulo.toLowerCase()}`}
+          className={`flex items-center justify-center rounded-full border border-ink font-semibold text-ink disabled:opacity-30 ${
+            compacto ? "h-7 w-7 text-base" : "h-9 w-9 text-lg"
+          }`}
+        >
+          −
+        </button>
+        <span className={`text-center font-medium tabular-nums text-ink ${compacto ? "w-10 text-xs" : "w-12 text-sm"}`}>
+          {Math.round(controle.valor * 100)}%
+        </span>
+        <button
+          type="button"
+          onClick={() => ajustar(0.1)}
+          disabled={controle.valor >= controle.max}
+          aria-label={`Aumentar ${controle.rotulo.toLowerCase()}`}
+          className={`flex items-center justify-center rounded-full border border-ink font-semibold text-ink disabled:opacity-30 ${
+            compacto ? "h-7 w-7 text-base" : "h-9 w-9 text-lg"
+          }`}
+        >
+          +
+        </button>
+      </div>
+    ) : null;
 
   const recomecar = () => {
     setPasso(0);
@@ -382,7 +437,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     <div className="grid gap-8 border border-line bg-paper p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:p-8">
       {/* The chair — same size before and after the weaving clip (a
           shrinking pinned band felt jumpy on phones, user 2026-09-30). */}
-      <div ref={faixaRef}>
+      <div ref={faixaRef} className="self-start">
       <div className="relative mx-auto w-full max-w-md overflow-hidden border border-line bg-canvas">
         <div className="relative aspect-[464/560]">
           {/* eslint-disable-next-line @next/next/no-img-element -- fixed local frame, same crop as the canvas */}
@@ -465,22 +520,32 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
         </div>
       </div>
 
+        {passo > 0 && !animando && controle ? (
+          <div className="mx-auto mt-3 w-full max-w-md">
+            {controleTamanho()}
+          </div>
+        ) : null}
       </div>
 
-      {/* Mini preview (phones only) */}
-      <button
-        type="button"
-        onClick={() => faixaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
-        aria-label="Ver a cadeira"
-        tabIndex={cadeiraFora && passo > 0 ? 0 : -1}
-        className={`fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] right-3 z-30 w-24 overflow-hidden rounded-md border border-line bg-paper p-1 shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-300 md:hidden ${
+      {/* Mini preview (shown while the big chair is scrolled away) */}
+      <div
+        className={`fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] right-3 z-30 w-28 overflow-hidden rounded-md border border-line bg-paper shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-300 md:bottom-6 md:right-6 md:w-44 ${
           cadeiraFora && passo > 0 && !animando
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-3 opacity-0"
         }`}
       >
-        <canvas ref={miniRef} width={232} height={280} className="block aspect-[464/560] w-full rounded-sm" />
-      </button>
+        <button
+          type="button"
+          onClick={() => faixaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+          aria-label="Ver a cadeira"
+          tabIndex={cadeiraFora && passo > 0 ? 0 : -1}
+          className="block w-full p-1"
+        >
+          <canvas ref={miniRef} width={232} height={280} className="block aspect-[464/560] w-full rounded-sm" />
+        </button>
+        {controleTamanho(true)}
+      </div>
 
       {/* The steps */}
       <div ref={passosRef} className="flex scroll-mt-4 flex-col">
@@ -623,52 +688,11 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   </button>
                 ))}
               </div>
-              {parte === "assento" && formaAssento !== "lisa" && formaAssento !== "meio-a-meio" ? (
-                <label className="mt-6 block">
-                  <span className="flex justify-between text-sm text-ink">
-                    Tamanho do desenho do assento
-                    <span className="text-ink-soft">{Math.round(escalaAssento * 100)}%</span>
-                  </span>
-                  <input
-                    type="range"
-                    min={0.4}
-                    max={2}
-                    step={0.05}
-                    value={escalaAssento}
-                    onChange={(e) => setEscalaAssento(Number(e.target.value))}
-                    className="mt-2 w-full accent-verde"
-                  />
-                  <span className="flex justify-between text-xs text-ink-soft">
-                    <span>Menor</span>
-                    <span>Maior</span>
-                  </span>
-                </label>
-              ) : null}
               {parte === "encosto" && forma !== "lisa" && forma !== "meio-a-meio" ? (
-                <label className="mt-6 block">
-                  <span className="flex justify-between text-sm text-ink">
-                    Tamanho do trançado
-                    <span className="text-ink-soft">{Math.round(escalaForma * 100)}%</span>
-                  </span>
-                  <input
-                    type="range"
-                    min={0.35}
-                    max={1}
-                    step={0.05}
-                    value={escalaForma}
-                    onChange={(e) => setEscalaForma(Number(e.target.value))}
-                    className="mt-2 w-full accent-verde"
-                  />
-                  <span className="flex justify-between text-xs text-ink-soft">
-                    <span>Menor</span>
-                    <span>Maior</span>
-                  </span>
-                  {escalaForma < 0.97 ? (
-                    <span className="mt-2 block text-xs text-ink-soft">
-                      Arraste o desenho na cadeira para escolher onde ele fica. Assim sobra espaço para o nome.
-                    </span>
-                  ) : null}
-                </label>
+                <p className="mt-4 text-xs text-ink-soft">
+                  Use o − e + embaixo da cadeira para mudar o tamanho. Com o desenho menor, dá para arrastar ele na
+                  cadeira e sobra espaço para o nome.
+                </p>
               ) : null}
             </fieldset>
           ) : null}
@@ -791,27 +815,6 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                     </p>
                   ) : null}
                 </fieldset>
-              ) : null}
-              {temNome && !nomeNoAssento ? (
-                <label className="block">
-                  <span className="flex justify-between text-sm text-ink">
-                    Tamanho do nome
-                    <span className="text-ink-soft">{tamanhoRotulo}</span>
-                  </span>
-                  <input
-                    type="range"
-                    min={0.3}
-                    max={1}
-                    step={0.05}
-                    value={tamanhoNome}
-                    onChange={(e) => setTamanhoNome(Number(e.target.value))}
-                    className="mt-2 w-full accent-ink"
-                  />
-                  <span className="flex justify-between text-xs text-ink-soft">
-                    <span>Menor</span>
-                    <span>Maior</span>
-                  </span>
-                </label>
               ) : null}
               {temNome && !nomeNoAssento ? (
                 <p className="border border-dashed border-line px-3 py-2 text-sm text-ink-soft">

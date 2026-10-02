@@ -197,6 +197,8 @@ export type Opcoes = {
   /** Name woven in the middle of the seat (detail color), instead of / as
    * well as the backrest one. */
   nomeAssento?: string;
+  /** Seat name size, 0.4-2 (1 = as big as fits the seat panel). */
+  tamanhoNomeAssento?: number;
   /** Seat figure size, 0.4-2 of the seat panel (1 = fits it), centered;
    * never drawn outside the panel. */
   escalaAssento?: number;
@@ -1032,13 +1034,17 @@ export function posicaoNoEncosto(sx: number, sy: number): NomePosicao {
 }
 
 /** Name laid out on the seat grid (cells), centered, as big as fits. */
-function mascaraNomeAssento(texto: string) {
+function mascaraNomeAssento(texto: string, tamanho = 1) {
   const linha = normalizarTexto(texto.replace(/\n/g, " ")).trim();
   if (!linha) return null;
   const larguraCel = linha.length * (GLYPH_W + 1) - 1;
-  const esc = Math.max(1, Math.min(3, Math.floor((ASSENTO_COLS - 4) / larguraCel), Math.floor((ASSENTO_ROWS - 6) / GLYPH_H)));
-  const w = larguraCel * esc;
-  const h = GLYPH_H * esc;
+  // fractional cell size: 1 = largest that fits, then the user's factor
+  const caber = Math.min(3.4, (ASSENTO_COLS - 4) / larguraCel, (ASSENTO_ROWS - 6) / GLYPH_H);
+  // grows past 100% only while the whole name still fits the panel
+  const maximo = Math.min((ASSENTO_COLS - 2) / larguraCel, (ASSENTO_ROWS - 2) / GLYPH_H);
+  const esc = Math.max(0.6, Math.min(maximo, caber * Math.max(0.4, Math.min(2, tamanho))));
+  const w = Math.round(larguraCel * esc);
+  const h = Math.round(GLYPH_H * esc);
   const x0 = Math.floor((ASSENTO_COLS - w) / 2);
   const y0 = Math.floor((ASSENTO_ROWS - h) / 2);
   const letra = new Uint8Array(ASSENTO_COLS * ASSENTO_ROWS);
@@ -1046,7 +1052,10 @@ function mascaraNomeAssento(texto: string) {
     for (let i = 0; i < w; i++) {
       const gx = Math.floor(i / esc);
       const ci = Math.floor(gx / (GLYPH_W + 1));
-      if (glyphPixel(linha[ci], gx % (GLYPH_W + 1), Math.floor(j / esc))) letra[(y0 + j) * ASSENTO_COLS + x0 + i] = 1;
+      const xx = x0 + i;
+      const yy = y0 + j;
+      if (xx < 0 || yy < 0 || xx >= ASSENTO_COLS || yy >= ASSENTO_ROWS) continue;
+      if (glyphPixel(linha[ci], gx % (GLYPH_W + 1), Math.floor(j / esc))) letra[yy * ASSENTO_COLS + xx] = 1;
     }
   }
   const contorno = new Uint8Array(ASSENTO_COLS * ASSENTO_ROWS);
@@ -1190,7 +1199,7 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   // color. Pattern cells follow the seat's perspective: u runs across the
   // seat between its left/right edges on that row, v from back to front.
   const formaAssento = op.formaAssento ?? "lisa";
-  const nomeSeat = mascaraNomeAssento(op.nomeAssento ?? "");
+  const nomeSeat = mascaraNomeAssento(op.nomeAssento ?? "", op.tamanhoNomeAssento ?? 1);
   // above 1 the figure grows and is cut at the panel edge — never past it
   const escA = Math.max(0.4, Math.min(2, op.escalaAssento ?? 1));
   for (let y = ASSENTO_Y0; y < ASSENTO_Y1; y++) {
