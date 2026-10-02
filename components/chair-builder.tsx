@@ -83,27 +83,6 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
 ];
 
 
-// Seat patterns (user 2026-10-02) — the ones that read well on the seat's
-// horizontal weave, drawn in the detail color.
-const FORMAS_ASSENTO: { valor: Forma; rotulo: string }[] = [
-  { valor: "lisa", rotulo: "Liso" },
-  { valor: "listras", rotulo: "Listras" },
-  { valor: "listras-largas", rotulo: "Listras largas" },
-  { valor: "faixas", rotulo: "Faixas" },
-  { valor: "xadrez", rotulo: "Xadrez" },
-  { valor: "bolinhas", rotulo: "Bolinhas" },
-  { valor: "meio-a-meio", rotulo: "Meio a meio" },
-  { valor: "faixa-central", rotulo: "Faixa no meio" },
-  { valor: "diamante", rotulo: "Diamante" },
-  { valor: "ziguezague", rotulo: "Ziguezague" },
-  { valor: "setas", rotulo: "Setas" },
-  { valor: "ondas", rotulo: "Ondas" },
-  { valor: "losangos", rotulo: "Losangos" },
-  { valor: "triangulos", rotulo: "Triângulos" },
-  { valor: "estrela", rotulo: "Estrela" },
-  { valor: "coracao", rotulo: "Coração" },
-];
-
 const PASSOS = ["Trançado", "Cores", "Nome", "Pronto"] as const;
 const MAX_LINHAS = 2;
 const MAX_CHARS = 14;
@@ -146,6 +125,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [forma, setForma] = useState<Forma>("lisa");
   const [grupo, setGrupo] = useState<Grupo>("basicos");
   const [formaAssento, setFormaAssento] = useState<Forma>("lisa");
+  // Which part the shape grid edits (user 2026-10-02: tabs Encosto / Assento).
+  const [parte, setParte] = useState<"encosto" | "assento">("encosto");
+  const formaAtiva = parte === "encosto" ? forma : formaAssento;
+  const escolherForma = (f: Forma) => (parte === "encosto" ? setForma(f) : setFormaAssento(f));
   const [fioA, setFioA] = useState<Fio>(FIOS[0]);
   const [fioB, setFioB] = useState<Fio>(FIOS[1]);
   // Optional third color: splits the main (vertical) thread down the middle.
@@ -222,14 +205,23 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   useEffect(() => {
     if (!foto || passo > 1) return;
     FORMAS.forEach((f, i) =>
-      f.grupo !== grupo ? null : desenhar(miniaturasRef.current[i], foto, { forma: f.valor, corA: fioA.cor, corB: fioB.cor, corC, nome: "", posicao }, {
-        x0: 108,
-        y0: 158,
-        w: 229,
-        h: 312,
-      })
+      f.grupo !== grupo
+        ? null
+        : parte === "encosto"
+          ? desenhar(miniaturasRef.current[i], foto, { forma: f.valor, corA: fioA.cor, corB: fioB.cor, corC, nome: "", posicao }, {
+              x0: 108,
+              y0: 158,
+              w: 229,
+              h: 312,
+            })
+          : desenhar(
+              miniaturasRef.current[i],
+              foto,
+              { forma: "lisa", formaAssento: f.valor, corA: fioA.cor, corB: fioB.cor, corC, nome: "", posicao },
+              { x0: 40, y0: 470, w: 368, h: 206 }
+            )
     );
-  }, [foto, passo, fioA, fioB, corC, posicao, grupo]);
+  }, [foto, passo, fioA, fioB, corC, posicao, grupo, parte]);
 
   const fimTimer = useRef<number | undefined>(undefined);
   const terminarAnimacao = useCallback(() => {
@@ -302,10 +294,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     "Oi! Montei a minha cadeira no site e quero pedir:",
     linkCadeira,
     "",
-    `Trançado: ${formaRotulo}${escalaForma < 0.97 ? ` (tamanho ${Math.round(escalaForma * 100)}%)` : ""}`,
+    `Encosto: ${formaRotulo}${escalaForma < 0.97 ? ` (tamanho ${Math.round(escalaForma * 100)}%)` : ""}`,
     tresCores ? `Cor principal: ${fioA.nome} (metade esquerda) e ${fioC.nome} (metade direita)` : `Cor principal: ${fioA.nome}`,
     `Cor dos detalhes: ${fioB.nome}`,
-    `Assento: ${formaAssento === "lisa" ? "liso" : FORMAS_ASSENTO.find((f) => f.valor === formaAssento)?.rotulo ?? formaAssento}`,
+    `Assento: ${formaAssento === "lisa" ? "liso" : FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? formaAssento}`,
     temNome
       ? `Nome: "${nomeLimpo.replace(/\n/g, " / ")}" (${posicaoRotulo.toLowerCase()}, tamanho ${tamanhoRotulo.toLowerCase()})`
       : "Sem nome",
@@ -441,10 +433,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
         onClick={() => faixaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
         aria-label="Ver a cadeira"
         tabIndex={cadeiraFora && passo > 0 ? 0 : -1}
-        className={`fixed right-3 top-[calc(var(--altura-topo,4rem)+0.5rem)] z-30 w-24 overflow-hidden rounded-md border border-line bg-paper p-1 shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-300 md:hidden ${
+        className={`fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] right-3 z-30 w-24 overflow-hidden rounded-md border border-line bg-paper p-1 shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-300 md:hidden ${
           cadeiraFora && passo > 0 && !animando
             ? "translate-y-0 opacity-100"
-            : "pointer-events-none -translate-y-3 opacity-0"
+            : "pointer-events-none translate-y-3 opacity-0"
         }`}
       >
         <canvas ref={miniRef} width={232} height={280} className="block aspect-[464/560] w-full rounded-sm" />
@@ -497,9 +489,35 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
           {passo <= 1 ? (
             <fieldset disabled={passo === 0}>
               <legend className="font-serif text-2xl font-medium tracking-tight text-ink">Escolha o trançado</legend>
-              <p className="mt-1 text-sm text-ink-soft">É o desenho que aparece no encosto.</p>
-              <p className="mt-2 text-sm text-ink" aria-live="polite">
-                Escolhido: <strong className="font-semibold text-verde-escuro">{formaRotulo}</strong>
+              <div className="mt-3 grid grid-cols-2 gap-2" role="tablist" aria-label="Parte da cadeira">
+                {(["encosto", "assento"] as const).map((pt) => (
+                  <button
+                    key={pt}
+                    type="button"
+                    role="tab"
+                    aria-selected={parte === pt}
+                    onClick={() => setParte(pt)}
+                    className={`border-2 px-3 py-2.5 text-left text-sm transition-colors ${
+                      parte === pt ? "border-ink bg-ink text-canvas" : "border-line text-ink hover:border-ink"
+                    }`}
+                  >
+                    <span className="block font-semibold">{pt === "encosto" ? "Encosto" : "Assento"}</span>
+                    <span className={`block text-xs ${parte === pt ? "text-canvas/80" : "text-ink-soft"}`}>
+                      {(pt === "encosto" ? FORMAS.find((f) => f.valor === forma) : FORMAS.find((f) => f.valor === formaAssento))?.rotulo}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="mt-3 text-sm text-ink-soft">
+                {parte === "encosto"
+                  ? "É o desenho que aparece no encosto."
+                  : "É o desenho do assento, na cor dos detalhes. As faixas da frente e de trás ficam lisas."}
+              </p>
+              <p className="mt-1 text-sm text-ink" aria-live="polite">
+                Escolhido:{" "}
+                <strong className="font-semibold text-verde-escuro">
+                  {FORMAS.find((f) => f.valor === formaAtiva)?.rotulo}
+                </strong>
               </p>
               {/* Style tabs: the open one is filled; a green dot marks the tab
                   holding the chosen shape when another tab is open. */}
@@ -510,7 +528,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
               >
                 {GRUPOS.map((g) => {
                   const aberto = grupo === g.valor;
-                  const temEscolhido = FORMAS.some((f) => f.grupo === g.valor && f.valor === forma);
+                  const temEscolhido = FORMAS.some((f) => f.grupo === g.valor && f.valor === formaAtiva);
                   return (
                     <button
                       key={g.valor}
@@ -540,15 +558,15 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   <button
                     key={f.valor}
                     type="button"
-                    onClick={() => setForma(f.valor)}
-                    aria-pressed={forma === f.valor}
+                    onClick={() => escolherForma(f.valor)}
+                    aria-pressed={formaAtiva === f.valor}
                     className={`relative flex flex-col items-center gap-1.5 border-2 p-1.5 text-xs transition-all ${
-                      forma === f.valor
+                      formaAtiva === f.valor
                         ? "border-verde bg-verde/5 font-semibold text-verde-escuro shadow-[0_0_0_3px_rgb(31_157_85/0.18)]"
                         : "border-line text-ink-soft hover:border-ink"
                     }`}
                   >
-                    {forma === f.valor ? (
+                    {formaAtiva === f.valor ? (
                       <span className="absolute -right-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-verde text-white shadow">
                         <CheckIcon className="h-3.5 w-3.5" />
                       </span>
@@ -557,15 +575,15 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                       ref={(el) => {
                         miniaturasRef.current[i] = el;
                       }}
-                      width={229}
-                      height={312}
-                      className="aspect-[229/312] w-full bg-canvas"
+                      width={parte === "encosto" ? 229 : 368}
+                      height={parte === "encosto" ? 312 : 206}
+                      className={`w-full bg-canvas ${parte === "encosto" ? "aspect-[229/312]" : "aspect-[368/206]"}`}
                     />
                     {f.rotulo}
                   </button>
                 ))}
               </div>
-              {forma !== "lisa" && forma !== "meio-a-meio" ? (
+              {parte === "encosto" && forma !== "lisa" && forma !== "meio-a-meio" ? (
                 <label className="mt-6 block">
                   <span className="flex justify-between text-sm text-ink">
                     Tamanho do trançado
@@ -591,33 +609,6 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   ) : null}
                 </label>
               ) : null}
-              <div className="mt-8 border-t border-line pt-6">
-                <p className="font-serif text-xl font-medium tracking-tight text-ink">Desenho do assento</p>
-                <p className="mt-1 text-sm text-ink-soft">
-                  Escolhido:{" "}
-                  <strong className="font-semibold text-verde-escuro">
-                    {FORMAS_ASSENTO.find((f) => f.valor === formaAssento)?.rotulo}
-                  </strong>
-                  . Feito na cor dos detalhes.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {FORMAS_ASSENTO.map((f) => (
-                    <button
-                      key={f.valor}
-                      type="button"
-                      onClick={() => setFormaAssento(f.valor)}
-                      aria-pressed={formaAssento === f.valor}
-                      className={`rounded-full border-2 px-3 py-1.5 text-sm transition-colors ${
-                        formaAssento === f.valor
-                          ? "border-verde bg-verde/5 font-semibold text-verde-escuro"
-                          : "border-line text-ink-soft hover:border-ink"
-                      }`}
-                    >
-                      {f.rotulo}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </fieldset>
           ) : null}
 
@@ -743,10 +734,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
               <p className="font-serif text-2xl font-medium tracking-tight text-ink">Sua cadeira está pronta</p>
               <dl className="mt-4 divide-y divide-line border-y border-line text-sm">
                 {[
-                  ["Trançado", formaRotulo],
+                  ["Encosto", formaRotulo],
                   ["Cor principal", tresCores ? `${fioA.nome} e ${fioC.nome}` : fioA.nome],
                   ["Cor dos detalhes", fioB.nome],
-                  ["Assento", FORMAS_ASSENTO.find((f) => f.valor === formaAssento)?.rotulo ?? "Liso"],
+                  ["Assento", formaAssento === "lisa" ? "Liso" : FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? ""],
                   ["Nome", temNome ? nomeLimpo.replace(/\n/g, " / ") : "Sem nome"],
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-4 py-2">

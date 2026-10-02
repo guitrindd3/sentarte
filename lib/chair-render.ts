@@ -98,6 +98,11 @@ const ASSENTO: [number, number][] = [
 ];
 const ASSENTO_Y0 = 476;
 const ASSENTO_Y1 = 674;
+/** Seat area where a pattern may go: between the band of exposed vertical
+ * strands under the backrest bar and the one along the front edge — those
+ * two bands only ever show the main color (user 2026-10-02). */
+const ASSENTO_DESENHO_Y0 = 504;
+const ASSENTO_DESENHO_Y1 = 628;
 
 /** Plain bands at the top and bottom of the backrest (where the rope wraps
  * the frame tubes on the real chairs): the weave shape never enters them,
@@ -130,16 +135,6 @@ export type Opcoes = {
 function hexRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.replace("#", ""), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
-function dentroPoligono(x: number, y: number, poly: [number, number][]) {
-  let dentro = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i];
-    const [xj, yj] = poly[j];
-    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) dentro = !dentro;
-  }
-  return dentro;
 }
 
 // Brightness-to-shade curves. Dark thread in the photo sits around 5-70,
@@ -643,6 +638,22 @@ export function posicaoNoEncosto(sx: number, sy: number): NomePosicao {
   return { x: clamp((sx - ENCOSTO.x0) / w), y: clamp((sy - ENCOSTO.y0 - MARGEM_TOPO) / h) };
 }
 
+/** Left/right x of a polygon on row y (where a horizontal line crosses it). */
+function bordasDaLinha(poly: [number, number][], y: number): [number, number] {
+  let esq = Infinity;
+  let dir = -Infinity;
+  for (let k = 0, j = poly.length - 1; k < poly.length; j = k++) {
+    const [x1, y1] = poly[j];
+    const [x2, y2] = poly[k];
+    if ((y1 <= y && y2 > y) || (y2 <= y && y1 > y)) {
+      const x = x1 + ((y - y1) * (x2 - x1)) / (y2 - y1);
+      esq = Math.min(esq, x);
+      dir = Math.max(dir, x);
+    }
+  }
+  return [esq, dir];
+}
+
 /** Writes the recolored chair into `saida` (same size as `foto`). */
 export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   const src = foto.data;
@@ -653,7 +664,6 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   const B = hexRgb(op.corB);
   // Right half of the main thread (three-color chairs); same as A otherwise.
   const C = op.corC ? hexRgb(op.corC) : A;
-  const MEIO_X = (ENCOSTO.x0 + ENCOSTO.x1) / 2;
   const pinta = (i: number, cor: [number, number, number], s: number) => {
     out[i] = Math.min(255, cor[0] * s);
     out[i + 1] = Math.min(255, cor[1] * s);
@@ -680,9 +690,11 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   for (let y = ENCOSTO.y0; y < ENCOSTO.y1; y++) {
     for (let x = ENCOSTO.x0; x < ENCOSTO.x1; x++) {
       const i = (y * IMG_W + x) * 4;
-      const lx = x - ENCOSTO.x0;
+      const [bEsq, bDir] = bordasDaLinha(ENCOSTO_QUAD, y + 0.5);
+      if (!(x + 0.5 >= bEsq && x + 0.5 < bDir)) continue;
+      // position across the panel along the strands (0..w), not raw x
+      const lx = Math.min(w - 1, Math.floor(((x + 0.5 - bEsq) / (bDir - bEsq)) * w));
       const ly = y - ENCOSTO.y0;
-      if (!dentroPoligono(x + 0.5, y + 0.5, ENCOSTO_QUAD)) continue;
       const naMargem = ly < MARGEM_TOPO || ly >= h - MARGEM_BASE;
       const u = (lx - caixaX0) / escala;
       const v = (ly - caixaY0) / escala;
@@ -701,7 +713,7 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
         if (nome.mascara[k]) detalhe = true;
         else if (nome.contorno[k]) detalhe = false;
       }
-      pinta(i, detalhe ? B : x >= MEIO_X ? C : A, sombraEscuro(brilho(i)));
+      pinta(i, detalhe ? B : lx >= w / 2 ? C : A, sombraEscuro(brilho(i)));
     }
   }
 
@@ -722,32 +734,21 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   const formaAssento = op.formaAssento ?? "lisa";
   const colsA = 36;
   const rowsA = 18;
-  const bordas = (y: number) => {
-    let esq = Infinity;
-    let dir = -Infinity;
-    for (let k = 0, j = ASSENTO.length - 1; k < ASSENTO.length; j = k++) {
-      const [x1, y1] = ASSENTO[j];
-      const [x2, y2] = ASSENTO[k];
-      if ((y1 <= y && y2 > y) || (y2 <= y && y1 > y)) {
-        const x = x1 + ((y - y1) * (x2 - x1)) / (y2 - y1);
-        esq = Math.min(esq, x);
-        dir = Math.max(dir, x);
-      }
-    }
-    return [esq, dir];
-  };
+  const bordas = (y: number) => bordasDaLinha(ASSENTO, y);
   for (let y = ASSENTO_Y0; y < ASSENTO_Y1; y++) {
     const [esq, dir] = bordas(y + 0.5);
     if (!Number.isFinite(esq)) continue;
-    const v = (y - ASSENTO_Y0) / (ASSENTO_Y1 - ASSENTO_Y0);
+    const v = (y - ASSENTO_DESENHO_Y0) / (ASSENTO_DESENHO_Y1 - ASSENTO_DESENHO_Y0);
+    const naFaixaLisa = y < ASSENTO_DESENHO_Y0 || y >= ASSENTO_DESENHO_Y1;
     for (let x = Math.ceil(esq); x < dir; x++) {
       const i = (y * IMG_W + x) * 4;
       const l = brilho(i);
       if (saturacao(i) > 60 || l > 140) continue; // floor/pool through the gaps
       const u = (x - esq) / (dir - esq);
-      const P = x >= MEIO_X ? C : A;
+      const P = u >= 0.5 ? C : A;
       const detalhe =
         formaAssento !== "lisa" &&
+        !naFaixaLisa &&
         (formaAssento === "meio-a-meio"
           ? u >= 0.5
           : celulaDaForma(formaAssento, Math.floor(u * colsA), Math.floor(v * rowsA), colsA, rowsA));

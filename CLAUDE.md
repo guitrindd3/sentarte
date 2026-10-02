@@ -364,7 +364,11 @@ CORTE_Y0=150. The seat takes a pattern too (`Opcoes.formaAssento`, detail
 color, cells mapped in the seat's perspective by row edges); "Desenho do
 assento" chips in step 1; link param `fa`. The intro clip/empty frame are
 still from the first video (different angle) — a better matching clip would
-make the transition seamless.
+make the transition seamless. Shape grid has Encosto / Assento tabs (one grid,
+`parte` decides which shape it sets). Backrest pattern/name x is measured
+between the trapezoid's edges on each row, so pattern columns follow the
+slanted strands; the seat's back band (y<504) and front band (y>=628) never
+get pattern — only the vertical strands' color (user 2026-10-02).
 
 `/personalizar` is `components/chair-builder.tsx`, a 4-step builder
 (trançado, cores, nome, pronto) built on the REAL chair from the user's
@@ -417,7 +421,7 @@ same camera position) would look better; the user was told this.
   padding below `md`, /personalizar hides its header clip below `md` and the
   builder keeps the chair full size (a shrinking pinned band felt jumpy —
   user video 2026-09-30) and instead fades in a small live mini preview at
-  the top-right while the big chair is scrolled out of view.
+  the bottom-right while the big chair is scrolled out of view.
 - The one saturated color allowed in customer-facing chrome is `verde`
   (`--verde` in globals.css), and only on the builder's go-buttons
   (Começar a montar with the `.pulso-verde` ring, Próximo, Pedir pelo
