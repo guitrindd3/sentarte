@@ -423,6 +423,16 @@ same camera position) would look better; the user was told this.
   scratchpad, not a project dependency) with the iPhone 13 profile at
   deviceScaleFactor 1 — full-page shots at 3x blank out past ~16k px.
 
+## Chair picture in the WhatsApp message (2026-10-02)
+
+wa.me links can't attach images, so the builder's WhatsApp message carries
+`/c?<choices>` (`lib/chair-link.ts` packs the design into the query
+string). `/c` sets og:image to `/api/cadeira?<choices>`, which re-renders the
+chair server-side with the same `pintarCadeira()` on
+`public/monte/cadeira-trancada.png` (pngjs) — WhatsApp shows it as the link
+preview. Nothing is stored. Catalog card photos use object-cover (fill the
+frame, no white bands — user 2026-10-02).
+
 ## Online payment — Mercado Pago Checkout Pro (2026-09-30)
 
 - The cart drawer shows "Pagar agora (Pix ou cartão)" only when the

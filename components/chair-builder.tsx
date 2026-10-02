@@ -7,6 +7,8 @@ import { useCart } from "@/lib/cart-context";
 import { IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix } from "@/lib/offer";
 import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
+import { codificarCadeira } from "@/lib/chair-link";
+import { SITE_URL } from "@/lib/nav";
 import { whatsappUrl } from "@/lib/urls";
 
 // Step-by-step "Monte a sua trama" builder (2026-09-29). Instead of a drawn
@@ -271,8 +273,12 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const tamanhoRotulo = tamanhoNome <= 0.45 ? "Pequeno" : tamanhoNome <= 0.75 ? "Médio" : "Grande";
   const posicaoRotulo = posicao.y < 0.34 ? "Em cima" : posicao.y > 0.66 ? "Embaixo" : "No meio";
 
+  // Link whose WhatsApp preview is the picture of this exact chair (wa.me
+  // can't attach images) — see app/c and app/api/cadeira.
+  const linkCadeira = `${SITE_URL}/c?${codificarCadeira(opcoes)}`;
   const mensagem = [
     "Oi! Montei a minha cadeira no site e quero pedir:",
+    linkCadeira,
     "",
     `Trançado: ${formaRotulo}${escalaForma < 0.97 ? ` (tamanho ${Math.round(escalaForma * 100)}%)` : ""}`,
     tresCores ? `Cor principal: ${fioA.nome} (metade esquerda) e ${fioC.nome} (metade direita)` : `Cor principal: ${fioA.nome}`,

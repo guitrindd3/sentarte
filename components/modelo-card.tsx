@@ -71,7 +71,7 @@ export function ModeloCard({
             src={fotoAtiva}
             alt={ativo.nome}
             fill
-            className="object-contain transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(min-width: 1024px) 360px, (min-width: 640px) 45vw, 100vw"
           />
         ) : (
