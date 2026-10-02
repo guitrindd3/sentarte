@@ -376,9 +376,9 @@ and name only go on the flat panel between the side tubes
 seat), size `escalaAssento` 0.4-2 (link `ea`; above 1 the figure is cut at the panel edge), on a fixed 60x27 grid so figures fit whole and
 centered; the name can go on the seat instead of the backrest
 (`Opcoes.nomeAssento`, link param `na`) and then replaces the seat figure.
-Shape thumbnails are flat (`desenharMiniatura`), not photo crops. 50 shapes per tab (200): the original ones are
+Shape thumbnails are flat (`desenharMiniatura`), not photo crops. 100 shapes per tab (400): the original ones are
 `case`s in `celulaDaForma`; the 120 added 2026-10-02 live in
-`lib/formas-extras.ts` (`FORMAS_EXTRAS` tests + `ROTULOS_EXTRAS` labels,
+`lib/formas-extras.ts` (`FORMAS_EXTRAS` tests + `ROTULOS_EXTRAS` labels, and 200 more in `lib/formas-extras-2.ts` — repeated sprites/cells there draw only whole pieces,
 pixel figures auto-fitted and centered). The seat grid is 61 columns (odd)
 so centered shapes have a true middle; the seat panel is centered on the
 chair's middle x=223 (ASSENTO_MEIO_X), which is also the 3-color split.

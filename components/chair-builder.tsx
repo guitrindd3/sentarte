@@ -8,6 +8,7 @@ import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type 
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix } from "@/lib/offer";
 import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
 import { ROTULOS_EXTRAS } from "@/lib/formas-extras";
+import { ROTULOS_EXTRAS_2 } from "@/lib/formas-extras-2";
 import { codificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
 import { whatsappUrl } from "@/lib/urls";
@@ -118,6 +119,7 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   { valor: "gatinho", rotulo: "Gatinho", grupo: "divertidos" },
   { valor: "cacto", rotulo: "Cacto", grupo: "divertidos" },
   ...ROTULOS_EXTRAS,
+  ...ROTULOS_EXTRAS_2,
 ];
 
 

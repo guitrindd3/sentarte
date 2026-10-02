@@ -13,6 +13,7 @@
 // is ever replaced, these regions must be re-measured.
 
 import { FORMAS_EXTRAS } from "./formas-extras";
+import { FORMAS_EXTRAS_2 } from "./formas-extras-2";
 import { GLYPH_H, GLYPH_W, glyphPixel, normalizarTexto } from "./pixel-font";
 
 export type Forma =
@@ -912,7 +913,7 @@ function celulaDaForma(forma: Forma, i: number, j: number, cols: number, rows: n
       return r > 7 && r < 12 && raio;
     }
   }
-  return FORMAS_EXTRAS[forma]?.(i, j, cols, rows) ?? false;
+  return (FORMAS_EXTRAS[forma] ?? FORMAS_EXTRAS_2[forma])?.(i, j, cols, rows) ?? false;
 }
 
 const espirais = new Map<string, Set<number>>();
