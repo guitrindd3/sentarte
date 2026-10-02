@@ -415,7 +415,8 @@ same camera position) would look better; the user was told this.
   pick); phones show a square photo frame (object-cover — the user wanted
   every slide to fill it like the square times photo, no letterbox) with
   the phrase/buttons below it; desktop unchanged.
-- Homepage team row on phones drifts by itself and loops (`AutoScrollRow`:
+- Homepage "Nossas cadeiras" row (every team, boho and desenho chair, all
+  screen sizes, since 2026-10-02) drifts by itself and loops (`AutoScrollRow`:
   a duplicated, `inert` second set marked `data-loop-start`; pauses 3.5s
   after touch). No scroll-snap there — snap fights the sub-pixel drift.
 - Mobile check workflow: Playwright (installed only in the session
