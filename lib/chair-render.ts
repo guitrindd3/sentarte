@@ -162,14 +162,17 @@ const ASSENTO_PAINEL: [number, number][] = [
 export const ASSENTO_COLS = 61;
 export const ASSENTO_ROWS = 27;
 /** Backrest pattern grid, for flat thumbnails. */
-export const ENCOSTO_COLS = 33;
-export const ENCOSTO_ROWS = 27;
+export const ENCOSTO_COLS = 29;
+export const ENCOSTO_ROWS = 29;
 
 /** Plain bands at the top and bottom of the backrest (where the rope wraps
  * the frame tubes on the real chairs): the weave shape never enters them,
  * only the main thread — user 2026-09-29. In source pixels. */
-const MARGEM_TOPO = 65;
-const MARGEM_BASE = 58;
+// Pattern area of the backrest, as the user marked it (2026-10-02): below
+// the top lip, a little above the bottom, and in from both sides.
+const MARGEM_TOPO = 80;
+const MARGEM_BASE = 30;
+const MARGEM_LADO = 14;
 
 /** Size of one "woven cell" of the backrest pattern, in source pixels. */
 const CELULA = 7;
@@ -958,7 +961,8 @@ function rasterizarNome(nome: string, posicao: NomePosicao, tamanho = 1): Nome {
   // (with margin), capped so a short word doesn't take over the backrest —
   // so "JU" over "TRINDADE" reads big-over-small like the real chairs. Then
   // everything shrinks together if the block is too tall.
-  const tamanhos = linhas.map((l) => Math.min(9, (w * 0.86) / (l.length * (GLYPH_W + 1) - 1)) * tamanho);
+  const wIn = w - 2 * MARGEM_LADO;
+  const tamanhos = linhas.map((l) => Math.min(9, (wIn * 0.94) / (l.length * (GLYPH_W + 1) - 1)) * tamanho);
   const gap = 12;
   const alturaNatural = tamanhos.reduce((s, px) => s + GLYPH_H * px, 0) + gap * (linhas.length - 1);
   const escala = Math.min(1, (h * 0.8) / alturaNatural);
@@ -969,7 +973,10 @@ function rasterizarNome(nome: string, posicao: NomePosicao, tamanho = 1): Nome {
   const centroY = posicao.y * h;
   const topo = MARGEM_TOPO + Math.max(px, Math.min(h - alturaBloco - px, centroY - alturaBloco / 2));
   const larguraBloco = Math.max(...linhas.map((l, li) => (l.length * (GLYPH_W + 1) - 1) * pxs[li]));
-  const centroX = Math.max(larguraBloco / 2 + px, Math.min(w - larguraBloco / 2 - px, posicao.x * w));
+  const centroX = Math.max(
+    MARGEM_LADO + larguraBloco / 2,
+    Math.min(w - MARGEM_LADO - larguraBloco / 2, MARGEM_LADO + posicao.x * wIn)
+  );
 
   const mascara = new Uint8Array(w * hTotal);
   let y0 = topo;
@@ -1018,7 +1025,10 @@ export function posicaoNoEncosto(sx: number, sy: number): NomePosicao {
   const w = ENCOSTO.x1 - ENCOSTO.x0;
   const h = ENCOSTO.y1 - ENCOSTO.y0 - MARGEM_TOPO - MARGEM_BASE;
   const clamp = (v: number) => Math.max(0, Math.min(1, v));
-  return { x: clamp((sx - ENCOSTO.x0) / w), y: clamp((sy - ENCOSTO.y0 - MARGEM_TOPO) / h) };
+  return {
+    x: clamp((sx - ENCOSTO.x0 - MARGEM_LADO) / (w - 2 * MARGEM_LADO)),
+    y: clamp((sy - ENCOSTO.y0 - MARGEM_TOPO) / h),
+  };
 }
 
 /** Name laid out on the seat grid (cells), centered, as big as fits. */
@@ -1122,16 +1132,17 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   // Backrest panel: shape + name, shaded by the photo's strands.
   const w = ENCOSTO.x1 - ENCOSTO.x0;
   const h = ENCOSTO.y1 - ENCOSTO.y0;
-  const cols = Math.ceil(w / CELULA);
+  const wIn = w - 2 * MARGEM_LADO; // pattern width inside the side margins
+  const cols = Math.ceil(wIn / CELULA);
   const rows = Math.ceil((h - MARGEM_TOPO - MARGEM_BASE) / CELULA);
   const nome = rasterizarNome(op.nome, op.posicao, op.tamanhoNome ?? 1);
   // The shape is drawn as a scaled-down copy inside a box of the name area.
   const escala = Math.max(0.35, Math.min(1, op.escalaForma ?? 1));
   const areaH = h - MARGEM_TOPO - MARGEM_BASE;
-  const caixaW = w * escala;
+  const caixaW = wIn * escala;
   const caixaH = areaH * escala;
   const pf = op.posForma ?? { x: 0.5, y: 0.5 };
-  const caixaX0 = Math.max(0, Math.min(w - caixaW, pf.x * w - caixaW / 2));
+  const caixaX0 = Math.max(0, Math.min(wIn - caixaW, pf.x * wIn - caixaW / 2));
   const caixaY0 = MARGEM_TOPO + Math.max(0, Math.min(areaH - caixaH, pf.y * areaH - caixaH / 2));
   for (let y = ENCOSTO.y0; y < ENCOSTO.y1; y++) {
     for (let x = ENCOSTO.x0; x < ENCOSTO.x1; x++) {
@@ -1141,10 +1152,11 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
       // position across the panel along the strands (0..w), not raw x
       const lx = Math.min(w - 1, Math.floor(((x + 0.5 - bEsq) / (bDir - bEsq)) * w));
       const ly = y - ENCOSTO.y0;
-      const naMargem = ly < MARGEM_TOPO || ly >= h - MARGEM_BASE;
-      const u = (lx - caixaX0) / escala;
+      const naMargem =
+        ly < MARGEM_TOPO || ly >= h - MARGEM_BASE || lx < MARGEM_LADO || lx >= w - MARGEM_LADO;
+      const u = (lx - MARGEM_LADO - caixaX0) / escala;
       const v = (ly - caixaY0) / escala;
-      const naCaixa = u >= 0 && v >= 0 && u < w && v < areaH;
+      const naCaixa = u >= 0 && v >= 0 && u < wIn && v < areaH;
       let detalhe =
         op.forma === "meio-a-meio"
           ? lx >= w / 2

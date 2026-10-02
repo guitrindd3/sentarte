@@ -367,7 +367,9 @@ still from the first video (different angle) — a better matching clip would
 make the transition seamless. Shape grid has Encosto / Assento tabs (one grid,
 `parte` decides which shape it sets). Backrest pattern/name x is measured
 between the trapezoid's edges on each row, so pattern columns follow the
-slanted strands; the seat's back band (y<504) and front band (y>=628) never
+slanted strands; backrest pattern area = MARGEM_TOPO 80 / MARGEM_BASE 30 /
+MARGEM_LADO 14 (user-marked box, 2026-10-02) — patterns, figures and the
+name stay inside it (meio-a-meio excepted); the seat's back band (y<504) and front band (y>=628) never
 get pattern — only the vertical strands' color (user 2026-10-02). Seat pattern
 and name only go on the flat panel between the side tubes
 (`ASSENTO_PAINEL`, kept inside the curved side margins and slanted with the

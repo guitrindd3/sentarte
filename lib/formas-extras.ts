@@ -76,7 +76,10 @@ const listrado = (n: number): Teste => (i, _j, cols) => Math.floor((i * n) / col
 const aros = (n: number): Teste => (_i, j, _c, rows) => Math.floor((j * n) / rows) % 2 === 1;
 const zigue = (amp: number, per: number, larg: number): Teste => (i, j, cols, rows) => {
   const tri = Math.abs((((i - Math.floor(cols / 2)) % (2 * amp)) + 2 * amp) % (2 * amp) - amp);
-  return ((j + tri) % per) < larg && j > 0 && j < rows - 1;
+  // only whole zigzag lines (a line never cut by the top/bottom margin)
+  const k = Math.floor((j + tri) / per);
+  const inteira = k * per - amp >= 0 && k * per + larg - 1 <= rows - 1;
+  return ((j + tri) % per) < larg && inteira;
 };
 
 export const FORMAS_EXTRAS: Record<string, Teste> = {
