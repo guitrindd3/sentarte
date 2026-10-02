@@ -6,7 +6,7 @@ import { IMG_H, IMG_W, pintarCadeira } from "@/lib/chair-render";
 // lib/chair-link.ts) as a PNG — the picture behind the WhatsApp link preview.
 // Same painter as the browser, on the same base photo.
 
-const CORTE_Y0 = 170;
+const CORTE_Y0 = 150;
 const CORTE_H = 560;
 
 let base: Promise<PNG> | null = null;

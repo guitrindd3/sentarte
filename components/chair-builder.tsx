@@ -22,7 +22,7 @@ const FOTO_TRANCADA = "/monte/cadeira-trancada.jpg";
 /** Clip time of the fully woven, still-unnamed frame the photo was taken from. */
 const FIM_DA_TRAMA = 1.72;
 /** Visible crop of the tall 480x848 frame (just the chair). */
-const CORTE_Y0 = 170;
+const CORTE_Y0 = 150;
 const CORTE_H = 560;
 
 type Grupo = "basicos" | "time" | "boho" | "divertidos";
@@ -83,6 +83,27 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
 ];
 
 
+// Seat patterns (user 2026-10-02) — the ones that read well on the seat's
+// horizontal weave, drawn in the detail color.
+const FORMAS_ASSENTO: { valor: Forma; rotulo: string }[] = [
+  { valor: "lisa", rotulo: "Liso" },
+  { valor: "listras", rotulo: "Listras" },
+  { valor: "listras-largas", rotulo: "Listras largas" },
+  { valor: "faixas", rotulo: "Faixas" },
+  { valor: "xadrez", rotulo: "Xadrez" },
+  { valor: "bolinhas", rotulo: "Bolinhas" },
+  { valor: "meio-a-meio", rotulo: "Meio a meio" },
+  { valor: "faixa-central", rotulo: "Faixa no meio" },
+  { valor: "diamante", rotulo: "Diamante" },
+  { valor: "ziguezague", rotulo: "Ziguezague" },
+  { valor: "setas", rotulo: "Setas" },
+  { valor: "ondas", rotulo: "Ondas" },
+  { valor: "losangos", rotulo: "Losangos" },
+  { valor: "triangulos", rotulo: "Triângulos" },
+  { valor: "estrela", rotulo: "Estrela" },
+  { valor: "coracao", rotulo: "Coração" },
+];
+
 const PASSOS = ["Trançado", "Cores", "Nome", "Pronto"] as const;
 const MAX_LINHAS = 2;
 const MAX_CHARS = 14;
@@ -124,6 +145,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [foto, setFoto] = useState<ImageData | null>(null);
   const [forma, setForma] = useState<Forma>("lisa");
   const [grupo, setGrupo] = useState<Grupo>("basicos");
+  const [formaAssento, setFormaAssento] = useState<Forma>("lisa");
   const [fioA, setFioA] = useState<Fio>(FIOS[0]);
   const [fioB, setFioB] = useState<Fio>(FIOS[1]);
   // Optional third color: splits the main (vertical) thread down the middle.
@@ -179,12 +201,12 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     carregarFoto(FOTO_TRANCADA).then(setFoto).catch(() => setFoto(null));
   }, []);
 
-  const opcoes = { forma, corA: fioA.cor, corB: fioB.cor, corC, nome, posicao, tamanhoNome, escalaForma, posForma };
+  const opcoes = { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome, posicao, tamanhoNome, escalaForma, posForma };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, corA: fioA.cor, corB: fioB.cor, corC, nome, posicao, tamanhoNome, escalaForma, posForma }, {
+    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome, posicao, tamanhoNome, escalaForma, posForma }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
@@ -194,17 +216,17 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       ctx?.clearRect(0, 0, mini.width, mini.height);
       ctx?.drawImage(canvasRef.current, 0, 0, mini.width, mini.height);
     }
-  }, [foto, passo, forma, fioA, fioB, corC, nome, posicao, tamanhoNome, escalaForma, posForma]);
+  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nome, posicao, tamanhoNome, escalaForma, posForma]);
 
   // Shape thumbnails (just the backrest), in the chosen colors.
   useEffect(() => {
     if (!foto || passo > 1) return;
     FORMAS.forEach((f, i) =>
       f.grupo !== grupo ? null : desenhar(miniaturasRef.current[i], foto, { forma: f.valor, corA: fioA.cor, corB: fioB.cor, corC, nome: "", posicao }, {
-        x0: 143,
-        y0: 245,
-        w: 181,
-        h: 267,
+        x0: 108,
+        y0: 158,
+        w: 229,
+        h: 312,
       })
     );
   }, [foto, passo, fioA, fioB, corC, posicao, grupo]);
@@ -283,6 +305,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     `Trançado: ${formaRotulo}${escalaForma < 0.97 ? ` (tamanho ${Math.round(escalaForma * 100)}%)` : ""}`,
     tresCores ? `Cor principal: ${fioA.nome} (metade esquerda) e ${fioC.nome} (metade direita)` : `Cor principal: ${fioA.nome}`,
     `Cor dos detalhes: ${fioB.nome}`,
+    `Assento: ${formaAssento === "lisa" ? "liso" : FORMAS_ASSENTO.find((f) => f.valor === formaAssento)?.rotulo ?? formaAssento}`,
     temNome
       ? `Nome: "${nomeLimpo.replace(/\n/g, " / ")}" (${posicaoRotulo.toLowerCase()}, tamanho ${tamanhoRotulo.toLowerCase()})`
       : "Sem nome",
@@ -329,7 +352,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
           shrinking pinned band felt jumpy on phones, user 2026-09-30). */}
       <div ref={faixaRef}>
       <div className="relative mx-auto w-full max-w-md overflow-hidden border border-line bg-canvas">
-        <div className="relative aspect-[480/560]">
+        <div className="relative aspect-[464/560]">
           {/* eslint-disable-next-line @next/next/no-img-element -- fixed local frame, same crop as the canvas */}
           <img
             src={FOTO_VAZIA}
@@ -424,7 +447,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             : "pointer-events-none -translate-y-3 opacity-0"
         }`}
       >
-        <canvas ref={miniRef} width={240} height={280} className="block aspect-[480/560] w-full rounded-sm" />
+        <canvas ref={miniRef} width={232} height={280} className="block aspect-[464/560] w-full rounded-sm" />
       </button>
 
       {/* The steps */}
@@ -534,9 +557,9 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                       ref={(el) => {
                         miniaturasRef.current[i] = el;
                       }}
-                      width={181}
-                      height={267}
-                      className="aspect-[181/267] w-full bg-canvas"
+                      width={229}
+                      height={312}
+                      className="aspect-[229/312] w-full bg-canvas"
                     />
                     {f.rotulo}
                   </button>
@@ -568,6 +591,33 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   ) : null}
                 </label>
               ) : null}
+              <div className="mt-8 border-t border-line pt-6">
+                <p className="font-serif text-xl font-medium tracking-tight text-ink">Desenho do assento</p>
+                <p className="mt-1 text-sm text-ink-soft">
+                  Escolhido:{" "}
+                  <strong className="font-semibold text-verde-escuro">
+                    {FORMAS_ASSENTO.find((f) => f.valor === formaAssento)?.rotulo}
+                  </strong>
+                  . Feito na cor dos detalhes.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {FORMAS_ASSENTO.map((f) => (
+                    <button
+                      key={f.valor}
+                      type="button"
+                      onClick={() => setFormaAssento(f.valor)}
+                      aria-pressed={formaAssento === f.valor}
+                      className={`rounded-full border-2 px-3 py-1.5 text-sm transition-colors ${
+                        formaAssento === f.valor
+                          ? "border-verde bg-verde/5 font-semibold text-verde-escuro"
+                          : "border-line text-ink-soft hover:border-ink"
+                      }`}
+                    >
+                      {f.rotulo}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </fieldset>
           ) : null}
 
@@ -696,6 +746,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   ["Trançado", formaRotulo],
                   ["Cor principal", tresCores ? `${fioA.nome} e ${fioC.nome}` : fioA.nome],
                   ["Cor dos detalhes", fioB.nome],
+                  ["Assento", FORMAS_ASSENTO.find((f) => f.valor === formaAssento)?.rotulo ?? "Liso"],
                   ["Nome", temNome ? nomeLimpo.replace(/\n/g, " / ") : "Sem nome"],
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-4 py-2">

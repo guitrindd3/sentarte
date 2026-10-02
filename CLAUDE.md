@@ -356,6 +356,16 @@ fabricated legal identifiers (CNPJ, address) unless the user supplies them.
 
 ## Monte a sua trama builder (2026-09-29)
 
+**2026-10-02 update:** the base photo is now a frame of the user's second
+clip (`public/monte/cadeira-trancada.{jpg,png}`, 464x832, higher camera so
+the seat is visible) — regions in `lib/chair-render.ts` were re-measured
+for it (ENCOSTO + ENCOSTO_QUAD trapezoid, LATERAIS, ASSENTO polygon), crop
+CORTE_Y0=150. The seat takes a pattern too (`Opcoes.formaAssento`, detail
+color, cells mapped in the seat's perspective by row edges); "Desenho do
+assento" chips in step 1; link param `fa`. The intro clip/empty frame are
+still from the first video (different angle) — a better matching clip would
+make the transition seamless.
+
 `/personalizar` is `components/chair-builder.tsx`, a 4-step builder
 (trançado, cores, nome, pronto) built on the REAL chair from the user's
 weaving clip instead of a drawn illustration (the old flat SVG

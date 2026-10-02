@@ -63,54 +63,50 @@ export type Forma =
  * (the backrest between its plain margins). Set by dragging in the builder. */
 export type NomePosicao = { x: number; y: number };
 
-export const IMG_W = 480;
-export const IMG_H = 848;
+// Base photo since 2026-10-02: a frame of the user's second clip, shot from
+// higher up so the seat is clearly visible (464x832). Re-measure every
+// region below if it ever changes.
+export const IMG_W = 464;
+export const IMG_H = 832;
 
-/** Backrest panel — the solid black rectangle in the photo. */
-const ENCOSTO = { x0: 143, x1: 324, y0: 245, y1: 512 };
+/** Backrest panel — bounding box of the black backrest in the photo. */
+const ENCOSTO = { x0: 108, x1: 337, y0: 158, y1: 470 };
+/** The backrest narrows a little toward the bottom (perspective). */
+const ENCOSTO_QUAD: [number, number][] = [
+  [108, 158],
+  [337, 158],
+  [321, 470],
+  [124, 470],
+];
 /** White side straps left/right of the backrest panel. */
 const LATERAIS = [
-  { x0: 101, x1: 143, y0: 300, y1: 486 },
-  { x0: 324, x1: 370, y0: 300, y1: 486 },
+  { x0: 66, x1: 124, y0: 236, y1: 452 },
+  { x0: 322, x1: 386, y0: 236, y1: 452 },
 ];
-/** Seat polygon (inside the aluminum rails). */
+/** Seat webbing, including where it wraps over the side tubes. */
 const ASSENTO: [number, number][] = [
-  [140, 519],
-  [330, 519],
-  [375, 544],
-  [398, 566],
-  [374, 600],
-  [106, 600],
-  [82, 566],
-  [100, 544],
+  [120, 476],
+  [328, 476],
+  [372, 500],
+  [404, 528],
+  [406, 618],
+  [364, 674],
+  [84, 674],
+  [40, 618],
+  [42, 528],
+  [74, 500],
 ];
-
-/** Where the seat webbing wraps around the left/right side tubes (the dark
- * triangles at the seat corners) — outside the seat polygon, so only dark
- * thread pixels there are recolored, never the aluminum around them. */
-const PONTAS_ASSENTO: [number, number][][] = [
-  [
-    [97, 521],
-    [130, 521],
-    [130, 582],
-    [63, 575],
-  ],
-  [
-    [383, 521],
-    [350, 521],
-    [350, 582],
-    [417, 575],
-  ],
-];
+const ASSENTO_Y0 = 476;
+const ASSENTO_Y1 = 674;
 
 /** Plain bands at the top and bottom of the backrest (where the rope wraps
  * the frame tubes on the real chairs): the weave shape never enters them,
  * only the main thread — user 2026-09-29. In source pixels. */
-const MARGEM_TOPO = 56;
-const MARGEM_BASE = 50;
+const MARGEM_TOPO = 65;
+const MARGEM_BASE = 58;
 
 /** Size of one "woven cell" of the backrest pattern, in source pixels. */
-const CELULA = 6;
+const CELULA = 7;
 
 export type Opcoes = {
   forma: Forma;
@@ -127,6 +123,8 @@ export type Opcoes = {
    * (0-1, like the name) — so a smaller shape and a name both fit. */
   escalaForma?: number;
   posForma?: NomePosicao;
+  /** Pattern woven into the seat, in the detail color (corB). Default: plain. */
+  formaAssento?: Forma;
 };
 
 function hexRgb(hex: string): [number, number, number] {
@@ -684,6 +682,7 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
       const i = (y * IMG_W + x) * 4;
       const lx = x - ENCOSTO.x0;
       const ly = y - ENCOSTO.y0;
+      if (!dentroPoligono(x + 0.5, y + 0.5, ENCOSTO_QUAD)) continue;
       const naMargem = ly < MARGEM_TOPO || ly >= h - MARGEM_BASE;
       const u = (lx - caixaX0) / escala;
       const v = (ly - caixaY0) / escala;
@@ -717,37 +716,42 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
     }
   }
 
-  // Seat corners wrapped around the side tubes: dark thread only.
-  for (const poly of PONTAS_ASSENTO) {
-    const xs = poly.map((p) => p[0]);
-    const ys = poly.map((p) => p[1]);
-    for (let y = Math.min(...ys); y < Math.max(...ys); y++) {
-      for (let x = Math.min(...xs); x < Math.max(...xs); x++) {
-        if (!dentroPoligono(x, y, poly) || dentroPoligono(x, y, ASSENTO)) continue;
-        const i = (y * IMG_W + x) * 4;
-        const l = brilho(i);
-        if (l < 115 && saturacao(i) < 55) pinta(i, x >= MEIO_X ? C : A, sombraEscuro(l));
+  // Seat: main (vertical) color, with an optional pattern in the detail
+  // color. Pattern cells follow the seat's perspective: u runs across the
+  // seat between its left/right edges on that row, v from back to front.
+  const formaAssento = op.formaAssento ?? "lisa";
+  const colsA = 36;
+  const rowsA = 18;
+  const bordas = (y: number) => {
+    let esq = Infinity;
+    let dir = -Infinity;
+    for (let k = 0, j = ASSENTO.length - 1; k < ASSENTO.length; j = k++) {
+      const [x1, y1] = ASSENTO[j];
+      const [x2, y2] = ASSENTO[k];
+      if ((y1 <= y && y2 > y) || (y2 <= y && y1 > y)) {
+        const x = x1 + ((y - y1) * (x2 - x1)) / (y2 - y1);
+        esq = Math.min(esq, x);
+        dir = Math.max(dir, x);
       }
     }
-  }
-
-  // Seat: main color everywhere (left/right halves for three-color chairs).
-  for (let y = 519; y < 600; y++) {
-    for (let x = 82; x < 398; x++) {
-      if (!dentroPoligono(x, y, ASSENTO)) continue;
+    return [esq, dir];
+  };
+  for (let y = ASSENTO_Y0; y < ASSENTO_Y1; y++) {
+    const [esq, dir] = bordas(y + 0.5);
+    if (!Number.isFinite(esq)) continue;
+    const v = (y - ASSENTO_Y0) / (ASSENTO_Y1 - ASSENTO_Y0);
+    for (let x = Math.ceil(esq); x < dir; x++) {
       const i = (y * IMG_W + x) * 4;
       const l = brilho(i);
-      if (saturacao(i) > 60) continue; // pool/tiles peeking through
-      // The whole seat is the main (vertical) color — no detail-color
-      // stripes (user 2026-10-02). The photo's dark and white strands only
-      // set the shading.
+      if (saturacao(i) > 60 || l > 140) continue; // floor/pool through the gaps
+      const u = (x - esq) / (dir - esq);
       const P = x >= MEIO_X ? C : A;
-      if (l < 110) pinta(i, P, sombraEscuro(l));
-      else if (l > 170) pinta(i, P, sombraClaro(l));
-      else {
-        const t = (l - 110) / 60;
-        pinta(i, P, sombraEscuro(l) * (1 - t) + sombraClaro(l) * t);
-      }
+      const detalhe =
+        formaAssento !== "lisa" &&
+        (formaAssento === "meio-a-meio"
+          ? u >= 0.5
+          : celulaDaForma(formaAssento, Math.floor(u * colsA), Math.floor(v * rowsA), colsA, rowsA));
+      pinta(i, detalhe ? B : P, sombraEscuro(l));
     }
   }
 }
