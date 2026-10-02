@@ -20,6 +20,7 @@ export function codificarCadeira(op: Opcoes): string {
   p.set("b", op.corB.replace("#", ""));
   if (op.corC) p.set("c", op.corC.replace("#", ""));
   if (op.formaAssento && op.formaAssento !== "lisa") p.set("fa", op.formaAssento);
+  if (op.nomeAssento?.trim()) p.set("na", op.nomeAssento.trim().slice(0, 30));
   if (op.nome.trim()) {
     p.set("n", op.nome.trim().slice(0, 40));
     p.set("nx", String(r2(op.posicao.x)));
@@ -48,6 +49,7 @@ export function decodificarCadeira(q: URLSearchParams): Opcoes {
     corC: q.get("c") && HEX.test(q.get("c")!) ? `#${q.get("c")}` : undefined,
     formaAssento: (/^[a-z-]{2,24}$/.test(formaAssento) ? formaAssento : "lisa") as Forma,
     nome: (q.get("n") ?? "").slice(0, 40),
+    nomeAssento: (q.get("na") ?? "").slice(0, 30),
     posicao: { x: num(q.get("nx"), 0, 1, 0.5), y: num(q.get("ny"), 0, 1, 0.5) },
     tamanhoNome: num(q.get("t"), 0.3, 1, 1),
     escalaForma: num(q.get("e"), 0.35, 1, 1),

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckIcon, ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
 import { VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { useCart } from "@/lib/cart-context";
-import { IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
+import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix } from "@/lib/offer";
 import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
 import { codificarCadeira } from "@/lib/chair-link";
@@ -139,6 +139,8 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [posicao, setPosicao] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
   const [arrastando, setArrastando] = useState(false);
   const [tamanhoNome, setTamanhoNome] = useState(1);
+  /** Where the name goes: backrest (default) or the middle of the seat. */
+  const [nomeNoAssento, setNomeNoAssento] = useState(false);
   const [escalaForma, setEscalaForma] = useState(1);
   const [posForma, setPosForma] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
   const [adicionado, setAdicionado] = useState(false);
@@ -184,12 +186,14 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     carregarFoto(FOTO_TRANCADA).then(setFoto).catch(() => setFoto(null));
   }, []);
 
-  const opcoes = { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome, posicao, tamanhoNome, escalaForma, posForma };
+  const nomeEncosto = nomeNoAssento ? "" : nome;
+  const nomeAssento = nomeNoAssento ? nome : "";
+  const opcoes = { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, posicao, tamanhoNome, escalaForma, posForma };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome, posicao, tamanhoNome, escalaForma, posForma }, {
+    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, posicao, tamanhoNome, escalaForma, posForma }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
@@ -199,29 +203,18 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       ctx?.clearRect(0, 0, mini.width, mini.height);
       ctx?.drawImage(canvasRef.current, 0, 0, mini.width, mini.height);
     }
-  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nome, posicao, tamanhoNome, escalaForma, posForma]);
+  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, posicao, tamanhoNome, escalaForma, posForma]);
 
-  // Shape thumbnails (just the backrest), in the chosen colors.
+  // Shape thumbnails: flat and straight (just the figure), in the chosen
+  // colors — the photo's perspective made them look slanted.
   useEffect(() => {
-    if (!foto || passo > 1) return;
-    FORMAS.forEach((f, i) =>
-      f.grupo !== grupo
-        ? null
-        : parte === "encosto"
-          ? desenhar(miniaturasRef.current[i], foto, { forma: f.valor, corA: fioA.cor, corB: fioB.cor, corC, nome: "", posicao }, {
-              x0: 108,
-              y0: 158,
-              w: 229,
-              h: 312,
-            })
-          : desenhar(
-              miniaturasRef.current[i],
-              foto,
-              { forma: "lisa", formaAssento: f.valor, corA: fioA.cor, corB: fioB.cor, corC, nome: "", posicao },
-              { x0: 40, y0: 470, w: 368, h: 206 }
-            )
-    );
-  }, [foto, passo, fioA, fioB, corC, posicao, grupo, parte]);
+    if (passo > 1) return;
+    FORMAS.forEach((f, i) => {
+      const c = miniaturasRef.current[i];
+      const ctx = f.grupo === grupo ? c?.getContext("2d") : null;
+      if (c && ctx) desenharMiniatura(ctx, c.width, c.height, f.valor, fioA.cor, fioB.cor, parte);
+    });
+  }, [passo, fioA, fioB, grupo, parte]);
 
   const fimTimer = useRef<number | undefined>(undefined);
   const terminarAnimacao = useCallback(() => {
@@ -251,7 +244,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   // Name step: press/drag on the chair to move the name.
   // Step 1 with a reduced shape: drag moves the shape instead.
   const arrastaForma = passo === 1 && escalaForma < 0.97 && forma !== "meio-a-meio";
-  const podeArrastar = arrastaForma || (passo === 3 && Boolean(nome.trim()));
+  const podeArrastar = arrastaForma || (passo === 3 && !nomeNoAssento && Boolean(nome.trim()));
   const moverNome = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     const escala = IMG_W / r.width;
@@ -297,9 +290,17 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     `Encosto: ${formaRotulo}${escalaForma < 0.97 ? ` (tamanho ${Math.round(escalaForma * 100)}%)` : ""}`,
     tresCores ? `Cor principal: ${fioA.nome} (metade esquerda) e ${fioC.nome} (metade direita)` : `Cor principal: ${fioA.nome}`,
     `Cor dos detalhes: ${fioB.nome}`,
-    `Assento: ${formaAssento === "lisa" ? "liso" : FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? formaAssento}`,
+    `Assento: ${
+      nomeNoAssento && temNome
+        ? "com o nome"
+        : formaAssento === "lisa"
+          ? "liso"
+          : FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? formaAssento
+    }`,
     temNome
-      ? `Nome: "${nomeLimpo.replace(/\n/g, " / ")}" (${posicaoRotulo.toLowerCase()}, tamanho ${tamanhoRotulo.toLowerCase()})`
+      ? nomeNoAssento
+        ? `Nome: "${nomeLimpo.replace(/\n/g, " ")}" (no meio do assento)`
+        : `Nome: "${nomeLimpo.replace(/\n/g, " / ")}" (no encosto, ${posicaoRotulo.toLowerCase()}, tamanho ${tamanhoRotulo.toLowerCase()})`
       : "Sem nome",
     `Valor: ${formatBRL(preco)}`,
   ].join("\n");
@@ -575,9 +576,9 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                       ref={(el) => {
                         miniaturasRef.current[i] = el;
                       }}
-                      width={parte === "encosto" ? 229 : 368}
-                      height={parte === "encosto" ? 312 : 206}
-                      className={`w-full bg-canvas ${parte === "encosto" ? "aspect-[229/312]" : "aspect-[368/206]"}`}
+                      width={parte === "encosto" ? 165 : 240}
+                      height={parte === "encosto" ? 135 : 108}
+                      className={`w-full bg-canvas ${parte === "encosto" ? "aspect-[165/135]" : "aspect-[240/108]"}`}
                     />
                     {f.rotulo}
                   </button>
@@ -701,6 +702,37 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                 />
               </label>
               {temNome ? (
+                <fieldset>
+                  <legend className="text-sm text-ink">Onde vai o nome</legend>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {[
+                      { v: false, r: "No encosto" },
+                      { v: true, r: "No assento" },
+                    ].map((o) => (
+                      <button
+                        key={o.r}
+                        type="button"
+                        onClick={() => setNomeNoAssento(o.v)}
+                        aria-pressed={nomeNoAssento === o.v}
+                        className={`border-2 px-3 py-2 text-sm transition-colors ${
+                          nomeNoAssento === o.v
+                            ? "border-verde bg-verde/5 font-semibold text-verde-escuro"
+                            : "border-line text-ink-soft hover:border-ink"
+                        }`}
+                      >
+                        {o.r}
+                      </button>
+                    ))}
+                  </div>
+                  {nomeNoAssento ? (
+                    <p className="mt-2 text-xs text-ink-soft">
+                      O nome fica centralizado no meio do assento, numa linha só
+                      {formaAssento !== "lisa" ? " — e entra no lugar do desenho do assento" : ""}.
+                    </p>
+                  ) : null}
+                </fieldset>
+              ) : null}
+              {temNome && !nomeNoAssento ? (
                 <label className="block">
                   <span className="flex justify-between text-sm text-ink">
                     Tamanho do nome
@@ -721,7 +753,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   </span>
                 </label>
               ) : null}
-              {temNome ? (
+              {temNome && !nomeNoAssento ? (
                 <p className="border border-dashed border-line px-3 py-2 text-sm text-ink-soft">
                   Arraste o nome na cadeira para escolher onde ele fica.
                 </p>
@@ -737,7 +769,14 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   ["Encosto", formaRotulo],
                   ["Cor principal", tresCores ? `${fioA.nome} e ${fioC.nome}` : fioA.nome],
                   ["Cor dos detalhes", fioB.nome],
-                  ["Assento", formaAssento === "lisa" ? "Liso" : FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? ""],
+                  [
+                    "Assento",
+                    nomeNoAssento && temNome
+                      ? "Com o nome"
+                      : formaAssento === "lisa"
+                        ? "Liso"
+                        : FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? "",
+                  ],
                   ["Nome", temNome ? nomeLimpo.replace(/\n/g, " / ") : "Sem nome"],
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-4 py-2">

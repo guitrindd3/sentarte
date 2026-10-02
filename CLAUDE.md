@@ -368,7 +368,12 @@ make the transition seamless. Shape grid has Encosto / Assento tabs (one grid,
 `parte` decides which shape it sets). Backrest pattern/name x is measured
 between the trapezoid's edges on each row, so pattern columns follow the
 slanted strands; the seat's back band (y<504) and front band (y>=628) never
-get pattern — only the vertical strands' color (user 2026-10-02).
+get pattern — only the vertical strands' color (user 2026-10-02). Seat pattern
+and name only go on the flat panel between the side tubes
+(`ASSENTO_PAINEL`), on a fixed 60x27 grid so figures fit whole and
+centered; the name can go on the seat instead of the backrest
+(`Opcoes.nomeAssento`, link param `na`) and then replaces the seat figure.
+Shape thumbnails are flat (`desenharMiniatura`), not photo crops.
 
 `/personalizar` is `components/chair-builder.tsx`, a 4-step builder
 (trançado, cores, nome, pronto) built on the REAL chair from the user's

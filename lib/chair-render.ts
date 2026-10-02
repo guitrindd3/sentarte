@@ -103,6 +103,22 @@ const ASSENTO_Y1 = 674;
  * two bands only ever show the main color (user 2026-10-02). */
 const ASSENTO_DESENHO_Y0 = 504;
 const ASSENTO_DESENHO_Y1 = 628;
+/** The flat part of the seat between the side tubes — the only place a seat
+ * pattern or name goes (the webbing wrapped over the tubes stays plain). */
+const ASSENTO_PAINEL: [number, number][] = [
+  [104, ASSENTO_DESENHO_Y0],
+  [350, ASSENTO_DESENHO_Y0],
+  [386, ASSENTO_DESENHO_Y1],
+  [82, ASSENTO_DESENHO_Y1],
+];
+/** Seat pattern grid. Same row count as the backrest's pattern area, so the
+ * figures (heart, anchor…) fit whole and centered; cells come out roughly
+ * square on screen. */
+export const ASSENTO_COLS = 60;
+export const ASSENTO_ROWS = 27;
+/** Backrest pattern grid, for flat thumbnails. */
+export const ENCOSTO_COLS = 33;
+export const ENCOSTO_ROWS = 27;
 
 /** Plain bands at the top and bottom of the backrest (where the rope wraps
  * the frame tubes on the real chairs): the weave shape never enters them,
@@ -130,6 +146,9 @@ export type Opcoes = {
   posForma?: NomePosicao;
   /** Pattern woven into the seat, in the detail color (corB). Default: plain. */
   formaAssento?: Forma;
+  /** Name woven in the middle of the seat (detail color), instead of / as
+   * well as the backrest one. */
+  nomeAssento?: string;
 };
 
 function hexRgb(hex: string): [number, number, number] {
@@ -638,6 +657,69 @@ export function posicaoNoEncosto(sx: number, sy: number): NomePosicao {
   return { x: clamp((sx - ENCOSTO.x0) / w), y: clamp((sy - ENCOSTO.y0 - MARGEM_TOPO) / h) };
 }
 
+/** Name laid out on the seat grid (cells), centered, as big as fits. */
+function mascaraNomeAssento(texto: string) {
+  const linha = normalizarTexto(texto.replace(/\n/g, " ")).trim();
+  if (!linha) return null;
+  const larguraCel = linha.length * (GLYPH_W + 1) - 1;
+  const esc = Math.max(1, Math.min(3, Math.floor((ASSENTO_COLS - 4) / larguraCel), Math.floor((ASSENTO_ROWS - 6) / GLYPH_H)));
+  const w = larguraCel * esc;
+  const h = GLYPH_H * esc;
+  const x0 = Math.floor((ASSENTO_COLS - w) / 2);
+  const y0 = Math.floor((ASSENTO_ROWS - h) / 2);
+  const letra = new Uint8Array(ASSENTO_COLS * ASSENTO_ROWS);
+  for (let j = 0; j < h; j++) {
+    for (let i = 0; i < w; i++) {
+      const gx = Math.floor(i / esc);
+      const ci = Math.floor(gx / (GLYPH_W + 1));
+      if (glyphPixel(linha[ci], gx % (GLYPH_W + 1), Math.floor(j / esc))) letra[(y0 + j) * ASSENTO_COLS + x0 + i] = 1;
+    }
+  }
+  const contorno = new Uint8Array(ASSENTO_COLS * ASSENTO_ROWS);
+  for (let j = 0; j < ASSENTO_ROWS; j++) {
+    for (let i = 0; i < ASSENTO_COLS; i++) {
+      if (letra[j * ASSENTO_COLS + i]) continue;
+      for (let dj = -1; dj <= 1; dj++) {
+        for (let di = -1; di <= 1; di++) {
+          const a = i + di;
+          const b = j + dj;
+          if (a >= 0 && b >= 0 && a < ASSENTO_COLS && b < ASSENTO_ROWS && letra[b * ASSENTO_COLS + a]) contorno[j * ASSENTO_COLS + i] = 1;
+        }
+      }
+    }
+  }
+  return { letra, contorno };
+}
+
+/** Flat, straight thumbnail of a shape (no photo): the pattern grid in the
+ * two thread colors, with thin gaps so it still reads as woven. */
+export function desenharMiniatura(
+  ctx: CanvasRenderingContext2D,
+  largura: number,
+  altura: number,
+  forma: Forma,
+  corA: string,
+  corB: string,
+  parte: "encosto" | "assento"
+) {
+  const cols = parte === "encosto" ? ENCOSTO_COLS : ASSENTO_COLS;
+  const rows = parte === "encosto" ? ENCOSTO_ROWS : ASSENTO_ROWS;
+  const cw = largura / cols;
+  const ch = altura / rows;
+  ctx.fillStyle = corA;
+  ctx.fillRect(0, 0, largura, altura);
+  ctx.fillStyle = corB;
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const on = forma === "meio-a-meio" ? i >= cols / 2 : forma !== "lisa" && celulaDaForma(forma, i, j, cols, rows);
+      if (on) ctx.fillRect(i * cw, j * ch, Math.ceil(cw), Math.ceil(ch));
+    }
+  }
+  // vertical strand lines
+  ctx.fillStyle = "rgba(0,0,0,0.14)";
+  for (let x = 0; x < largura; x += Math.max(2, cw / 2)) ctx.fillRect(Math.floor(x), 0, 1, altura);
+}
+
 /** Left/right x of a polygon on row y (where a horizontal line crosses it). */
 function bordasDaLinha(poly: [number, number][], y: number): [number, number] {
   let esq = Infinity;
@@ -732,26 +814,33 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   // color. Pattern cells follow the seat's perspective: u runs across the
   // seat between its left/right edges on that row, v from back to front.
   const formaAssento = op.formaAssento ?? "lisa";
-  const colsA = 36;
-  const rowsA = 18;
-  const bordas = (y: number) => bordasDaLinha(ASSENTO, y);
+  const nomeSeat = mascaraNomeAssento(op.nomeAssento ?? "");
   for (let y = ASSENTO_Y0; y < ASSENTO_Y1; y++) {
-    const [esq, dir] = bordas(y + 0.5);
+    const [esq, dir] = bordasDaLinha(ASSENTO, y + 0.5);
     if (!Number.isFinite(esq)) continue;
+    const [pEsq, pDir] = bordasDaLinha(ASSENTO_PAINEL, y + 0.5);
     const v = (y - ASSENTO_DESENHO_Y0) / (ASSENTO_DESENHO_Y1 - ASSENTO_DESENHO_Y0);
-    const naFaixaLisa = y < ASSENTO_DESENHO_Y0 || y >= ASSENTO_DESENHO_Y1;
     for (let x = Math.ceil(esq); x < dir; x++) {
       const i = (y * IMG_W + x) * 4;
       const l = brilho(i);
       if (saturacao(i) > 60 || l > 140) continue; // floor/pool through the gaps
-      const u = (x - esq) / (dir - esq);
-      const P = u >= 0.5 ? C : A;
-      const detalhe =
-        formaAssento !== "lisa" &&
-        !naFaixaLisa &&
-        (formaAssento === "meio-a-meio"
-          ? u >= 0.5
-          : celulaDaForma(formaAssento, Math.floor(u * colsA), Math.floor(v * rowsA), colsA, rowsA));
+      const P = (x - esq) / (dir - esq) >= 0.5 ? C : A;
+      let detalhe = false;
+      if (Number.isFinite(pEsq) && x + 0.5 >= pEsq && x + 0.5 < pDir) {
+        const u = (x + 0.5 - pEsq) / (pDir - pEsq);
+        const ci = Math.min(ASSENTO_COLS - 1, Math.floor(u * ASSENTO_COLS));
+        const cj = Math.min(ASSENTO_ROWS - 1, Math.floor(v * ASSENTO_ROWS));
+        // a name on the seat takes the seat figure's place
+        detalhe =
+          !nomeSeat &&
+          formaAssento !== "lisa" &&
+          (formaAssento === "meio-a-meio" ? u >= 0.5 : celulaDaForma(formaAssento, ci, cj, ASSENTO_COLS, ASSENTO_ROWS));
+        if (nomeSeat) {
+          const k = cj * ASSENTO_COLS + ci;
+          if (nomeSeat.letra[k]) detalhe = true;
+          else if (nomeSeat.contorno[k]) detalhe = false;
+        }
+      }
       pinta(i, detalhe ? B : P, sombraEscuro(l));
     }
   }
