@@ -1,39 +1,29 @@
 import "server-only";
 import { scryptSync, timingSafeEqual } from "crypto";
-import { cache } from "react";
 import { cookies } from "next/headers";
-import { list, put } from "@vercel/blob";
+import revogacao from "@/content/admin.json";
+import { gravarArquivo, lerArquivo } from "./github-store";
 import { SignJWT, jwtVerify } from "jose";
 
 const COOKIE_NAME = "sentarte_admin";
 /** Admin sessions last 7 days (was 30, shortened 2026-09-30). */
 const DURACAO_DIAS = 7;
-/** Sessions issued before this timestamp are rejected ("Sair de todos os aparelhos"). */
-const REVOGACAO_PATH = "admin/sessoes-revogadas.json";
-
-const revogadoEm = cache(async (): Promise<number> => {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return 0;
-  try {
-    const { blobs } = await list({ prefix: REVOGACAO_PATH, limit: 1 });
-    const b = blobs.find((x) => x.pathname === REVOGACAO_PATH);
-    if (!b) return 0;
-    const r = await fetch(`${b.url}?v=${Date.now()}`, { cache: "no-store" });
-    if (!r.ok) return 0;
-    const j = (await r.json()) as { revogadoEm?: number };
-    return Number(j.revogadoEm) || 0;
-  } catch {
-    return 0;
-  }
-});
+/** Sessions issued at or before content/admin.json's `revogadoEm` (unix
+ * seconds) are rejected — "Sair de todos os aparelhos". Kept in the repo
+ * (like the site content) since Vercel Blob was dropped on 2026-10-02; it
+ * takes effect on the next deploy (~1-2 min), and the current device is
+ * logged out right away. */
+const revogadoEm = async () => Number((revogacao as { revogadoEm?: number }).revogadoEm) || 0;
 
 /** Invalidates every admin session issued until now, on every device. */
 export async function revogarTodasAsSessoes() {
-  await put(REVOGACAO_PATH, JSON.stringify({ revogadoEm: Math.floor(Date.now() / 1000) }), {
-    access: "public",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-  });
+  const atual = await lerArquivo("content/admin.json");
+  await gravarArquivo(
+    "content/admin.json",
+    `${JSON.stringify({ revogadoEm: Math.floor(Date.now() / 1000) }, null, 2)}\n`,
+    "Painel: sair de todos os aparelhos",
+    atual?.sha
+  );
 }
 
 function getEncodedKey() {

@@ -1,0 +1,350 @@
+{
+  "site": {
+    "nome": "SentArte",
+    "descricao": "Cadeiras de praia personalizadas, trançadas à mão em corda náutica e alumínio: de time, boho, com desenho ou com o seu nome. Frete grátis para todo o Brasil.",
+    "whatsappNumero": "5527995201669",
+    "instagramHandle": "ateliesentarte"
+  },
+  "hero": {
+    "titulo": "Ateliê SentArte",
+    "subtitulo": "Cadeiras de praia artesanais personalizadas, feitas para durar o verão inteiro — e os próximos.",
+    "tags": []
+  },
+  "categorias": [
+    {
+      "id": "cat-cadeiras",
+      "slug": "cadeiras",
+      "titulo": "Cadeiras de praia",
+      "resumo": "Personalizadas, de time ou em tramas exclusivas.",
+      "intro": "A peça que começou o SentArte. Estrutura em alumínio, assento e encosto trançados à mão em corda náutica, dobrável para caber no porta-malas e resistente para durar temporadas de sol e maresia.",
+      "corA": "#15564C",
+      "corB": "#EDE3D0",
+      "modelos": [
+        {
+          "id": "mod-60128627-f011-4a55-b52c-1c70ecf4344a",
+          "nome": "Monte a sua trama",
+          "descricao": "Escolha o modelo, a forma do trançado e as cores. Uma cadeira sua, do seu jeito.",
+          "corA": "#15564C",
+          "corB": "#0E3E37"
+        },
+        {
+          "id": "mod-8e110a6c-a507-4def-9224-a486410af9ad",
+          "nome": "Cadeiras boho",
+          "descricao": "Estampas boho exclusivas, em tons terrosos — cada padrão é uma trama diferente.",
+          "corA": "#15564C",
+          "corB": "#BD502E",
+          "imagemUrl": "/catalogo/cadeiras-boho.jpg"
+        },
+        {
+          "id": "mod-a2743711-282e-44ad-9a12-b8f834cdbce8",
+          "nome": "Time do coração",
+          "descricao": "Cores e brasão do seu time, trançados na estrutura — sem adesivo, sem estampa.",
+          "corA": "#16222B",
+          "corB": "#BD502E",
+          "imagemUrl": "/catalogo/time-do-coracao.jpg"
+        },
+        {
+          "id": "mod-cc7970d4-201a-43a6-927a-9c46348acafd",
+          "nome": "Animes e desenhos",
+          "descricao": "Desenhos, personagens e frases tecidos na cadeira, do jeito que você imaginar.",
+          "corA": "#15564C",
+          "corB": "#BD502E",
+          "imagemUrl": "/catalogo/animes-e-desenhos.jpg"
+        },
+        {
+          "id": "mod-2af168e3-0db2-4f24-9c9b-588d6660f989",
+          "nome": "Botafogo",
+          "descricao": "Escudo do Botafogo tecido em preto e branco, com estrela.",
+          "corA": "#111111",
+          "corB": "#F2F2F2",
+          "imagemUrl": "/catalogo/botafogo.jpg",
+          "fotosExtras": [
+            "/catalogo/botafogo-foto2.jpg"
+          ]
+        },
+        {
+          "id": "mod-c1b9cdbe-354d-46f6-a4c7-5534640b4751",
+          "nome": "Botafogo personalizado",
+          "descricao": "Escudo do Botafogo com o nome que você quiser tecido embaixo. Manda pelo WhatsApp.",
+          "corA": "#111111",
+          "corB": "#F2F2F2",
+          "imagemUrl": "/catalogo/botafogo-personalizado.jpg"
+        },
+        {
+          "id": "mod-7a28ae75-662e-4a38-8788-67dcc229e2f4",
+          "nome": "Corinthians",
+          "descricao": "Escudo do Corinthians tecido em preto e branco.",
+          "corA": "#111111",
+          "corB": "#F2F2F2",
+          "imagemUrl": "/catalogo/corinthians.jpg",
+          "fotosExtras": [
+            "/catalogo/corinthians-foto2.jpg",
+            "/catalogo/corinthians-foto3.jpg",
+            "/catalogo/corinthians-foto4.jpg"
+          ]
+        },
+        {
+          "id": "mod-d4486d07-bb10-4c95-be30-56f561e65b18",
+          "nome": "Flamengo",
+          "descricao": "Escudo do Flamengo tecido em vermelho e preto. Tem variação de cor — escolhe a que combina com você.",
+          "corA": "#C8102E",
+          "corB": "#111111",
+          "imagemUrl": "/catalogo/flamengo.jpg",
+          "variantes": [
+            "/catalogo/flamengo-cor2.jpg",
+            "/catalogo/flamengo-cor3.jpg"
+          ]
+        },
+        {
+          "id": "mod-f6259487-5c53-4f14-8cbf-09d3bec71fa9",
+          "nome": "Flamengo personalizado",
+          "descricao": "Escudo do Flamengo com o nome que você quiser tecido embaixo. Manda pelo WhatsApp.",
+          "corA": "#C8102E",
+          "corB": "#111111",
+          "imagemUrl": "/catalogo/flamengo-personalizado.jpg",
+          "fotosExtras": [
+            "/catalogo/flamengo-personalizado-foto2.jpg",
+            "/catalogo/flamengo-personalizado-foto3.jpg"
+          ]
+        },
+        {
+          "id": "mod-a05e269c-5609-4411-96e7-132b4c739878",
+          "nome": "Fluminense",
+          "descricao": "Escudo do Fluminense tecido em vermelho, branco e verde.",
+          "corA": "#6FA83C",
+          "corB": "#B0121A",
+          "imagemUrl": "/catalogo/fluminense.jpg"
+        },
+        {
+          "id": "mod-90315ea0-8785-486c-b166-6db04e1d7958",
+          "nome": "Palmeiras",
+          "descricao": "Escudo do Palmeiras tecido em verde e branco.",
+          "corA": "#006437",
+          "corB": "#F2F2F2",
+          "imagemUrl": "/catalogo/palmeiras.jpg"
+        },
+        {
+          "id": "mod-fb28a240-cdd5-412e-b2c6-5279026faf92",
+          "nome": "Vasco",
+          "descricao": "Cruz de malta do Vasco tecida em preto, branco e vermelho.",
+          "corA": "#111111",
+          "corB": "#B0121A",
+          "imagemUrl": "/catalogo/vasco.jpg"
+        },
+        {
+          "id": "mod-4442ac16-1064-48d8-ac63-51c76c2dcbb5",
+          "nome": "Vasco personalizado",
+          "descricao": "Cruz de malta do Vasco com o nome que você quiser tecido embaixo. Manda pelo WhatsApp.",
+          "corA": "#111111",
+          "corB": "#B0121A",
+          "imagemUrl": "/catalogo/vasco-personalizado.jpg",
+          "fotosExtras": [
+            "/catalogo/vasco-personalizado-foto2.jpg"
+          ]
+        },
+        {
+          "id": "mod-6f73a3f4-07ff-42f1-a81a-07fe390c7c96",
+          "nome": "Diamante verde",
+          "descricao": "Losango verde e laranja, trançado em degradê.",
+          "corA": "#15564C",
+          "corB": "#BD502E",
+          "imagemUrl": "/catalogo/diamante-verde.jpg",
+          "fotosExtras": [
+            "/catalogo/diamante-verde-foto2.jpg",
+            "/catalogo/diamante-verde-foto3.jpg"
+          ]
+        },
+        {
+          "id": "mod-1899d435-b163-4f1f-b24d-e853c8c981ef",
+          "nome": "Degradê pôr do sol",
+          "descricao": "Ziguezague em tons de rosa, laranja e amarelo.",
+          "corA": "#E85A97",
+          "corB": "#F5A83C",
+          "imagemUrl": "/catalogo/degrade-por-do-sol.jpg",
+          "fotosExtras": [
+            "/catalogo/degrade-por-do-sol-foto2.jpg",
+            "/catalogo/degrade-por-do-sol-foto3.jpg",
+            "/catalogo/degrade-por-do-sol-foto4.jpg"
+          ]
+        },
+        {
+          "id": "mod-94c66c49-d1c4-406b-a94e-4e762ea4dd8d",
+          "nome": "Diamante multicolor",
+          "descricao": "Losango colorido, várias tonalidades numa trama só.",
+          "corA": "#BD502E",
+          "corB": "#15564C",
+          "imagemUrl": "/catalogo/diamante-multicolor.jpg"
+        },
+        {
+          "id": "mod-978306d8-9152-4693-9802-ee24716ade31",
+          "nome": "Totem espiral",
+          "descricao": "Padrão totem em terracota e areia.",
+          "corA": "#BD502E",
+          "corB": "#EDE3D0",
+          "imagemUrl": "/catalogo/totem-espiral.jpg"
+        },
+        {
+          "id": "mod-2a5abb86-9420-4b2e-9f31-8f4f8df2953e",
+          "nome": "Losango terracota",
+          "descricao": "Losango em terracota sobre trama areia.",
+          "corA": "#BD502E",
+          "corB": "#EDE3D0",
+          "imagemUrl": "/catalogo/losango-terracota.jpg",
+          "fotosExtras": [
+            "/catalogo/losango-terracota-foto2.jpg"
+          ]
+        },
+        {
+          "id": "mod-b1cac2d7-63d0-4eec-808d-d5866756d2c4",
+          "nome": "Sol",
+          "descricao": "Sol estilizado em laranja sobre trama areia.",
+          "corA": "#F5A83C",
+          "corB": "#EDE3D0",
+          "imagemUrl": "/catalogo/sol.jpg",
+          "fotosExtras": [
+            "/catalogo/sol-foto2.jpg",
+            "/catalogo/sol-foto3.jpg"
+          ]
+        },
+        {
+          "id": "mod-dc70e2e6-e163-49e5-9f3b-106d75f51b66",
+          "nome": "Sukuna",
+          "descricao": "Personagem de anime tecido em preto e branco.",
+          "corA": "#111111",
+          "corB": "#F2F2F2",
+          "imagemUrl": "/catalogo/sukuna.jpg"
+        },
+        {
+          "id": "mod-d39e5dbc-6275-48b6-aaed-ad5278be70dc",
+          "nome": "Itachi Uchiha",
+          "descricao": "O Sharingan tecido em preto, vermelho e branco.",
+          "corA": "#B0121A",
+          "corB": "#111111",
+          "imagemUrl": "/catalogo/itachi-uchiha.jpg"
+        },
+        {
+          "id": "mod-f9dc8a5d-f16e-4a89-bd42-7e223f807edb",
+          "nome": "Borboleta",
+          "descricao": "Nome tecido junto com uma borboleta, em roxo e pink. Manda o nome que você quer pelo WhatsApp.",
+          "corA": "#8B5FBF",
+          "corB": "#EC1E79",
+          "imagemUrl": "/catalogo/borboleta.jpg"
+        },
+        {
+          "id": "mod-483f7774-7901-4d16-9575-152a66c92136",
+          "nome": "Coração leve",
+          "descricao": "A frase que só você tem, tecida na cadeira. Manda o texto pelo WhatsApp.",
+          "corA": "#2F6690",
+          "corB": "#E8DCC0",
+          "imagemUrl": "/catalogo/coracao-leve.jpg"
+        },
+        {
+          "id": "mod-ad39708e-2902-464e-ad4e-860af57c82ba",
+          "nome": "Homem-aranha",
+          "descricao": "Máscara do Homem-Aranha tecida em vermelho e preto.",
+          "corA": "#C21807",
+          "corB": "#111111",
+          "imagemUrl": "/catalogo/homem-aranha.jpg"
+        },
+        {
+          "id": "mod-eabfd8ec-50f5-4f5a-956a-9296f34fd81c",
+          "nome": "Gato",
+          "descricao": "Gatinho em pixel art tecido em rosa e branco.",
+          "corA": "#EC1E79",
+          "corB": "#F8C8DC",
+          "imagemUrl": "/catalogo/gato.jpg"
+        },
+        {
+          "id": "mod-e8db6821-bdba-4d7c-ab1d-d36c88dc3c9e",
+          "nome": "Creeper",
+          "descricao": "Creeper de Minecraft em verde e preto, com nome tecido embaixo.",
+          "corA": "#6FA83C",
+          "corB": "#111111",
+          "imagemUrl": "/catalogo/creeper.jpg"
+        },
+        {
+          "id": "mod-00d97af3-cb50-412b-805a-f27aece363c0",
+          "nome": "Sereia arco-íris",
+          "descricao": "Degradê do rosa ao amarelo em formato de cauda de sereia.",
+          "corA": "#E85A97",
+          "corB": "#F5A83C",
+          "imagemUrl": "/catalogo/sereia-arco-iris.jpg"
+        },
+        {
+          "id": "mod-196c59ea-b897-4aa0-ab25-e195068cd8e7",
+          "nome": "JV Trindade",
+          "descricao": "Só o nome, grande e limpo, tecido do jeito que você quiser. Combina as cores e manda pelo WhatsApp.",
+          "corA": "#111111",
+          "corB": "#D9D9D9",
+          "imagemUrl": "/catalogo/jv-trindade.jpg"
+        },
+        {
+          "id": "mod-01d16dd0-66cf-4fa2-8491-85c2c74e18cc",
+          "nome": "Satoru Gojo",
+          "descricao": "Personagem de anime tecido em marrom e branco.",
+          "corA": "#2B2118",
+          "corB": "#E8DCC8",
+          "imagemUrl": "/catalogo/satoru-gojo.jpg"
+        },
+        {
+          "id": "mod-57626963-7d95-418e-95fc-498bdcd70b1e",
+          "nome": "Ghostface",
+          "descricao": "Personagem de terror com o sobrenome tecido no assento, em preto e branco.",
+          "corA": "#111111",
+          "corB": "#F2F2F2",
+          "imagemUrl": "/catalogo/ghostface.jpg"
+        }
+      ]
+    },
+    {
+      "id": "cat-bolsas",
+      "slug": "bolsas",
+      "titulo": "Bolsas",
+      "resumo": "No mesmo trançado das cadeiras, para levar tudo pra praia.",
+      "intro": "Feitas com a mesma corda náutica das cadeiras, em tamanhos para o dia a dia ou para o dia de praia inteiro. Forro interno e alça reforçada para aguentar o peso da bolsa cheia.",
+      "corA": "#A9835A",
+      "corB": "#16222B",
+      "modelos": [
+        {
+          "id": "mod-83b71967-bf4a-49b4-a039-a8b013db9e7a",
+          "nome": "Bolsa dia a dia",
+          "descricao": "Tamanho médio, alça de ombro, para o uso do dia a dia.",
+          "corA": "#A9835A",
+          "corB": "#EDE3D0"
+        },
+        {
+          "id": "mod-83de0859-309f-49a3-bea1-880869868beb",
+          "nome": "Bolsa de praia",
+          "descricao": "Grande, com espaço para canga, protetor e o que mais precisar levar.",
+          "corA": "#15564C",
+          "corB": "#BD502E"
+        }
+      ]
+    },
+    {
+      "id": "cat-espreguicadeiras",
+      "slug": "espreguicadeiras",
+      "titulo": "Espreguiçadeiras",
+      "resumo": "Para quem não abre mão do conforto.",
+      "intro": "Estrutura maior e reclinável, para quem quer passar a tarde inteira na praia ou na piscina sem sair do lugar. Mesma trama resistente à maresia, mesmo acabamento à mão.",
+      "corA": "#BD502E",
+      "corB": "#EDE3D0",
+      "modelos": [
+        {
+          "id": "mod-1289c905-cf3b-49e7-a7ab-810f190a342f",
+          "nome": "Trama lisa",
+          "descricao": "Uma cor só, acabamento limpo, do jeito que combina com qualquer varanda.",
+          "corA": "#15564C",
+          "corB": "#0E3E37"
+        },
+        {
+          "id": "mod-5e874097-66e2-42e3-9220-38dc4055ec01",
+          "nome": "Trama mesclada",
+          "descricao": "Duas cores intercaladas, para dar mais presença à peça.",
+          "corA": "#BD502E",
+          "corB": "#EDE3D0"
+        }
+      ]
+    }
+  ]
+}

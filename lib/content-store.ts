@@ -1,53 +1,27 @@
 import "server-only";
 import { cache } from "react";
-import { unstable_cache } from "next/cache";
-import { list, put } from "@vercel/blob";
+import conteudoDoRepo from "@/content/site-content.json";
 import { DEFAULT_CONTENT, type SiteContent } from "./content-schema";
+import { githubConfigurado, gravarArquivo, lerArquivo } from "./github-store";
 import { CATEGORIAS_OCULTAS } from "./offer";
 
-const CONTENT_PATH = "content/site-content.json";
+// Site content lives in the repo (content/site-content.json) since
+// 2026-10-02. Before, it was one JSON in Vercel Blob — and the free Blob
+// store got "limits-exceeded-suspended" twice (2026-09-24 on the old
+// account, 2026-10-01 on this one), taking every photo down. Now the public
+// site reads the copy bundled in the deploy (no storage calls at all) and
+// the admin panel saves by committing to GitHub (see lib/github-store.ts),
+// which redeploys the site.
 
-async function fetchContent(): Promise<SiteContent | null> {
-  const { blobs } = await list({ prefix: CONTENT_PATH, limit: 1 });
-  const match = blobs.find((b) => b.pathname === CONTENT_PATH);
-  if (!match) return null;
+const CAMINHO = "content/site-content.json";
 
-  // Vercel Blob's public URL sits behind a CDN that can serve a stale
-  // cached copy for tens of seconds after put() — cache:"no-store" only
-  // stops Next's own Data Cache, not that CDN edge cache. Busting with
-  // list()'s own `uploadedAt` isn't enough (that metadata can itself lag
-  // behind the write), so use Date.now() — a guaranteed-unique query on
-  // every single read forces a real origin fetch every time.
-  //
-  // NOTE: forcing an uncached origin fetch on every single read is exactly
-  // what caused a 403 storm (and a full site outage) on 2026-09-24 under
-  // concurrent admin automation — the Blob origin started rejecting the
-  // uncached burst. If that recurs, throttle/cache this instead of removing
-  // the busting entirely (stale CDN reads are the other failure mode).
-  const res = await fetch(`${match.url}?v=${Date.now()}`, { cache: "no-store" });
-  if (!res.ok) throw new Error(`fetchContent: failed to fetch site content (${res.status})`);
-
-  const data = (await res.json()) as Partial<SiteContent>;
+function normalizar(data: Partial<SiteContent>): SiteContent {
   return {
     site: { ...DEFAULT_CONTENT.site, ...data.site },
     hero: { ...DEFAULT_CONTENT.hero, ...data.hero },
     categorias: data.categorias ?? DEFAULT_CONTENT.categorias,
   };
 }
-
-export const CONTENT_TAG = "site-content";
-
-// Cross-request cache for public pages. Before 2026-09-29 every page view
-// did a list() + an uncached origin fetch (two Blob operations per visit),
-// which is what burned through the free-tier quota. Now the (still
-// cache-busted) origin fetch runs at most once per REVALIDATE window, or
-// right after an admin save — every admin action calls
-// updateTag(CONTENT_TAG) via revalidateSite() in app/admin/actions.ts, so
-// saves still show up on the next request. A throw inside is not cached.
-const fetchContentCached = unstable_cache(fetchContent, ["site-content"], {
-  tags: [CONTENT_TAG],
-  revalidate: 300,
-});
 
 function withoutHiddenCategories(content: SiteContent): SiteContent {
   return {
@@ -56,61 +30,56 @@ function withoutHiddenCategories(content: SiteContent): SiteContent {
   };
 }
 
-/**
- * Public-site content: cached across requests (see above) and per request
- * (React cache()), with categories in CATEGORIAS_OCULTAS removed.
- *
- * Resilient by design: falls back to DEFAULT_CONTENT on any read failure so
- * a Blob hiccup degrades to a stale/default-looking page instead of taking
- * the whole site down. NEVER use this as the read half of a
- * read-modify-write — use getContentForWrite() instead, see the note there.
- */
-export const getContent = cache(async (): Promise<SiteContent> => {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return withoutHiddenCategories(DEFAULT_CONTENT);
-  try {
-    return withoutHiddenCategories((await fetchContentCached()) ?? DEFAULT_CONTENT);
-  } catch (err) {
-    console.error("getContent: read failed, falling back to default content", err);
-    return withoutHiddenCategories(DEFAULT_CONTENT);
-  }
-});
+/** Public-site content: the copy bundled in this deploy, hidden categories removed. */
+export const getContent = cache(async (): Promise<SiteContent> =>
+  withoutHiddenCategories(normalizar(conteudoDoRepo as Partial<SiteContent>))
+);
 
 /**
- * For the /admin page's own display: uncached (always the latest save) and
- * unfiltered (hidden categories stay editable). Same fallback behavior as
- * getContent(); still never the read half of a read-modify-write.
+ * For the /admin page's own display: the latest saved version straight from
+ * GitHub (it can be ahead of the deployed site for a minute or two after a
+ * save), unfiltered so hidden categories stay editable. Falls back to the
+ * bundled copy if GitHub isn't reachable/configured.
  */
 export const getAdminContent = cache(async (): Promise<SiteContent> => {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return DEFAULT_CONTENT;
-  try {
-    return (await fetchContent()) ?? DEFAULT_CONTENT;
-  } catch (err) {
-    console.error("getAdminContent: read failed, falling back to default content", err);
-    return DEFAULT_CONTENT;
+  if (githubConfigurado()) {
+    try {
+      const arq = await lerArquivo(CAMINHO);
+      if (arq) return normalizar(JSON.parse(arq.texto) as Partial<SiteContent>);
+    } catch (err) {
+      console.error("getAdminContent: GitHub read failed, using bundled copy", err);
+    }
   }
+  return normalizar(conteudoDoRepo as Partial<SiteContent>);
 });
+
+// sha of the file each write started from, so a save made on top of a stale
+// read is rejected by GitHub instead of silently overwriting newer edits.
+const shaDaLeitura = new WeakMap<SiteContent, string>();
 
 /**
  * Used ONLY at the start of an admin Server Action that reads, mutates, and
- * saves content back. Throws instead of silently falling back to
- * DEFAULT_CONTENT — a failed read here must abort the save, never persist
- * empty/default content over real data. This is the fix for the 2026-09-24
- * incident, where a swallowed transient read failure got the empty default
- * content written back to Blob, wiping out times/boho/Vasco/desenhos.
+ * saves content back. Throws on any failure — never falls back to defaults,
+ * so a bad read can't be saved over the real catalog (the 2026-09-24 lesson).
  */
 export async function getContentForWrite(): Promise<SiteContent> {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    throw new Error("getContentForWrite: Blob not configured — refusing to save");
-  }
-  const content = await fetchContent();
-  return content ?? DEFAULT_CONTENT; // null only means genuinely no content saved yet — safe to start from defaults
+  const arq = await lerArquivo(CAMINHO);
+  if (!arq) throw new Error("getContentForWrite: content file missing in the repo — refusing to save");
+  const content = normalizar(JSON.parse(arq.texto) as Partial<SiteContent>);
+  shaDaLeitura.set(content, arq.sha);
+  return content;
 }
 
 export async function saveContent(content: SiteContent): Promise<void> {
-  await put(CONTENT_PATH, JSON.stringify(content, null, 2), {
-    access: "public",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-  });
+  const sha = shaDaLeitura.get(content);
+  if (!sha) throw new Error("saveContent: content wasn't read with getContentForWrite()");
+  await gravarArquivo(CAMINHO, JSON.stringify(content, null, 2) + "\n", "Painel: atualiza conteúdo do site", sha);
+}
+
+/** Saves an uploaded photo into public/catalogo and returns its site URL. */
+export async function salvarFoto(arquivo: File): Promise<string> {
+  const ext = arquivo.type === "image/png" ? "png" : arquivo.type === "image/webp" ? "webp" : "jpg";
+  const nome = `${crypto.randomUUID()}.${ext}`;
+  await gravarArquivo(`public/catalogo/${nome}`, Buffer.from(await arquivo.arrayBuffer()), "Painel: nova foto");
+  return `/catalogo/${nome}`;
 }

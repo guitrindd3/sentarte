@@ -2,6 +2,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
 import { getAdminContent } from "@/lib/content-store";
+import { githubConfigurado } from "@/lib/github-store";
 import {
   addCategoriaAction,
   addModeloAction,
@@ -29,8 +30,13 @@ export default async function AdminPage() {
         <div>
           <h1 className="font-serif text-3xl text-ink">Painel do Sentarte</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Alterações aparecem no site assim que você salva.
+            Depois de salvar, a alteração aparece no site em 1 a 2 minutos.
           </p>
+          {!githubConfigurado() ? (
+            <p className="mt-3 border border-clay bg-clay/10 px-3 py-2 text-sm text-ink">
+              Salvar está desativado: falta configurar a chave do GitHub (GITHUB_TOKEN) na Vercel.
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-col items-end gap-1">
           <form action={logoutAction}>

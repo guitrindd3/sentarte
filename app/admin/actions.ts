@@ -1,11 +1,10 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { put } from "@vercel/blob";
 import { headers } from "next/headers";
 import { createSession, destroySession, revogarTodasAsSessoes, verifyPassword, verifySession } from "@/lib/auth";
-import { CONTENT_TAG, getContentForWrite, saveContent } from "@/lib/content-store";
+import { getContentForWrite, salvarFoto, saveContent } from "@/lib/content-store";
 import type { Categoria, Modelo } from "@/lib/content-schema";
 
 type LoginState = { error?: string } | undefined;
@@ -89,7 +88,6 @@ function slugify(text: string) {
 }
 
 function revalidateSite() {
-  updateTag(CONTENT_TAG);
   revalidatePath("/", "layout");
 }
 
@@ -209,11 +207,7 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
 
   const foto = await imagemValida(formData.get("foto"));
   if (foto) {
-    const blob = await put(`modelos/${crypto.randomUUID()}-${foto.name}`, foto, {
-      access: "public",
-      contentType: foto.type || undefined,
-    });
-    modelo.imagemUrl = blob.url;
+    modelo.imagemUrl = await salvarFoto(foto);
   }
   if (formData.get("removerFoto") === "on") {
     modelo.imagemUrl = undefined;
@@ -227,11 +221,7 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
   for (const [i, { foto: campoFoto, remover: campoRemover }] of camposVariante.entries()) {
     const fotoVariante = await imagemValida(formData.get(campoFoto));
     if (fotoVariante) {
-      const blob = await put(`modelos/${crypto.randomUUID()}-${fotoVariante.name}`, fotoVariante, {
-        access: "public",
-        contentType: fotoVariante.type || undefined,
-      });
-      variantes[i] = blob.url;
+      variantes[i] = await salvarFoto(fotoVariante);
     } else if (formData.get(campoRemover) === "on") {
       variantes[i] = undefined;
     }
@@ -244,11 +234,7 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
   for (const entrada of formData.getAll("fotosExtrasNovas")) {
     const nova = extras.length < MAX_FOTOS_EXTRAS ? await imagemValida(entrada) : null;
     if (!nova) continue;
-    const blob = await put(`modelos/${crypto.randomUUID()}-${nova.name}`, nova, {
-      access: "public",
-      contentType: nova.type || undefined,
-    });
-    extras.push(blob.url);
+    extras.push(await salvarFoto(nova));
   }
   modelo.fotosExtras = extras.length > 0 ? extras : undefined;
 

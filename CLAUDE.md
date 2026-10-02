@@ -103,6 +103,25 @@ ends as a WhatsApp message, there's no payment processing.
   kit. Hover states use a hard offset shadow (`hover:shadow-[6px_6px_0_0_var(--rattan)]`)
   to read as a stamped/print card, not a soft SaaS shadow.
 
+## Storage — repo, not Vercel Blob (2026-10-02, supersedes Blob notes below)
+
+The free Vercel Blob store was suspended for exceeding usage limits twice
+(old account 09-24, this one ~10-01: `limits-exceeded-suspended`, every
+photo 403). Everything moved into the repo:
+- `content/site-content.json` — the site content (same `SiteContent` shape).
+  `getContent()` imports it at build time; no storage calls on page views.
+- `public/catalogo/*.jpg` — all catalog photos (converted ≤1400px).
+- `content/admin.json` — `revogadoEm` for "Sair de todos os aparelhos".
+- Admin saves commit to GitHub through `lib/github-store.ts` (Contents
+  API, needs `GITHUB_TOKEN` env var, fine-grained, Contents read/write on
+  guitrindd3/sentarte). Each commit redeploys → changes show in ~1-2 min.
+  Writes use the file sha from `getContentForWrite()` so a stale save is
+  rejected (409) instead of overwriting. Without the token, /admin shows a
+  banner and saving fails.
+- `@vercel/blob` was uninstalled. The Blob store still exists (suspended) on
+  the account, unused. Notes below about Blob propagation/caching are
+  historical.
+
 ## Content model
 
 Site content (hero copy, site settings, categories and their models/photos)
