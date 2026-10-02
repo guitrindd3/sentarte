@@ -434,8 +434,8 @@ same camera position) would look better; the user was told this.
   padding below `md`, /personalizar hides its header clip below `md` and the
   builder keeps the chair full size (a shrinking pinned band felt jumpy —
   user video 2026-09-30) and instead fades in a small live mini preview at
-  the bottom-right while the big chair is scrolled out of view (phones and
-  desktop). Size controls (− % +) live under the chair and under the mini
+  the bottom-right while the big chair is scrolled out of view (phones only;
+  on desktop the chair column is sticky and sized to the viewport height). Size controls (− % +) live under the chair and under the mini
   preview, editing the backrest shape / seat figure (step 1) or the name
   (step 3); seat name size `tamanhoNomeAssento` (link `tna`) never cuts the name.
 - The one saturated color allowed in customer-facing chrome is `verde`

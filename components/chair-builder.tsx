@@ -437,8 +437,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     <div className="grid gap-8 border border-line bg-paper p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:p-8">
       {/* The chair — same size before and after the weaving clip (a
           shrinking pinned band felt jumpy on phones, user 2026-09-30). */}
-      <div ref={faixaRef} className="self-start">
-      <div className="relative mx-auto w-full max-w-md overflow-hidden border border-line bg-canvas">
+      {/* Desktop: the chair column stays pinned while the options scroll
+          (user 2026-10-02) — phones use the floating mini preview instead. */}
+      <div ref={faixaRef} className="self-start md:sticky md:top-[calc(var(--altura-topo,4rem)+1rem)]">
+      <div className="relative mx-auto w-full max-w-md overflow-hidden border border-line bg-canvas md:max-w-[min(28rem,calc((100vh-var(--altura-topo,4rem)-7.5rem)*0.83))]">
         <div className="relative aspect-[464/560]">
           {/* eslint-disable-next-line @next/next/no-img-element -- fixed local frame, same crop as the canvas */}
           <img
@@ -521,7 +523,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       </div>
 
         {passo > 0 && !animando && controle ? (
-          <div className="mx-auto mt-3 w-full max-w-md">
+          <div className="mx-auto mt-3 w-full max-w-md md:max-w-[min(28rem,calc((100vh-var(--altura-topo,4rem)-7.5rem)*0.83))]">
             {controleTamanho()}
           </div>
         ) : null}
@@ -529,7 +531,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
       {/* Mini preview (shown while the big chair is scrolled away) */}
       <div
-        className={`fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] right-3 z-30 w-28 overflow-hidden rounded-md border border-line bg-paper shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-300 md:bottom-6 md:right-6 md:w-44 ${
+        className={`fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] right-3 z-30 w-28 overflow-hidden rounded-md border border-line bg-paper shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-300 md:hidden ${
           cadeiraFora && passo > 0 && !animando
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-3 opacity-0"
