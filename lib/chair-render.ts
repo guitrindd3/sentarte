@@ -731,20 +731,22 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
     }
   }
 
-  // Seat: dark thread -> A, white thread -> B, blend in between.
+  // Seat: main color everywhere (left/right halves for three-color chairs).
   for (let y = 519; y < 600; y++) {
     for (let x = 82; x < 398; x++) {
       if (!dentroPoligono(x, y, ASSENTO)) continue;
       const i = (y * IMG_W + x) * 4;
       const l = brilho(i);
       if (saturacao(i) > 60) continue; // pool/tiles peeking through
+      // The whole seat is the main (vertical) color — no detail-color
+      // stripes (user 2026-10-02). The photo's dark and white strands only
+      // set the shading.
       const P = x >= MEIO_X ? C : A;
       if (l < 110) pinta(i, P, sombraEscuro(l));
-      else if (l > 170) pinta(i, B, sombraClaro(l));
+      else if (l > 170) pinta(i, P, sombraClaro(l));
       else {
         const t = (l - 110) / 60;
-        const s = sombraEscuro(l) * (1 - t) + sombraClaro(l) * t;
-        pinta(i, [P[0] * (1 - t) + B[0] * t, P[1] * (1 - t) + B[1] * t, P[2] * (1 - t) + B[2] * t], s);
+        pinta(i, P, sombraEscuro(l) * (1 - t) + sombraClaro(l) * t);
       }
     }
   }

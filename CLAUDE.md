@@ -374,7 +374,8 @@ step — `posicaoNoEncosto()`, clamped to the area between the plain
 MARGEM_TOPO/MARGEM_BASE bands, which the weave shape never enters either
 (except "meio-a-meio", split top to bottom like real team chairs);
 optional third color (`Opcoes.corC`, "Usar 3 cores" toggle in the Cores
-step) splits the main/vertical thread down the middle (left corA, right
+step) splits the main/vertical thread down the middle (the seat is always
+the main color only — no detail-color stripes, user 2026-10-02) (left corA, right
 corC) on the backrest and seat — works with every shape; "triangulo-grande"
 reproduces the three-color chair the user showed (a separate side-strap
 color was added and then removed at the user's request, 2026-09-30 —
