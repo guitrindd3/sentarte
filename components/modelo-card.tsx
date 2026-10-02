@@ -177,7 +177,7 @@ export function ModeloCard({
           </label>
         ) : null}
 
-        <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-soft">{ativo.descricao}</p>
+        <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft" title={ativo.descricao}>{ativo.descricao}</p>
         <AddToCartButton
           item={{
             id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}${
