@@ -101,15 +101,18 @@ const ASSENTO_Y1 = 674;
 /** Seat area where a pattern may go: between the band of exposed vertical
  * strands under the backrest bar and the one along the front edge — those
  * two bands only ever show the main color (user 2026-10-02). */
-const ASSENTO_DESENHO_Y0 = 504;
-const ASSENTO_DESENHO_Y1 = 628;
+const ASSENTO_DESENHO_Y0 = 512;
+const ASSENTO_DESENHO_Y1 = 612;
 /** The flat part of the seat between the side tubes — the only place a seat
  * pattern or name goes (the webbing wrapped over the tubes stays plain). */
+// Kept well inside the side curves (user 2026-10-02 marked the curved
+// edges as a margin) and slanted like the seat itself, so figures follow
+// the seat's perspective.
 const ASSENTO_PAINEL: [number, number][] = [
-  [104, ASSENTO_DESENHO_Y0],
-  [350, ASSENTO_DESENHO_Y0],
-  [386, ASSENTO_DESENHO_Y1],
-  [82, ASSENTO_DESENHO_Y1],
+  [122, ASSENTO_DESENHO_Y0],
+  [340, ASSENTO_DESENHO_Y0],
+  [362, ASSENTO_DESENHO_Y1],
+  [102, ASSENTO_DESENHO_Y1],
 ];
 /** Seat pattern grid. Same row count as the backrest's pattern area, so the
  * figures (heart, anchor…) fit whole and centered; cells come out roughly
@@ -149,6 +152,8 @@ export type Opcoes = {
   /** Name woven in the middle of the seat (detail color), instead of / as
    * well as the backrest one. */
   nomeAssento?: string;
+  /** Seat figure size, 0.4-1 of the seat panel, centered. */
+  escalaAssento?: number;
 };
 
 function hexRgb(hex: string): [number, number, number] {
@@ -815,6 +820,7 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   // seat between its left/right edges on that row, v from back to front.
   const formaAssento = op.formaAssento ?? "lisa";
   const nomeSeat = mascaraNomeAssento(op.nomeAssento ?? "");
+  const escA = Math.max(0.4, Math.min(1, op.escalaAssento ?? 1));
   for (let y = ASSENTO_Y0; y < ASSENTO_Y1; y++) {
     const [esq, dir] = bordasDaLinha(ASSENTO, y + 0.5);
     if (!Number.isFinite(esq)) continue;
@@ -830,11 +836,18 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
         const u = (x + 0.5 - pEsq) / (pDir - pEsq);
         const ci = Math.min(ASSENTO_COLS - 1, Math.floor(u * ASSENTO_COLS));
         const cj = Math.min(ASSENTO_ROWS - 1, Math.floor(v * ASSENTO_ROWS));
+        // figure scaled into a centered box of the panel
+        const us = (u - 0.5) / escA + 0.5;
+        const vs = (v - 0.5) / escA + 0.5;
+        const dentroCaixa = us >= 0 && us < 1 && vs >= 0 && vs < 1;
+        const fi = Math.min(ASSENTO_COLS - 1, Math.floor(us * ASSENTO_COLS));
+        const fj = Math.min(ASSENTO_ROWS - 1, Math.floor(vs * ASSENTO_ROWS));
         // a name on the seat takes the seat figure's place
         detalhe =
           !nomeSeat &&
+          dentroCaixa &&
           formaAssento !== "lisa" &&
-          (formaAssento === "meio-a-meio" ? u >= 0.5 : celulaDaForma(formaAssento, ci, cj, ASSENTO_COLS, ASSENTO_ROWS));
+          (formaAssento === "meio-a-meio" ? us >= 0.5 : celulaDaForma(formaAssento, fi, fj, ASSENTO_COLS, ASSENTO_ROWS));
         if (nomeSeat) {
           const k = cj * ASSENTO_COLS + ci;
           if (nomeSeat.letra[k]) detalhe = true;

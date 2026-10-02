@@ -125,6 +125,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [forma, setForma] = useState<Forma>("lisa");
   const [grupo, setGrupo] = useState<Grupo>("basicos");
   const [formaAssento, setFormaAssento] = useState<Forma>("lisa");
+  const [escalaAssento, setEscalaAssento] = useState(1);
   // Which part the shape grid edits (user 2026-10-02: tabs Encosto / Assento).
   const [parte, setParte] = useState<"encosto" | "assento">("encosto");
   const formaAtiva = parte === "encosto" ? forma : formaAssento;
@@ -188,12 +189,12 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
   const nomeEncosto = nomeNoAssento ? "" : nome;
   const nomeAssento = nomeNoAssento ? nome : "";
-  const opcoes = { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, posicao, tamanhoNome, escalaForma, posForma };
+  const opcoes = { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, posicao, tamanhoNome, escalaForma, posForma }, {
+    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
@@ -203,7 +204,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       ctx?.clearRect(0, 0, mini.width, mini.height);
       ctx?.drawImage(canvasRef.current, 0, 0, mini.width, mini.height);
     }
-  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, posicao, tamanhoNome, escalaForma, posForma]);
+  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma]);
 
   // Shape thumbnails: flat and straight (just the figure), in the chosen
   // colors — the photo's perspective made them look slanted.
@@ -295,7 +296,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
         ? "com o nome"
         : formaAssento === "lisa"
           ? "liso"
-          : FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? formaAssento
+          : `${FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? formaAssento}${escalaAssento < 0.97 ? ` (tamanho ${Math.round(escalaAssento * 100)}%)` : ""}`
     }`,
     temNome
       ? nomeNoAssento
@@ -584,6 +585,27 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   </button>
                 ))}
               </div>
+              {parte === "assento" && formaAssento !== "lisa" && formaAssento !== "meio-a-meio" ? (
+                <label className="mt-6 block">
+                  <span className="flex justify-between text-sm text-ink">
+                    Tamanho do desenho do assento
+                    <span className="text-ink-soft">{Math.round(escalaAssento * 100)}%</span>
+                  </span>
+                  <input
+                    type="range"
+                    min={0.4}
+                    max={1}
+                    step={0.05}
+                    value={escalaAssento}
+                    onChange={(e) => setEscalaAssento(Number(e.target.value))}
+                    className="mt-2 w-full accent-verde"
+                  />
+                  <span className="flex justify-between text-xs text-ink-soft">
+                    <span>Menor</span>
+                    <span>Maior</span>
+                  </span>
+                </label>
+              ) : null}
               {parte === "encosto" && forma !== "lisa" && forma !== "meio-a-meio" ? (
                 <label className="mt-6 block">
                   <span className="flex justify-between text-sm text-ink">
