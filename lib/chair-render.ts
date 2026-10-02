@@ -152,7 +152,8 @@ export type Opcoes = {
   /** Name woven in the middle of the seat (detail color), instead of / as
    * well as the backrest one. */
   nomeAssento?: string;
-  /** Seat figure size, 0.4-1 of the seat panel, centered. */
+  /** Seat figure size, 0.4-2 of the seat panel (1 = fits it), centered;
+   * never drawn outside the panel. */
   escalaAssento?: number;
 };
 
@@ -820,7 +821,8 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   // seat between its left/right edges on that row, v from back to front.
   const formaAssento = op.formaAssento ?? "lisa";
   const nomeSeat = mascaraNomeAssento(op.nomeAssento ?? "");
-  const escA = Math.max(0.4, Math.min(1, op.escalaAssento ?? 1));
+  // above 1 the figure grows and is cut at the panel edge — never past it
+  const escA = Math.max(0.4, Math.min(2, op.escalaAssento ?? 1));
   for (let y = ASSENTO_Y0; y < ASSENTO_Y1; y++) {
     const [esq, dir] = bordasDaLinha(ASSENTO, y + 0.5);
     if (!Number.isFinite(esq)) continue;

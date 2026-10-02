@@ -296,7 +296,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
         ? "com o nome"
         : formaAssento === "lisa"
           ? "liso"
-          : `${FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? formaAssento}${escalaAssento < 0.97 ? ` (tamanho ${Math.round(escalaAssento * 100)}%)` : ""}`
+          : `${FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? formaAssento}${Math.abs(escalaAssento - 1) > 0.02 ? ` (tamanho ${Math.round(escalaAssento * 100)}%)` : ""}`
     }`,
     temNome
       ? nomeNoAssento
@@ -594,7 +594,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   <input
                     type="range"
                     min={0.4}
-                    max={1}
+                    max={2}
                     step={0.05}
                     value={escalaAssento}
                     onChange={(e) => setEscalaAssento(Number(e.target.value))}

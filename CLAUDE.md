@@ -371,7 +371,7 @@ slanted strands; the seat's back band (y<504) and front band (y>=628) never
 get pattern — only the vertical strands' color (user 2026-10-02). Seat pattern
 and name only go on the flat panel between the side tubes
 (`ASSENTO_PAINEL`, kept inside the curved side margins and slanted with the
-seat), size `escalaAssento` 0.4-1 (link `ea`), on a fixed 60x27 grid so figures fit whole and
+seat), size `escalaAssento` 0.4-2 (link `ea`; above 1 the figure is cut at the panel edge), on a fixed 60x27 grid so figures fit whole and
 centered; the name can go on the seat instead of the backrest
 (`Opcoes.nomeAssento`, link param `na`) and then replaces the seat figure.
 Shape thumbnails are flat (`desenharMiniatura`), not photo crops.
