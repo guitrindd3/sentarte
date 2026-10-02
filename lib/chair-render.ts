@@ -58,7 +58,43 @@ export type Forma =
   | "oculos"
   | "borboleta"
   | "coqueiro"
-  | "triangulo-grande";
+  | "triangulo-grande"
+  | "listras-finas"
+  | "faixas-largas"
+  | "xadrez-grande"
+  | "xadrez-miudo"
+  | "bolinhas-grandes"
+  | "moldura-dupla"
+  | "grade-diagonal"
+  | "degraus"
+  | "cantos"
+  | "duas-colunas"
+  | "tricolor-vertical"
+  | "tricolor-horizontal"
+  | "aros"
+  | "faixa-v"
+  | "diagonal-invertida"
+  | "quadrantes"
+  | "numero-10"
+  | "bola"
+  | "trofeu"
+  | "escudo-estrela"
+  | "arco-iris"
+  | "kilim"
+  | "ziguezague-duplo"
+  | "espinha-de-peixe"
+  | "sol-nascente"
+  | "penas"
+  | "abacaxi"
+  | "sorvete"
+  | "pata"
+  | "nota"
+  | "raio"
+  | "guarda-sol"
+  | "concha"
+  | "melancia"
+  | "gatinho"
+  | "cacto";
 /** Where the name block's center sits, 0-1 across/down the name area
  * (the backrest between its plain margins). Set by dragging in the builder. */
 export type NomePosicao = { x: number; y: number };
@@ -240,6 +276,197 @@ const DESENHOS = {
     "........X........",
     ".......XXX.......",
     "....XXXXXXXXX....",
+  ],
+  numero10: [
+    "..XX....XXXXX..",
+    ".XXX...XX...XX.",
+    "XXXX...XX...XX.",
+    "..XX...XX...XX.",
+    "..XX...XX...XX.",
+    "..XX...XX...XX.",
+    "..XX...XX...XX.",
+    "..XX...XX...XX.",
+    "..XX...XX...XX.",
+    "XXXXXX..XXXXX..",
+  ],
+  trofeu: [
+    "XXXXXXXXXXXXX",
+    "X.XXXXXXXXX.X",
+    "X.XXXXXXXXX.X",
+    ".X.XXXXXXX.X.",
+    "..XXXXXXXXX..",
+    "...XXXXXXX...",
+    "....XXXXX....",
+    ".....XXX.....",
+    "......X......",
+    "......X......",
+    ".....XXX.....",
+    "...XXXXXXX...",
+    "...XXXXXXX...",
+  ],
+  abacaxi: [
+    "...X.X.X...",
+    "....XXX....",
+    "...X.X.X...",
+    "....XXX....",
+    "..XXXXXXX..",
+    ".XX.X.X.XX.",
+    "XX.X.X.X.XX",
+    "X.X.X.X.X.X",
+    "XX.X.X.X.XX",
+    "X.X.X.X.X.X",
+    "XX.X.X.X.XX",
+    "X.X.X.X.X.X",
+    ".XX.X.X.XX.",
+    "..XXXXXXX..",
+  ],
+  sorvete: [
+    "...XXXXX...",
+    "..XXXXXXX..",
+    ".XXXXXXXXX.",
+    ".XXXXXXXXX.",
+    "XXXXXXXXXXX",
+    "XXXXXXXXXXX",
+    ".X.X.X.X.X.",
+    ".XXXXXXXXX.",
+    "..X.X.X.X..",
+    "..XXXXXXX..",
+    "...X.X.X...",
+    "...XXXXX...",
+    "....X.X....",
+    "....XXX....",
+    ".....X.....",
+  ],
+  pata: [
+    "...XX...XX...",
+    "..XXXX.XXXX..",
+    "..XXXX.XXXX..",
+    "X..XX...XX..X",
+    "XX.........XX",
+    "XXX..XXX..XXX",
+    ".X..XXXXX..X.",
+    "...XXXXXXX...",
+    "..XXXXXXXXX..",
+    "..XXXXXXXXX..",
+    "...XXX.XXX...",
+  ],
+  nota: [
+    "....XXXXXXX",
+    "....XXXXXXX",
+    "....X.....X",
+    "....X.....X",
+    "....X.....X",
+    "....X.....X",
+    "....X.....X",
+    "....X.....X",
+    ".XXXX...XXX",
+    "XXXXX..XXXX",
+    "XXXXX..XXXX",
+    ".XXX....XX.",
+  ],
+  raio: [
+    "......XXXXX",
+    ".....XXXXX.",
+    "....XXXXX..",
+    "...XXXXX...",
+    "..XXXXX....",
+    ".XXXXXXXXXX",
+    "XXXXXXXXXX.",
+    "......XXX..",
+    ".....XXX...",
+    "....XXX....",
+    "...XXX.....",
+    "..XX.......",
+    ".XX........",
+    "X..........",
+  ],
+  guardasol: [
+    "......XXX......",
+    "....XXXXXXX....",
+    "..XXXXXXXXXXX..",
+    ".XXXXXXXXXXXXX.",
+    "XXXXXXXXXXXXXXX",
+    "X..X..X.X..X..X",
+    ".......X.......",
+    ".......X.......",
+    ".......X.......",
+    ".......X.......",
+    ".......X.......",
+    "......XX.......",
+    "...XXXXXXXXX...",
+  ],
+  concha: [
+    ".......X.......",
+    "....X..X..X....",
+    "..X..X.X.X..X..",
+    ".X.X..XXX..X.X.",
+    "X..X.X.X.X.X..X",
+    "X.X..X.X.X..X.X",
+    "X.X.X..X..X.X.X",
+    "XX.X...X...X.XX",
+    ".XX.X..X..X.XX.",
+    "..XXXX.X.XXXX..",
+    "....XXXXXXX....",
+    ".....XXXXX.....",
+  ],
+  melancia: [
+    "XXXXXXXXXXXXXXXXX",
+    ".X...X.....X...X.",
+    ".X.............X.",
+    "..X..X..X..X..X..",
+    "..X...........X..",
+    "...X.........X...",
+    "....XX.....XX....",
+    "......XXXXX......",
+  ],
+  gatinho: [
+    "X.............X",
+    "XX...........XX",
+    "XXX.........XXX",
+    "XXXXXXXXXXXXXXX",
+    "XXXXXXXXXXXXXXX",
+    "XX..XXXXXXX..XX",
+    "XX..XXXXXXX..XX",
+    "XXXXXXXXXXXXXXX",
+    "XXXXXX...XXXXXX",
+    ".XXXXXX.XXXXXX.",
+    "..XXXXXXXXXXX..",
+    "....XXXXXXX....",
+  ],
+  cacto: [
+    "......XX.....",
+    ".....XXXX....",
+    ".....XXXX....",
+    ".X...XXXX....",
+    "XXX..XXXX..X.",
+    "XXX..XXXX.XXX",
+    "XXX..XXXX.XXX",
+    "XXXXXXXXX.XXX",
+    ".XXXXXXXX.XXX",
+    ".....XXXXXXXX",
+    ".....XXXXXXX.",
+    ".....XXXX....",
+    ".....XXXX....",
+    ".....XXXX....",
+    "...XXXXXXXX..",
+    "...XXXXXXXX..",
+  ],
+  penas: [
+    "....X..........X..........X....",
+    "...XXX........XXX........XXX...",
+    "..X.X.X......X.X.X......X.X.X..",
+    ".X..X..X....X..X..X....X..X..X.",
+    "X.X.X.X.X..X.X.X.X.X..X.X.X.X.X",
+    ".X..X..X....X..X..X....X..X..X.",
+    "X.X.X.X.X..X.X.X.X.X..X.X.X.X.X",
+    ".X..X..X....X..X..X....X..X..X.",
+    "X.X.X.X.X..X.X.X.X.X..X.X.X.X.X",
+    ".X..X..X....X..X..X....X..X..X.",
+    "..X.X.X......X.X.X......X.X.X..",
+    "...XXX........XXX........XXX...",
+    "....X..........X..........X....",
+    "....X..........X..........X....",
+    "....X..........X..........X....",
   ],
   estrelinha: ["...X...", "...X...", "..XXX..", "XXXXXXX", ".XXXXX.", "..XXX..", ".XX.XX.", ".X...X."],
   coroa: [
@@ -540,6 +767,128 @@ function celulaDaForma(forma: Forma, i: number, j: number, cols: number, rows: n
       const alto = rows * 0.62;
       return j <= alto - (Math.abs(i - cx) / cx) * alto;
     }
+    // ---- 2026-10-02 additions (20 per tab) ----
+    case "listras-finas":
+      return i % 3 === 1;
+    case "faixas-largas":
+      return Math.floor(j / 4) % 2 === 1 && j < rows - 1;
+    case "xadrez-grande":
+      return (Math.floor(i / 7) + Math.floor(j / 7)) % 2 === 0;
+    case "xadrez-miudo":
+      return (Math.floor(i / 2) + Math.floor(j / 2)) % 2 === 0;
+    case "bolinhas-grandes": {
+      const di = (i % 9) - 4;
+      const dj = (j % 9) - 4;
+      return di * di + dj * dj <= 7;
+    }
+    case "moldura-dupla": {
+      const borda = Math.min(i, cols - 1 - i, j, rows - 1 - j);
+      return borda === 1 || borda === 4;
+    }
+    case "grade-diagonal":
+      return (i + j) % 6 === 0 || (i - j + 600) % 6 === 0;
+    case "degraus":
+      return (Math.floor(i / 3) - Math.floor(j / 3) + 400) % 4 === 0;
+    case "cantos":
+      return Math.min(i, cols - 1 - i) + Math.min(j, rows - 1 - j) < 7;
+    case "duas-colunas": {
+      const d = Math.abs(i - cx);
+      return d >= 5 && d <= 7;
+    }
+    case "tricolor-vertical":
+      return i < cols / 3 || i >= (2 * cols) / 3;
+    case "tricolor-horizontal":
+      return j < rows / 3 || j >= (2 * rows) / 3;
+    case "aros":
+      return Math.floor(j / 5) % 2 === 0;
+    case "faixa-v": {
+      const linha = (1 - Math.abs(i - cx) / cx) * (rows - 1);
+      return Math.abs(j - linha) <= 2.2;
+    }
+    case "diagonal-invertida": {
+      const t = (cols - 1 - i) / (cols - 1) - j / (rows - 1);
+      return Math.abs(t) < 0.18;
+    }
+    case "quadrantes":
+      return i < cols / 2 !== j < rows / 2;
+    case "numero-10":
+      return noDesenho(DESENHOS.numero10, 1.6, i, j, cols, rows);
+    case "bola": {
+      const cy = (rows - 1) / 2;
+      const r = Math.hypot(i - cx, j - cy);
+      if (r >= 9.5 && r < 11) return true;
+      if (r < 2.6) return true;
+      const ang = Math.atan2(j - cy, i - cx);
+      const setor = ((ang + Math.PI) / (2 * Math.PI)) * 5;
+      return r >= 6 && r < 8.2 && Math.abs(setor - Math.round(setor)) < 0.18;
+    }
+    case "trofeu":
+      return noDesenho(DESENHOS.trofeu, 1.6, i, j, cols, rows);
+    case "escudo-estrela": {
+      const cy = (rows - 1) / 2;
+      const x = Math.abs(i - cx) / 10;
+      const y = (j - (cy - 10)) / 21;
+      if (y < 0 || y > 1) return false;
+      const meia = y < 0.5 ? 1 : 1 - (y - 0.5) / 0.5;
+      if (x > meia) return false;
+      const dx = i - cx;
+      const dy = j - (cy - 2);
+      const r = Math.hypot(dx, dy);
+      const a = Math.atan2(dy, dx) + Math.PI / 2;
+      const setor = ((a % ((2 * Math.PI) / 5)) + (2 * Math.PI) / 5) % ((2 * Math.PI) / 5);
+      const t = Math.abs(setor / ((2 * Math.PI) / 5) - 0.5) * 2;
+      return !(r <= 2.5 + 3.5 * t);
+    }
+    case "arco-iris": {
+      const r = Math.hypot(i - cx, j - (rows - 1));
+      return r < rows - 1 && Math.floor(r / 2.5) % 2 === 0;
+    }
+    case "kilim": {
+      const cy = (rows - 1) / 2;
+      return [-11, 0, 11].some((d) => {
+        const dd = Math.abs(i - (Math.round(cx) + d)) + Math.abs(j - cy);
+        return dd <= 5 && dd % 3 !== 1;
+      });
+    }
+    case "ziguezague-duplo": {
+      const tri = Math.abs((i % 10) - 5);
+      const m = (j + tri) % 10;
+      return (m === 0 || m === 1 || m === 3 || m === 4) && j > 0 && j < rows - 1;
+    }
+    case "espinha-de-peixe": {
+      const k = Math.floor(i / 4);
+      const off = k % 2 === 0 ? i % 4 : 3 - (i % 4);
+      return (j + off) % 4 === 0;
+    }
+    case "sol-nascente": {
+      const by = rows - 1;
+      const r = Math.hypot(i - cx, j - by);
+      if (r < 6) return true;
+      const ang = Math.atan2(by - j, i - cx);
+      return r > 8 && r < rows - 2 && Math.floor((ang / Math.PI) * 12) % 2 === 0;
+    }
+    case "penas":
+      return noDesenho(DESENHOS.penas, 1, i, j, cols, rows);
+    case "abacaxi":
+      return noDesenho(DESENHOS.abacaxi, 1.6, i, j, cols, rows);
+    case "sorvete":
+      return noDesenho(DESENHOS.sorvete, 1.5, i, j, cols, rows);
+    case "pata":
+      return noDesenho(DESENHOS.pata, 1.7, i, j, cols, rows);
+    case "nota":
+      return noDesenho(DESENHOS.nota, 1.8, i, j, cols, rows);
+    case "raio":
+      return noDesenho(DESENHOS.raio, 1.7, i, j, cols, rows);
+    case "guarda-sol":
+      return noDesenho(DESENHOS.guardasol, 1.6, i, j, cols, rows);
+    case "concha":
+      return noDesenho(DESENHOS.concha, 1.6, i, j, cols, rows);
+    case "melancia":
+      return noDesenho(DESENHOS.melancia, 1.6, i, j, cols, rows);
+    case "gatinho":
+      return noDesenho(DESENHOS.gatinho, 1.6, i, j, cols, rows);
+    case "cacto":
+      return noDesenho(DESENHOS.cacto, 1.5, i, j, cols, rows);
     case "sol": {
       const cy = rows * 0.42;
       const dx = i - cx;
