@@ -59,7 +59,9 @@
           "corB": "#F2F2F2",
           "imagemUrl": "/catalogo/botafogo.jpg",
           "fotosExtras": [
-            "/catalogo/botafogo-foto2.jpg"
+            "/catalogo/botafogo-foto2.jpg",
+            "/catalogo/botafogo-foto3.jpg",
+            "/catalogo/botafogo-foto4.jpg"
           ]
         },
         {
@@ -113,7 +115,11 @@
           "descricao": "Escudo do Fluminense tecido em vermelho, branco e verde.",
           "corA": "#6FA83C",
           "corB": "#B0121A",
-          "imagemUrl": "/catalogo/fluminense.jpg"
+          "imagemUrl": "/catalogo/fluminense.jpg",
+          "fotosExtras": [
+            "/catalogo/fluminense-foto2.jpg",
+            "/catalogo/fluminense-foto3.jpg"
+          ]
         },
         {
           "id": "mod-90315ea0-8785-486c-b166-6db04e1d7958",
@@ -293,6 +299,29 @@
           "corA": "#111111",
           "corB": "#F2F2F2",
           "imagemUrl": "/catalogo/ghostface.jpg"
+        },
+        {
+          "id": "mod-arpoador",
+          "nome": "Arpoador",
+          "descricao": "Faixas em rosa, azul e branco com triângulos, nas cores de fim de tarde no Arpoador.",
+          "corA": "#F3F1EC",
+          "corB": "#E85A97",
+          "imagemUrl": "/catalogo/arpoador.jpg",
+          "fotosExtras": [
+            "/catalogo/arpoador-foto2.jpg"
+          ]
+        },
+        {
+          "id": "mod-tracada-listrada",
+          "nome": "Traçada listrada",
+          "descricao": "Listras coloridas de cima a baixo — laranja, azul, amarelo e vermelho sobre o fio areia.",
+          "corA": "#EDE3D0",
+          "corB": "#E8641B",
+          "imagemUrl": "/catalogo/tracada-listrada.jpg",
+          "fotosExtras": [
+            "/catalogo/tracada-listrada-foto2.jpg",
+            "/catalogo/tracada-listrada-foto3.jpg"
+          ]
         }
       ]
     },

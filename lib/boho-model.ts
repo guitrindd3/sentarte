@@ -11,4 +11,6 @@ export const BOHO_PADROES = [
   "Totem espiral",
   "Losango terracota",
   "Sol",
+  "Arpoador",
+  "Traçada listrada",
 ];
