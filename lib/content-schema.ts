@@ -27,6 +27,15 @@ export type Categoria = {
   modelos: Modelo[];
 };
 
+/** A real customer's words (added by the admin — never invented). */
+export type Depoimento = {
+  id: string;
+  nome: string;
+  cidade?: string;
+  texto: string;
+  fotoUrl?: string;
+};
+
 export type SiteContent = {
   site: {
     nome: string;
@@ -40,6 +49,8 @@ export type SiteContent = {
     tags: string[];
   };
   categorias: Categoria[];
+  /** Shown on the homepage only when there is at least one. */
+  depoimentos: Depoimento[];
 };
 
 export const DEFAULT_CONTENT: SiteContent = {
@@ -56,6 +67,7 @@ export const DEFAULT_CONTENT: SiteContent = {
       "Cadeiras de praia artesanais personalizadas, feitas para durar o verão inteiro — e os próximos.",
     tags: ["Feito à mão", "Corda náutica e alumínio", "Resistente à maresia"],
   },
+  depoimentos: [],
   categorias: [
     {
       id: "cat-cadeiras",

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createSession, destroySession, revogarTodasAsSessoes, verifyPassword, verifySession } from "@/lib/auth";
 import { getContentForWrite, salvarFoto, saveContent } from "@/lib/content-store";
-import type { Categoria, Modelo } from "@/lib/content-schema";
+import type { Categoria, Depoimento, Modelo } from "@/lib/content-schema";
 
 type LoginState = { error?: string } | undefined;
 
@@ -248,6 +248,34 @@ export async function deleteModeloAction(categoriaId: string, modeloId: string) 
   const cat = content.categorias.find((c) => c.id === categoriaId);
   if (!cat) return;
   cat.modelos = cat.modelos.filter((m) => m.id !== modeloId);
+  await saveContent(content);
+  revalidateSite();
+}
+
+export async function addDepoimentoAction(formData: FormData) {
+  await requireAdmin();
+  const nome = String(formData.get("nome") ?? "").trim().slice(0, 80);
+  const texto = String(formData.get("texto") ?? "").trim().slice(0, 600);
+  if (!nome || !texto) return;
+  const foto = await imagemValida(formData.get("foto"));
+  const fotoUrl = foto ? await salvarFoto(foto) : undefined;
+  const content = await getContentForWrite();
+  const novo: Depoimento = {
+    id: `dep-${crypto.randomUUID().slice(0, 8)}`,
+    nome,
+    cidade: String(formData.get("cidade") ?? "").trim().slice(0, 80) || undefined,
+    texto,
+    fotoUrl,
+  };
+  content.depoimentos = [...content.depoimentos, novo];
+  await saveContent(content);
+  revalidateSite();
+}
+
+export async function deleteDepoimentoAction(id: string) {
+  await requireAdmin();
+  const content = await getContentForWrite();
+  content.depoimentos = content.depoimentos.filter((d) => d.id !== id);
   await saveContent(content);
   revalidateSite();
 }

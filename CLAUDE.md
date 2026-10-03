@@ -454,6 +454,11 @@ same camera position) would look better; the user was told this.
   scratchpad, not a project dependency) with the iPhone 13 profile at
   deviceScaleFactor 1 — full-page shots at 3x blank out past ~16k px.
 
+## Shape search & testimonials (2026-10-03)
+
+- The builder has a "Buscar trançado" box above the style tabs: accent-insensitive match on the shape label across all four tabs (tabs show unselected while searching; clicking a tab clears the search).
+- `SiteContent.depoimentos` (customer name, optional city/photo, text), managed in /admin ("Depoimentos de clientes", needs GITHUB_TOKEN to save). The homepage section `components/home/depoimentos.tsx` renders only when there is at least one. Only real customer messages — never invent testimonials.
+
 ## Chair picture in the cart (2026-10-03)
 
 The builder's cart item uses `imagemUrl: /api/cadeira?<choices>` (the same server render as the WhatsApp preview), so the cart shows the exact chair instead of a weave swatch; `CartDrawer` loads `/api/` images `unoptimized` with object-contain. The cart item id is the encoded design, so two different chairs never merge.

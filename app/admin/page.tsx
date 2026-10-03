@@ -5,8 +5,10 @@ import { getAdminContent } from "@/lib/content-store";
 import { githubConfigurado } from "@/lib/github-store";
 import {
   addCategoriaAction,
+  addDepoimentoAction,
   addModeloAction,
   deleteCategoriaAction,
+  deleteDepoimentoAction,
   deleteModeloAction,
   logoutAction,
   logoutTodosAction,
@@ -82,6 +84,53 @@ export default async function AdminPage() {
             <input name="instagramHandle" defaultValue={content.site.instagramHandle} className={inputClass} />
           </Field>
           <SaveButton />
+        </form>
+      </section>
+
+      <section className="mt-8 border border-line bg-paper p-6">
+        <h2 className="font-serif text-xl text-ink">Depoimentos de clientes</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          Aparecem na página inicial assim que tiver pelo menos um. Use só mensagens reais, com a autorização do cliente.
+        </p>
+        <div className="mt-4 space-y-3">
+          {content.depoimentos.map((d) => (
+            <div key={d.id} className="flex items-start gap-3 border border-line p-3">
+              {d.fotoUrl ? (
+                <span className="relative block h-16 w-16 shrink-0 overflow-hidden border border-line">
+                  <Image src={d.fotoUrl} alt="" fill className="object-cover" sizes="64px" />
+                </span>
+              ) : null}
+              <div className="flex-1 text-sm">
+                <p className="text-ink">&ldquo;{d.texto}&rdquo;</p>
+                <p className="mt-1 text-ink-soft">
+                  {d.nome}
+                  {d.cidade ? `, ${d.cidade}` : ""}
+                </p>
+              </div>
+              <form action={deleteDepoimentoAction.bind(null, d.id)}>
+                <ConfirmSubmitButton confirmText={`Excluir o depoimento de ${d.nome}?`} className="text-xs text-clay hover:underline">
+                  Excluir
+                </ConfirmSubmitButton>
+              </form>
+            </div>
+          ))}
+        </div>
+        <form action={addDepoimentoAction} encType="multipart/form-data" className="mt-4 space-y-3 border border-dashed border-rattan p-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Nome do cliente">
+              <input name="nome" required maxLength={80} className={inputClass} />
+            </Field>
+            <Field label="Cidade (opcional)">
+              <input name="cidade" maxLength={80} className={inputClass} />
+            </Field>
+          </div>
+          <Field label="O que o cliente disse">
+            <textarea name="texto" required maxLength={600} rows={3} className={inputClass} />
+          </Field>
+          <Field label="Foto do cliente com a cadeira (opcional)">
+            <input type="file" name="foto" accept="image/*" className="text-sm text-ink-soft" />
+          </Field>
+          <SaveButton>Adicionar depoimento</SaveButton>
         </form>
       </section>
 

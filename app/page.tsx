@@ -1,6 +1,7 @@
 import { Carousel } from "@/components/home/carousel";
 import { CategoryBento } from "@/components/home/category-bento";
 import { ContactCta } from "@/components/home/contact-cta";
+import { Depoimentos } from "@/components/home/depoimentos";
 import { MaterialSpec } from "@/components/home/material-spec";
 import { PersonalizationSteps } from "@/components/home/personalization-steps";
 import { PullQuote } from "@/components/home/pull-quote";
@@ -25,6 +26,7 @@ export default async function Home() {
       <CategoryBento categorias={content.categorias} />
       <TeamShowcase categorias={content.categorias} whatsappNumero={content.site.whatsappNumero} />
       <PersonalizationSteps />
+      <Depoimentos depoimentos={content.depoimentos} />
       <PullQuote />
       <MaterialSpec />
       <ContactCta whatsappNumero={content.site.whatsappNumero} instagramHandle={content.site.instagramHandle} />

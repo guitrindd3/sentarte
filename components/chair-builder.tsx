@@ -125,6 +125,9 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
 ];
 /** What the shape grid shows: near-duplicates stay out (they still render for old links). */
 const FORMAS_VISIVEIS = FORMAS.filter((f) => !FORMAS_OCULTAS.has(f.valor));
+/** Lowercase, no accents — so "coracao" finds "Coração". */
+const semAcento = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+const ROTULOS_BUSCA = FORMAS_VISIVEIS.map((f) => semAcento(f.rotulo));
 
 
 const PASSOS = ["Trançado", "Cores", "Nome", "Pronto"] as const;
@@ -167,6 +170,8 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [animando, setAnimando] = useState(false);
   const [foto, setFoto] = useState<ImageData | null>(null);
   const [forma, setForma] = useState<Forma>("lisa");
+  /** Shape search: while it has text, the grid shows matches from every tab. */
+  const [busca, setBusca] = useState("");
   const [grupo, setGrupo] = useState<Grupo>("basicos");
   const [formaAssento, setFormaAssento] = useState<Forma>("lisa");
   const [escalaAssento, setEscalaAssento] = useState(1);
@@ -255,12 +260,17 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   // colors — the photo's perspective made them look slanted.
   useEffect(() => {
     if (passo > 1) return;
+    const termo = semAcento(busca);
     FORMAS_VISIVEIS.forEach((f, i) => {
       const c = miniaturasRef.current[i];
-      const ctx = f.grupo === grupo ? c?.getContext("2d") : null;
+      const visivel = termo ? ROTULOS_BUSCA[i].includes(termo) : f.grupo === grupo;
+      const ctx = visivel ? c?.getContext("2d") : null;
       if (c && ctx) desenharMiniatura(ctx, c.width, c.height, f.valor, fioA.cor, fioB.cor, parte);
     });
-  }, [passo, fioA, fioB, grupo, parte]);
+  }, [passo, fioA, fioB, grupo, parte, busca]);
+  const termoBusca = semAcento(busca);
+  const mostrarForma = (i: number) => (termoBusca ? ROTULOS_BUSCA[i].includes(termoBusca) : FORMAS_VISIVEIS[i].grupo === grupo);
+  const achadas = termoBusca ? ROTULOS_BUSCA.filter((r) => r.includes(termoBusca)).length : -1;
 
   const fimTimer = useRef<number | undefined>(undefined);
   const terminarAnimacao = useCallback(() => {
@@ -635,6 +645,24 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   {FORMAS.find((f) => f.valor === formaAtiva)?.rotulo}
                 </strong>
               </p>
+              <label className="mt-4 block">
+                <span className="sr-only">Buscar trançado</span>
+                <input
+                  type="search"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar trançado (ex.: escudo, estrela, lhama)"
+                  className="w-full border border-line bg-canvas px-3 py-2 text-sm text-ink placeholder:text-ink-soft focus:border-ink focus:outline-none"
+                />
+              </label>
+              {achadas >= 0 ? (
+                <p className="mt-2 text-sm text-ink-soft" aria-live="polite">
+                  {achadas === 0 ? "Nenhum trançado com esse nome." : `${achadas} ${achadas === 1 ? "trançado encontrado" : "trançados encontrados"} em todas as abas.`}{" "}
+                  <button type="button" onClick={() => setBusca("")} className="underline underline-offset-2 hover:text-ink">
+                    Limpar busca
+                  </button>
+                </p>
+              ) : null}
               {/* Style tabs: the open one is filled; a green dot marks the tab
                   holding the chosen shape when another tab is open. */}
               <div
@@ -650,11 +678,14 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                       key={g.valor}
                       type="button"
                       role="tab"
-                      aria-selected={aberto}
-                      onClick={() => setGrupo(g.valor)}
+                      aria-selected={aberto && !termoBusca}
+                      onClick={() => {
+                        setGrupo(g.valor);
+                        setBusca("");
+                      }}
                       aria-label={g.rotulo}
                       className={`relative flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-[0.8rem] transition-colors sm:px-3 sm:text-sm ${
-                        aberto ? "bg-ink font-medium text-canvas" : "text-ink-soft hover:bg-paper hover:text-ink"
+                        aberto && !termoBusca ? "bg-ink font-medium text-canvas" : "text-ink-soft hover:bg-paper hover:text-ink"
                       }`}
                     >
                       <span className="sm:hidden">{g.curto}</span>
@@ -670,7 +701,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                 })}
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
-                {FORMAS_VISIVEIS.map((f, i) => f.grupo !== grupo ? null : (
+                {FORMAS_VISIVEIS.map((f, i) => !mostrarForma(i) ? null : (
                   <button
                     key={f.valor}
                     type="button"
