@@ -460,7 +460,7 @@ Free shipping was removed from the whole site (user). Shipping is quoted by CEP:
 
 ## Chair sizes (2026-10-03)
 
-`lib/medidas.ts` holds the specs from the atelier's own card (infantil, fixa 1 posição, reclinável 8 posições — also 4 and 6): shown by `components/medidas-cadeiras.tsx` on /categoria/cadeiras and /personalizar, plus a FAQ entry. `FRETE_CAIXA` on Vercel is currently an ESTIMATE of the folded, packed fixed chair (10x56x76 cm, 2.5 kg) — replace it when the user measures the real box.
+`lib/medidas.ts` holds the specs from the atelier's own card (infantil, fixa 1 posição, reclinável 8 posições — also 4 and 6): shown by `components/medidas-cadeiras.tsx` on /categoria/cadeiras and /personalizar, plus a FAQ entry. `FRETE_CAIXA` on Vercel is the folded fixed chair shipped in a plastic bag (no box — user): weight 2.1 kg (2 kg chair + 100 g plastic, user), size still an ESTIMATE (10x56x76 cm) — replace when the user measures the wrapped chair.
 
 ## Shape search & testimonials (2026-10-03)
 
