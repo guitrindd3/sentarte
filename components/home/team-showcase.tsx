@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { AutoScrollRow } from "@/components/auto-scroll-row";
 import { ModeloCard } from "@/components/modelo-card";
 import { BOHO_PADROES } from "@/lib/boho-model";
@@ -65,9 +64,6 @@ export function TeamShowcase({
               levar um nome no encosto.
             </p>
           </div>
-          <Link href="/categoria/cadeiras" className="shrink-0 border-b border-current py-1 text-sm font-medium text-ink">
-            Ver todos os modelos
-          </Link>
         </div>
         <AutoScrollRow className="-mx-6 mt-8 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:gap-6 [&::-webkit-scrollbar]:hidden [&>*]:flex [&>*>*]:w-full [&>*]:w-[82%] [&>*]:shrink-0 sm:[&>*]:w-[45%] lg:[&>*]:w-[31%]">
           {itens.map((it) => (
