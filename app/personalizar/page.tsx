@@ -4,6 +4,7 @@ import { BackLink } from "@/components/back-link";
 import { VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { ChairBuilder } from "@/components/chair-builder";
 import { getContent } from "@/lib/content-store";
+import { MedidasCadeiras } from "@/components/medidas-cadeiras";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,7 @@ export default async function PersonalizarPage() {
       <section className="mx-auto max-w-6xl px-6 py-14">
         <ChairBuilder whatsappNumero={content.site.whatsappNumero} />
       </section>
+      <MedidasCadeiras whatsappNumero={content.site.whatsappNumero} />
     </>
   );
 }

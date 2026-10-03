@@ -8,6 +8,7 @@ import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
 import { ModeloCard } from "@/components/modelo-card";
 import { WeavePattern } from "@/components/weave-pattern";
 import { getContent } from "@/lib/content-store";
+import { MedidasCadeiras } from "@/components/medidas-cadeiras";
 import { pageMetadata } from "@/lib/seo";
 import { OfferStrip } from "@/components/offer-strip";
 import { CATEGORIA_COM_PRECO } from "@/lib/offer";
@@ -132,6 +133,8 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
           <p className="text-sm text-ink-soft">Nenhum modelo cadastrado nessa categoria ainda.</p>
         )}
       </section>
+
+      {categoria.slug === CATEGORIA_COM_PRECO ? <MedidasCadeiras whatsappNumero={content.site.whatsappNumero} /> : null}
 
       <section className="relative overflow-hidden border-t border-line bg-canvas-deep py-14 text-ink">
         <WeavePattern

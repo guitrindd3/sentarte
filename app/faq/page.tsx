@@ -37,6 +37,11 @@ const PERGUNTAS = [
     resposta: `A cadeira de praia sai por ${formatBRL(PRECO_CADEIRA)}. Com um nome ou outra personalização trançada, sai por ${formatBRL(PRECO_CADEIRA_COM_NOME)}. No Pix tem ${Math.round(PIX_DESCONTO * 100)}% de desconto (${formatBRL(precoPix(PRECO_CADEIRA))}), e no cartão dá para parcelar em até ${PARCELAS_MAX}x (com a taxa do cartão).`,
   },
   {
+    pergunta: "Quais são as medidas da cadeira?",
+    resposta:
+      "A cadeira fixa tem 73 cm de altura, 54 cm de largura e 53 cm de profundidade, aguenta até 110 kg e pesa de 1,3 a 2 kg. A reclinável (8 posições) tem 88 x 54,5 x 67 cm e aguenta até 100 kg. A infantil tem 49,5 x 41,5 x 39 cm e aguenta até 30 kg. A tabela completa está na página das cadeiras.",
+  },
+  {
     pergunta: "Quanto custa o frete?",
     resposta: "Depende de onde você mora. É só colocar o seu CEP no carrinho que o valor e o prazo aparecem na hora, antes de pagar.",
   },

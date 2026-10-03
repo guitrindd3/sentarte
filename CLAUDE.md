@@ -458,6 +458,10 @@ same camera position) would look better; the user was told this.
 
 Free shipping was removed from the whole site (user). Shipping is quoted by CEP: `lib/frete-servidor.ts` calls Melhor Envio's calculate API (cheapest carrier) from `FRETE_CEP_ORIGEM` with the packed-chair size in `FRETE_CAIXA` ("altura,largura,comprimento,pesoKg") and `MELHORENVIO_TOKEN`. **Espírito Santo CEPs (29xxx) ship free, but this must never be announced on the site** — the customer only sees "Grátis" after typing an ES CEP. `/api/frete` serves the cart (CEP field under the subtotal, remembered in localStorage) and the checkout form (`lib/use-frete.ts`); `/api/checkout` recomputes it and adds a "Frete" item to the Mercado Pago preference (the Pix 2% applies to the chairs only). Until the Melhor Envio env vars exist, non-ES CEPs show "Combinado pelo WhatsApp" and can't pay online.
 
+## Chair sizes (2026-10-03)
+
+`lib/medidas.ts` holds the specs from the atelier's own card (infantil, fixa 1 posição, reclinável 8 posições — also 4 and 6): shown by `components/medidas-cadeiras.tsx` on /categoria/cadeiras and /personalizar, plus a FAQ entry. `FRETE_CAIXA` on Vercel is currently an ESTIMATE of the folded, packed fixed chair (10x56x76 cm, 2.5 kg) — replace it when the user measures the real box.
+
 ## Shape search & testimonials (2026-10-03)
 
 - The builder has a "Buscar trançado" box above the style tabs: accent-insensitive match on the shape label across all four tabs (tabs show unselected while searching; clicking a tab clears the search).
