@@ -9,7 +9,7 @@ export function ContactCta({
   instagramHandle: string;
 }) {
   return (
-    <section className="bg-canvas px-6 py-16 md:py-28">
+    <section className="bg-canvas px-6 py-14 md:py-20">
       <div className="mx-auto max-w-xl border border-line bg-paper px-6 py-10 text-center md:px-10 md:py-14">
         <span className="mx-auto block h-px w-10 bg-line" aria-hidden="true" />
         <h2 className="mt-6 font-serif text-2xl font-medium tracking-tight text-ink">

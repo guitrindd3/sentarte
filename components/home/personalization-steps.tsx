@@ -23,7 +23,7 @@ const STEPS = [
 
 export function PersonalizationSteps() {
   return (
-    <section className="bg-canvas-deep px-6 py-14 md:py-24">
+    <section className="bg-canvas-deep px-6 pb-8 pt-12 md:pb-10 md:pt-16">
       <div className="mx-auto max-w-6xl">
         <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Como funciona a personalização</h2>
         <ol className="mt-10 grid gap-8 md:grid-cols-4">

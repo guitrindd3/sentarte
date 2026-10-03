@@ -54,7 +54,7 @@ export function TeamShowcase({
   );
 
   return (
-    <section className="border-t border-line px-6 py-14 md:py-24">
+    <section className="border-t border-line px-6 py-12 md:py-16">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

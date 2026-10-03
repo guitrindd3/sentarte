@@ -26,7 +26,7 @@ export function CategoryBento({ categorias }: { categorias: Categoria[] }) {
   if (cards.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-14 md:py-24">
+    <section className="mx-auto max-w-6xl px-6 py-12 md:py-16">
       <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Escolha a sua cadeira</h2>
       <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
         {cards.map(({ modelo, href, linkLabel }) => (
