@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { CoverLinkCard, VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { BOHO_NOME } from "@/lib/boho-model";
 import { DESENHO_NOME } from "@/lib/desenho-model";
@@ -28,12 +27,7 @@ export function CategoryBento({ categorias }: { categorias: Categoria[] }) {
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-14 md:py-24">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Escolha a sua cadeira</h2>
-        <Link href="/categoria/cadeiras" className="shrink-0 border-b border-current py-1 text-sm font-medium text-ink">
-          Ver todos os modelos
-        </Link>
-      </div>
+      <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Escolha a sua cadeira</h2>
       <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
         {cards.map(({ modelo, href, linkLabel }) => (
           <CoverLinkCard

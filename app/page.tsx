@@ -2,6 +2,7 @@ import { Carousel } from "@/components/home/carousel";
 import { CategoryBento } from "@/components/home/category-bento";
 import { ContactCta } from "@/components/home/contact-cta";
 import { Depoimentos } from "@/components/home/depoimentos";
+import { MedidasCadeiras } from "@/components/medidas-cadeiras";
 import { MaterialSpec } from "@/components/home/material-spec";
 import { PersonalizationSteps } from "@/components/home/personalization-steps";
 import { PullQuote } from "@/components/home/pull-quote";
@@ -29,6 +30,7 @@ export default async function Home() {
       <Depoimentos depoimentos={content.depoimentos} />
       <PullQuote />
       <MaterialSpec />
+      <MedidasCadeiras whatsappNumero={content.site.whatsappNumero} />
       <ContactCta whatsappNumero={content.site.whatsappNumero} instagramHandle={content.site.instagramHandle} />
     </>
   );
