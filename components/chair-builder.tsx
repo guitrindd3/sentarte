@@ -9,6 +9,7 @@ import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix } from "@/lib/offer";
 import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
 import { ROTULOS_EXTRAS } from "@/lib/formas-extras";
 import { ROTULOS_EXTRAS_2 } from "@/lib/formas-extras-2";
+import { FORMAS_OCULTAS, ROTULOS_EXTRAS_3 } from "@/lib/formas-extras-3";
 import { codificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
 import { whatsappUrl } from "@/lib/urls";
@@ -120,7 +121,10 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   { valor: "cacto", rotulo: "Cacto", grupo: "divertidos" },
   ...ROTULOS_EXTRAS,
   ...ROTULOS_EXTRAS_2,
+  ...ROTULOS_EXTRAS_3,
 ];
+/** What the shape grid shows: near-duplicates stay out (they still render for old links). */
+const FORMAS_VISIVEIS = FORMAS.filter((f) => !FORMAS_OCULTAS.has(f.valor));
 
 
 const PASSOS = ["Trançado", "Cores", "Nome", "Pronto"] as const;
@@ -251,7 +255,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   // colors — the photo's perspective made them look slanted.
   useEffect(() => {
     if (passo > 1) return;
-    FORMAS.forEach((f, i) => {
+    FORMAS_VISIVEIS.forEach((f, i) => {
       const c = miniaturasRef.current[i];
       const ctx = f.grupo === grupo ? c?.getContext("2d") : null;
       if (c && ctx) desenharMiniatura(ctx, c.width, c.height, f.valor, fioA.cor, fioB.cor, parte);
@@ -420,13 +424,16 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
   const adicionarAoCarrinho = () => {
     addItem({
-      id: `cadeiras:monte:${forma}:${fioA.nome}:${tresCores ? fioC.nome : ""}:${fioB.nome}:${nomeLimpo}:${posicao.x.toFixed(2)},${posicao.y.toFixed(2)}`,
+      // the whole design is in the link, so two different chairs never merge
+      id: `cadeiras:monte:${codificarCadeira(opcoes)}`,
       categoriaSlug: "cadeiras",
       categoriaTitulo: "Cadeiras de praia",
       modeloId: "monte-a-sua-trama",
       modeloNome: `Monte a sua trama: ${formaRotulo}, ${fioA.nome.toLowerCase()}${
         tresCores ? `/${fioC.nome.toLowerCase()}` : ""
       } e ${fioB.nome.toLowerCase()}`,
+      // picture of this exact chair (rendered server-side, same as the WhatsApp preview)
+      imagemUrl: `/api/cadeira?${codificarCadeira(opcoes)}`,
       corA: fioA.cor,
       corB: fioB.cor,
       nomePersonalizado: nomeLimpo ? nomeLimpo.replace(/\n/g, " / ") : undefined,
@@ -637,7 +644,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
               >
                 {GRUPOS.map((g) => {
                   const aberto = grupo === g.valor;
-                  const temEscolhido = FORMAS.some((f) => f.grupo === g.valor && f.valor === formaAtiva);
+                  const temEscolhido = FORMAS_VISIVEIS.some((f) => f.grupo === g.valor && f.valor === formaAtiva);
                   return (
                     <button
                       key={g.valor}
@@ -663,7 +670,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                 })}
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
-                {FORMAS.map((f, i) => f.grupo !== grupo ? null : (
+                {FORMAS_VISIVEIS.map((f, i) => f.grupo !== grupo ? null : (
                   <button
                     key={f.valor}
                     type="button"

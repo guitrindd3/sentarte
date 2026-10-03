@@ -113,7 +113,15 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
                 <li key={item.id} className="flex gap-3 border-b border-line pb-4">
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden border border-line">
                     {item.imagemUrl ? (
-                      <Image src={item.imagemUrl} alt={item.modeloNome} fill className="object-cover" sizes="64px" />
+                      <Image
+                        src={item.imagemUrl}
+                        alt={item.modeloNome}
+                        fill
+                        // the builder's chair picture comes from /api/cadeira (a PNG with a query string)
+                        unoptimized={item.imagemUrl.startsWith("/api/")}
+                        className={item.imagemUrl.startsWith("/api/") ? "bg-white object-contain" : "object-cover"}
+                        sizes="64px"
+                      />
                     ) : (
                       <WeavePattern colorA={item.corA} colorB={item.corB} cell={10} band={7} className="h-full w-full" />
                     )}

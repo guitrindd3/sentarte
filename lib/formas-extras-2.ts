@@ -4,13 +4,13 @@ import { GLYPH_H, GLYPH_W, glyphPixel } from "./pixel-font";
 // contract as formas-extras.ts — (i, j, cols, rows) → detail color? — on the
 // backrest pattern grid (29×29) or the seat panel (61×27).
 
-type Teste = (i: number, j: number, cols: number, rows: number) => boolean;
+export type Teste = (i: number, j: number, cols: number, rows: number) => boolean;
 type Grupo = "basicos" | "time" | "boho" | "divertidos";
 
-const meio = (n: number) => Math.floor(n / 2);
-const mod = (a: number, n: number) => ((a % n) + n) % n;
+export const meio = (n: number) => Math.floor(n / 2);
+export const mod = (a: number, n: number) => ((a % n) + n) % n;
 
-function figura(d: string[]): Teste {
+export function figura(d: string[]): Teste {
   const h = d.length;
   const w = d[0].length;
   return (i, j, cols, rows) => {
@@ -24,7 +24,7 @@ function figura(d: string[]): Teste {
 }
 
 /** Small sprite repeated in a staggered grid, centered. */
-function repetido(d: string[], gap = 2): Teste {
+export function repetido(d: string[], gap = 2): Teste {
   const h = d.length;
   const w = d[0].length;
   const pw = w + gap;
@@ -40,7 +40,7 @@ function repetido(d: string[], gap = 2): Teste {
   };
 }
 
-function texto(t: string): Teste {
+export function texto(t: string): Teste {
   const w = t.length * (GLYPH_W + 1) - 1;
   return (i, j, cols, rows) => {
     const esc = Math.max(1, Math.floor(Math.min((cols * 0.8) / w, (rows * 0.75) / GLYPH_H)));
@@ -53,7 +53,7 @@ function texto(t: string): Teste {
   };
 }
 
-function estrela(i: number, j: number, x: number, y: number, R: number) {
+export function estrela(i: number, j: number, x: number, y: number, R: number) {
   const dx = i - x;
   const dy = j - y;
   const r = Math.hypot(dx, dy);
@@ -63,7 +63,7 @@ function estrela(i: number, j: number, x: number, y: number, R: number) {
   return r <= R * 0.42 + R * 0.58 * t;
 }
 
-function noEscudo(i: number, j: number, cols: number, rows: number) {
+export function noEscudo(i: number, j: number, cols: number, rows: number) {
   const cx = meio(cols);
   const cy = meio(rows);
   const hw = Math.min(10, cols * 0.35);
@@ -74,7 +74,7 @@ function noEscudo(i: number, j: number, cols: number, rows: number) {
 }
 
 /** Repeating cell of size p centered on the panel; `inteira` when the whole cell (radius r) fits. */
-function celulaInteira(i: number, j: number, cols: number, rows: number, p: number, r: number) {
+export function celulaInteira(i: number, j: number, cols: number, rows: number, p: number, r: number) {
   const di = mod(i - meio(cols) + Math.floor(p / 2), p) - Math.floor(p / 2);
   const dj = mod(j - meio(rows) + Math.floor(p / 2), p) - Math.floor(p / 2);
   const ci = i - di;
@@ -96,12 +96,12 @@ function chevronInteiro(i: number, j: number, cols: number, rows: number, p: num
 }
 
 /** Figure drawn in coordinates centered on the panel; R = largest radius that fits. */
-type Centrada = (x: number, y: number, R: number) => boolean;
-const centrada = (f: Centrada): Teste => (i, j, cols, rows) => f(i - meio(cols), j - meio(rows), Math.min(meio(cols), meio(rows)) - 1);
+export type Centrada = (x: number, y: number, R: number) => boolean;
+export const centrada = (f: Centrada): Teste => (i, j, cols, rows) => f(i - meio(cols), j - meio(rows), Math.min(meio(cols), meio(rows)) - 1);
 const hex = (x: number, y: number, r: number) => Math.abs(y) <= r * 0.87 && Math.abs(x) + Math.abs(y) * 0.577 <= r;
 const oct = (x: number, y: number, r: number) => Math.abs(x) <= r && Math.abs(y) <= r && Math.abs(x) + Math.abs(y) <= r * 1.42;
 /** Horizontal almond (eye) shape, half-width ≈ 0.94·s. */
-const lente = (x: number, y: number, s: number) => Math.hypot(x, y - s * 0.9) <= s * 1.3 && Math.hypot(x, y + s * 0.9) <= s * 1.3;
+export const lente = (x: number, y: number, s: number) => Math.hypot(x, y - s * 0.9) <= s * 1.3 && Math.hypot(x, y + s * 0.9) <= s * 1.3;
 const mais = (x: number, y: number, a: number, L: number) => (Math.abs(x) <= a && Math.abs(y) <= L) || (Math.abs(y) <= a && Math.abs(x) <= L);
 
 const lista: { valor: string; rotulo: string; grupo: Grupo; teste: Teste }[] = [];

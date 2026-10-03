@@ -376,7 +376,7 @@ and name only go on the flat panel between the side tubes
 seat), size `escalaAssento` 0.4-2 (link `ea`; above 1 the figure is cut at the panel edge), on a fixed 60x27 grid so figures fit whole and
 centered; the name can go on the seat instead of the backrest
 (`Opcoes.nomeAssento`, link param `na`) and then replaces the seat figure.
-Shape thumbnails are flat (`desenharMiniatura`), not photo crops. 100 shapes per tab (400): the original ones are
+Shape thumbnails are flat (`desenharMiniatura`), not photo crops. **150 shapes per tab (600 visible) since 2026-10-03** — the user asked to remove everything that looked alike: `FORMAS_OCULTAS` in `lib/formas-extras-3.ts` hides 87 near-duplicates (numbered variants of stripes/checks/dots/zigzags, extra numbers...) from the grid only; their tests stay so old `/c` links still render — never delete a shape key, hide it. Batch 3 (`lib/formas-extras-3.ts`) adds generated team crests (7 outlines × interiors, 45 — "mais variações de escudo"), geometric figures, boho kilims/medallions/figures/textures, and 149 pixel icons in `lib/formas-icones.ts` converted from Phosphor Icons (MIT — license text kept in that file's header; regenerate with the scratchpad rasterizer, don't hand-edit). Before adding shapes, check new ones against the existing grid for look-alikes. The original ones are
 `case`s in `celulaDaForma`; the 120 added 2026-10-02 live in
 `lib/formas-extras.ts` (`FORMAS_EXTRAS` tests + `ROTULOS_EXTRAS` labels, and 200 more in `lib/formas-extras-2.ts` — repeated sprites/cells there draw only whole pieces,
 pixel figures auto-fitted and centered). The seat grid is 61 columns (odd)
@@ -453,6 +453,10 @@ same camera position) would look better; the user was told this.
 - Mobile check workflow: Playwright (installed only in the session
   scratchpad, not a project dependency) with the iPhone 13 profile at
   deviceScaleFactor 1 — full-page shots at 3x blank out past ~16k px.
+
+## Chair picture in the cart (2026-10-03)
+
+The builder's cart item uses `imagemUrl: /api/cadeira?<choices>` (the same server render as the WhatsApp preview), so the cart shows the exact chair instead of a weave swatch; `CartDrawer` loads `/api/` images `unoptimized` with object-contain. The cart item id is the encoded design, so two different chairs never merge.
 
 ## Chair picture in the WhatsApp message (2026-10-02)
 
