@@ -37,8 +37,8 @@ const PERGUNTAS = [
     resposta: `A cadeira de praia sai por ${formatBRL(PRECO_CADEIRA)}. Com um nome ou outra personalização trançada, sai por ${formatBRL(PRECO_CADEIRA_COM_NOME)}. No Pix tem ${Math.round(PIX_DESCONTO * 100)}% de desconto (${formatBRL(precoPix(PRECO_CADEIRA))}), e no cartão dá para parcelar em até ${PARCELAS_MAX}x (com a taxa do cartão).`,
   },
   {
-    pergunta: "O frete é pago?",
-    resposta: "Não. O frete é grátis para todo o Brasil.",
+    pergunta: "Quanto custa o frete?",
+    resposta: "Depende de onde você mora. É só colocar o seu CEP no carrinho que o valor e o prazo aparecem na hora, antes de pagar.",
   },
   {
     pergunta: "Qual o prazo de produção?",

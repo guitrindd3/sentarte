@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronDownIcon } from "@/components/icons";
 import type { CartItem } from "@/lib/cart-context";
 import { formatBRL, PARCELAS_MAX, PIX_DESCONTO } from "@/lib/offer";
+import { guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import {
   calcularPedido,
   ENTREGA_VAZIA,
@@ -34,7 +35,9 @@ export function CheckoutForm({ items, onVoltar }: { items: CartItem[]; onVoltar:
   const [erro, setErro] = useState("");
   const [buscandoCep, setBuscandoCep] = useState(false);
   const conta = calcularPedido(items);
-  const ok = entregaCompleta(d);
+  const estadoFrete = useFrete(d.cep, items);
+  const valorFrete = estadoFrete.tipo === "ok" ? estadoFrete.frete.valor : null;
+  const ok = entregaCompleta(d) && valorFrete !== null;
 
   const set = (campo: keyof DadosEntrega) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setD((v) => ({ ...v, [campo]: e.target.value }));
@@ -102,7 +105,7 @@ export function CheckoutForm({ items, onVoltar }: { items: CartItem[]; onVoltar:
           Voltar ao carrinho
         </button>
         <p className="mt-2 font-serif text-lg font-medium text-ink">Dados para entrega</p>
-        <p className="text-xs text-ink-soft">Frete grátis para todo o Brasil.</p>
+        <p className="text-xs text-ink-soft">O frete é calculado pelo CEP.</p>
 
         <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <label className="col-span-2">
@@ -119,6 +122,7 @@ export function CheckoutForm({ items, onVoltar }: { items: CartItem[]; onVoltar:
               value={d.cep}
               onChange={(e) => {
                 set("cep")(e);
+                guardarCep(e.target.value);
                 void buscarCep(e.target.value);
               }}
               inputMode="numeric"
@@ -156,7 +160,17 @@ export function CheckoutForm({ items, onVoltar }: { items: CartItem[]; onVoltar:
 
       <div className="border-t border-line px-6 py-4">
         {erro ? <p className="mb-3 text-sm text-clay">{erro}</p> : null}
-        {!ok ? <p className="mb-3 text-xs text-ink-soft">Preencha os dados acima para pagar.</p> : null}
+        <div className="mb-3 flex justify-between text-sm text-ink-soft">
+          <span>Frete</span>
+          <span>{textoFrete(estadoFrete) ?? formatBRL(valorFrete ?? 0)}</span>
+        </div>
+        {estadoFrete.tipo === "indisponivel" ? (
+          <p className="mb-3 text-xs text-ink">
+            Para esse CEP a gente calcula o frete pelo WhatsApp. Volte ao carrinho e feche por lá.
+          </p>
+        ) : !ok ? (
+          <p className="mb-3 text-xs text-ink-soft">Preencha os dados acima para pagar.</p>
+        ) : null}
         <button
           type="button"
           disabled={!ok || enviando !== null}
@@ -164,7 +178,7 @@ export function CheckoutForm({ items, onVoltar }: { items: CartItem[]; onVoltar:
           className="flex w-full items-center justify-between rounded-full bg-verde px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-verde-escuro disabled:opacity-40"
         >
           <span>{enviando === "pix" ? "Abrindo o Pix…" : `Pagar no Pix (${Math.round(PIX_DESCONTO * 100)}% off)`}</span>
-          <span>{formatBRL(conta.totalPix)}</span>
+          <span>{formatBRL(conta.totalPix + (valorFrete ?? 0))}</span>
         </button>
         <button
           type="button"
@@ -173,7 +187,7 @@ export function CheckoutForm({ items, onVoltar }: { items: CartItem[]; onVoltar:
           className="mt-2 flex w-full items-center justify-between rounded-full border-2 border-verde px-5 py-3 text-sm font-semibold text-verde-escuro transition-colors hover:bg-verde/5 disabled:opacity-40"
         >
           <span>{enviando === "cartao" ? "Abrindo…" : `Cartão em até ${PARCELAS_MAX}x`}</span>
-          <span>{formatBRL(conta.total)}</span>
+          <span>{formatBRL(conta.total + (valorFrete ?? 0))}</span>
         </button>
         <p className="mt-3 text-center text-[0.7rem] leading-snug text-ink-soft">
           Pagamento seguro pelo Mercado Pago. Depois de pagar, você volta para cá e manda o resumo no WhatsApp.

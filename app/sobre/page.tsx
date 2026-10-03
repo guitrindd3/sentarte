@@ -33,8 +33,8 @@ export default function SobrePage() {
           </p>
           <p>
             Cada cadeira é feita sob encomenda, com um resumo do pedido confirmado com você antes
-            de começar. Fica pronta em até 5 dias úteis e segue com frete grátis para qualquer
-            lugar do Brasil.
+            de começar. Fica pronta em até 5 dias úteis e segue para qualquer lugar do
+            Brasil.
           </p>
         </div>
         <FramedWeave imagemUrl="/photos/sand-texture.jpg" alt="Areia de praia com ondulações formadas pelo vento" />

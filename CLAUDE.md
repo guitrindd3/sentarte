@@ -318,7 +318,7 @@ fabricated legal identifiers (CNPJ, address) unless the user supplies them.
 
 - **Commercial terms live in `lib/offer.ts`**, not in admin content: chair
   price R$ 449,90, up to 4x on card (with the card fee, so never write "sem
-  juros"), free shipping to all of Brazil, production in up to 5 business
+  juros"), shipping quoted by CEP (see "Shipping" below — no more free shipping), production in up to 5 business
   days, coupon `SENTARTE` = 5% off from 2 chairs, 2% off paying with Pix (stacked on the final total). Only the `cadeiras`
   category shows a price (`CATEGORIA_COM_PRECO`). A chair with a woven name
   costs `PRECO_CADEIRA_COM_NOME` (R$ 489,90) — `precoCadeira(comNome)`; the
@@ -453,6 +453,10 @@ same camera position) would look better; the user was told this.
 - Mobile check workflow: Playwright (installed only in the session
   scratchpad, not a project dependency) with the iPhone 13 profile at
   deviceScaleFactor 1 — full-page shots at 3x blank out past ~16k px.
+
+## Shipping (2026-10-03)
+
+Free shipping was removed from the whole site (user). Shipping is quoted by CEP: `lib/frete-servidor.ts` calls Melhor Envio's calculate API (cheapest carrier) from `FRETE_CEP_ORIGEM` with the packed-chair size in `FRETE_CAIXA` ("altura,largura,comprimento,pesoKg") and `MELHORENVIO_TOKEN`. **Espírito Santo CEPs (29xxx) ship free, but this must never be announced on the site** — the customer only sees "Grátis" after typing an ES CEP. `/api/frete` serves the cart (CEP field under the subtotal, remembered in localStorage) and the checkout form (`lib/use-frete.ts`); `/api/checkout` recomputes it and adds a "Frete" item to the Mercado Pago preference (the Pix 2% applies to the chairs only). Until the Melhor Envio env vars exist, non-ES CEPs show "Combinado pelo WhatsApp" and can't pay online.
 
 ## Shape search & testimonials (2026-10-03)
 

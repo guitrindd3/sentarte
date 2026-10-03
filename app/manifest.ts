@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Ateliê SentArte",
     short_name: "SentArte",
-    description: "Cadeiras de praia personalizadas, trançadas à mão. Frete grátis para todo o Brasil.",
+    description: "Cadeiras de praia personalizadas, trançadas à mão. Enviamos para todo o Brasil.",
     start_url: "/",
     display: "standalone",
     background_color: "#faf7f2",

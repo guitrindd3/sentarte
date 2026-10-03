@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = pageMetadata({
   title: "Cadeira de praia boho",
   description:
-    "Cadeiras de praia boho trançadas à mão, com estampas exclusivas em tons terrosos. A partir de R$ 449,90, frete grátis para todo o Brasil.",
+    "Cadeiras de praia boho trançadas à mão, com estampas exclusivas em tons terrosos. A partir de R$ 449,90, com envio para todo o Brasil.",
   path: "/boho",
 });
 

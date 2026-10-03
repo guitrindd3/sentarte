@@ -894,7 +894,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                 <span className="font-serif text-3xl font-medium tracking-tight">{formatBRL(preco)}</span>
                 <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
                 <span className="block text-xs text-ink-soft">
-                  {formatBRL(precoPix(preco))} no Pix. Frete grátis para todo o Brasil.
+                  {formatBRL(precoPix(preco))} no Pix. Frete calculado pelo CEP no carrinho.
                 </span>
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">

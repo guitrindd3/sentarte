@@ -17,7 +17,7 @@ const STEPS = [
   {
     numero: "4",
     titulo: "Confirme o resumo",
-    texto: "Você revê tudo pelo WhatsApp antes de fechar. Em até 5 dias úteis ela fica pronta e vai com frete grátis.",
+    texto: "Você revê tudo pelo WhatsApp antes de fechar. Em até 5 dias úteis ela fica pronta e segue para a sua casa.",
   },
 ];
 

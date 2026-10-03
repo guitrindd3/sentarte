@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = pageMetadata({
   title: "Cadeira de praia com desenho, anime ou nome",
   description:
-    "Cadeira de praia personalizada com o seu desenho ou personagem de anime, trançado à mão. R$ 489,90, frete grátis para todo o Brasil.",
+    "Cadeira de praia personalizada com o seu desenho ou personagem de anime, trançado à mão. R$ 489,90, com envio para todo o Brasil.",
   path: "/desenhos",
 });
 

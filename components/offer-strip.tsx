@@ -22,8 +22,8 @@ function itens(soPersonalizada: boolean) {
           texto: `com nome, ${formatBRL(PRECO_CADEIRA_COM_NOME)}. Até ${PARCELAS_MAX}x no cartão ou ${Math.round(PIX_DESCONTO * 100)}% off no Pix`,
         },
     {
-      destaque: "Frete grátis",
-      texto: "para todo o Brasil",
+      destaque: "Envio para todo o Brasil",
+      texto: "frete calculado pelo CEP no carrinho",
     },
     {
       destaque: `Até ${PRAZO_PRODUCAO_DIAS_UTEIS} dias úteis`,

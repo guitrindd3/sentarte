@@ -1,5 +1,5 @@
-// Commercial terms shown across the site (price, installments, shipping,
-// production time, multi-chair coupon). Supplied by the user 2026-09-29 —
+// Commercial terms shown across the site (price, installments, production
+// time, multi-chair coupon). Shipping is quoted by CEP — see lib/frete-servidor.ts. Supplied by the user 2026-09-29 —
 // not admin-editable yet, so change them here. Only the "cadeiras" category
 // has a price; other categories show no price.
 

@@ -25,10 +25,11 @@ export default function PoliticaDeEnvioPage() {
           </p>
         </div>
         <div>
-          <h2 className="font-serif text-lg text-ink">Frete grátis</h2>
+          <h2 className="font-serif text-lg text-ink">Frete</h2>
           <p className="mt-2">
-            O frete é grátis para todo o Brasil. Enviamos por transportadora ou correio, e
-            também dá para combinar a retirada se você estiver na região.
+            Enviamos para todo o Brasil por transportadora ou Correios. O valor e o prazo de
+            entrega são calculados pelo seu CEP, no carrinho, antes de pagar. Também dá para
+            combinar a retirada se você estiver na região.
           </p>
         </div>
         <div>

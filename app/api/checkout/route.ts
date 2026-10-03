@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { SITE_URL } from "@/lib/nav";
+import { calcularFrete } from "@/lib/frete-servidor";
 import { PARCELAS_MAX } from "@/lib/offer";
 import {
   calcularPedido,
@@ -46,7 +47,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ erro: "Preencha os dados de entrega." }, { status: 400 });
   }
   const ref = /^[a-z0-9-]{6,40}$/i.test(String(referencia)) ? String(referencia) : crypto.randomUUID();
-  const valor = forma === "pix" ? conta.totalPix : conta.total;
+  // shipping is recomputed here too (Espírito Santo ships free, see lib/frete-servidor.ts)
+  const frete = await calcularFrete(entrega.cep, conta.qtdCadeiras, conta.total);
+  if (!frete) {
+    return NextResponse.json({ erro: "Para esse CEP o frete é combinado pelo WhatsApp." }, { status: 400 });
+  }
+  const valorProdutos = forma === "pix" ? conta.totalPix : conta.total;
+  const valor = Math.round((valorProdutos + frete.valor) * 100) / 100;
 
   const telefone = entrega.telefone.replace(/\D/g, "");
   const preferencia = {
@@ -58,8 +65,11 @@ export async function POST(req: Request) {
         category_id: "home",
         quantity: 1,
         currency_id: "BRL",
-        unit_price: valor,
+        unit_price: valorProdutos,
       },
+      ...(frete.valor > 0
+        ? [{ id: `${ref}-frete`, title: "Frete", category_id: "services", quantity: 1, currency_id: "BRL", unit_price: frete.valor }]
+        : []),
     ],
     payer: {
       name: entrega.nome.trim().slice(0, 80),
@@ -88,7 +98,7 @@ export async function POST(req: Request) {
     auto_return: "approved",
     external_reference: ref,
     statement_descriptor: "SENTARTE",
-    metadata: { forma, entrega: `${entrega.cidade}/${entrega.uf}` },
+    metadata: { forma, entrega: `${entrega.cidade}/${entrega.uf}`, frete: frete.valor, servico_frete: frete.servico ?? "" },
   };
 
   const res = await fetch("https://api.mercadopago.com/checkout/preferences", {

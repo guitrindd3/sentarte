@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { cepGuardado, guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import { CheckoutForm } from "@/components/checkout-form";
 import { calcularPedido } from "@/lib/pedido";
 import { useCart } from "@/lib/cart-context";
@@ -23,6 +24,12 @@ import { whatsappUrl } from "@/lib/urls";
 export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero: string; pagamentoAtivo: boolean }) {
   const { items, count, isOpen, closeCart, removeItem, setQuantidade, clear } = useCart();
   const [etapa, setEtapa] = useState<"carrinho" | "entrega">("carrinho");
+  const [cep, setCep] = useState("");
+  useEffect(() => {
+    // CEP typed last time (localStorage) — only after hydration, like the cart itself
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCep(cepGuardado());
+  }, []);
   const podePagar = pagamentoAtivo && calcularPedido(items).pagavel;
   const naEntrega = etapa === "entrega" && podePagar;
 
@@ -38,6 +45,11 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
   const desconto = temCupom ? subtotal * CUPOM_DESCONTO : 0;
   const total = subtotal - desconto;
   const faltamParaCupom = CUPOM_MIN_ITENS - qtdCadeiras;
+  const estadoFrete = useFrete(cep, cadeiras);
+  const valorFrete = estadoFrete.tipo === "ok" ? estadoFrete.frete.valor : null;
+  const prazoFrete = estadoFrete.tipo === "ok" ? estadoFrete.frete.prazoDias : undefined;
+  const totalComFrete = total + (valorFrete ?? 0);
+  const pixComFrete = precoPix(total) + (valorFrete ?? 0);
 
   const resumoValores =
     qtdCadeiras === 0
@@ -48,8 +60,11 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
           ...(temCupom
             ? [`Cupom ${CUPOM_CODIGO} (${Math.round(CUPOM_DESCONTO * 100)}%): -${formatBRL(desconto)}`]
             : []),
-          `Total: ${formatBRL(total)} com frete grátis`,
-          `No Pix (${Math.round(PIX_DESCONTO * 100)}% off): ${formatBRL(precoPix(total))}`,
+          valorFrete === null
+            ? `Frete: a calcular${cep ? ` (CEP ${cep})` : ""}`
+            : `Frete (CEP ${cep}): ${valorFrete === 0 ? "grátis" : formatBRL(valorFrete)}`,
+          `Total: ${formatBRL(totalComFrete)}${valorFrete === null ? " + frete" : ""}`,
+          `No Pix (${Math.round(PIX_DESCONTO * 100)}% off): ${formatBRL(pixComFrete)}${valorFrete === null ? " + frete" : ""}`,
         ];
 
   const mensagem =
@@ -191,17 +206,37 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
                     <dd>-{formatBRL(desconto)}</dd>
                   </div>
                 ) : null}
-                <div className="flex justify-between text-ink-soft">
-                  <dt>Frete</dt>
-                  <dd>Grátis</dd>
+                <div className="flex items-center justify-between gap-3 text-ink-soft">
+                  <dt>
+                    <label htmlFor="cep-frete">Frete</label>
+                  </dt>
+                  <dd className="flex items-center gap-2">
+                    <input
+                      id="cep-frete"
+                      value={cep}
+                      onChange={(e) => {
+                        setCep(e.target.value);
+                        guardarCep(e.target.value);
+                      }}
+                      inputMode="numeric"
+                      autoComplete="postal-code"
+                      placeholder="Seu CEP"
+                      maxLength={9}
+                      className="w-24 border border-line bg-canvas px-2 py-1 text-sm text-ink focus:border-ink focus:outline-none"
+                    />
+                    <span className="min-w-[4.5rem] text-right">{textoFrete(estadoFrete) ?? formatBRL(valorFrete ?? 0)}</span>
+                  </dd>
                 </div>
+                {prazoFrete ? (
+                  <p className="text-right text-xs text-ink-soft">entrega em até {prazoFrete} dias úteis depois de pronta</p>
+                ) : null}
                 <div className="flex justify-between border-t border-line pt-2 font-medium text-ink">
-                  <dt>Total</dt>
-                  <dd>{formatBRL(total)}</dd>
+                  <dt>Total{valorFrete === null ? " (sem frete)" : ""}</dt>
+                  <dd>{formatBRL(totalComFrete)}</dd>
                 </div>
                 <div className="flex justify-between text-ink">
                   <dt>No Pix ({Math.round(PIX_DESCONTO * 100)}% off)</dt>
-                  <dd>{formatBRL(precoPix(total))}</dd>
+                  <dd>{formatBRL(pixComFrete)}</dd>
                 </div>
                 <p className="text-xs text-ink-soft">ou em até {PARCELAS_MAX}x no cartão</p>
                 {faltamParaCupom > 0 ? (

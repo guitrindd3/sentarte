@@ -57,7 +57,7 @@ export const DEFAULT_CONTENT: SiteContent = {
   site: {
     nome: "SentArte",
     descricao:
-      "Cadeiras de praia personalizadas, trançadas à mão em corda náutica e alumínio: de time, boho, com desenho ou com o seu nome. Frete grátis para todo o Brasil.",
+      "Cadeiras de praia personalizadas, trançadas à mão em corda náutica e alumínio: de time, boho, com desenho ou com o seu nome. Enviamos para todo o Brasil.",
     whatsappNumero: "5527995201669",
     instagramHandle: "ateliesentarte",
   },

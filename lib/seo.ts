@@ -58,11 +58,6 @@ export function chairListJsonLd(
           offerCount: soPersonalizada ? 1 : 2,
           priceCurrency: "BRL",
           availability: "https://schema.org/MadeToOrder",
-          shippingDetails: {
-            "@type": "OfferShippingDetails",
-            shippingRate: { "@type": "MonetaryAmount", value: "0", currency: "BRL" },
-            shippingDestination: { "@type": "DefinedRegion", addressCountry: "BR" },
-          },
         },
       },
     })),
