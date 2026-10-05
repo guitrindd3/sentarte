@@ -344,7 +344,7 @@ fabricated legal identifiers (CNPJ, address) unless the user supplies them.
   be the homepage); each page uses `pageMetadata()` from `lib/seo.ts`.
   JSON-LD via `components/json-ld.tsx`: `Store` in the layout, `FAQPage` on
   /faq, product `ItemList` with the price on /times, /boho, /desenhos.
-  `GOOGLE_SITE_VERIFICATION` env var (optional) feeds the Search Console
+  Search Console is verified (2026-10-05) by the file `public/google590b889b4b231e43.html` — never delete it. `GOOGLE_SITE_VERIFICATION` env var (optional, unused) feeds the Search Console
   meta tag. `@vercel/analytics` is mounted in the layout.
 - Brand is spelled **SentArte** (matches `site.nome` in the admin content).
 - The header's admin (person) icon was removed — it read as a customer
