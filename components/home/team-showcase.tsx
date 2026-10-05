@@ -52,8 +52,8 @@ export function TeamShowcase({
   );
 
   return (
-    <section className="border-t border-line px-6 py-12 md:py-16">
-      <div className="mx-auto max-w-6xl">
+    <section className="border-t border-line py-12 md:py-16">
+      <div className="mx-auto max-w-6xl px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">{titulo}</h2>
@@ -62,7 +62,11 @@ export function TeamShowcase({
             </p>
           </div>
         </div>
-        <AutoScrollRow className="-mx-6 mt-8 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:gap-6 [&::-webkit-scrollbar]:hidden [&>*]:flex [&>*>*]:w-full [&>*]:w-[82%] [&>*]:shrink-0 sm:[&>*]:w-[45%] lg:[&>*]:w-[31%]">
+      </div>
+      {/* Full screen width (user 2026-10-05: chairs should slide in and out at the
+          screen edges, not vanish at the content edge). The first card still lines
+          up with the text column; card sizes match the old in-column ones. */}
+      <AutoScrollRow className="mt-8 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:gap-6 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] [&::-webkit-scrollbar]:hidden [&>*]:flex [&>*>*]:w-full [&>*]:w-[calc((100vw-3rem)*0.82)] [&>*]:shrink-0 sm:[&>*]:w-[calc((100vw-3rem)*0.45)] lg:[&>*]:w-[calc((min(100vw,72rem)-3rem)*0.31)]">
           {itens.map((it) => (
             <div key={it.chave}>{cartao(it)}</div>
           ))}
@@ -72,8 +76,7 @@ export function TeamShowcase({
               {cartao(it)}
             </div>
           ))}
-        </AutoScrollRow>
-      </div>
+      </AutoScrollRow>
     </section>
   );
 }

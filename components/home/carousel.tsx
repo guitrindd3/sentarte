@@ -7,8 +7,9 @@ import { WhatsAppIcon } from "@/components/icons";
 import { whatsappUrl } from "@/lib/urls";
 import type { SiteContent } from "@/lib/content-schema";
 
-// Order set by the user 2026-09-30 (the old last photo now opens).
-const SLIDES = [
+// Default photos and their descriptions (order set by the user 2026-09-30). Since
+// 2026-10-05 the list comes from the admin (Páginas → Página inicial → Fotos do topo).
+const PADRAO = [
   {
     src: "/photos/carousel-boho-2.jpg",
     alt: "Cadeiras de praia boho SentArte numa varanda decorada",
@@ -29,10 +30,15 @@ const INTERVALO_MS = 4000;
 export function Carousel({
   hero,
   whatsappNumero,
+  fotos,
 }: {
   hero: SiteContent["hero"];
   whatsappNumero: string;
+  fotos?: string[];
 }) {
+  const SLIDES = fotos?.length
+    ? fotos.map((src) => ({ src, alt: PADRAO.find((p) => p.src === src)?.alt ?? "Cadeiras de praia SentArte, trançadas à mão" }))
+    : PADRAO;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -42,7 +48,7 @@ export function Carousel({
     if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), INTERVALO_MS);
     return () => clearInterval(id);
-  }, [paused]);
+  }, [paused, SLIDES.length]);
 
   return (
     <section

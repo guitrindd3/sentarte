@@ -10,12 +10,14 @@
 // shop's terms; [words](whatsapp) / [words](/page) / [words](https://…) become links.
 
 export type Bloco = { titulo: string; texto: string };
-export type ValorCampo = string | Bloco[];
+export type ValorCampo = string | Bloco[] | string[];
 
 export type Campo =
   | { id: string; rotulo: string; tipo: "linha" | "texto"; dica?: string; max?: number }
   /** A photo: the value is its URL (/catalogo/… once replaced in the admin). */
   | { id: string; rotulo: string; tipo: "imagem"; dica?: string }
+  /** Several photos in order (the homepage carousel). */
+  | { id: string; rotulo: string; tipo: "fotos"; dica?: string; max: number }
   | {
       id: string;
       rotulo: string;
@@ -50,6 +52,13 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
     caminho: "/",
     descricao: "Títulos e textos das seções da página inicial. A frase de boas-vindas fica em Textos e contato.",
     campos: [
+      {
+        id: "carrossel",
+        rotulo: "Fotos do topo (passam sozinhas)",
+        tipo: "fotos",
+        max: 8,
+        dica: "As fotos grandes do começo da página. A primeira é a que aparece ao abrir o site. Fotos deitadas (mais largas que altas) ficam melhores.",
+      },
       { id: "escolhaTitulo", rotulo: "Título dos 4 cartões de coleção", tipo: "linha", max: 60 },
       { id: "nossasTitulo", rotulo: "Título da faixa que passa sozinha", tipo: "linha", max: 60 },
       { id: "nossasTexto", rotulo: "Texto da faixa que passa sozinha", tipo: "texto", max: 300 },
@@ -66,6 +75,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
       { id: "contatoTexto", rotulo: "Texto do quadro de contato", tipo: "texto", max: 300 },
     ],
     padrao: {
+      carrossel: ["/photos/carousel-boho-2.jpg", "/photos/carousel-boho.jpg", "/photos/carousel-times.jpg"],
       escolhaTitulo: "Escolha a sua cadeira",
       nossasTitulo: "Nossas cadeiras",
       nossasTexto: "De time, boho ou com o seu desenho preferido — todas trançadas à mão, e qualquer uma pode levar um nome no encosto.",
@@ -374,11 +384,17 @@ export function textosDaPagina(salvos: TextosSalvos | undefined, id: string) {
   const out: Record<string, ValorCampo> = {};
   for (const c of pg.campos) {
     const v = s[c.id];
-    const ok = c.tipo === "blocos" ? Array.isArray(v) && (!c.fixo || v.length === (pg.padrao[c.id] as Bloco[]).length) : typeof v === "string";
+    const ok =
+      c.tipo === "blocos"
+        ? Array.isArray(v) && (!c.fixo || v.length === (pg.padrao[c.id] as Bloco[]).length)
+        : c.tipo === "fotos"
+          ? Array.isArray(v) && v.length > 0 && v.every((x) => typeof x === "string")
+          : typeof v === "string";
     out[c.id] = ok ? v : pg.padrao[c.id];
   }
   return {
     linha: (campo: string) => String(out[campo] ?? ""),
     blocos: (campo: string) => (Array.isArray(out[campo]) ? (out[campo] as Bloco[]) : []),
+    fotos: (campo: string) => (Array.isArray(out[campo]) ? (out[campo] as string[]) : []),
   };
 }

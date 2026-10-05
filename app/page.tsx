@@ -26,7 +26,7 @@ export default async function Home() {
 
   return (
     <>
-      <Carousel hero={content.hero} whatsappNumero={content.site.whatsappNumero} />
+      <Carousel hero={content.hero} whatsappNumero={zap} fotos={t.fotos("carrossel")} />
       <OfferStrip />
       <CategoryBento categorias={content.categorias} titulo={t.linha("escolhaTitulo")} />
       <TeamShowcase categorias={content.categorias} whatsappNumero={zap} titulo={t.linha("nossasTitulo")} texto={textoSimples(t.linha("nossasTexto"))} />

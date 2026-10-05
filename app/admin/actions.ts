@@ -519,7 +519,29 @@ export async function salvarPaginaAction(paginaId: string, _p: Resultado, formDa
     const fotos: ArquivoNovo[] = [];
     for (const c of pg.campos) {
       let v: ValorCampo;
-      if (c.tipo === "imagem") {
+      if (c.tipo === "fotos") {
+        // Order tokens: "u:<url>" keeps a photo already in use, "n:<k>" is the k-th new file.
+        const permitidas = new Set([...((content.paginas[pg.id]?.[c.id] as string[] | undefined) ?? []), ...(pg.padrao[c.id] as string[])]);
+        let ordem: string[] = [];
+        try {
+          ordem = JSON.parse(String(formData.get(`${c.id}.ordem`) ?? "[]"));
+        } catch {}
+        const novos = formData.getAll(`${c.id}.novos`);
+        const lista: string[] = [];
+        for (const tok of ordem.slice(0, c.max)) {
+          if (tok.startsWith("u:") && permitidas.has(tok.slice(2))) lista.push(tok.slice(2));
+          else if (tok.startsWith("n:")) {
+            const f = await imagemValida(novos[Number(tok.slice(2))] ?? null);
+            if (f) {
+              const p = await prepararFoto(f);
+              fotos.push(p.arquivo);
+              lista.push(p.url);
+            }
+          }
+        }
+        if (!lista.length) throw new Aviso(`"${c.rotulo}" precisa de pelo menos uma foto.`);
+        v = lista;
+      } else if (c.tipo === "imagem") {
         const atual = content.paginas[pg.id]?.[c.id];
         const nova = await imagemValida(formData.get(c.id));
         if (nova) {

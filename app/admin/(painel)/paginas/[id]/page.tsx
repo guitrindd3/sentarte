@@ -5,6 +5,7 @@ import { paginaEditavel, textosDaPagina } from "@/lib/textos-paginas";
 import { restaurarPaginaAction, salvarPaginaAction } from "../../../actions";
 import { AdminForm, BarraSalvar, BotaoExcluir, Card, CampoTexto, Field, FotoSlot, btnSecondary } from "../../../_ui";
 import { EditorBlocos } from "../blocos";
+import { EditorFotos } from "../fotos";
 
 export default async function EditarPagina({ params }: PageProps<"/admin/paginas/[id]">) {
   const { id } = await params;
@@ -56,7 +57,15 @@ export default async function EditarPagina({ params }: PageProps<"/admin/paginas
         <Card>
           <div className="space-y-6">
             {pg.campos.map((c) =>
-              c.tipo === "imagem" ? (
+              c.tipo === "fotos" ? (
+                <div key={c.id}>
+                  <p className="text-sm font-semibold text-ink">{c.rotulo}</p>
+                  {c.dica ? <p className="mt-0.5 text-xs text-ink-soft">{c.dica}</p> : null}
+                  <div className="mt-2">
+                    <EditorFotos name={c.id} inicial={t.fotos(c.id)} max={c.max} />
+                  </div>
+                </div>
+              ) : c.tipo === "imagem" ? (
                 <div key={c.id} className="max-w-[16rem]">
                   <FotoSlot name={c.id} removerName={`${c.id}.remover`} atual={t.linha(c.id)} rotulo={c.rotulo} vazio="Clique ou arraste a foto" destaque />
                   {c.dica ? <p className="mt-2 text-xs text-ink-soft">{c.dica}</p> : null}

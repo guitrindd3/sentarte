@@ -13,6 +13,9 @@ import {
   type ReactNode,
 } from "react";
 import type { Resultado } from "./actions";
+import { AjustarFoto } from "./ajustar-foto";
+
+export type FormatoFoto = "original" | "quadrada" | "empe" | "deitada" | "larga";
 
 // ---------------------------------------------------------------------------
 // Admin UI kit (redesigned 2026-10-05: the user found the old one-page panel
@@ -418,6 +421,7 @@ export function FotoSlot({
   rotulo,
   vazio = "Adicionar foto",
   destaque = false,
+  formato,
 }: {
   name: string;
   removerName?: string;
@@ -425,12 +429,15 @@ export function FotoSlot({
   rotulo?: string;
   vazio?: string;
   destaque?: boolean;
+  /** Shape the "Ajustar" window starts with. */
+  formato?: FormatoFoto;
 }) {
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
   const [nova, setNova] = useState<string | null>(null);
   const [remover, setRemover] = useState(false);
   const [carregando, setCarregando] = useState(false);
+  const [ajustando, setAjustando] = useState<string | null>(null);
 
   useEffect(() => () => void (nova && URL.revokeObjectURL(nova)), [nova]);
 
@@ -493,8 +500,26 @@ export function FotoSlot({
         }} />
         {removerName ? <input type="checkbox" name={removerName} checked={remover} readOnly hidden /> : null}
       </div>
-      {nova || (atual && removerName) ? (
-        <div className="mt-1.5 flex gap-3 text-xs font-medium">
+      {ajustando ? (
+        <AjustarFoto
+          src={ajustando}
+          formatoInicial={formato ?? (destaque ? "empe" : "original")}
+          onCancelar={() => setAjustando(null)}
+          onPronto={(f, previa) => {
+            definirArquivos(input.current, [f]);
+            setNova(previa);
+            setRemover(false);
+            setAjustando(null);
+          }}
+        />
+      ) : null}
+      {mostrar || nova || (atual && removerName) ? (
+        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium">
+          {mostrar ? (
+            <button type="button" className="text-wood-dark hover:underline" onClick={() => setAjustando(mostrar)}>
+              Ajustar
+            </button>
+          ) : null}
           {nova ? (
             <button
               type="button"
@@ -542,7 +567,9 @@ export function GaleriaFotos({
   const [remover, setRemover] = useState<Set<string>>(new Set());
   const [novas, setNovas] = useState<{ f: File; url: string }[]>([]);
   const [carregando, setCarregando] = useState(false);
+  const [ajustando, setAjustando] = useState<{ src: string; url?: string; i?: number } | null>(null);
   const total = existentes.length - remover.size + novas.length;
+  const botaoAjustar = "absolute bottom-1.5 left-1.5 rounded-full bg-paper/90 px-2 py-0.5 text-[0.7rem] font-semibold text-wood-dark shadow hover:bg-paper";
 
   const adicionar = async (fs: File[]) => {
     const espaco = max - total;
@@ -559,6 +586,27 @@ export function GaleriaFotos({
 
   return (
     <div {...props} className={`rounded-xl p-1 transition ${sobre ? "bg-rattan/10 ring-2 ring-wood" : ""}`}>
+      {ajustando ? (
+        <AjustarFoto
+          src={ajustando.src}
+          onCancelar={() => setAjustando(null)}
+          onPronto={(f, previa) => {
+            const alvo = ajustando;
+            setAjustando(null);
+            let lista: { f: File; url: string }[];
+            if (alvo.i !== undefined) {
+              // a new photo: swap it for the adjusted one
+              lista = novas.map((n, j) => (j === alvo.i ? { f, url: previa } : n));
+            } else {
+              // a saved photo: it's removed and the adjusted copy is added
+              setRemover((s) => new Set(s).add(alvo.url!));
+              lista = [...novas, { f, url: previa }];
+            }
+            setNovas(lista);
+            definirArquivos(input.current, lista.map((n) => n.f));
+          }}
+        />
+      ) : null}
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
         {existentes.map((url) => {
           const sai = remover.has(url);
@@ -567,6 +615,11 @@ export function GaleriaFotos({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={url} alt="" className={`h-full w-full object-cover transition ${sai ? "opacity-30 grayscale" : ""}`} />
               {sai ? <input type="hidden" name={removerName} value={url} /> : null}
+              {!sai ? (
+                <button type="button" onClick={() => setAjustando({ src: url, url })} className={botaoAjustar}>
+                  Ajustar
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => {
@@ -592,6 +645,9 @@ export function GaleriaFotos({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={n.url} alt="" className="h-full w-full object-cover" />
             <span className="absolute left-1.5 top-1.5 rounded-full bg-verde px-2 py-0.5 text-[0.7rem] font-semibold text-paper">Nova</span>
+            <button type="button" onClick={() => setAjustando({ src: n.url, i })} className={botaoAjustar}>
+              Ajustar
+            </button>
             <button
               type="button"
               onClick={() => {
