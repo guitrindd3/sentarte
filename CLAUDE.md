@@ -348,7 +348,7 @@ fabricated legal identifiers (CNPJ, address) unless the user supplies them.
   meta tag. `@vercel/analytics` is mounted in the layout.
 - Brand is spelled **SentArte** (matches `site.nome` in the admin content).
 - The header's admin (person) icon was removed — it read as a customer
-  login. Reach the panel directly at `/admin`.
+  login. Reach the panel at `/admin` — since 2026-10-05 also via a small "Área do ateliê" lock link in the footer's bottom bar (user asked for a button; kept out of the header on purpose).
 - Homepage: `CategoryBento` now shows the four collection cover cards
   (times/boho/desenhos/monte a sua) instead of category tiles. (A homepage
   mini live preview, `PreviewPromo`, was added and then removed the same day

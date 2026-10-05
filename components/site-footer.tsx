@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
+import { InstagramIcon, LockIcon, WhatsAppIcon } from "@/components/icons";
 import { getContent } from "@/lib/content-store";
 import { FOOTER_LINKS } from "@/lib/nav";
 import { instagramUrl, whatsappUrl } from "@/lib/urls";
@@ -70,8 +70,17 @@ export async function SiteFooter() {
         </div>
       </div>
 
-      <div className="border-t border-line px-6 py-4 text-center text-xs text-ink-soft">
-        © {new Date().getFullYear()} {nome}. Todos os direitos reservados.
+      <div className="border-t border-line px-6 py-4 text-xs text-ink-soft">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:justify-between">
+          <p>
+            © {new Date().getFullYear()} {nome}. Todos os direitos reservados.
+          </p>
+          {/* Staff entrance to /admin (user 2026-10-05) — kept in the footer, not the header, so customers don't read it as a login. */}
+          <Link href="/admin" data-sem-rastro className="inline-flex items-center gap-1.5 py-1 transition-colors hover:text-ink">
+            <LockIcon className="h-3.5 w-3.5" />
+            Área do ateliê
+          </Link>
+        </div>
       </div>
     </footer>
   );
