@@ -561,6 +561,13 @@ The user found the one-page /admin "muito minimalista" and confusing (saved, loo
 - Photos are shrunk in the browser before upload (≤2000px JPEG, also converts HEIC when the browser can decode it).
 - Local check: `next start` + Playwright with a session cookie signed with `SESSION_SECRET` from `.env.local`; saving fails locally (no `GITHUB_TOKEN`, it's a Vercel Secret) — which exercises the error toast.
 
+## Site statistics — admin "Acessos" (2026-10-05)
+
+Vercel Web Analytics wasn't enabled and on Hobby can't record searches/clicks, so the site counts itself: `components/rastreador.tsx` (root layout; page views on route change + a capture-phase click listener: `data-rastro` label, else WhatsApp/Instagram links, else the button/link text ≤50 chars; `data-sem-rastro` opts an area out) → `POST /api/e` (bots, the admin's own browser — `sentarte_admin` cookie — and >120/min per IP are dropped) → `lib/estatisticas.ts`, per-day Redis hashes `e:YYYY-MM-DD:{geral,pag,ref,disp,busca,clique,carrinho,hora,local}` + HyperLogLog `:vis` (visitor = one-day sha256 of secret+IP+UA, never stored raw), 400-day expiry. Cart adds come from `addItem` in `lib/cart-context.tsx`; the builder's shape search is sent after 1.5s idle; /busca's `q` rides on the page view. Dashboard: `app/admin/(painel)/acessos` (Hoje/7/30/90 days; 90 days ≈ 900 Redis commands per load).
+- Storage: Upstash Redis "sentarte-estatisticas" from the Vercel Marketplace, plan **free**, region gru1, **autoUpgrade=false** (must never bill — the user can't spend money). Env vars `KV_REST_API_URL`/`KV_REST_API_TOKEN` (UPSTASH_REDIS_REST_* also accepted); without them tracking no-ops and the page says it isn't on yet. REST `/pipeline` via fetch, no SDK.
+- Privacy page has an "Estatísticas de visita" paragraph — keep it true if tracking changes.
+- Local test: scratchpad `fake-redis.mjs` (tiny REST stand-in) + `KV_REST_API_URL=http://localhost:3199`.
+
 ## Security (2026-09-30 pass)
 
 - Security headers + CSP in `next.config.ts` (`headers()`), `poweredByHeader:

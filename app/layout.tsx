@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Archivo, Bodoni_Moda } from "next/font/google";
 import { CartDrawer } from "@/components/cart-drawer";
 import { ForaDoAdmin } from "@/components/fora-do-admin";
+import { Rastreador } from "@/components/rastreador";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Analytics } from "@vercel/analytics/next";
@@ -94,6 +95,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             sameAs: [instagramUrl(site.instagramHandle)],
           }}
         />
+        <Rastreador />
         <Analytics />
       </body>
     </html>

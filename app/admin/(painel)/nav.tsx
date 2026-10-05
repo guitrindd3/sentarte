@@ -11,6 +11,11 @@ const ITENS: { href: string; rotulo: string; icone: ReactNode }[] = [
     icone: <path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z" />,
   },
   {
+    href: "/admin/acessos",
+    rotulo: "Acessos",
+    icone: <path d="M4 20h16M7 16v-4M11 16V8M15 16v-6M19 16V5" />,
+  },
+  {
     href: "/admin/catalogo",
     rotulo: "Cadeiras",
     icone: (
@@ -81,7 +86,7 @@ export function NavInferior() {
   const pathname = usePathname();
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-      <div className="grid grid-cols-4">
+      <div className="grid grid-cols-5">
         {ITENS.map((i) => {
           const on = ativo(pathname, i.href);
           return (

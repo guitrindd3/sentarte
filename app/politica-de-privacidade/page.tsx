@@ -42,6 +42,16 @@ export default async function PoliticaDePrivacidadePage() {
           </p>
         </div>
         <div>
+          <h2 className="font-serif text-lg text-ink">Estatísticas de visita</h2>
+          <p className="mt-2">
+            Para melhorar o site, contamos de forma anônima quantas pessoas visitam, quais páginas
+            são vistas, o que é pesquisado, em quais botões clicam, a cidade aproximada e se o
+            acesso é pelo celular ou pelo computador. Não usamos cookies para isso e não guardamos
+            seu nome, IP ou qualquer dado que identifique você. Os números ficam guardados por até
+            13 meses.
+          </p>
+        </div>
+        <div>
           <h2 className="font-serif text-lg text-ink">Seus direitos</h2>
           <p className="mt-2">
             Você pode pedir a qualquer momento para saber quais dados temos sobre você, corrigi-los

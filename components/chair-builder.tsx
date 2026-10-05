@@ -12,6 +12,7 @@ import { ROTULOS_EXTRAS_2 } from "@/lib/formas-extras-2";
 import { FORMAS_OCULTAS, ROTULOS_EXTRAS_3 } from "@/lib/formas-extras-3";
 import { codificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
+import { rastrear } from "@/lib/rastro";
 import { whatsappUrl } from "@/lib/urls";
 
 // Step-by-step "Monte a sua trama" builder (2026-09-29). Instead of a drawn
@@ -172,6 +173,13 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [forma, setForma] = useState<Forma>("lisa");
   /** Shape search: while it has text, the grid shows matches from every tab. */
   const [busca, setBusca] = useState("");
+  // Count what people look for in the shape search, once they stop typing.
+  useEffect(() => {
+    const q = busca.trim();
+    if (q.length < 2) return;
+    const t = setTimeout(() => rastrear({ t: "b", q, onde: "trama" }), 1500);
+    return () => clearTimeout(t);
+  }, [busca]);
   const [grupo, setGrupo] = useState<Grupo>("basicos");
   const [formaAssento, setFormaAssento] = useState<Forma>("lisa");
   const [escalaAssento, setEscalaAssento] = useState(1);

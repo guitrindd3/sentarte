@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { rastrear } from "./rastro";
 
 export type CartItem = {
   id: string;
@@ -65,6 +66,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, hydrated]);
 
   const addItem = (item: Omit<CartItem, "quantidade">) => {
+    rastrear({ t: "a", m: item.categoriaSlug === "personalizar" || item.modeloNome.startsWith("Monte") ? "Cadeira montada (Monte a sua trama)" : item.modeloNome });
     setItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
