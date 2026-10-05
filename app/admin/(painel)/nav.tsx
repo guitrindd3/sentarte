@@ -40,6 +40,11 @@ const ITENS: { href: string; rotulo: string; icone: ReactNode }[] = [
       </>
     ),
   },
+  {
+    href: "/admin/seguranca",
+    rotulo: "Segurança",
+    icone: <path d="M12 3.5 5 6v5.5c0 4.3 3 7.7 7 9 4-1.3 7-4.7 7-9V6zM9 12l2 2 4-4" />,
+  },
 ];
 
 function ativo(pathname: string, href: string) {
@@ -87,7 +92,7 @@ export function NavInferior() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
       <div className="grid grid-cols-5">
-        {ITENS.map((i) => {
+        {ITENS.filter((i) => i.href !== "/admin/seguranca").map((i) => {
           const on = ativo(pathname, i.href);
           return (
             <Link

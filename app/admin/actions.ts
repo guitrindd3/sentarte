@@ -3,46 +3,113 @@
 import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { headers } from "next/headers";
-import { createSession, destroySession, revogarTodasAsSessoes, verifyPassword, verifySession } from "@/lib/auth";
+import {
+  apagarPreSessao,
+  createSession,
+  criarPreSessao,
+  destroySession,
+  preSessaoValida,
+  revogarTodasAsSessoes,
+  verifyPassword,
+  verifySession,
+} from "@/lib/auth";
+import { redisAtivo } from "@/lib/redis";
+import {
+  confirmarDoisFatores,
+  conferirSegundoFator,
+  contarFalha,
+  desativarDoisFatores,
+  doisFatoresAtivo,
+  iniciarDoisFatores,
+  ipDe,
+  limparFalhas,
+  minutosBloqueado,
+  registrarEntrada,
+} from "@/lib/seguranca";
 import { getContentForWrite, prepararFoto, saveContent } from "@/lib/content-store";
 import type { ArquivoNovo } from "@/lib/github-store";
 import type { Categoria, Depoimento, Modelo } from "@/lib/content-schema";
 
-type LoginState = { error?: string } | undefined;
+export type LoginState = { error?: string; etapa?: "senha" | "codigo" } | undefined;
 
-// Brute-force brake for the single admin password: every wrong attempt waits
-// a second, and an IP is locked out for 15 minutes after 5 wrong ones.
-// In-memory, so it's per server instance — a speed bump, not a wall; the
-// real protection is a long password.
+// Brute-force brake: every wrong attempt waits a second, and an IP is locked
+// out for 15 minutes after 5 wrong ones (password or code). Kept in Redis
+// since 2026-10-05 so every server instance shares it; in-memory fallback
+// when Redis isn't configured.
 const MAX_TENTATIVAS = 5;
 const JANELA_MS = 15 * 60 * 1000;
 const tentativas = new Map<string, { n: number; desde: number }>();
 
-async function ipDoPedido() {
-  const h = await headers();
-  return (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || h.get("x-real-ip") || "desconhecido";
-}
-
-export async function loginAction(_prevState: LoginState, formData: FormData): Promise<LoginState> {
-  const ip = await ipDoPedido();
+async function bloqueadoPorMin(ip: string) {
+  if (redisAtivo()) return minutosBloqueado(ip);
   const agora = Date.now();
   const reg = tentativas.get(ip);
   if (reg && agora - reg.desde > JANELA_MS) tentativas.delete(ip);
   const atual = tentativas.get(ip);
-  if (atual && atual.n >= MAX_TENTATIVAS) {
-    const min = Math.ceil((JANELA_MS - (agora - atual.desde)) / 60000);
-    return { error: `Muitas tentativas erradas. Tente de novo em ${min} min.` };
-  }
-
-  const password = String(formData.get("password") ?? "");
-  if (!password || password.length > 200 || !verifyPassword(password)) {
-    tentativas.set(ip, { n: (atual?.n ?? 0) + 1, desde: atual?.desde ?? agora });
-    if (tentativas.size > 5000) tentativas.clear();
-    await new Promise((r) => setTimeout(r, 1000));
-    return { error: "Senha incorreta." };
-  }
+  return atual && atual.n >= MAX_TENTATIVAS ? Math.ceil((JANELA_MS - (agora - atual.desde)) / 60000) : 0;
+}
+async function falhou(ip: string) {
+  if (redisAtivo()) return contarFalha(ip);
+  const atual = tentativas.get(ip);
+  tentativas.set(ip, { n: (atual?.n ?? 0) + 1, desde: atual?.desde ?? Date.now() });
+  if (tentativas.size > 5000) tentativas.clear();
+}
+async function acertou(ip: string) {
+  if (redisAtivo()) return limparFalhas(ip);
   tentativas.delete(ip);
-  await createSession();
+}
+const espera = () => new Promise((r) => setTimeout(r, 1000));
+
+export async function loginAction(_prevState: LoginState, formData: FormData): Promise<LoginState> {
+  const h = await headers();
+  const ip = ipDe(h);
+  const log = (evento: string, ok: boolean) => (redisAtivo() ? registrarEntrada(evento, ok, h) : Promise.resolve());
+  const etapaCodigo = formData.get("etapa") === "codigo";
+
+  try {
+    const min = await bloqueadoPorMin(ip);
+    if (min > 0) {
+      await log("Bloqueado: muitas tentativas erradas", false);
+      return { error: `Muitas tentativas erradas. Tente de novo em ${min} min.`, etapa: etapaCodigo ? "codigo" : "senha" };
+    }
+
+    if (etapaCodigo) {
+      if (!(await preSessaoValida())) {
+        return { error: "O tempo para digitar o código acabou. Entre com a senha de novo.", etapa: "senha" };
+      }
+      const codigo = String(formData.get("codigo") ?? "").slice(0, 20);
+      const como = await conferirSegundoFator(codigo);
+      if (!como) {
+        await falhou(ip);
+        await log("Código do celular errado", false);
+        await espera();
+        return { error: "Código errado ou vencido. Confira o app e digite o código que está aparecendo agora.", etapa: "codigo" };
+      }
+      await acertou(ip);
+      await apagarPreSessao();
+      await createSession({ mfa: true });
+      await log(como === "reserva" ? "Entrou com um código reserva" : "Entrou (senha + código)", true);
+    } else {
+      const password = String(formData.get("password") ?? "");
+      if (!password || password.length > 200 || !verifyPassword(password)) {
+        await falhou(ip);
+        await log("Senha errada", false);
+        await espera();
+        return { error: "Senha incorreta.", etapa: "senha" };
+      }
+      if (redisAtivo() && (await doisFatoresAtivo())) {
+        await criarPreSessao();
+        return { etapa: "codigo" };
+      }
+      await acertou(ip);
+      await createSession();
+      await log("Entrou (só senha)", true);
+    }
+  } catch (err) {
+    unstable_rethrow(err);
+    console.error("login", err);
+    return { error: "Não deu para entrar agora. Tente de novo em instantes.", etapa: etapaCodigo ? "codigo" : "senha" };
+  }
   redirect("/admin");
 }
 
@@ -50,6 +117,7 @@ export async function loginAction(_prevState: LoginState, formData: FormData): P
 export async function logoutTodosAction() {
   await requireAdmin();
   await revogarTodasAsSessoes();
+  if (redisAtivo()) await registrarEntrada("Saiu de todos os aparelhos", true, await headers());
   await destroySession();
   redirect("/admin/login");
 }
@@ -321,5 +389,39 @@ export async function deleteDepoimentoAction(id: string) {
     content.depoimentos = content.depoimentos.filter((x) => x.id !== id);
     await saveContent(content, `exclui o depoimento de ${d?.nome ?? ""}`);
     return "Depoimento excluído.";
+  });
+}
+
+// --- Segurança: phone code (2FA) setup --------------------------------------
+
+/** Step 1 of turning the phone code on: a new secret + its QR code. */
+export async function iniciarDoisFatoresAction() {
+  await requireAdmin();
+  const { segredo, otpauth } = await iniciarDoisFatores();
+  const QRCode = (await import("qrcode")).default;
+  const qrSvg = await QRCode.toString(otpauth, { type: "svg", margin: 1, color: { dark: "#241f1a", light: "#fffefb" } });
+  return { segredo, otpauth, qrSvg };
+}
+
+/** Step 2: the first code from the app proves the scan worked. */
+export async function confirmarDoisFatoresAction(codigo: string): Promise<{ reservas?: string[]; erro?: string }> {
+  await requireAdmin();
+  const reservas = await confirmarDoisFatores(String(codigo).slice(0, 12));
+  if (!reservas) return { erro: "Código não confere. Confira se escaneou o QR code e digite o código que está aparecendo agora no app." };
+  // Older password-only sessions stop working now; keep this device signed in.
+  await createSession({ mfa: true });
+  await registrarEntrada("Ativou o código no celular", true, await headers());
+  revalidatePath("/admin/seguranca");
+  return { reservas };
+}
+
+export async function desativarDoisFatoresAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const codigo = String(formData.get("codigo") ?? "").slice(0, 20);
+    if (!(await conferirSegundoFator(codigo))) throw new Aviso("Código errado. Para desligar, digite o código que está aparecendo agora no app.");
+    await desativarDoisFatores();
+    await registrarEntrada("Desligou o código no celular", true, await headers());
+    revalidatePath("/admin/seguranca");
+    return "Código no celular desligado. O painel volta a pedir só a senha.";
   });
 }

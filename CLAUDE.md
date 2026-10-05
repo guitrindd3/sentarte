@@ -568,6 +568,16 @@ Vercel Web Analytics wasn't enabled and on Hobby can't record searches/clicks, s
 - Privacy page has an "Estatísticas de visita" paragraph — keep it true if tracking changes.
 - Local test: scratchpad `fake-redis.mjs` (tiny REST stand-in) + `KV_REST_API_URL=http://localhost:3199`.
 
+## Admin login security (2026-10-05)
+
+`lib/seguranca.ts` + `/admin/seguranca` (sidebar "Segurança"; on phones a header link). All state in the same Upstash Redis as the statistics (`lib/redis.ts`):
+- **Phone code (TOTP, RFC 6238, own implementation, no lib)**, turned on by the admin from /admin/seguranca: QR (`qrcode` npm, server SVG) → first code confirms → 8 one-time recovery codes shown once (stored as salted sha256 in a Redis set). Secret stored AES-256-GCM-encrypted with a key derived from SESSION_SECRET (`admin:totp`). Login is two-step: password → short-lived `sentarte_pre` cookie (5 min, path /admin) → code (app code or recovery code; an app code's 30s step can't be reused). Sessions carry `mfa: true`; once the code is on, `verifySession()` rejects password-only sessions. Rotating SESSION_SECRET breaks the stored secret/recovery codes — turn the code off first.
+- **Locked out (lost phone and recovery codes)?** Delete Redis key `admin:totp` (and `admin:reserva`, `admin:totp:ultimo`) with the `KV_REST_API_*` env vars — the panel goes back to password only.
+- Wrong attempts (password or code) → `admin:falhas:<ip>` (5 per 15 min). History: `admin:log` (last 200: event, ok, city, device, masked IP), shown as a table.
+- "Sair de todos os aparelhos" now writes `admin:revogadoEm` in Redis (instant); `content/admin.json` is the old repo-based copy, still honored (max of both).
+- `verifySession()` fails closed if Redis errors. Without Redis env vars everything falls back to the old password-only behavior.
+- Tested end to end locally (scratchpad `teste2fa.mjs`: fake Redis + a throwaway `ADMIN_PASSWORD_HASH` for "teste123" passed only to the local `next start`).
+
 ## Security (2026-09-30 pass)
 
 - Security headers + CSP in `next.config.ts` (`headers()`), `poweredByHeader:

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
 import { githubConfigurado } from "@/lib/github-store";
@@ -65,6 +66,9 @@ export default async function PainelLayout({ children }: { children: React.React
             <div className="hidden lg:block" />
             <div className="flex items-center gap-3">
               <StatusPublicacao />
+              <Link href="/admin/seguranca" className="text-sm font-medium text-ink-soft underline-offset-2 hover:text-ink hover:underline lg:hidden">
+                Segurança
+              </Link>
               <a href="/" target="_blank" rel="noreferrer" className="text-sm font-medium text-ink-soft underline-offset-2 hover:text-ink hover:underline lg:hidden">
                 Ver site
               </a>

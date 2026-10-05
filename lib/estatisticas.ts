@@ -1,5 +1,6 @@
 import "server-only";
 import { createHash } from "crypto";
+import { redis, redisAtivo, type Cmd } from "./redis";
 
 // Site statistics (2026-10-05): the admin's "Acessos" dashboard. Vercel Web
 // Analytics on Hobby can't record searches or clicks, so the site counts them
@@ -8,26 +9,10 @@ import { createHash } from "crypto";
 // a one-day hash of IP + browser, only used inside a HyperLogLog to count
 // unique visitors. Everything is a per-day counter that expires after ~13 months.
 
-const URL_ = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
-const TOKEN = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
 const VALIDADE_S = 400 * 24 * 3600;
 
-export const estatisticasAtivas = () => Boolean(URL_ && TOKEN);
-
-type Cmd = (string | number)[];
-
-async function pipeline(cmds: Cmd[]): Promise<unknown[]> {
-  if (!URL_ || !TOKEN || cmds.length === 0) return [];
-  const res = await fetch(`${URL_}/pipeline`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${TOKEN}`, "Content-Type": "application/json" },
-    body: JSON.stringify(cmds),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`Upstash ${res.status}`);
-  const out = (await res.json()) as { result?: unknown; error?: string }[];
-  return out.map((r) => r.result);
-}
+export const estatisticasAtivas = redisAtivo;
+const pipeline = redis;
 
 /** YYYY-MM-DD in Brasília time. */
 export function diaBR(d = new Date()) {
