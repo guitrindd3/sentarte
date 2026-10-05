@@ -383,7 +383,8 @@
       "nome": "Itaciara",
       "cidade": "Rio de Janeiro",
       "texto": "Muito bom",
-      "fotoUrl": "/catalogo/796d0e35-1464-4492-8f14-c30401cbcd59.jpg"
+      "fotoUrl": "/catalogo/796d0e35-1464-4492-8f14-c30401cbcd59.jpg",
+      "estrelas": 5
     }
   ],
   "paginas": {}
