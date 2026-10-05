@@ -35,6 +35,8 @@ export type Depoimento = {
   cidade?: string;
   texto: string;
   fotoUrl?: string;
+  /** 1-5 stars (customer reviews sent from the site, or set by the admin). */
+  estrelas?: number;
 };
 
 export type SiteContent = {

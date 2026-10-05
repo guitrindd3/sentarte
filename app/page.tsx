@@ -34,7 +34,7 @@ export default async function Home() {
       <PullQuote frase={textoSimples(t.linha("frase"))} assinatura={textoSimples(t.linha("fraseAssinatura"))} />
       <MaterialSpec foto={t.linha("materialFoto")} titulo={t.linha("materialTitulo")} texto={textoSimples(t.linha("materialTexto"))} itens={t.blocos("materialItens").map((b) => ({ titulo: b.titulo, texto: textoSimples(b.texto) }))} />
       <MedidasCadeiras whatsappNumero={content.site.whatsappNumero} />
-      <Depoimentos depoimentos={content.depoimentos} titulo={t.linha("depoimentosTitulo")} />
+      <Depoimentos depoimentos={content.depoimentos} titulo={t.linha("depoimentosTitulo")} googleUrl={content.site.googleUrl} />
       <ContactCta whatsappNumero={zap} instagramHandle={content.site.instagramHandle} titulo={t.linha("contatoTitulo")} texto={textoSimples(t.linha("contatoTexto"))} />
     </>
   );

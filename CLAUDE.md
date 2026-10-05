@@ -609,6 +609,10 @@ Three defaults were corrected on 2026-10-05 because they still said orders were 
 - Homepage "Nossas cadeiras" row cards made smaller (user: "muito grande") — 23.5% of the column on desktop, 34% sm, 76% phones — and the whole card photo is a link to the WhatsApp order (same message as "Ou pedir direto pelo WhatsApp"; gallery arrows sit above it), on every ModeloCard.
 - Homepage "Nossas cadeiras" row now spans the full screen width (user: chairs should slide out at the screen edges); first card aligns with the text column via `lg:px-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))]`, card widths computed from the viewport so they keep the old size.
 
+## Star reviews (2026-10-05)
+
+`Depoimento.estrelas` (1-5). The homepage testimonials section (`components/home/depoimentos.tsx`) now always renders: stars per card, the average + count, and "★ Já tem a sua? Avalie" (`components/avaliar.tsx` → `POST /api/avaliacoes`: stars, name, city, comment; honeypot; 3/IP/day). Reviews wait in Redis hash `avaliacoes:pendentes` (`lib/avaliacoes.ts`) until approved in /admin → Depoimentos ("Esperando aprovação": edit text/stars, add a photo, Aprovar e publicar → becomes a Depoimento via commit; or Recusar). Início shows a callout while some wait. The admin's own testimonials get a stars select too, and existing ones can get stars ("Salvar estrelas"). After sending, the customer is invited to also review on Google (`site.googleUrl`). No AggregateRating JSON-LD on purpose (self-serving reviews aren't eligible for Google stars). Privacy page default has an "Avaliações" section.
+
 ## Security (2026-09-30 pass)
 
 - Security headers + CSP in `next.config.ts` (`headers()`), `poweredByHeader:

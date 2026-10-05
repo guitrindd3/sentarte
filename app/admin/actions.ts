@@ -14,6 +14,7 @@ import {
   verifySession,
 } from "@/lib/auth";
 import { excluirInteressado, excluirPedido } from "@/lib/clientes";
+import { avaliacoesPendentes, tirarAvaliacao } from "@/lib/avaliacoes";
 import { normalizarCodigo } from "@/lib/cupom";
 import { paginaEditavel, type Bloco, type ValorCampo } from "@/lib/textos-paginas";
 import { excluirCupom, listarCupons, salvarCupom } from "@/lib/cupons-store";
@@ -382,10 +383,50 @@ export async function addDepoimentoAction(_p: Resultado, formData: FormData) {
       cidade: String(formData.get("cidade") ?? "").trim().slice(0, 80) || undefined,
       texto,
       fotoUrl: preparada?.url,
+      estrelas: estrelasDoForm(formData),
     };
     content.depoimentos = [...content.depoimentos, novo];
     await saveContent(content, `adiciona o depoimento de ${nome}`, preparada ? [preparada.arquivo] : []);
     return "Depoimento adicionado! Aparece na página inicial em 1 a 2 minutos.";
+  });
+}
+
+function estrelasDoForm(fd: FormData) {
+  const n = Math.round(Number(fd.get("estrelas")));
+  return n >= 1 && n <= 5 ? n : undefined;
+}
+
+/** Approves a customer's review from the site (texts may be corrected first; a photo may be added). */
+export async function aprovarAvaliacaoAction(id: string, _p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const pendente = (await avaliacoesPendentes()).find((a) => a.id === id);
+    if (!pendente) throw new Aviso(SUMIU);
+    const nome = String(formData.get("nome") ?? pendente.nome).trim().slice(0, 80) || pendente.nome;
+    const texto = String(formData.get("texto") ?? pendente.texto).trim().slice(0, 600) || pendente.texto;
+    const foto = await imagemValida(formData.get("foto"));
+    const preparada = foto ? await prepararFoto(foto) : undefined;
+    const content = await getContentForWrite();
+    content.depoimentos = [
+      ...content.depoimentos,
+      {
+        id: `dep-${crypto.randomUUID().slice(0, 8)}`,
+        nome,
+        cidade: String(formData.get("cidade") ?? pendente.cidade ?? "").trim().slice(0, 80) || undefined,
+        texto,
+        estrelas: estrelasDoForm(formData) ?? pendente.estrelas,
+        fotoUrl: preparada?.url,
+      },
+    ];
+    await saveContent(content, `aprova a avaliação de ${nome}`, preparada ? [preparada.arquivo] : []);
+    await tirarAvaliacao(id);
+    return "Avaliação aprovada! Aparece na página inicial em 1 a 2 minutos.";
+  });
+}
+
+export async function recusarAvaliacaoAction(id: string) {
+  return executar(async () => {
+    await tirarAvaliacao(id);
+    return "Avaliação recusada. Ela não vai aparecer no site.";
   });
 }
 
@@ -586,5 +627,16 @@ export async function restaurarPaginaAction(paginaId: string) {
     content.paginas = resto;
     await saveContent(content, `volta a página "${pg.nome}" ao texto original`);
     return { msg: "Pronto: a página voltou ao texto original.", ir: `/admin/paginas/${pg.id}` };
+  });
+}
+
+export async function estrelasDepoimentoAction(id: string, _p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const content = await getContentForWrite();
+    const d = content.depoimentos.find((x) => x.id === id);
+    if (!d) throw new Aviso(SUMIU);
+    d.estrelas = estrelasDoForm(formData);
+    await saveContent(content, `muda as estrelas do depoimento de ${d.nome}`);
+    return PRONTO;
   });
 }

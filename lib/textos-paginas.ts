@@ -334,6 +334,11 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
             "Se você se cadastrar para receber novidades e cupons, guardamos seu nome e WhatsApp só para isso. Para sair da lista, é só pedir pelo WhatsApp que a gente apaga na hora.",
         },
         {
+          titulo: "Avaliações",
+          texto:
+            "Se você avaliar a sua cadeira aqui no site, seu nome, a cidade (se informar), as estrelas e o comentário aparecem na página inicial depois que o ateliê conferir. Para tirar a sua avaliação, é só pedir pelo WhatsApp.",
+        },
+        {
           titulo: "Seus direitos",
           texto:
             "Você pode pedir a qualquer momento para saber quais dados temos sobre você, corrigi-los ou solicitar a exclusão, conforme a Lei Geral de Proteção de Dados (LGPD). Basta [enviar uma mensagem no WhatsApp](whatsapp).",

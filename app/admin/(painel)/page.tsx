@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { avaliacoesPendentes } from "@/lib/avaliacoes";
 import { pedidosRecentes, type PedidoCliente } from "@/lib/clientes";
 import { getAdminContent } from "@/lib/content-store";
 import { githubConfigurado, ultimosCommits, type CommitResumo } from "@/lib/github-store";
@@ -36,11 +37,13 @@ export default async function VisaoGeral() {
     } catch {}
   }
 
-  // Carts that went to Mercado Pago and never got paid, last 7 days.
+  // Carts that went to Mercado Pago and never got paid, last 7 days; reviews waiting for approval.
   let abandonados: PedidoCliente[] = [];
+  let avaliacoesEsperando = 0;
   if (redisAtivo()) {
     try {
       abandonados = carrinhosAbandonados(await pedidosRecentes(30));
+      avaliacoesEsperando = (await avaliacoesPendentes()).length;
     } catch {}
   }
 
@@ -77,6 +80,18 @@ export default async function VisaoGeral() {
           Tudo o que você salvar aqui aparece no site em 1 a 2 minutos. O aviso lá em cima mostra quando terminou de atualizar.
         </p>
       </div>
+
+      {avaliacoesEsperando ? (
+        <Link
+          href="/admin/depoimentos"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-rattan/50 bg-rattan/10 px-5 py-4 transition hover:border-wood"
+        >
+          <span className="font-semibold text-wood-dark">
+            ★ {avaliacoesEsperando} {avaliacoesEsperando === 1 ? "avaliação nova esperando" : "avaliações novas esperando"} a sua aprovação
+          </span>
+          <span className="rounded-full bg-wood px-4 py-2 text-sm font-semibold text-paper">Ver avaliações</span>
+        </Link>
+      ) : null}
 
       {abandonados.length ? (
         <Link
