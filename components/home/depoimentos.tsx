@@ -5,28 +5,22 @@ import type { Depoimento } from "@/lib/content-schema";
 export function Depoimentos({ depoimentos }: { depoimentos: Depoimento[] }) {
   if (!depoimentos.length) return null;
   return (
-    <section className="px-6 py-14 md:py-20" aria-labelledby="titulo-depoimentos">
+    <section className="px-6 pb-2 pt-14 md:pb-4 md:pt-20" aria-labelledby="titulo-depoimentos">
       <div className="mx-auto max-w-6xl">
         <h2 id="titulo-depoimentos" className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">
           Quem já tem a sua
         </h2>
-        <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-8 grid gap-4 md:grid-cols-2">
           {depoimentos.map((d) => (
-            <li key={d.id} className="flex flex-col border border-line bg-paper">
+            <li key={d.id} className="flex items-start gap-4 border border-line bg-paper p-4 sm:p-5">
               {d.fotoUrl ? (
-                <span className="relative block aspect-square w-full overflow-hidden">
-                  <Image
-                    src={d.fotoUrl}
-                    alt={`${d.nome} com a cadeira SentArte`}
-                    fill
-                    className="object-cover"
-                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  />
+                <span className="relative block h-20 w-20 shrink-0 overflow-hidden sm:h-24 sm:w-24">
+                  <Image src={d.fotoUrl} alt={`${d.nome} com a cadeira SentArte`} fill className="object-cover" sizes="96px" />
                 </span>
               ) : null}
-              <blockquote className="flex flex-1 flex-col p-5">
+              <blockquote className="min-w-0 flex-1">
                 <p className="text-ink">&ldquo;{d.texto}&rdquo;</p>
-                <footer className="mt-4 text-sm text-ink-soft">
+                <footer className="mt-3 text-sm text-ink-soft">
                   {d.nome}
                   {d.cidade ? `, ${d.cidade}` : ""}
                 </footer>

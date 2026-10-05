@@ -27,10 +27,10 @@ export default async function Home() {
       <CategoryBento categorias={content.categorias} />
       <TeamShowcase categorias={content.categorias} whatsappNumero={content.site.whatsappNumero} />
       <PersonalizationSteps />
-      <Depoimentos depoimentos={content.depoimentos} />
       <PullQuote />
       <MaterialSpec />
       <MedidasCadeiras whatsappNumero={content.site.whatsappNumero} />
+      <Depoimentos depoimentos={content.depoimentos} />
       <ContactCta whatsappNumero={content.site.whatsappNumero} instagramHandle={content.site.instagramHandle} />
     </>
   );

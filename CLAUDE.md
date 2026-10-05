@@ -465,7 +465,7 @@ Free shipping was removed from the whole site (user). Shipping is quoted by CEP:
 ## Shape search & testimonials (2026-10-03)
 
 - The builder has a "Buscar trançado" box above the style tabs: accent-insensitive match on the shape label across all four tabs (tabs show unselected while searching; clicking a tab clears the search).
-- `SiteContent.depoimentos` (customer name, optional city/photo, text), managed in /admin ("Depoimentos de clientes", needs GITHUB_TOKEN to save). The homepage section `components/home/depoimentos.tsx` renders only when there is at least one. Only real customer messages — never invent testimonials.
+- `SiteContent.depoimentos` (customer name, optional city/photo, text), managed in /admin ("Depoimentos de clientes", needs GITHUB_TOKEN to save). The homepage section `components/home/depoimentos.tsx` renders only when there is at least one — at the bottom, just before the contact CTA, as small square thumbnails beside the quote (user 2026-10-05). Only real customer messages — never invent testimonials.
 
 ## Chair picture in the cart (2026-10-03)
 
