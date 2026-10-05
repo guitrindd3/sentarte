@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckIcon, ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
-import { VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { useCart } from "@/lib/cart-context";
 import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
@@ -24,8 +23,6 @@ import { whatsappUrl } from "@/lib/urls";
 
 const FOTO_VAZIA = "/monte/cadeira-vazia.jpg";
 const FOTO_TRANCADA = "/monte/cadeira-trancada.jpg";
-/** Clip time of the fully woven, still-unnamed frame the photo was taken from. */
-const FIM_DA_TRAMA = 1.72;
 /** Visible crop of the tall 480x848 frame (just the chair). */
 const CORTE_Y0 = 150;
 const CORTE_H = 560;
@@ -169,7 +166,6 @@ function desenhar(
 
 export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [passo, setPasso] = useState(0); // 0 = not started yet
-  const [animando, setAnimando] = useState(false);
   const [foto, setFoto] = useState<ImageData | null>(null);
   const [forma, setForma] = useState<Forma>("lisa");
   // Chair type (user 2026-10-05): only chosen here, in the builder. The picture
@@ -241,7 +237,6 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     const alvo = el.getBoundingClientRect().top + window.scrollY - topo - 8;
     if (el.getBoundingClientRect().top < topo) window.scrollTo({ top: alvo, behavior: "smooth" });
   }, [passo]);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const miniaturasRef = useRef<(HTMLCanvasElement | null)[]>([]);
   const { addItem, openCart } = useCart();
 
@@ -284,30 +279,9 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const mostrarForma = (i: number) => (termoBusca ? ROTULOS_BUSCA[i].includes(termoBusca) : FORMAS_VISIVEIS[i].grupo === grupo);
   const achadas = termoBusca ? ROTULOS_BUSCA.filter((r) => r.includes(termoBusca)).length : -1;
 
-  const fimTimer = useRef<number | undefined>(undefined);
-  const terminarAnimacao = useCallback(() => {
-    window.clearTimeout(fimTimer.current);
-    videoRef.current?.pause();
-    setAnimando(false);
-    setPasso((p) => (p === 0 ? 1 : p));
-  }, []);
-  useEffect(() => () => window.clearTimeout(fimTimer.current), []);
-
-  const comecar = useCallback(() => {
-    const v = videoRef.current;
-    if (!v) return terminarAnimacao();
-    setAnimando(true);
-    v.currentTime = 0;
-    v.play().catch(terminarAnimacao);
-    // Safety net: if the clip stalls (slow network, a backgrounded tab),
-    // go to step 1 anyway shortly after it should have finished.
-    fimTimer.current = window.setTimeout(terminarAnimacao, (FIM_DA_TRAMA + 1.3) * 1000);
-  }, [terminarAnimacao]);
-
-  const aoAvancarVideo = () => {
-    const v = videoRef.current;
-    if (animando && v && v.currentTime >= FIM_DA_TRAMA) terminarAnimacao();
-  };
+  // "Começar a montar" goes straight to step 1 — the weaving clip used to play
+  // first (~2s); the user didn't want to wait for it (2026-10-05).
+  const comecar = useCallback(() => setPasso((p) => (p === 0 ? 1 : p)), []);
 
   // Name step: press/drag on the chair to move the name.
   // Step 1 with a reduced shape: drag moves the shape instead.
@@ -481,7 +455,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             src={FOTO_VAZIA}
             alt="Estrutura da cadeira de praia, ainda sem trançado"
             className={`absolute inset-0 h-full w-full object-cover object-[50%_59%] transition-opacity duration-500 ${
-              passo === 0 && !animando ? "opacity-100" : "opacity-0"
+              passo === 0 ? "opacity-100" : "opacity-0"
             }`}
           />
           {/* eslint-disable-next-line @next/next/no-img-element -- fallback under the canvas until the first repaint lands */}
@@ -490,19 +464,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             alt=""
             aria-hidden="true"
             className={`absolute inset-0 h-full w-full object-cover object-[50%_59%] ${
-              passo > 0 && !animando ? "opacity-100" : "opacity-0"
-            }`}
-          />
-          <video
-            ref={videoRef}
-            src={VIDEO_MONTE_SUA_CADEIRA}
-            muted
-            playsInline
-            preload="auto"
-            onTimeUpdate={aoAvancarVideo}
-            aria-hidden="true"
-            className={`absolute inset-0 h-full w-full object-cover object-[50%_59%] ${
-              animando ? "opacity-100" : "opacity-0"
+              passo > 0 ? "opacity-100" : "opacity-0"
             }`}
           />
           <canvas
@@ -529,7 +491,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
               temNome ? `, com o nome ${nomeLimpo}` : ""
             }`}
             className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${
-              passo > 0 && !animando ? "opacity-100" : "opacity-0"
+              passo > 0 ? "opacity-100" : "opacity-0"
             } ${podeArrastar ? (arrastando ? "cursor-grabbing touch-none" : "cursor-grab touch-none") : ""}`}
           />
           {podeArrastar && !arrastando ? (
@@ -538,7 +500,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             </p>
           ) : null}
 
-          {passo === 0 && !animando ? (
+          {passo === 0 ? (
             <div className="absolute inset-x-4 bottom-4 border border-line bg-paper/95 p-5 text-center backdrop-blur md:hidden">
               <p className="font-serif text-xl font-medium tracking-tight text-ink">Vamos montar a sua cadeira?</p>
               <p className="mt-1 text-sm text-ink-soft">São 3 passos: trançado, cores e nome.</p>
@@ -556,7 +518,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
         </div>
       </div>
 
-        {passo > 0 && !animando && controle ? (
+        {passo > 0 && controle ? (
           <div className="mx-auto mt-3 w-full max-w-md md:max-w-[min(28rem,calc((100vh-var(--altura-topo,4rem)-7.5rem)*0.83))]">
             {controleTamanho()}
           </div>
@@ -566,7 +528,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       {/* Mini preview (shown while the big chair is scrolled away) */}
       <div
         className={`fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] right-3 z-30 w-28 overflow-hidden rounded-md border border-line bg-paper shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-300 md:hidden ${
-          cadeiraFora && passo > 0 && !animando
+          cadeiraFora && passo > 0
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-3 opacity-0"
         }`}
@@ -585,7 +547,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
       {/* The steps */}
       <div ref={passosRef} className="flex scroll-mt-4 flex-col">
-        {passo === 0 && !animando ? (
+        {passo === 0 ? (
           <div className="mb-8 hidden items-center justify-between gap-6 border border-verde/40 bg-verde/5 p-5 md:flex">
             <div>
               <p className="font-serif text-xl font-medium tracking-tight text-ink">Vamos montar a sua cadeira?</p>
@@ -602,7 +564,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             </button>
           </div>
         ) : null}
-        <fieldset className="mb-6" disabled={animando}>
+        <fieldset className="mb-6">
           <legend className="text-sm font-medium text-ink">Tipo de cadeira</legend>
           <div className="mt-2 grid grid-cols-3 gap-1.5 sm:gap-2" role="radiogroup" aria-label="Tipo de cadeira">
             {(["infantil", "normal", "reclinavel"] as const).map((t) => {
@@ -643,7 +605,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
               <li key={rotulo}>
                 <button
                   type="button"
-                  disabled={passo === 0 || animando}
+                  disabled={passo === 0}
                   onClick={() => setPasso(n)}
                   aria-current={ativo ? "step" : undefined}
                   className={`inline-flex w-full items-center justify-center gap-1 whitespace-nowrap border px-1 py-1.5 text-[0.8rem] transition-colors disabled:opacity-40 sm:w-auto sm:gap-2 sm:px-3 sm:text-sm ${
