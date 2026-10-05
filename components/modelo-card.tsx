@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { WeavePattern } from "@/components/weave-pattern";
@@ -9,6 +9,7 @@ import { CATEGORIA_COM_PRECO, formatBRL, PARCELAS_MAX, precoCadeira, precoPix, P
 import { DESENHO_TEMAS } from "@/lib/desenho-model";
 import { whatsappUrl } from "@/lib/urls";
 import type { Modelo } from "@/lib/content-schema";
+import { useCart, type CartItem } from "@/lib/cart-context";
 
 export function ModeloCard({
   modelo,
@@ -26,6 +27,8 @@ export function ModeloCard({
   const [wantsNome, setWantsNome] = useState(false);
   const [varianteIndex, setVarianteIndex] = useState(0);
   const [nomeTexto, setNomeTexto] = useState("");
+  const nomeRef = useRef<HTMLInputElement>(null);
+  const { addItem, comprarAgora } = useCart();
 
   const ativo = wantsNome && personalizado ? personalizado : modelo;
   // Color options (a real choice, sent with the order) come first, then
@@ -62,6 +65,27 @@ export function ModeloCard({
     varianteLabel ? ` Cor: ${varianteLabel}.` : ""
   }${nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""}`;
 
+  const itemDoCarrinho: Omit<CartItem, "quantidade"> = {
+    id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}${
+      varianteLabel ? `:${varianteLabel}` : ""
+    }`,
+    categoriaSlug,
+    categoriaTitulo: categoria,
+    modeloId: ativo.id,
+    modeloNome: ativo.nome,
+    imagemUrl: fotoAtiva,
+    corA: ativo.corA,
+    corB: ativo.corB,
+    nomePersonalizado: nomeFinal || undefined,
+    personalizada: ehDesenho || undefined,
+    variante: varianteLabel || undefined,
+  };
+
+  const pedirNome = () => {
+    nomeRef.current?.focus();
+    nomeRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  };
+
   return (
     <div className="group flex flex-col border border-line bg-paper transition-all duration-300 hover:-translate-y-1 hover:border-ink hover:shadow-[6px_6px_0_0_var(--line)]">
       <div className="relative aspect-square overflow-hidden border-b border-line bg-canvas sm:aspect-[4/5]">
@@ -77,15 +101,14 @@ export function ModeloCard({
         ) : (
           <WeavePattern colorA={ativo.corA} colorB={ativo.corB} cell={30} band={20} className="h-full w-full" />
         )}
-        {/* The whole photo is the order link (user 2026-10-05) — same as "Ou pedir direto
-            pelo WhatsApp"; the gallery arrows/thumbnails below sit on top of it. */}
-        <a
-          href={whatsappUrl(whatsappNumero, mensagemWhatsapp)}
-          target="_blank"
-          rel="noreferrer"
-          data-rastro={`Foto da cadeira (pedido WhatsApp): ${ativo.nome}`}
-          aria-label={`Pedir ${ativo.nome} pelo WhatsApp`}
-          className="absolute inset-0"
+        {/* The whole photo puts the chair in the cart (user 2026-10-05; it was the
+            WhatsApp order link). The gallery arrows/thumbnails sit above it. */}
+        <button
+          type="button"
+          data-rastro={`Foto da cadeira (carrinho): ${ativo.nome}`}
+          aria-label={`Colocar ${ativo.nome} no carrinho`}
+          onClick={() => (faltaNome ? pedirNome() : addItem(itemDoCarrinho))}
+          className="absolute inset-0 cursor-pointer"
         />
         {temVariantes ? (
           <>
@@ -178,6 +201,7 @@ export function ModeloCard({
             <span className="text-xs text-ink-soft">Nome ou apelido para trançar</span>
             <input
               type="text"
+              ref={nomeRef}
               value={nomeTexto}
               onChange={(e) => setNomeTexto(e.target.value)}
               placeholder="Ex: João"
@@ -188,26 +212,20 @@ export function ModeloCard({
         ) : null}
 
         <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft" title={ativo.descricao}>{ativo.descricao}</p>
-        <AddToCartButton
-          item={{
-            id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}${
-              varianteLabel ? `:${varianteLabel}` : ""
-            }`,
-            categoriaSlug,
-            categoriaTitulo: categoria,
-            modeloId: ativo.id,
-            modeloNome: ativo.nome,
-            imagemUrl: fotoAtiva,
-            corA: ativo.corA,
-            corB: ativo.corB,
-            nomePersonalizado: nomeFinal || undefined,
-            personalizada: ehDesenho || undefined,
-            variante: varianteLabel || undefined,
-          }}
-          disabled={faltaNome}
-        />
+        <div className="mt-4 grid gap-2">
+          <button
+            type="button"
+            disabled={faltaNome}
+            data-rastro={`Comprar: ${ativo.nome}`}
+            onClick={() => comprarAgora(itemDoCarrinho)}
+            className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas"
+          >
+            Comprar
+          </button>
+          <AddToCartButton item={itemDoCarrinho} disabled={faltaNome} contorno />
+        </div>
         {faltaNome ? (
-          <p className="mt-1.5 text-xs text-ink-soft">Escreva o nome para adicionar ao carrinho.</p>
+          <p className="mt-1.5 text-xs text-ink-soft">Escreva o nome para comprar ou adicionar ao carrinho.</p>
         ) : null}
         <a
           href={whatsappUrl(whatsappNumero, mensagemWhatsapp)}

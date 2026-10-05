@@ -34,6 +34,11 @@ type CartContextValue = {
   clear: () => void;
   openCart: () => void;
   closeCart: () => void;
+  /** Cart drawer step: the item list, or the delivery/payment form. */
+  etapa: "carrinho" | "entrega";
+  setEtapa: (e: "carrinho" | "entrega") => void;
+  /** "Comprar": puts the item in the cart (once — no duplicate) and opens the payment step. */
+  comprarAgora: (item: Omit<CartItem, "quantidade">) => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -43,6 +48,7 @@ const STORAGE_KEY = "sentarte-cart";
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [etapa, setEtapa] = useState<"carrinho" | "entrega">("carrinho");
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -77,6 +83,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...item, quantidade: 1 }];
     });
+    setEtapa("carrinho");
     setIsOpen(true);
   };
 
@@ -106,8 +113,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeItem,
         setQuantidade,
         clear,
-        openCart: () => setIsOpen(true),
+        openCart: () => {
+          setEtapa("carrinho");
+          setIsOpen(true);
+        },
         closeCart: () => setIsOpen(false),
+        etapa,
+        setEtapa,
+        comprarAgora: (item) => {
+          if (!items.some((i) => i.id === item.id)) addItem(item);
+          setEtapa("entrega");
+          setIsOpen(true);
+        },
       }}
     >
       {children}

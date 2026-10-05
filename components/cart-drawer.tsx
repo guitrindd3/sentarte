@@ -21,8 +21,7 @@ import {
 import { whatsappUrl } from "@/lib/urls";
 
 export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero: string; pagamentoAtivo: boolean }) {
-  const { items, count, isOpen, closeCart, removeItem, setQuantidade, clear } = useCart();
-  const [etapa, setEtapa] = useState<"carrinho" | "entrega">("carrinho");
+  const { items, count, isOpen, closeCart, removeItem, setQuantidade, clear, etapa, setEtapa } = useCart();
   const [cep, setCep] = useState("");
   useEffect(() => {
     // CEP typed last time (localStorage) — only after hydration, like the cart itself
