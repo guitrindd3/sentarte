@@ -118,8 +118,9 @@ photo 403). Everything moved into the repo:
   Writes use the file sha from `getContentForWrite()` so a stale save is
   rejected (409) instead of overwriting. Without the token, /admin shows a
   banner and saving fails.
-- `@vercel/blob` was uninstalled. The Blob store still exists (suspended) on
-  the account, unused. Notes below about Blob propagation/caching are
+- `@vercel/blob` was uninstalled. The suspended Blob store `sentarte-content`
+  was emptied and DELETED by the user on 2026-10-05 (with its
+  `BLOB_READ_WRITE_TOKEN`); the account has no Blob stores. Notes below about Blob propagation/caching are
   historical.
 
 ## Content model
