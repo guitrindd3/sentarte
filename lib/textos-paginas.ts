@@ -14,6 +14,8 @@ export type ValorCampo = string | Bloco[];
 
 export type Campo =
   | { id: string; rotulo: string; tipo: "linha" | "texto"; dica?: string; max?: number }
+  /** A photo: the value is its URL (/catalogo/… once replaced in the admin). */
+  | { id: string; rotulo: string; tipo: "imagem"; dica?: string }
   | {
       id: string;
       rotulo: string;
@@ -56,6 +58,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
       { id: "frase", rotulo: "Frase de destaque", tipo: "texto", max: 300 },
       { id: "fraseAssinatura", rotulo: "Linha embaixo da frase", tipo: "linha", max: 120 },
       { id: "materialTitulo", rotulo: "Título do material", tipo: "linha", max: 60 },
+      { id: "materialFoto", rotulo: "Foto do material", tipo: "imagem", dica: "Fica do lado do texto do material." },
       { id: "materialTexto", rotulo: "Texto do material", tipo: "texto", max: 600 },
       { id: "materialItens", rotulo: "Os 3 destaques do material", tipo: "blocos", rotulos: ["Destaque", "Explicação"], fixo: true },
       { id: "depoimentosTitulo", rotulo: "Título dos depoimentos", tipo: "linha", max: 60 },
@@ -79,6 +82,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
       frase: "Uma cadeira boa não é a que impressiona na primeira olhada — é a que continua inteira depois do quinto verão.",
       fraseAssinatura: "Do jeito que a gente pensa cada peça no ateliê.",
       materialTitulo: "A linha que sustenta cada peça",
+      materialFoto: "/photos/thread-spools.jpg",
       materialTexto:
         "Trabalhamos com corda náutica 100% polipropileno — um material que não absorve água, por isso não apodrece nem mofa mesmo com contato constante com a maresia. A estrutura é em alumínio, que não enferruja e mantém a cadeira leve e fácil de dobrar e transportar.",
       materialItens: [
@@ -96,7 +100,11 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
     nome: "Sobre",
     caminho: "/sobre",
     descricao: "A história do ateliê.",
-    campos: [...camposTituloResumo, { id: "texto", rotulo: "Texto da página", tipo: "texto", dica: "Deixe uma linha em branco entre os parágrafos.", max: 3000 }],
+    campos: [
+      ...camposTituloResumo,
+      { id: "texto", rotulo: "Texto da página", tipo: "texto", dica: "Deixe uma linha em branco entre os parágrafos.", max: 3000 },
+      { id: "foto", rotulo: "Foto do lado do texto", tipo: "imagem", dica: "Uma foto do ateliê, de você trabalhando ou das cadeiras. Fica melhor em pé (mais alta que larga)." },
+    ],
     padrao: {
       ...tituloResumo(
         "Sobre o SentArte",
@@ -107,6 +115,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
         "O processo não mudou desde a primeira peça: estrutura em alumínio, corda náutica de polipropileno e um trançado feito à mão, fio a fio, sem pressa. É esse cuidado que garante que a cadeira aguente sol, areia e maresia por temporadas seguidas.",
         "Cada cadeira é feita sob encomenda, com um resumo do pedido confirmado com você antes de começar. Fica pronta em até {prazo} dias úteis e segue para qualquer lugar do Brasil.",
       ].join("\n\n"),
+      foto: "/photos/sand-texture.jpg",
     },
   },
   {

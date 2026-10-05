@@ -28,7 +28,7 @@ export default async function SobrePage() {
         <div className="space-y-5 text-sm leading-relaxed text-ink-soft">
           <TextoRico texto={t.linha("texto")} whatsappNumero={site.whatsappNumero} nome={site.nome} />
         </div>
-        <FramedWeave imagemUrl="/photos/sand-texture.jpg" alt="Areia de praia com ondulações formadas pelo vento" />
+        <FramedWeave imagemUrl={t.linha("foto")} alt={t.linha("foto").startsWith("/photos/") ? "Areia de praia com ondulações formadas pelo vento" : `Foto do ateliê ${site.nome}`} />
       </section>
     </>
   );

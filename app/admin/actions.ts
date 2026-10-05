@@ -516,9 +516,22 @@ export async function salvarPaginaAction(paginaId: string, _p: Resultado, formDa
     if (!pg) throw new Aviso(SUMIU);
     const content = await getContentForWrite();
     const novo: Record<string, ValorCampo> = {};
+    const fotos: ArquivoNovo[] = [];
     for (const c of pg.campos) {
       let v: ValorCampo;
-      if (c.tipo === "blocos") {
+      if (c.tipo === "imagem") {
+        const atual = content.paginas[pg.id]?.[c.id];
+        const nova = await imagemValida(formData.get(c.id));
+        if (nova) {
+          const p = await prepararFoto(nova);
+          fotos.push(p.arquivo);
+          v = p.url;
+        } else if (formData.get(`${c.id}.remover`) === "on") {
+          v = pg.padrao[c.id];
+        } else {
+          v = typeof atual === "string" ? atual : pg.padrao[c.id];
+        }
+      } else if (c.tipo === "blocos") {
         const titulos = formData.getAll(`${c.id}.titulo`).map((x) => String(x).trim());
         const textos = formData.getAll(`${c.id}.texto`).map((x) => String(x).trim());
         v = titulos.map((titulo, i) => ({ titulo, texto: textos[i] ?? "" })).filter((b) => b.titulo || b.texto);
@@ -536,7 +549,7 @@ export async function salvarPaginaAction(paginaId: string, _p: Resultado, formDa
       delete resto[pg.id];
       content.paginas = resto;
     }
-    await saveContent(content, `edita a página "${pg.nome}"`);
+    await saveContent(content, `edita a página "${pg.nome}"`, fotos);
     return PRONTO;
   });
 }

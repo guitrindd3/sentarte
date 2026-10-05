@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getAdminContent } from "@/lib/content-store";
 import { paginaEditavel, textosDaPagina } from "@/lib/textos-paginas";
 import { restaurarPaginaAction, salvarPaginaAction } from "../../../actions";
-import { AdminForm, BarraSalvar, BotaoExcluir, Card, CampoTexto, Field, btnSecondary } from "../../../_ui";
+import { AdminForm, BarraSalvar, BotaoExcluir, Card, CampoTexto, Field, FotoSlot, btnSecondary } from "../../../_ui";
 import { EditorBlocos } from "../blocos";
 
 export default async function EditarPagina({ params }: PageProps<"/admin/paginas/[id]">) {
@@ -56,7 +56,13 @@ export default async function EditarPagina({ params }: PageProps<"/admin/paginas
         <Card>
           <div className="space-y-6">
             {pg.campos.map((c) =>
-              c.tipo === "blocos" ? (
+              c.tipo === "imagem" ? (
+                <div key={c.id} className="max-w-[16rem]">
+                  <FotoSlot name={c.id} removerName={`${c.id}.remover`} atual={t.linha(c.id)} rotulo={c.rotulo} vazio="Clique ou arraste a foto" destaque />
+                  {c.dica ? <p className="mt-2 text-xs text-ink-soft">{c.dica}</p> : null}
+                  <p className="mt-1 text-xs text-ink-soft">&ldquo;Remover&rdquo; volta para a foto original.</p>
+                </div>
+              ) : c.tipo === "blocos" ? (
                 <div key={c.id}>
                   <p className="text-sm font-semibold text-ink">{c.rotulo}</p>
                   {c.dica ? <p className="mt-0.5 text-xs text-ink-soft">{c.dica}</p> : null}

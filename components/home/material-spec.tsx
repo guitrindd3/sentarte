@@ -23,8 +23,10 @@ export function MaterialSpec({
   titulo = "A linha que sustenta cada peça",
   texto,
   itens,
+  foto = "/photos/thread-spools.jpg",
 }: {
   titulo?: string;
+  foto?: string;
   texto?: string;
   itens?: { titulo: string; texto: string }[];
 }) {
@@ -52,7 +54,7 @@ export function MaterialSpec({
         </div>
         <div className="order-first md:order-none">
           <FramedWeave
-            imagemUrl="/photos/thread-spools.jpg"
+            imagemUrl={foto}
             alt="Novelos de corda náutica em várias cores, sobre a areia"
             tone="paper"
           />
