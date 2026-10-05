@@ -90,9 +90,9 @@
           "id": "mod-d4486d07-bb10-4c95-be30-56f561e65b18",
           "nome": "Flamengo",
           "descricao": "Escudo do Flamengo tecido em vermelho e preto. Tem variação de cor — escolhe a que combina com você.",
-          "corA": "#C8102E",
+          "corA": "#c8102e",
           "corB": "#111111",
-          "imagemUrl": "/catalogo/flamengo.jpg",
+          "imagemUrl": "/catalogo/960212ee-bacf-469d-865b-c58435c8164c.jpg",
           "variantes": [
             "/catalogo/flamengo-cor2.jpg",
             "/catalogo/flamengo-cor3.jpg"
