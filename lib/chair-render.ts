@@ -180,6 +180,8 @@ const MARGEM_LADO = 14;
 const CELULA = 7;
 
 export type Opcoes = {
+  /** Chair type (infantil / reclinável); the picture is the same, only the order changes. */
+  tipo?: "infantil" | "reclinavel";
   forma: Forma;
   corA: string; // main thread
   corB: string; // detail thread

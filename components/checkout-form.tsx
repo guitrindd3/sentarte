@@ -89,6 +89,7 @@ export function CheckoutForm({
       quantidade: i.quantidade,
       nomePersonalizado: i.nomePersonalizado,
       variante: i.variante,
+      tipoCadeira: i.tipoCadeira,
     }));
     try {
       window.localStorage.setItem(ENTREGA_KEY, JSON.stringify(d));

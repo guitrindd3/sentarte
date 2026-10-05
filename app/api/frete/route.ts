@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { tipoValido } from "@/lib/offer";
 import type { RespostaFrete } from "@/lib/frete";
 import { calcularFrete } from "@/lib/frete-servidor";
 import { calcularPedido, type ItemDoPedido } from "@/lib/pedido";
@@ -17,9 +18,10 @@ export async function POST(req: Request) {
     modeloNome: String(i.modeloNome ?? "").slice(0, 120),
     quantidade: Math.max(1, Math.min(20, Math.floor(Number(i.quantidade) || 1))),
     nomePersonalizado: i.nomePersonalizado ? String(i.nomePersonalizado).slice(0, 40) : undefined,
+    tipoCadeira: tipoValido(i.tipoCadeira),
   }));
   const conta = calcularPedido(itens);
-  const frete = await calcularFrete(String(corpo.cep ?? ""), conta.qtdCadeiras, conta.total);
+  const frete = await calcularFrete(String(corpo.cep ?? ""), conta.porTipo, conta.total);
   const resposta: RespostaFrete = frete ? { frete } : { indisponivel: true };
   return NextResponse.json(resposta);
 }

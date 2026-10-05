@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { TipoCadeira } from "./offer";
 import { rastrear } from "./rastro";
 
 export type CartItem = {
@@ -19,6 +20,8 @@ export type CartItem = {
   personalizada?: boolean;
   /** Which color variant the customer picked, if the model has more than one. */
   variante?: string;
+  /** Chair type chosen in Monte a sua trama (missing = normal). */
+  tipoCadeira?: TipoCadeira;
 };
 
 type CartContextValue = {

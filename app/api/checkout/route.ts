@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { tipoValido } from "@/lib/offer";
 import { normalizarWhatsapp, salvarPedidoIniciado } from "@/lib/clientes";
 import { cuponsDoPedido } from "@/lib/cupons-store";
 import { anotarNoCaminho, vidValido } from "@/lib/estatisticas";
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
       modeloNome: String(i.modeloNome ?? "").slice(0, 120),
       quantidade: Math.max(1, Math.min(20, Math.floor(Number(i.quantidade) || 1))),
       nomePersonalizado: i.nomePersonalizado ? String(i.nomePersonalizado).slice(0, 40) : undefined,
+      tipoCadeira: tipoValido(i.tipoCadeira),
       variante: i.variante ? String(i.variante).slice(0, 40) : undefined,
     }));
 
@@ -58,7 +60,7 @@ export async function POST(req: Request) {
   }
   const ref = /^[a-z0-9-]{6,40}$/i.test(String(referencia)) ? String(referencia) : crypto.randomUUID();
   // shipping is recomputed here too (Espírito Santo ships free, see lib/frete-servidor.ts)
-  const frete = await calcularFrete(entrega.cep, conta.qtdCadeiras, conta.total);
+  const frete = await calcularFrete(entrega.cep, conta.porTipo, conta.total);
   if (!frete) {
     return NextResponse.json({ erro: "Para esse CEP o frete é combinado pelo WhatsApp." }, { status: 400 });
   }

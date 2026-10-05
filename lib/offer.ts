@@ -19,13 +19,26 @@ export const CATEGORIA_COM_PRECO = "cadeiras";
 // a slug from here to bring that category back everywhere at once.
 export const CATEGORIAS_OCULTAS = new Set(["bolsas", "espreguicadeiras"]);
 
-export function precoCadeira(comNome: boolean) {
-  return comNome ? PRECO_CADEIRA_COM_NOME : PRECO_CADEIRA;
+/**
+ * Chair types offered in "Monte a sua trama" (user 2026-10-05). "normal" is the
+ * fixed chair every catalog model is; the other two exist only in the builder.
+ */
+export type TipoCadeira = "normal" | "infantil" | "reclinavel";
+export const TIPOS_CADEIRA: Record<TipoCadeira, { rotulo: string; curto: string; preco: number; precoComNome: number }> = {
+  infantil: { rotulo: "Cadeira infantil", curto: "Infantil", preco: 399.9, precoComNome: 429.9 },
+  normal: { rotulo: "Cadeira normal", curto: "Normal", preco: PRECO_CADEIRA, precoComNome: PRECO_CADEIRA_COM_NOME },
+  reclinavel: { rotulo: "Cadeira reclinável 8 posições", curto: "Reclinável 8 posições", preco: 549.9, precoComNome: 569.9 },
+};
+export const tipoValido = (t: unknown): TipoCadeira | undefined => (t === "infantil" || t === "reclinavel" ? t : undefined);
+
+export function precoCadeira(comNome: boolean, tipo: TipoCadeira = "normal") {
+  const t = TIPOS_CADEIRA[tipo] ?? TIPOS_CADEIRA.normal;
+  return comNome ? t.precoComNome : t.preco;
 }
 
 /** Price of one cart line: personalized if it has a name or is a desenho design. */
-export function precoItemCadeira(item: { nomePersonalizado?: string; personalizada?: boolean }) {
-  return precoCadeira(Boolean(item.nomePersonalizado) || Boolean(item.personalizada));
+export function precoItemCadeira(item: { nomePersonalizado?: string; personalizada?: boolean; tipoCadeira?: TipoCadeira }) {
+  return precoCadeira(Boolean(item.nomePersonalizado) || Boolean(item.personalizada), item.tipoCadeira);
 }
 
 export function precoPix(valor: number) {

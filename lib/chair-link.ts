@@ -15,6 +15,7 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 
 export function codificarCadeira(op: Opcoes): string {
   const p = new URLSearchParams();
+  if (op.tipo) p.set("tc", op.tipo);
   p.set("f", op.forma);
   p.set("a", op.corA.replace("#", ""));
   p.set("b", op.corB.replace("#", ""));
@@ -44,7 +45,9 @@ export function decodificarCadeira(q: URLSearchParams): Opcoes {
   };
   const forma = q.get("f") ?? "lisa";
   const formaAssento = q.get("fa") ?? "lisa";
+  const tc = q.get("tc");
   return {
+    tipo: tc === "infantil" || tc === "reclinavel" ? tc : undefined,
     forma: (/^[a-z-]{2,24}$/.test(forma) ? forma : "lisa") as Forma,
     corA: cor("a", "#1C1C1E"),
     corB: cor("b", "#F3F1EC"),

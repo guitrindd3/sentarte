@@ -13,7 +13,7 @@ export type EstadoFrete =
 /** Asks /api/frete for the quote whenever the CEP (8 digits) or the cart changes. */
 export function useFrete(cep: string, items: CartItem[]): EstadoFrete {
   const digitos = soDigitosCep(cep);
-  const chaveItens = items.map((i) => `${i.categoriaSlug}|${i.modeloNome}|${i.quantidade}|${i.nomePersonalizado ?? ""}`).join(";");
+  const chaveItens = items.map((i) => `${i.categoriaSlug}|${i.modeloNome}|${i.quantidade}|${i.nomePersonalizado ?? ""}|${i.tipoCadeira ?? ""}`).join(";");
   const [resultado, setResultado] = useState<{ chave: string; estado: EstadoFrete } | null>(null);
   const chave = `${digitos}#${chaveItens}`;
 
@@ -30,6 +30,7 @@ export function useFrete(cep: string, items: CartItem[]): EstadoFrete {
           modeloNome: i.modeloNome,
           quantidade: i.quantidade,
           nomePersonalizado: i.nomePersonalizado,
+          tipoCadeira: i.tipoCadeira,
         })),
       }),
     })

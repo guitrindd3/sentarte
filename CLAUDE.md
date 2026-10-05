@@ -613,6 +613,10 @@ Three defaults were corrected on 2026-10-05 because they still said orders were 
 
 `Depoimento.estrelas` (1-5). The homepage testimonials section (`components/home/depoimentos.tsx`) now always renders: stars per card, the average + count, and "★ Já tem a sua? Avalie" (`components/avaliar.tsx` → `POST /api/avaliacoes`: stars, name, city, comment; honeypot; 3/IP/day). Reviews wait in Redis hash `avaliacoes:pendentes` (`lib/avaliacoes.ts`) until approved in /admin → Depoimentos ("Esperando aprovação": edit text/stars, add a photo, Aprovar e publicar → becomes a Depoimento via commit; or Recusar). Início shows a callout while some wait. The admin's own testimonials get a stars select too, and existing ones can get stars ("Salvar estrelas"). After sending, the customer is invited to also review on Google (`site.googleUrl`). No AggregateRating JSON-LD on purpose (self-serving reviews aren't eligible for Google stars). Privacy page default has an "Avaliações" section.
 
+## Chair types in Monte a sua trama (2026-10-05)
+
+Only the builder offers a chair type (user: no photos, chosen only there): Infantil R$ 399,90 / with name R$ 429,90, Normal R$ 449,90 / 489,90, Reclinável 8 posições R$ 549,90 / 569,90 — `TIPOS_CADEIRA` in `lib/offer.ts`, `precoCadeira(comNome, tipo)`. Selector above the builder steps with prices + the type's specs (from `lib/medidas.ts`); the preview stays the normal chair (a note says so). The type travels as `Opcoes.tipo` / link param `tc`, `CartItem.tipoCadeira` (missing = normal), the WhatsApp message ("Tipo: …"), the cart line name, and `ItemDoPedido.tipoCadeira` — /api/checkout and /api/frete sanitize it with `tipoValido()` and price it server-side. Shipping quotes one Melhor Envio product per type (`calcularFrete(cep, porTipo, valor)`): normal = `FRETE_CAIXA`; infantil/reclinável = `FRETE_CAIXA_INFANTIL` / `FRETE_CAIXA_RECLINAVEL` env vars, or estimates (8×42×50 cm 1.2 kg; 12×56×92 cm 2.6 kg) until the user sends real folded sizes.
+
 ## Security (2026-09-30 pass)
 
 - Security headers + CSP in `next.config.ts` (`headers()`), `poweredByHeader:

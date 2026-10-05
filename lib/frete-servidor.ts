@@ -10,6 +10,8 @@ import type { Frete } from "./frete";
 //   MELHORENVIO_TOKEN   — Melhor Envio API token (Integrações → Permissões de acesso)
 //   FRETE_CEP_ORIGEM    — atelier CEP, 8 digits
 //   FRETE_CAIXA         — one packed chair: "alturaCm,larguraCm,comprimentoCm,pesoKg"
+//   FRETE_CAIXA_INFANTIL / FRETE_CAIXA_RECLINAVEL — same, for the other chair
+//                         types (optional; estimates below until the real sizes come)
 //   MELHORENVIO_EMAIL   — contact e-mail Melhor Envio asks for in the User-Agent
 // Without them, non-ES CEPs get "combinar pelo WhatsApp" and can't pay online.
 
@@ -31,19 +33,40 @@ type Servico = {
 const cacheCotacoes = new Map<string, { em: number; frete: Frete | null }>();
 const DEZ_MIN = 10 * 60 * 1000;
 
+// Folded infantil/reclinável packages were never measured (2026-10-05): estimated
+// from the open sizes in lib/medidas.ts until the user sends the real ones.
+const ESTIMATIVAS: Record<"infantil" | "reclinavel", string> = { infantil: "8,42,50,1.2", reclinavel: "12,56,92,2.6" };
+const lerCaixa = (v: string | undefined) => {
+  const c = (v ?? "").split(",").map((x) => Number(x.trim()));
+  return c.length === 4 && c.every((x) => x > 0) ? c : null;
+};
+
+export type ChairsPorTipo = { normal: number; infantil: number; reclinavel: number };
+
 /** null = can't quote online (not configured, bad CEP, no carrier). */
-export async function calcularFrete(cep: string, qtdCadeiras: number, valorDeclarado: number): Promise<Frete | null> {
+export async function calcularFrete(cep: string, porTipo: ChairsPorTipo, valorDeclarado: number): Promise<Frete | null> {
   const destino = cep.replace(/\D/g, "");
+  const qtdCadeiras = porTipo.normal + porTipo.infantil + porTipo.reclinavel;
   if (destino.length !== 8 || qtdCadeiras < 1) return null;
   if (ehCepES(destino)) return { valor: 0 };
 
   const token = process.env.MELHORENVIO_TOKEN;
   const origem = (process.env.FRETE_CEP_ORIGEM ?? "").replace(/\D/g, "");
-  const caixa = (process.env.FRETE_CAIXA ?? "").split(",").map((v) => Number(v.trim()));
-  if (!token || origem.length !== 8 || caixa.length !== 4 || caixa.some((v) => !(v > 0))) return null;
-  const [altura, largura, comprimento, peso] = caixa;
+  const caixas = {
+    normal: lerCaixa(process.env.FRETE_CAIXA),
+    infantil: lerCaixa(process.env.FRETE_CAIXA_INFANTIL) ?? lerCaixa(ESTIMATIVAS.infantil),
+    reclinavel: lerCaixa(process.env.FRETE_CAIXA_RECLINAVEL) ?? lerCaixa(ESTIMATIVAS.reclinavel),
+  };
+  if (!token || origem.length !== 8 || !caixas.normal) return null;
+  const seguroPorCadeira = Math.round((valorDeclarado / qtdCadeiras) * 100) / 100;
+  const produtos = (Object.keys(caixas) as (keyof ChairsPorTipo)[])
+    .filter((t) => porTipo[t] > 0)
+    .map((t) => {
+      const [altura, largura, comprimento, peso] = caixas[t]!;
+      return { id: `cadeira-${t}`, height: altura, width: largura, length: comprimento, weight: peso, insurance_value: seguroPorCadeira, quantity: porTipo[t] };
+    });
 
-  const chave = `${destino}:${qtdCadeiras}`;
+  const chave = `${destino}:${porTipo.normal}:${porTipo.infantil}:${porTipo.reclinavel}`;
   const guardado = cacheCotacoes.get(chave);
   if (guardado && Date.now() - guardado.em < DEZ_MIN) return guardado.frete;
 
@@ -60,17 +83,7 @@ export async function calcularFrete(cep: string, qtdCadeiras: number, valorDecla
       body: JSON.stringify({
         from: { postal_code: origem },
         to: { postal_code: destino },
-        products: [
-          {
-            id: "cadeira",
-            height: altura,
-            width: largura,
-            length: comprimento,
-            weight: peso,
-            insurance_value: Math.round((valorDeclarado / qtdCadeiras) * 100) / 100,
-            quantity: qtdCadeiras,
-          },
-        ],
+        products: produtos,
         options: { receipt: false, own_hand: false },
       }),
       cache: "no-store",

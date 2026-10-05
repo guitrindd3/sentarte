@@ -7,7 +7,7 @@ import { CATEGORIA_COM_PRECO, PIX_DESCONTO, precoCadeira } from "./offer";
 // amount actually charged). The server recomputes everything from here —
 // it never trusts a price sent by the browser.
 
-export type ItemDoPedido = Pick<CartItem, "categoriaSlug" | "modeloNome" | "quantidade" | "nomePersonalizado"> & {
+export type ItemDoPedido = Pick<CartItem, "categoriaSlug" | "modeloNome" | "quantidade" | "nomePersonalizado" | "tipoCadeira"> & {
   variante?: string;
   categoriaTitulo?: string;
 };
@@ -17,7 +17,7 @@ const arred = (v: number) => Math.round(v * 100) / 100;
 /** Unit price of a chair line: personalized with a name or a desenho design. */
 export function precoUnitario(item: ItemDoPedido) {
   const desenho = DESENHO_TEMAS.includes(item.modeloNome);
-  return precoCadeira(Boolean(item.nomePersonalizado?.trim()) || desenho);
+  return precoCadeira(Boolean(item.nomePersonalizado?.trim()) || desenho, item.tipoCadeira);
 }
 
 /** `cupons`: the coupons on offer (automatic + typed); the best one is applied, no stacking. */
@@ -33,7 +33,10 @@ export function calcularPedido(items: ItemDoPedido[], cupons: CupomPublico[] = [
   const totalPix = arred(total * (1 - PIX_DESCONTO));
   /** Only chairs have a fixed price, so only an all-chair cart can be paid online. */
   const pagavel = items.length > 0 && cadeiras.length === items.length;
-  return { qtdCadeiras, subtotal, temCupom, cupom, desconto, total, totalPix, pagavel };
+  // Chairs per type, for the shipping quote (each type has its own package).
+  const porTipo = { normal: 0, infantil: 0, reclinavel: 0 };
+  for (const i of cadeiras) porTipo[i.tipoCadeira ?? "normal"] += i.quantidade;
+  return { qtdCadeiras, subtotal, temCupom, cupom, desconto, total, totalPix, pagavel, porTipo };
 }
 
 export type DadosEntrega = {

@@ -5,7 +5,8 @@ import { CheckIcon, ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
 import { VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { useCart } from "@/lib/cart-context";
 import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
-import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix } from "@/lib/offer";
+import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
+import { MEDIDAS_CADEIRAS } from "@/lib/medidas";
 import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
 import { ROTULOS_EXTRAS } from "@/lib/formas-extras";
 import { ROTULOS_EXTRAS_2 } from "@/lib/formas-extras-2";
@@ -171,6 +172,9 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const [animando, setAnimando] = useState(false);
   const [foto, setFoto] = useState<ImageData | null>(null);
   const [forma, setForma] = useState<Forma>("lisa");
+  // Chair type (user 2026-10-05): only chosen here, in the builder. The picture
+  // stays the normal chair; the type changes the price, the order and the shipping.
+  const [tipo, setTipo] = useState<TipoCadeira>("normal");
   /** Shape search: while it has text, the grid shows matches from every tab. */
   const [busca, setBusca] = useState("");
   // Count what people look for in the shape search, once they stop typing.
@@ -247,7 +251,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
   const nomeEncosto = nomeNoAssento ? "" : nome;
   const nomeAssento = nomeNoAssento ? nome : "";
-  const opcoes = { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma };
+  const opcoes = { tipo: tipo === "normal" ? undefined : tipo, forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma };
 
   // Main preview.
   useEffect(() => {
@@ -393,7 +397,8 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
   const nomeLimpo = nome.trim().toUpperCase();
   const temNome = Boolean(nomeLimpo);
-  const preco = precoCadeira(temNome);
+  const preco = precoCadeira(temNome, tipo);
+  const tipoRotulo = TIPOS_CADEIRA[tipo].rotulo;
   const formaRotulo = FORMAS.find((f) => f.valor === forma)?.rotulo ?? "Lisa";
   const tamanhoRotulo = tamanhoNome <= 0.45 ? "Pequeno" : tamanhoNome <= 0.75 ? "Médio" : "Grande";
   const posicaoRotulo = posicao.y < 0.34 ? "Em cima" : posicao.y > 0.66 ? "Embaixo" : "No meio";
@@ -405,6 +410,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     "Oi! Montei a minha cadeira no site e quero pedir:",
     linkCadeira,
     "",
+    `Tipo: ${tipoRotulo}`,
     `Encosto: ${formaRotulo}${escalaForma < 0.97 ? ` (tamanho ${Math.round(escalaForma * 100)}%)` : ""}`,
     tresCores ? `Cor principal: ${fioA.nome} (metade esquerda) e ${fioC.nome} (metade direita)` : `Cor principal: ${fioA.nome}`,
     `Cor dos detalhes: ${fioB.nome}`,
@@ -447,7 +453,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       categoriaSlug: "cadeiras",
       categoriaTitulo: "Cadeiras de praia",
       modeloId: "monte-a-sua-trama",
-      modeloNome: `Monte a sua trama: ${formaRotulo}, ${fioA.nome.toLowerCase()}${
+      modeloNome: `Monte a sua trama${tipo === "normal" ? "" : ` (${tipoRotulo.toLowerCase()})`}: ${formaRotulo}, ${fioA.nome.toLowerCase()}${
         tresCores ? `/${fioC.nome.toLowerCase()}` : ""
       } e ${fioB.nome.toLowerCase()}`,
       // picture of this exact chair (rendered server-side, same as the WhatsApp preview)
@@ -455,6 +461,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       corA: fioA.cor,
       corB: fioB.cor,
       nomePersonalizado: nomeLimpo ? nomeLimpo.replace(/\n/g, " / ") : undefined,
+      tipoCadeira: tipo === "normal" ? undefined : tipo,
     });
     setAdicionado(true);
     openCart();
@@ -595,6 +602,38 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             </button>
           </div>
         ) : null}
+        <fieldset className="mb-6" disabled={animando}>
+          <legend className="text-sm font-medium text-ink">Tipo de cadeira</legend>
+          <div className="mt-2 grid grid-cols-3 gap-1.5 sm:gap-2" role="radiogroup" aria-label="Tipo de cadeira">
+            {(["infantil", "normal", "reclinavel"] as const).map((t) => {
+              const on = tipo === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => setTipo(t)}
+                  className={`flex flex-col items-center justify-center gap-0.5 border px-1.5 py-2 text-center transition-colors ${
+                    on ? "border-ink bg-ink text-canvas" : "border-line text-ink hover:border-ink"
+                  }`}
+                >
+                  <span className="text-[0.8rem] font-medium leading-tight sm:text-sm">{TIPOS_CADEIRA[t].curto}</span>
+                  <span className={`text-[0.7rem] ${on ? "text-canvas/75" : "text-ink-soft"}`}>{formatBRL(TIPOS_CADEIRA[t].preco)}</span>
+                </button>
+              );
+            })}
+          </div>
+          {(() => {
+            const m = MEDIDAS_CADEIRAS[tipo === "infantil" ? 0 : tipo === "reclinavel" ? 2 : 1];
+            return (
+              <p className="mt-2 text-xs text-ink-soft">
+                {m.altura} de altura, {m.largura} de largura, {m.profundidade} de profundidade, aguenta {m.capacidade}.
+                {tipo !== "normal" ? " A prévia mostra a cadeira normal: a trama e as cores saem iguais, no tamanho da cadeira escolhida." : ""}
+              </p>
+            );
+          })()}
+        </fieldset>
         <ol className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2" aria-label="Passos">
           {PASSOS.map((rotulo, i) => {
             const n = i + 1;
@@ -822,7 +861,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                 <p className="font-serif text-2xl font-medium tracking-tight text-ink">Quer um nome?</p>
                 <p className="mt-1 text-sm text-ink-soft">
                   Opcional. Até {MAX_LINHAS} linhas com {MAX_CHARS} letras cada. Com nome, a cadeira sai por{" "}
-                  {formatBRL(precoCadeira(true))}.
+                  {formatBRL(precoCadeira(true, tipo))}.
                 </p>
               </div>
               <label className="block">
@@ -879,6 +918,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
               <p className="font-serif text-2xl font-medium tracking-tight text-ink">Sua cadeira está pronta</p>
               <dl className="mt-4 divide-y divide-line border-y border-line text-sm">
                 {[
+                  ["Tipo", tipoRotulo],
                   ["Encosto", formaRotulo],
                   ["Cor principal", tresCores ? `${fioA.nome} e ${fioC.nome}` : fioA.nome],
                   ["Cor dos detalhes", fioB.nome],
