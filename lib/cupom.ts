@@ -34,7 +34,7 @@ export function normalizarCodigo(c: string) {
 }
 
 /** Discount in reais for this cart; 0 when the minimum isn't met. Never more than the subtotal. */
-export function descontoDoCupom(c: CupomPublico, subtotal: number, qtdCadeiras: number) {
+function descontoDoCupom(c: CupomPublico, subtotal: number, qtdCadeiras: number) {
   if (qtdCadeiras < c.minCadeiras || subtotal <= 0) return 0;
   const d = c.tipo === "percentual" ? subtotal * (c.valor / 100) : c.valor;
   return arred(Math.min(subtotal, Math.max(0, d)));

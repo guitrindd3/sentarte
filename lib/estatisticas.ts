@@ -22,7 +22,7 @@ function horaBR(d = new Date()) {
   return Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: "America/Sao_Paulo" }).format(d));
 }
 
-export const GRUPOS = ["geral", "pag", "ref", "disp", "busca", "clique", "carrinho", "hora", "local"] as const;
+const GRUPOS = ["geral", "pag", "ref", "disp", "busca", "clique", "carrinho", "hora", "local"] as const;
 type Grupo = (typeof GRUPOS)[number];
 const chave = (dia: string, g: Grupo | "vis") => `e:${dia}:${g}`;
 
@@ -210,7 +210,7 @@ const MAX_PASSOS = 80;
 export const vidValido = (v: unknown): v is string => typeof v === "string" && /^[a-z0-9]{8,24}$/.test(v);
 const kv = (vid: string) => `vj:${vid}`;
 
-export function cmdsDoCaminho(vid: string, passo: Passo, ctx: { origem?: string; local?: string; disp?: string } = {}): Cmd[] {
+function cmdsDoCaminho(vid: string, passo: Passo, ctx: { origem?: string; local?: string; disp?: string } = {}): Cmd[] {
   if (!vidValido(vid)) return [];
   const agora = Date.now();
   const cmds: Cmd[] = [

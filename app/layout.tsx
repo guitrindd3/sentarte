@@ -5,7 +5,6 @@ import { ForaDoAdmin } from "@/components/fora-do-admin";
 import { Rastreador } from "@/components/rastreador";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { Analytics } from "@vercel/analytics/next";
 import { JsonLd } from "@/components/json-ld";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { CartProvider } from "@/lib/cart-context";
@@ -96,7 +95,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
         <Rastreador />
-        <Analytics />
       </body>
     </html>
   );

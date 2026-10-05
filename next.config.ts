@@ -2,15 +2,16 @@ import type { NextConfig } from "next";
 
 // Browser-side protections (2026-09-30). 'unsafe-inline' scripts are needed
 // for Next's inline bootstrapping and the JSON-LD blocks; everything else is
-// same-origin except Blob images (catalog photos) and ViaCEP (address lookup).
+// same-origin except ViaCEP (address lookup). `blob:` images = the admin's
+// photo previews. (Vercel Blob hosts removed 2026-10-05: photos live in the repo.)
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
+  "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "media-src 'self'",
-  "connect-src 'self' https://viacep.com.br https://*.public.blob.vercel-storage.com",
+  "connect-src 'self' https://viacep.com.br",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -33,9 +34,6 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
-  },
-  images: {
-    remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
   },
   // Default Server Action body limit is 1MB, too small for real photo
   // uploads from the admin's modelo Foto field (see updateModeloAction in

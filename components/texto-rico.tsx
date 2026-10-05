@@ -7,7 +7,7 @@ import { whatsappUrl } from "@/lib/urls";
 // {preco}-style placeholders filled from lib/offer.ts, and [words](target)
 // links (target: "whatsapp", "/page" or "https://…"). See lib/textos-paginas.ts.
 
-export function preencher(texto: string, nome = "SentArte") {
+function preencher(texto: string, nome = "SentArte") {
   const vars: Record<string, string> = {
     preco: formatBRL(PRECO_CADEIRA),
     preco_nome: formatBRL(PRECO_CADEIRA_COM_NOME),

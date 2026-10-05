@@ -15,7 +15,7 @@ import type { Frete } from "./frete";
 //   MELHORENVIO_EMAIL   — contact e-mail Melhor Envio asks for in the User-Agent
 // Without them, non-ES CEPs get "combinar pelo WhatsApp" and can't pay online.
 
-export function ehCepES(cep: string) {
+function ehCepES(cep: string) {
   const n = Number(cep.replace(/\D/g, "").slice(0, 5));
   return n >= 29000 && n <= 29999;
 }

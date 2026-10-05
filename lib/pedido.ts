@@ -15,7 +15,7 @@ export type ItemDoPedido = Pick<CartItem, "categoriaSlug" | "modeloNome" | "quan
 const arred = (v: number) => Math.round(v * 100) / 100;
 
 /** Unit price of a chair line: personalized with a name or a desenho design. */
-export function precoUnitario(item: ItemDoPedido) {
+function precoUnitario(item: ItemDoPedido) {
   const desenho = DESENHO_TEMAS.includes(item.modeloNome);
   return precoCadeira(Boolean(item.nomePersonalizado?.trim()) || desenho, item.tipoCadeira);
 }

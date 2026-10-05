@@ -334,7 +334,7 @@ export function BotaoExcluir({
   );
 }
 
-export function TrashIcon({ className = "h-4 w-4" }: { className?: string }) {
+function TrashIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden>
       <path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6" strokeLinecap="round" strokeLinejoin="round" />
