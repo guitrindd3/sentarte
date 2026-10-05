@@ -29,6 +29,7 @@ import {
   ipDe,
   limparFalhas,
   minutosBloqueado,
+  novosCodigosReserva,
   registrarEntrada,
 } from "@/lib/seguranca";
 import { getContentForWrite, prepararFoto, saveContent } from "@/lib/content-store";
@@ -639,4 +640,16 @@ export async function estrelasDepoimentoAction(id: string, _p: Resultado, formDa
     await saveContent(content, `muda as estrelas do depoimento de ${d.nome}`);
     return PRONTO;
   });
+}
+
+/** New recovery codes, after confirming with the app code (or a recovery code). */
+export async function novosCodigosReservaAction(codigo: string): Promise<{ reservas?: string[]; erro?: string }> {
+  await requireAdmin();
+  if (!(await conferirSegundoFator(String(codigo).slice(0, 20)))) {
+    return { erro: "Código errado. Digite o código que está aparecendo agora no app." };
+  }
+  const reservas = await novosCodigosReserva();
+  await registrarEntrada("Gerou novos códigos reserva", true, await headers());
+  revalidatePath("/admin/seguranca");
+  return { reservas };
 }

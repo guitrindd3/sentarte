@@ -3,6 +3,7 @@ import { doisFatoresAtivo, historico, reservasRestantes, type Entrada } from "@/
 import { desativarDoisFatoresAction, logoutTodosAction } from "../../actions";
 import { AdminForm, Card, Field, SaveButton, btnSecondary, inputClass } from "../../_ui";
 import { AtivarDoisFatores } from "./ativar";
+import { NovosCodigos } from "./novos-codigos";
 
 function quando(iso: string) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -52,8 +53,9 @@ export default async function Seguranca() {
           <div className="space-y-5">
             <p className="text-sm text-ink">
               Você tem <strong>{reservas}</strong> {reservas === 1 ? "código reserva sobrando" : "códigos reserva sobrando"}.
-              {reservas <= 2 ? " Estão acabando: desligue e ligue de novo para gerar novos." : ""}
+              {reservas <= 3 ? " Estão acabando: gere novos." : ""}
             </p>
+            <NovosCodigos />
             <details className="rounded-xl border border-line/70 bg-canvas/60 p-4">
               <summary className="cursor-pointer text-sm font-semibold text-ink-soft hover:text-ink">Trocou de celular ou quer desligar?</summary>
               <AdminForm action={desativarDoisFatoresAction} className="mt-4 flex flex-wrap items-end gap-3">

@@ -33,14 +33,44 @@ export function AtivarDoisFatores({ ativo, children }: { ativo: boolean; childre
             </li>
           ))}
         </ul>
-        <button type="button" onClick={() => setReservas(null)} className={`${btnPrimary} mt-5`}>
+        <button type="button" onClick={() => { setReservas(null); setDados(null); }} className={`${btnPrimary} mt-5`}>
           Já guardei os códigos
         </button>
       </div>
     );
   }
 
-  if (ativo) return children;
+  // Already on: the "it's on" panel, plus re-pairing the phone (new QR code) —
+  // user 2026-10-05 preferred codes from the app over recovery codes.
+  if (ativo && !dados) {
+    return (
+      <div className="space-y-5">
+        {children}
+        <div className="rounded-xl border border-line/70 bg-canvas/60 p-4">
+          <p className="text-sm font-semibold text-ink">O app do celular não está mostrando o código do SentArte?</p>
+          <p className="mt-0.5 text-xs text-ink-soft">
+            Escaneie um QR code novo no Google Authenticator. O código antigo para de valer e você ganha 8 códigos reserva novos.
+          </p>
+          <button
+            type="button"
+            disabled={pendente}
+            className={`${btnSecondary} mt-3`}
+            onClick={() =>
+              iniciar(async () => {
+                try {
+                  setDados(await iniciarDoisFatoresAction());
+                } catch {
+                  avisar("erro", "Não deu para começar agora. Tente de novo.");
+                }
+              })
+            }
+          >
+            {pendente ? "Preparando…" : "Escanear de novo no celular"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!dados) {
     return (

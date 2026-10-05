@@ -115,16 +115,27 @@ export async function confirmarDoisFatores(codigo: string): Promise<string[] | n
   const segredo = decifrar(pend);
   const passo = conferirCodigo(segredo, codigo);
   if (passo === null) return null;
-  const reservas = Array.from({ length: 8 }, () => {
-    const s = base32(randomBytes(5)).slice(0, 8);
-    return `${s.slice(0, 4)}-${s.slice(4)}`;
-  });
+  const reservas = gerarReservas();
   await redis([
     ["SET", K.totp, cifrar(segredo)],
     ["SET", K.ultimoPasso, passo],
     ["DEL", K.totpPendente, K.reserva],
     ["SADD", K.reserva, ...reservas.map(hashReserva)],
   ]);
+  return reservas;
+}
+
+function gerarReservas() {
+  return Array.from({ length: 8 }, () => {
+    const s = base32(randomBytes(5)).slice(0, 8);
+    return `${s.slice(0, 4)}-${s.slice(4)}`;
+  });
+}
+
+/** Replaces all recovery codes with 8 new ones (the old ones stop working). */
+export async function novosCodigosReserva(): Promise<string[]> {
+  const reservas = gerarReservas();
+  await redis([["DEL", K.reserva], ["SADD", K.reserva, ...reservas.map(hashReserva)]]);
   return reservas;
 }
 
