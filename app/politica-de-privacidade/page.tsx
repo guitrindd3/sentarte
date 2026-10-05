@@ -21,9 +21,9 @@ export default async function PoliticaDePrivacidadePage() {
       <PageHeader titulo="Política de privacidade" />
       <section className="mx-auto max-w-6xl space-y-6 px-6 py-16 [&>*]:max-w-3xl text-sm leading-relaxed text-ink-soft">
         <p>
-          O {site.nome} não opera uma loja online com cadastro ou checkout: os pedidos são feitos
-          diretamente pelo WhatsApp e pelo Instagram. Esta página explica quais dados são
-          coletados nesse contato e como eles são usados.
+          O {site.nome} não tem cadastro de clientes: os pedidos são feitos pelo WhatsApp, pelo
+          Instagram ou pagos aqui no site pelo Mercado Pago. Esta página explica quais dados são
+          coletados e como eles são usados.
         </p>
         <div>
           <h2 className="font-serif text-lg text-ink">Quais dados coletamos</h2>
@@ -44,11 +44,28 @@ export default async function PoliticaDePrivacidadePage() {
         <div>
           <h2 className="font-serif text-lg text-ink">Estatísticas de visita</h2>
           <p className="mt-2">
-            Para melhorar o site, contamos de forma anônima quantas pessoas visitam, quais páginas
-            são vistas, o que é pesquisado, em quais botões clicam, a cidade aproximada e se o
-            acesso é pelo celular ou pelo computador. Não usamos cookies para isso e não guardamos
-            seu nome, IP ou qualquer dado que identifique você. Os números ficam guardados por até
-            13 meses.
+            Para melhorar o site, registramos de forma anônima quantas pessoas visitam, quais páginas
+            são vistas, o que é pesquisado, em quais botões clicam, a cidade aproximada e se o acesso é
+            pelo celular ou pelo computador. Também guardamos o caminho de cada visita (por exemplo:
+            &ldquo;abriu Cadeiras de time, colocou uma cadeira no carrinho&rdquo;), ligado só a um
+            código aleatório que fica no seu navegador enquanto a aba está aberta. Não usamos cookies
+            para isso e não guardamos seu nome, IP ou qualquer dado que identifique você. Os números
+            ficam guardados por até 13 meses e o caminho das visitas por 30 dias.
+          </p>
+        </div>
+        <div>
+          <h2 className="font-serif text-lg text-ink">Pedidos pagos pelo site</h2>
+          <p className="mt-2">
+            Quando você clica em pagar, guardamos seu nome, WhatsApp, cidade e os itens do pedido por até
+            6 meses, para confirmar o pagamento e falar com você sobre ele, inclusive se o pagamento não
+            for concluído.
+          </p>
+        </div>
+        <div>
+          <h2 className="font-serif text-lg text-ink">Lista de novidades</h2>
+          <p className="mt-2">
+            Se você se cadastrar para receber novidades e cupons, guardamos seu nome e WhatsApp só para
+            isso. Para sair da lista, é só pedir pelo WhatsApp que a gente apaga na hora.
           </p>
         </div>
         <div>

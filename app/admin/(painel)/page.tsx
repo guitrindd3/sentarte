@@ -1,14 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
+import { pedidosRecentes, type PedidoCliente } from "@/lib/clientes";
 import { getAdminContent } from "@/lib/content-store";
 import { githubConfigurado, ultimosCommits, type CommitResumo } from "@/lib/github-store";
 import { ondeAparece } from "@/lib/admin-grupos";
 import { CATEGORIAS_OCULTAS } from "@/lib/offer";
+import { redisAtivo } from "@/lib/redis";
 import { Card } from "../_ui";
 
 function saudacao() {
   const h = Number(new Intl.DateTimeFormat("pt-BR", { hour: "numeric", timeZone: "America/Sao_Paulo" }).format(new Date()));
   return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+}
+
+function carrinhosAbandonados(pedidos: PedidoCliente[]) {
+  const agora = Date.now();
+  return pedidos.filter((p) => p.status === "aguardando" && agora - p.em > 30 * 60000 && agora - p.em < 7 * 86400000);
 }
 
 function quando(iso: string) {
@@ -26,6 +33,14 @@ export default async function VisaoGeral() {
   if (githubConfigurado()) {
     try {
       historico = (await ultimosCommits(40)).filter((c) => c.mensagem.startsWith("Painel:")).slice(0, 6);
+    } catch {}
+  }
+
+  // Carts that went to Mercado Pago and never got paid, last 7 days.
+  let abandonados: PedidoCliente[] = [];
+  if (redisAtivo()) {
+    try {
+      abandonados = carrinhosAbandonados(await pedidosRecentes(30));
     } catch {}
   }
 
@@ -62,6 +77,21 @@ export default async function VisaoGeral() {
           Tudo o que você salvar aqui aparece no site em 1 a 2 minutos. O aviso lá em cima mostra quando terminou de atualizar.
         </p>
       </div>
+
+      {abandonados.length ? (
+        <Link
+          href="/admin/clientes"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-clay/40 bg-[#fbeee8] px-5 py-4 transition hover:border-clay"
+        >
+          <span>
+            <span className="block font-semibold text-clay-dark">
+              {abandonados.length} {abandonados.length === 1 ? "pessoa foi pagar e não terminou" : "pessoas foram pagar e não terminaram"} esta semana
+            </span>
+            <span className="block text-sm text-ink">{abandonados.slice(0, 3).map((p) => p.nome.split(" ")[0]).join(", ")}. Chame no WhatsApp para fechar a venda.</span>
+          </span>
+          <span className="rounded-full bg-clay px-4 py-2 text-sm font-semibold text-paper">Ver clientes</span>
+        </Link>
+      ) : null}
 
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         {numeros.map((x) => (

@@ -16,6 +16,16 @@ const ITENS: { href: string; rotulo: string; icone: ReactNode }[] = [
     icone: <path d="M4 20h16M7 16v-4M11 16V8M15 16v-6M19 16V5" />,
   },
   {
+    href: "/admin/clientes",
+    rotulo: "Clientes",
+    icone: (
+      <>
+        <circle cx="9" cy="8.5" r="3" />
+        <path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8M15.5 6a3 3 0 0 1 0 5.6M17 14.6c1.8.6 3 2.1 3.5 4.4" />
+      </>
+    ),
+  },
+  {
     href: "/admin/catalogo",
     rotulo: "Cadeiras",
     icone: (
@@ -47,7 +57,15 @@ const ITENS: { href: string; rotulo: string; icone: ReactNode }[] = [
   },
 ];
 
+const MAIS = {
+  href: "/admin/mais",
+  rotulo: "Mais",
+  icone: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth="3" />,
+};
+const DENTRO_DE_MAIS = ["/admin/mais", "/admin/depoimentos", "/admin/site", "/admin/seguranca"];
+
 function ativo(pathname: string, href: string) {
+  if (href === "/admin/mais") return DENTRO_DE_MAIS.some((h) => pathname.startsWith(h));
   return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 }
 
@@ -92,7 +110,7 @@ export function NavInferior() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
       <div className="grid grid-cols-5">
-        {ITENS.filter((i) => i.href !== "/admin/seguranca").map((i) => {
+        {[...ITENS.filter((i) => ["/admin", "/admin/acessos", "/admin/clientes", "/admin/catalogo"].includes(i.href)), MAIS].map((i) => {
           const on = ativo(pathname, i.href);
           return (
             <Link
@@ -102,7 +120,7 @@ export function NavInferior() {
               className={`flex flex-col items-center gap-0.5 py-2 text-[0.7rem] font-medium ${on ? "text-wood-dark" : "text-ink-soft"}`}
             >
               <Icone>{i.icone}</Icone>
-              {i.rotulo === "Textos e contato" ? "Textos" : i.rotulo}
+              {i.rotulo}
             </Link>
           );
         })}

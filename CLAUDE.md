@@ -578,6 +578,14 @@ Vercel Web Analytics wasn't enabled and on Hobby can't record searches/clicks, s
 - `verifySession()` fails closed if Redis errors. Without Redis env vars everything falls back to the old password-only behavior.
 - Tested end to end locally (scratchpad `teste2fa.mjs`: fake Redis + a throwaway `ADMIN_PASSWORD_HASH` for "teste123" passed only to the local `next start`).
 
+## Visitors & customers (2026-10-05)
+
+The user asked "quem é o visitante". Anonymous visitors can't be identified (and the privacy page promises not to try); three consented/anonymous alternatives were built, all in the same Upstash Redis:
+- **Visit journeys** ("Acessos" → tab "Visita por visita", `app/admin/(painel)/acessos/visitas`): `lib/rastro.ts` gives each tab a random `vid` (sessionStorage `sentarte-visita`) sent with every event; `cmdsDoCaminho()` in `lib/estatisticas.ts` keeps `vj:<vid>` (start/end, city, device, origin, flags carrinho/whatsapp/pagar/pagou/lista) + `vj:<vid>:p` (≤80 steps) for 30 days, index zset `vj`. Server-side steps (`anotarNoCaminho`): went to pay (/api/checkout), paid (/pedido), joined the list. Filters: carrinho / WhatsApp / foi pagar / lista; `?id=<vid>` shows one visit.
+- **Started orders / abandoned carts** (admin "Clientes"): /api/checkout saves `pedido:<ref>` (name, WhatsApp, city, items, value, vid; 180 days, zset `pedidos`) after the Mercado Pago preference is created; /pedido marks it paid/pending/refused; the Clientes page also asks Mercado Pago (`payments/search?external_reference=`) for open ones. "Não terminou" = still waiting after 30 min; Início shows a callout for those (last 7 days). WhatsApp follow-up button with a prefilled message. The checkout form says the data is kept for contact about the order.
+- **Novidades list**: footer box (`components/lista-novidades.tsx`, required consent checkbox, honeypot, 5 sign-ups/IP/hour) → `/api/interessados` → hash `interessados` keyed by number. Admin can call, remove, or copy all numbers.
+- Privacy page describes all three. Admin nav: Início, Acessos, Clientes, Cadeiras, Depoimentos, Textos e contato, Segurança; on phones the bottom bar is Início/Acessos/Clientes/Cadeiras/Mais (`/admin/mais`).
+
 ## Security (2026-09-30 pass)
 
 - Security headers + CSP in `next.config.ts` (`headers()`), `poweredByHeader:

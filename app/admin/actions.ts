@@ -13,6 +13,7 @@ import {
   verifyPassword,
   verifySession,
 } from "@/lib/auth";
+import { excluirInteressado, excluirPedido } from "@/lib/clientes";
 import { redisAtivo } from "@/lib/redis";
 import {
   confirmarDoisFatores,
@@ -423,5 +424,21 @@ export async function desativarDoisFatoresAction(_p: Resultado, formData: FormDa
     await registrarEntrada("Desligou o código no celular", true, await headers());
     revalidatePath("/admin/seguranca");
     return "Código no celular desligado. O painel volta a pedir só a senha.";
+  });
+}
+
+// --- Clientes ------------------------------------------------------------------
+
+export async function excluirPedidoAction(ref: string) {
+  return executar(async () => {
+    await excluirPedido(ref);
+    return "Pedido apagado da lista.";
+  });
+}
+
+export async function excluirInteressadoAction(id: string) {
+  return executar(async () => {
+    await excluirInteressado(id);
+    return "Contato tirado da lista de novidades.";
   });
 }

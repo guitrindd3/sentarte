@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { PedidoResultado } from "@/components/pedido-resultado";
+import { marcarPedido } from "@/lib/clientes";
 import { getContent } from "@/lib/content-store";
+import { anotarNoCaminho } from "@/lib/estatisticas";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,16 @@ export default async function PedidoPage({ searchParams }: PageProps<"/pedido">)
   const refUrl = pick("external_reference");
   const pagamento = confirmado && refUrl && confirmado.external_reference === refUrl ? confirmado : null;
   const { site } = await getContent();
+  if (pagamento?.external_reference) {
+    const st = pagamento.status;
+    const novo = st === "approved" ? "pago" : st === "pending" || st === "in_process" || st === "authorized" ? "pendente" : st === "rejected" || st === "cancelled" ? "recusado" : null;
+    if (novo) {
+      const pedido = await marcarPedido(pagamento.external_reference, novo);
+      if (novo === "pago" && pedido?.vid) {
+        await anotarNoCaminho(pedido.vid, { k: "p", x: (pagamento.transaction_amount ?? pedido.valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) });
+      }
+    }
+  }
 
   const status = pagamento?.status ?? pick("status") ?? pick("collection_status");
   const situacao: Situacao =

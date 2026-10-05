@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronDownIcon } from "@/components/icons";
 import type { CartItem } from "@/lib/cart-context";
 import { formatBRL, PARCELAS_MAX, PIX_DESCONTO } from "@/lib/offer";
+import { idDaVisita } from "@/lib/rastro";
 import { guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import {
   calcularPedido,
@@ -82,7 +83,7 @@ export function CheckoutForm({ items, onVoltar }: { items: CartItem[]; onVoltar:
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ forma, itens, entrega: d, referencia }),
+        body: JSON.stringify({ forma, itens, entrega: d, referencia, vid: idDaVisita() }),
       });
       const j = (await res.json()) as { url?: string; erro?: string; valor?: number };
       if (!res.ok || !j.url) throw new Error(j.erro || "Não foi possível abrir o pagamento.");
@@ -191,6 +192,10 @@ export function CheckoutForm({ items, onVoltar }: { items: CartItem[]; onVoltar:
         </button>
         <p className="mt-3 text-center text-[0.7rem] leading-snug text-ink-soft">
           Pagamento seguro pelo Mercado Pago. Depois de pagar, você volta para cá e manda o resumo no WhatsApp.
+        </p>
+        <p className="mt-2 text-center text-[0.7rem] leading-snug text-ink-soft">
+          Seu nome, WhatsApp e o pedido ficam guardados para a gente falar com você sobre ele.{" "}
+          <a href="/politica-de-privacidade" target="_blank" className="underline underline-offset-2">Privacidade</a>
         </p>
       </div>
     </div>

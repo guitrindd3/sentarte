@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { normalizarWhatsapp, salvarPedidoIniciado } from "@/lib/clientes";
+import { anotarNoCaminho, vidValido } from "@/lib/estatisticas";
 import { SITE_URL } from "@/lib/nav";
 import { calcularFrete } from "@/lib/frete-servidor";
 import { PARCELAS_MAX } from "@/lib/offer";
@@ -15,7 +17,7 @@ import {
 // Mercado Pago account). The amount is recomputed here from lib/pedido.ts —
 // never taken from the request.
 
-type Corpo = { forma: "pix" | "cartao"; itens: ItemDoPedido[]; entrega: DadosEntrega; referencia: string };
+type Corpo = { forma: "pix" | "cartao"; itens: ItemDoPedido[]; entrega: DadosEntrega; referencia: string; vid?: string };
 
 export async function POST(req: Request) {
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
@@ -117,5 +119,17 @@ export async function POST(req: Request) {
   }
   const pref = (await res.json()) as { init_point?: string };
   if (!pref.init_point) return NextResponse.json({ erro: "Resposta inesperada do Mercado Pago." }, { status: 502 });
+  // Kept so the atelier can follow up if the payment never completes (admin "Clientes").
+  await salvarPedidoIniciado({
+    ref,
+    nome: entrega.nome.trim().slice(0, 80),
+    whatsapp: normalizarWhatsapp(telefone) ?? telefone,
+    cidade: `${entrega.cidade.trim()}/${entrega.uf.trim()}`.slice(0, 60),
+    forma,
+    itens: itens.map(descricaoItem),
+    valor,
+    vid: vidValido(corpo.vid) ? corpo.vid : undefined,
+  });
+  await anotarNoCaminho(corpo.vid, { k: "$", x: `${forma === "pix" ? "Pix" : "cartão"}, ${valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}` });
   return NextResponse.json({ url: pref.init_point, referencia: ref, valor });
 }

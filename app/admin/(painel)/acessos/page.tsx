@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getAdminContent } from "@/lib/content-store";
 import { estatisticasAtivas, relatorio, type Contagem, type Relatorio } from "@/lib/estatisticas";
+import { nomeDaPagina } from "@/lib/paginas";
 import { Card } from "../../_ui";
+import { AbasAcessos } from "./abas";
 
 const PERIODOS = [
   { dias: 1, rotulo: "Hoje" },
@@ -10,23 +12,6 @@ const PERIODOS = [
   { dias: 90, rotulo: "90 dias" },
 ];
 
-const PAGINAS: Record<string, string> = {
-  "/": "Página inicial",
-  "/times": "Cadeiras de time",
-  "/boho": "Cadeiras boho",
-  "/desenhos": "Animes e desenhos",
-  "/personalizar": "Monte a sua trama",
-  "/c": "Cadeira montada (link do WhatsApp)",
-  "/busca": "Busca",
-  "/faq": "Perguntas frequentes",
-  "/sobre": "Sobre",
-  "/contato": "Contato",
-  "/pedido": "Pedido pago (volta do Mercado Pago)",
-  "/politica-de-envio": "Política de envio",
-  "/politica-de-troca-e-devolucao": "Trocas e devoluções",
-  "/politica-de-privacidade": "Privacidade",
-  "/termos-de-uso": "Termos de uso",
-};
 
 const fmt = (n: number) => n.toLocaleString("pt-BR");
 
@@ -134,8 +119,7 @@ export default async function Acessos({ searchParams }: PageProps<"/admin/acesso
     console.error("relatorio", err);
   }
   const { categorias } = await getAdminContent();
-  const nomeCategoria = new Map(categorias.map((c) => [`/categoria/${c.slug}`, c.titulo]));
-  const nomePagina = (p: string) => PAGINAS[p] ?? nomeCategoria.get(p) ?? p;
+  const nomePagina = (p: string) => nomeDaPagina(p, categorias);
 
   return (
     <div className="space-y-6">
@@ -143,6 +127,7 @@ export default async function Acessos({ searchParams }: PageProps<"/admin/acesso
         <div>
           <h1 className="font-serif text-3xl font-medium tracking-tight text-ink sm:text-4xl">Acessos do site</h1>
           <p className="mt-2 max-w-prose text-ink-soft">Quem visitou, o que procurou e onde clicou. Contagem anônima; suas visitas logada no painel não entram.</p>
+          <AbasAcessos atual="resumo" />
         </div>
         <div className="flex rounded-full border border-line bg-paper p-1">
           {PERIODOS.map((p) => (

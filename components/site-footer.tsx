@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ListaNovidades } from "@/components/lista-novidades";
 import { InstagramIcon, LockIcon, WhatsAppIcon } from "@/components/icons";
 import { getContent } from "@/lib/content-store";
 import { FOOTER_LINKS } from "@/lib/nav";
@@ -10,6 +11,15 @@ export async function SiteFooter() {
 
   return (
     <footer className="border-t border-line bg-canvas-deep text-ink">
+      <div className="border-b border-line">
+        <div className="mx-auto grid max-w-6xl gap-4 px-6 py-8 md:grid-cols-[1fr_1.4fr] md:items-center md:gap-10">
+          <div>
+            <p className="font-serif text-xl font-medium tracking-tight">Novidades e cupons no seu WhatsApp</p>
+            <p className="mt-1 text-sm text-ink-soft">Modelos novos e promoções antes de todo mundo. Sem spam.</p>
+          </div>
+          <ListaNovidades />
+        </div>
+      </div>
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-6 py-16 md:grid-cols-4">
         <div className="col-span-2 md:col-span-1">
           <p className="font-serif text-xl font-medium tracking-tight">{nome}</p>
