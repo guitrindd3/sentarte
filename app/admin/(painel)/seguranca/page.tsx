@@ -60,7 +60,7 @@ export default async function Seguranca() {
               <summary className="cursor-pointer text-sm font-semibold text-ink-soft hover:text-ink">Trocou de celular ou quer desligar?</summary>
               <AdminForm action={desativarDoisFatoresAction} className="mt-4 flex flex-wrap items-end gap-3">
                 <Field label="Código do app (ou um código reserva)" dica="Depois de desligar, você pode ligar de novo no celular novo.">
-                  <input name="codigo" required inputMode="numeric" autoComplete="one-time-code" maxLength={12} className={`w-48 ${inputClass}`} />
+                  <input name="codigo" required inputMode="text" autoCapitalize="characters" autoCorrect="off" spellCheck={false} autoComplete="off" maxLength={12} className={`w-48 uppercase ${inputClass}`} />
                 </Field>
                 <SaveButton className={btnSecondary}>Desligar o código</SaveButton>
               </AdminForm>

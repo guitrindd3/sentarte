@@ -2,13 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { loginAction } from "../actions";
 import { btnPrimary, inputClass } from "../_ui";
 
 export default function AdminLoginPage() {
   const [state, action, pending] = useActionState(loginAction, undefined);
   const codigo = state?.etapa === "codigo";
+  // Phone keyboard: numbers for the app code; letters too for a recovery code (user 2026-10-05).
+  const [reserva, setReserva] = useState(false);
 
   return (
     <div className="grid min-h-screen place-items-center bg-espresso px-4 py-10">
@@ -19,27 +21,40 @@ export default function AdminLoginPage() {
         </h1>
         <p className="mt-1 text-center text-sm text-ink-soft">
           {codigo
-            ? "Abra o app autenticador e digite o código de 6 números do SentArte."
+            ? reserva
+              ? "Sem o celular? Digite um dos seus códigos reserva (cada um funciona uma vez)."
+              : "Abra o app autenticador e digite o código de 6 números do SentArte."
             : "Entre para editar as cadeiras, fotos e textos do site."}
         </p>
         <form action={action} className="mt-7 space-y-4">
           {codigo ? (
-            <label className="block">
-              <span className="text-sm font-semibold text-ink">Código</span>
-              <input
-                key="codigo"
-                name="codigo"
-                required
-                autoFocus
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={12}
-                placeholder="000000"
-                className={`mt-1.5 text-center font-mono text-2xl tracking-[0.3em] ${inputClass}`}
-              />
+            <div>
+              <label className="block">
+                <span className="text-sm font-semibold text-ink">{reserva ? "Código reserva" : "Código do app"}</span>
+                <input
+                  key={reserva ? "reserva" : "codigo"}
+                  name="codigo"
+                  required
+                  autoFocus
+                  inputMode={reserva ? "text" : "numeric"}
+                  autoComplete={reserva ? "off" : "one-time-code"}
+                  autoCapitalize={reserva ? "characters" : "off"}
+                  autoCorrect="off"
+                  spellCheck={false}
+                  maxLength={12}
+                  placeholder={reserva ? "ABCD-EF23" : "000000"}
+                  className={`mt-1.5 text-center font-mono text-2xl tracking-[0.3em] uppercase ${inputClass}`}
+                />
+              </label>
               <input type="hidden" name="etapa" value="codigo" />
-              <span className="mt-2 block text-xs text-ink-soft">Perdeu o celular? Digite um dos seus códigos reserva (ex.: ABCD-EF23).</span>
-            </label>
+              <button
+                type="button"
+                onClick={() => setReserva((r) => !r)}
+                className="mt-2 text-xs font-medium text-wood-dark underline underline-offset-2"
+              >
+                {reserva ? "Voltar para o código do app (só números)" : "Usar código reserva (com letras)"}
+              </button>
+            </div>
           ) : (
             <label className="block">
               <span className="text-sm font-semibold text-ink">Senha</span>
