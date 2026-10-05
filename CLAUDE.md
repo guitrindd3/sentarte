@@ -319,7 +319,7 @@ fabricated legal identifiers (CNPJ, address) unless the user supplies them.
 - **Commercial terms live in `lib/offer.ts`**, not in admin content: chair
   price R$ 449,90, up to 4x on card (with the card fee, so never write "sem
   juros"), shipping quoted by CEP (see "Shipping" below — no more free shipping), production in up to 5 business
-  days, coupon `SENTARTE` = 5% off from 2 chairs, 2% off paying with Pix (stacked on the final total). Only the `cadeiras`
+  days, coupons are managed in the admin (see "Coupons"; SENTARTE = 5% off from 2 chairs), 2% off paying with Pix (stacked on the final total). Only the `cadeiras`
   category shows a price (`CATEGORIA_COM_PRECO`). A chair with a woven name
   costs `PRECO_CADEIRA_COM_NOME` (R$ 489,90) — `precoCadeira(comNome)`; the
   cart prices each line by whether it has `nomePersonalizado`, and every
@@ -585,6 +585,12 @@ The user asked "quem é o visitante". Anonymous visitors can't be identified (an
 - **Started orders / abandoned carts** (admin "Clientes"): /api/checkout saves `pedido:<ref>` (name, WhatsApp, city, items, value, vid; 180 days, zset `pedidos`) after the Mercado Pago preference is created; /pedido marks it paid/pending/refused; the Clientes page also asks Mercado Pago (`payments/search?external_reference=`) for open ones. "Não terminou" = still waiting after 30 min; Início shows a callout for those (last 7 days). WhatsApp follow-up button with a prefilled message. The checkout form says the data is kept for contact about the order.
 - **Novidades list**: footer box (`components/lista-novidades.tsx`, required consent checkbox, honeypot, 5 sign-ups/IP/hour) → `/api/interessados` → hash `interessados` keyed by number. Admin can call, remove, or copy all numbers.
 - Privacy page describes all three. Admin nav: Início, Acessos, Clientes, Cadeiras, Depoimentos, Textos e contato, Segurança; on phones the bottom bar is Início/Acessos/Clientes/Cadeiras/Mais (`/admin/mais`).
+
+## Coupons (2026-10-05)
+
+Admin "Cupons" (`app/admin/(painel)/cupons`; phones: Mais → Cupons). Stored in Redis hash `cupons` (by code), paid uses in `cupons:usos` — changes apply instantly, no deploy. `lib/cupom.ts` = shared math (`melhorCupom`: the single biggest discount wins, no stacking; Pix 2% still stacks on top), `lib/cupons-store.ts` = storage/validation (on, valid-until date in Brasília, use limit). Fields: code (A-Z0-9), % or R$, min chairs, valid until, use limit, note, "entra sozinho" (automatic). SENTARTE (5% from 2 chairs, automatic) is seeded once from the old `lib/offer.ts` constants (removed) — the admin may edit/delete it; `cupons:semeado` stops re-seeding. Without Redis the old SENTARTE terms apply (`CUPOM_PADRAO`).
+- Cart: "Tem cupom de desconto?" field (`lib/use-cupons.ts`, `/api/cupom` lookup, 30/min/IP, typed code remembered in localStorage and re-checked). `/api/checkout` re-checks the code server-side (`cuponsDoPedido`) and stores it on the order; uses are counted when the order becomes "pago" (`marcarPedido`). WhatsApp-closed orders aren't counted.
+- The offer strip's 4th item and the FAQ's multi-chair answer come from the automatic coupon (fallback "Feito à mão" / question hidden).
 
 ## Security (2026-09-30 pass)
 

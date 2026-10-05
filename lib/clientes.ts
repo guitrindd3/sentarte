@@ -1,4 +1,5 @@
 import "server-only";
+import { contarUsoDoCupom } from "./cupons-store";
 import { redis, redisAtivo, type Cmd } from "./redis";
 
 // Customers who identified themselves (2026-10-05, admin "Clientes"):
@@ -23,6 +24,8 @@ export type PedidoCliente = {
   valor: number;
   status: StatusPedido;
   vid?: string;
+  /** Coupon code applied, if any (its paid uses are counted when this order is paid). */
+  cupom?: string;
 };
 
 export async function salvarPedidoIniciado(p: Omit<PedidoCliente, "em" | "status">) {
@@ -50,6 +53,8 @@ export async function marcarPedido(ref: string, status: StatusPedido): Promise<P
     if (p.status === status || p.status === "pago") return p;
     p.status = status;
     await redis([["SET", kp(ref), JSON.stringify(p), "KEEPTTL"]]);
+    // Counted once: an order that's already "pago" returns above.
+    if (status === "pago" && p.cupom) await contarUsoDoCupom(p.cupom);
     return p;
   } catch (err) {
     console.error("marcarPedido", err);

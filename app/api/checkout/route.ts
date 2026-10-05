@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { normalizarWhatsapp, salvarPedidoIniciado } from "@/lib/clientes";
+import { cuponsDoPedido } from "@/lib/cupons-store";
 import { anotarNoCaminho, vidValido } from "@/lib/estatisticas";
 import { SITE_URL } from "@/lib/nav";
 import { calcularFrete } from "@/lib/frete-servidor";
@@ -17,7 +18,7 @@ import {
 // Mercado Pago account). The amount is recomputed here from lib/pedido.ts —
 // never taken from the request.
 
-type Corpo = { forma: "pix" | "cartao"; itens: ItemDoPedido[]; entrega: DadosEntrega; referencia: string; vid?: string };
+type Corpo = { forma: "pix" | "cartao"; itens: ItemDoPedido[]; entrega: DadosEntrega; referencia: string; vid?: string; cupom?: string };
 
 export async function POST(req: Request) {
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
@@ -40,7 +41,14 @@ export async function POST(req: Request) {
       variante: i.variante ? String(i.variante).slice(0, 40) : undefined,
     }));
 
-  const conta = calcularPedido(itens);
+  // Coupons are looked up again here (the browser only sends the typed code).
+  let cupons: Awaited<ReturnType<typeof cuponsDoPedido>> = [];
+  try {
+    cupons = await cuponsDoPedido(typeof corpo.cupom === "string" ? corpo.cupom.slice(0, 30) : undefined);
+  } catch (err) {
+    console.error("checkout cupons", err);
+  }
+  const conta = calcularPedido(itens, cupons);
   if (!conta.pagavel || conta.total <= 0) {
     return NextResponse.json({ erro: "Esse carrinho só pode ser fechado pelo WhatsApp." }, { status: 400 });
   }
@@ -100,7 +108,7 @@ export async function POST(req: Request) {
     auto_return: "approved",
     external_reference: ref,
     statement_descriptor: "SENTARTE",
-    metadata: { forma, entrega: `${entrega.cidade}/${entrega.uf}`, frete: frete.valor, servico_frete: frete.servico ?? "" },
+    metadata: { forma, entrega: `${entrega.cidade}/${entrega.uf}`, frete: frete.valor, servico_frete: frete.servico ?? "", cupom: conta.cupom?.codigo ?? "", desconto: conta.desconto },
   };
 
   const res = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -129,6 +137,7 @@ export async function POST(req: Request) {
     itens: itens.map(descricaoItem),
     valor,
     vid: vidValido(corpo.vid) ? corpo.vid : undefined,
+    cupom: conta.cupom?.codigo,
   });
   await anotarNoCaminho(corpo.vid, { k: "$", x: `${forma === "pix" ? "Pix" : "cartão"}, ${valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}` });
   return NextResponse.json({ url: pref.init_point, referencia: ref, valor });

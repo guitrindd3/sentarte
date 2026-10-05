@@ -9,9 +9,8 @@ export const PRECO_CADEIRA_COM_NOME = 489.9;
 export const PARCELAS_MAX = 4; // no cartão, com a taxa da maquininha (não é "sem juros")
 export const PIX_DESCONTO = 0.02; // user 2026-09-29; stacks with the coupon (applied on the final total)
 export const PRAZO_PRODUCAO_DIAS_UTEIS = 5;
-export const CUPOM_CODIGO = "SENTARTE";
-export const CUPOM_DESCONTO = 0.05;
-export const CUPOM_MIN_ITENS = 2;
+// Coupons (SENTARTE included) are managed in the admin since 2026-10-05 —
+// see lib/cupom.ts and lib/cupons-store.ts.
 
 export const CATEGORIA_COM_PRECO = "cadeiras";
 

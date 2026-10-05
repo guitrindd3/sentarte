@@ -14,6 +14,8 @@ import {
   verifySession,
 } from "@/lib/auth";
 import { excluirInteressado, excluirPedido } from "@/lib/clientes";
+import { normalizarCodigo } from "@/lib/cupom";
+import { excluirCupom, listarCupons, salvarCupom } from "@/lib/cupons-store";
 import { redisAtivo } from "@/lib/redis";
 import {
   confirmarDoisFatores,
@@ -440,5 +442,64 @@ export async function excluirInteressadoAction(id: string) {
   return executar(async () => {
     await excluirInteressado(id);
     return "Contato tirado da lista de novidades.";
+  });
+}
+
+// --- Cupons ------------------------------------------------------------------------
+
+/** Creates or edits a coupon (`original` = the code being edited). */
+export async function salvarCupomAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const original = String(formData.get("original") ?? "");
+    const codigo = normalizarCodigo(String(formData.get("codigo") ?? ""));
+    if (codigo.length < 3) throw new Aviso("O código precisa ter pelo menos 3 letras ou números (sem espaço).");
+    const tipo = formData.get("tipo") === "valor" ? "valor" : "percentual";
+    const valor = Number(String(formData.get("valor") ?? "").replace(",", "."));
+    if (!(valor > 0)) throw new Aviso("Diga quanto é o desconto.");
+    if (tipo === "percentual" && valor > 90) throw new Aviso("O desconto em % vai até 90%.");
+    if (tipo === "valor" && valor > 5000) throw new Aviso("Esse desconto em reais está alto demais.");
+    const minCadeiras = Math.min(50, Math.max(1, Math.floor(Number(formData.get("minCadeiras")) || 1)));
+    const validoAte = String(formData.get("validoAte") ?? "").trim();
+    if (validoAte && !/^\d{4}-\d{2}-\d{2}$/.test(validoAte)) throw new Aviso("Data de validade inválida.");
+    const limite = Math.floor(Number(formData.get("limiteUsos")) || 0);
+
+    const todos = await listarCupons();
+    if (codigo !== original && todos.some((c) => c.codigo === codigo)) throw new Aviso(`Já existe um cupom ${codigo}.`);
+    const antigo = todos.find((c) => c.codigo === original);
+    await salvarCupom({
+      codigo,
+      tipo,
+      valor: Math.round(valor * 100) / 100,
+      minCadeiras,
+      automatico: formData.get("automatico") === "on",
+      ativo: antigo ? antigo.ativo : true,
+      validoAte: validoAte || undefined,
+      limiteUsos: limite > 0 ? limite : undefined,
+      descricao: String(formData.get("descricao") ?? "").trim().slice(0, 120) || undefined,
+      criadoEm: antigo?.criadoEm ?? Date.now(),
+    });
+    if (antigo && original !== codigo) await excluirCupom(original);
+    revalidatePath("/admin/cupons");
+    return antigo ? `Cupom ${codigo} salvo. Já está valendo no site.` : `Cupom ${codigo} criado. Já está valendo no site.`;
+  });
+}
+
+export async function alternarCupomAction(codigo: string) {
+  return executar(async () => {
+    const c = (await listarCupons()).find((x) => x.codigo === codigo);
+    if (!c) throw new Aviso(SUMIU);
+    const { usos: _usos, ...resto } = c;
+    void _usos;
+    await salvarCupom({ ...resto, ativo: !c.ativo });
+    revalidatePath("/admin/cupons");
+    return c.ativo ? `Cupom ${codigo} desligado.` : `Cupom ${codigo} ligado.`;
+  });
+}
+
+export async function excluirCupomAction(codigo: string) {
+  return executar(async () => {
+    await excluirCupom(codigo);
+    revalidatePath("/admin/cupons");
+    return `Cupom ${codigo} apagado.`;
   });
 }

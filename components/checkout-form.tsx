@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDownIcon } from "@/components/icons";
 import type { CartItem } from "@/lib/cart-context";
+import type { CupomPublico } from "@/lib/cupom";
 import { formatBRL, PARCELAS_MAX, PIX_DESCONTO } from "@/lib/offer";
 import { idDaVisita } from "@/lib/rastro";
 import { guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
@@ -30,12 +31,23 @@ function carregarEntrega(): DadosEntrega {
 // cart to /api/checkout, which creates the Mercado Pago payment, and then
 // redirects there. The order summary is kept in localStorage so /pedido can
 // show it (and send it to WhatsApp) when Mercado Pago sends the buyer back.
-export function CheckoutForm({ items, onVoltar }: { items: CartItem[]; onVoltar: () => void }) {
+export function CheckoutForm({
+  items,
+  cupons,
+  codigoDigitado,
+  onVoltar,
+}: {
+  items: CartItem[];
+  cupons: CupomPublico[];
+  /** The code the customer typed; the server re-checks it before charging. */
+  codigoDigitado?: string;
+  onVoltar: () => void;
+}) {
   const [d, setD] = useState<DadosEntrega>(carregarEntrega);
   const [enviando, setEnviando] = useState<"pix" | "cartao" | null>(null);
   const [erro, setErro] = useState("");
   const [buscandoCep, setBuscandoCep] = useState(false);
-  const conta = calcularPedido(items);
+  const conta = calcularPedido(items, cupons);
   const estadoFrete = useFrete(d.cep, items);
   const valorFrete = estadoFrete.tipo === "ok" ? estadoFrete.frete.valor : null;
   const ok = entregaCompleta(d) && valorFrete !== null;
@@ -83,7 +95,7 @@ export function CheckoutForm({ items, onVoltar }: { items: CartItem[]; onVoltar:
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ forma, itens, entrega: d, referencia, vid: idDaVisita() }),
+        body: JSON.stringify({ forma, itens, entrega: d, referencia, vid: idDaVisita(), cupom: codigoDigitado }),
       });
       const j = (await res.json()) as { url?: string; erro?: string; valor?: number };
       if (!res.ok || !j.url) throw new Error(j.erro || "Não foi possível abrir o pagamento.");

@@ -8,11 +8,10 @@ import { calcularPedido } from "@/lib/pedido";
 import { useCart } from "@/lib/cart-context";
 import { CloseIcon, MinusIcon, PlusIcon, WhatsAppIcon } from "@/components/icons";
 import { WeavePattern } from "@/components/weave-pattern";
+import { rotuloDesconto } from "@/lib/cupom";
+import { useCupons } from "@/lib/use-cupons";
 import {
   CATEGORIA_COM_PRECO,
-  CUPOM_CODIGO,
-  CUPOM_DESCONTO,
-  CUPOM_MIN_ITENS,
   formatBRL,
   PARCELAS_MAX,
   PIX_DESCONTO,
@@ -30,21 +29,23 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCep(cepGuardado());
   }, []);
-  const podePagar = pagamentoAtivo && calcularPedido(items).pagavel;
+  const cupons = useCupons();
+  const [abrirCupom, setAbrirCupom] = useState(false);
+  const [codigo, setCodigo] = useState("");
+  const conta = calcularPedido(items, cupons.cupons);
+  const podePagar = pagamentoAtivo && conta.pagavel;
   const naEntrega = etapa === "entrega" && podePagar;
 
   // Only chairs have a fixed price; anything else is priced over WhatsApp.
   // A chair with a woven name costs PRECO_CADEIRA_COM_NOME.
   const cadeiras = items.filter((i) => i.categoriaSlug === CATEGORIA_COM_PRECO);
-  const qtdCadeiras = cadeiras.reduce((soma, i) => soma + i.quantidade, 0);
-  const subtotal = cadeiras.reduce(
-    (soma, i) => soma + i.quantidade * precoItemCadeira(i),
-    0
-  );
-  const temCupom = qtdCadeiras >= CUPOM_MIN_ITENS;
-  const desconto = temCupom ? subtotal * CUPOM_DESCONTO : 0;
-  const total = subtotal - desconto;
-  const faltamParaCupom = CUPOM_MIN_ITENS - qtdCadeiras;
+  const { qtdCadeiras, subtotal, desconto, total, cupom } = conta;
+  // "Take N more and get X%": the automatic coupon the cart doesn't reach yet.
+  const proximo = cupons.automaticos
+    .filter((c) => c.minCadeiras > qtdCadeiras)
+    .sort((a, b) => a.minCadeiras - b.minCadeiras)[0];
+  const faltamParaCupom = proximo && !cupom ? proximo.minCadeiras - qtdCadeiras : 0;
+  const digitadoSemMinimo = cupons.digitado && cupom?.codigo !== cupons.digitado.codigo ? cupons.digitado : null;
   const estadoFrete = useFrete(cep, cadeiras);
   const valorFrete = estadoFrete.tipo === "ok" ? estadoFrete.frete.valor : null;
   const prazoFrete = estadoFrete.tipo === "ok" ? estadoFrete.frete.prazoDias : undefined;
@@ -57,9 +58,7 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
       : [
           "",
           `Subtotal: ${formatBRL(subtotal)}`,
-          ...(temCupom
-            ? [`Cupom ${CUPOM_CODIGO} (${Math.round(CUPOM_DESCONTO * 100)}%): -${formatBRL(desconto)}`]
-            : []),
+          ...(cupom ? [`Cupom ${cupom.codigo} (${rotuloDesconto(cupom)}): -${formatBRL(desconto)}`] : []),
           valorFrete === null
             ? `Frete: a calcular${cep ? ` (CEP ${cep})` : ""}`
             : `Frete (CEP ${cep}): ${valorFrete === 0 ? "grátis" : formatBRL(valorFrete)}`,
@@ -116,7 +115,7 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
 
         {naEntrega ? (
           <div className="min-h-0 flex-1">
-            <CheckoutForm items={items} onVoltar={() => setEtapa("carrinho")} />
+            <CheckoutForm items={items} cupons={cupons.cupons} codigoDigitado={cupons.digitado?.codigo} onVoltar={() => setEtapa("carrinho")} />
           </div>
         ) : null}
         <div className={`flex-1 overflow-y-auto px-6 py-4 ${naEntrega ? "hidden" : ""}`}>
@@ -198,14 +197,66 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
                   </dt>
                   <dd>{formatBRL(subtotal)}</dd>
                 </div>
-                {temCupom ? (
+                {cupom ? (
                   <div className="flex justify-between text-ink">
-                    <dt>
-                      Cupom {CUPOM_CODIGO} ({Math.round(CUPOM_DESCONTO * 100)}%)
+                    <dt className="flex items-center gap-2">
+                      Cupom {cupom.codigo} ({rotuloDesconto(cupom)})
+                      {cupons.digitado?.codigo === cupom.codigo ? (
+                        <button type="button" onClick={cupons.remover} className="text-xs text-ink-soft underline underline-offset-2 hover:text-ink">
+                          tirar
+                        </button>
+                      ) : null}
                     </dt>
                     <dd>-{formatBRL(desconto)}</dd>
                   </div>
                 ) : null}
+                {digitadoSemMinimo ? (
+                  <p className="text-xs text-ink">
+                    O cupom {digitadoSemMinimo.codigo} vale a partir de {digitadoSemMinimo.minCadeiras} cadeiras.{" "}
+                    <button type="button" onClick={cupons.remover} className="underline underline-offset-2">
+                      tirar
+                    </button>
+                  </p>
+                ) : !cupons.digitado ? (
+                  abrirCupom ? (
+                    <form
+                      className="flex items-center gap-2 py-1"
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (await cupons.aplicar(codigo)) {
+                          setAbrirCupom(false);
+                          setCodigo("");
+                        }
+                      }}
+                    >
+                      <label htmlFor="cupom-codigo" className="sr-only">
+                        Código do cupom
+                      </label>
+                      <input
+                        id="cupom-codigo"
+                        value={codigo}
+                        onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+                        autoFocus
+                        autoCapitalize="characters"
+                        placeholder="CÓDIGO"
+                        maxLength={20}
+                        className="min-w-0 flex-1 border border-line bg-canvas px-2 py-1 text-sm uppercase text-ink focus:border-ink focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={cupons.conferindo || !codigo.trim()}
+                        className="border border-ink px-3 py-1 text-sm text-ink hover:bg-ink hover:text-canvas disabled:opacity-40"
+                      >
+                        {cupons.conferindo ? "…" : "Aplicar"}
+                      </button>
+                    </form>
+                  ) : (
+                    <button type="button" onClick={() => setAbrirCupom(true)} className="text-xs text-ink-soft underline underline-offset-2 hover:text-ink">
+                      Tem cupom de desconto?
+                    </button>
+                  )
+                ) : null}
+                {cupons.erro ? <p className="text-xs text-clay-dark">{cupons.erro}</p> : null}
                 <div className="flex items-center justify-between gap-3 text-ink-soft">
                   <dt>
                     <label htmlFor="cep-frete">Frete</label>
@@ -239,10 +290,9 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
                   <dd>{formatBRL(pixComFrete)}</dd>
                 </div>
                 <p className="text-xs text-ink-soft">ou em até {PARCELAS_MAX}x no cartão</p>
-                {faltamParaCupom > 0 ? (
+                {faltamParaCupom > 0 && proximo ? (
                   <p className="pt-1 text-xs text-ink">
-                    Leve mais {faltamParaCupom} e ganhe {Math.round(CUPOM_DESCONTO * 100)}% de desconto com o
-                    cupom {CUPOM_CODIGO}.
+                    Leve mais {faltamParaCupom} e ganhe {rotuloDesconto(proximo)} de desconto com o cupom {proximo.codigo}.
                   </p>
                 ) : null}
               </dl>

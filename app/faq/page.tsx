@@ -3,10 +3,9 @@ import { pageMetadata } from "@/lib/seo";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
 import { JsonLd } from "@/components/json-ld";
+import { rotuloDesconto } from "@/lib/cupom";
+import { cuponsAutomaticos } from "@/lib/cupons-store";
 import {
-  CUPOM_CODIGO,
-  CUPOM_DESCONTO,
-  CUPOM_MIN_ITENS,
   formatBRL,
   PARCELAS_MAX,
   PIX_DESCONTO,
@@ -26,7 +25,7 @@ export const metadata: Metadata = pageMetadata({
   path: "/faq",
 });
 
-const PERGUNTAS = [
+const PERGUNTAS_FIXAS = [
   {
     pergunta: "Como faço um pedido?",
     resposta:
@@ -50,10 +49,6 @@ const PERGUNTAS = [
     resposta: `Cada cadeira é feita sob encomenda, à mão, e fica pronta em até ${PRAZO_PRODUCAO_DIAS_UTEIS} dias úteis depois que o pedido é confirmado. Depois disso, é só o tempo de entrega até você.`,
   },
   {
-    pergunta: "Tem desconto levando mais de uma?",
-    resposta: `Tem. Na compra de ${CUPOM_MIN_ITENS} cadeiras ou mais, use o cupom ${CUPOM_CODIGO} e ganhe ${Math.round(CUPOM_DESCONTO * 100)}% de desconto no pedido.`,
-  },
-  {
     pergunta: "Posso escolher as cores do meu time?",
     resposta:
       "Sim. As cores entram direto na trama, fio a fio — sem adesivo e sem estampa que descasca com o tempo.",
@@ -72,6 +67,18 @@ const PERGUNTAS = [
 
 export default async function FaqPage() {
   const { site } = await getContent();
+  // The multi-chair discount comes from the admin's automatic coupon (if one is on).
+  const multi = (await cuponsAutomaticos()).filter((c) => c.minCadeiras >= 2).sort((a, b) => a.minCadeiras - b.minCadeiras)[0];
+  const PERGUNTAS = multi
+    ? [
+        ...PERGUNTAS_FIXAS.slice(0, 5),
+        {
+          pergunta: "Tem desconto levando mais de uma?",
+          resposta: `Tem. Na compra de ${multi.minCadeiras} cadeiras ou mais, o cupom ${multi.codigo} entra sozinho no carrinho e dá ${rotuloDesconto(multi)} de desconto no pedido.`,
+        },
+        ...PERGUNTAS_FIXAS.slice(5),
+      ]
+    : PERGUNTAS_FIXAS;
 
   return (
     <>

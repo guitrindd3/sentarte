@@ -1,12 +1,7 @@
 import type { CartItem } from "./cart-context";
 import { DESENHO_TEMAS } from "./desenho-model";
-import {
-  CATEGORIA_COM_PRECO,
-  CUPOM_DESCONTO,
-  CUPOM_MIN_ITENS,
-  PIX_DESCONTO,
-  precoCadeira,
-} from "./offer";
+import { melhorCupom, type CupomPublico } from "./cupom";
+import { CATEGORIA_COM_PRECO, PIX_DESCONTO, precoCadeira } from "./offer";
 
 // Order math shared by the cart drawer (display) and /api/checkout (the
 // amount actually charged). The server recomputes everything from here —
@@ -25,17 +20,20 @@ export function precoUnitario(item: ItemDoPedido) {
   return precoCadeira(Boolean(item.nomePersonalizado?.trim()) || desenho);
 }
 
-export function calcularPedido(items: ItemDoPedido[]) {
+/** `cupons`: the coupons on offer (automatic + typed); the best one is applied, no stacking. */
+export function calcularPedido(items: ItemDoPedido[], cupons: CupomPublico[] = []) {
   const cadeiras = items.filter((i) => i.categoriaSlug === CATEGORIA_COM_PRECO);
   const qtdCadeiras = cadeiras.reduce((s, i) => s + i.quantidade, 0);
   const subtotal = arred(cadeiras.reduce((s, i) => s + i.quantidade * precoUnitario(i), 0));
-  const temCupom = qtdCadeiras >= CUPOM_MIN_ITENS;
-  const desconto = temCupom ? arred(subtotal * CUPOM_DESCONTO) : 0;
+  const aplicado = melhorCupom(cupons, subtotal, qtdCadeiras);
+  const cupom = aplicado?.cupom ?? null;
+  const temCupom = Boolean(aplicado);
+  const desconto = aplicado?.desconto ?? 0;
   const total = arred(subtotal - desconto);
   const totalPix = arred(total * (1 - PIX_DESCONTO));
   /** Only chairs have a fixed price, so only an all-chair cart can be paid online. */
   const pagavel = items.length > 0 && cadeiras.length === items.length;
-  return { qtdCadeiras, subtotal, temCupom, desconto, total, totalPix, pagavel };
+  return { qtdCadeiras, subtotal, temCupom, cupom, desconto, total, totalPix, pagavel };
 }
 
 export type DadosEntrega = {

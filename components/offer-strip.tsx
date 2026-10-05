@@ -1,7 +1,6 @@
+import { rotuloDesconto, type CupomPublico } from "@/lib/cupom";
+import { cuponsAutomaticos } from "@/lib/cupons-store";
 import {
-  CUPOM_CODIGO,
-  CUPOM_DESCONTO,
-  CUPOM_MIN_ITENS,
   formatBRL,
   PARCELAS_MAX,
   PIX_DESCONTO,
@@ -10,7 +9,7 @@ import {
   PRECO_CADEIRA_COM_NOME,
 } from "@/lib/offer";
 
-function itens(soPersonalizada: boolean) {
+function itens(soPersonalizada: boolean, cupom?: CupomPublico) {
   return [
     soPersonalizada
       ? {
@@ -29,10 +28,12 @@ function itens(soPersonalizada: boolean) {
       destaque: `Até ${PRAZO_PRODUCAO_DIAS_UTEIS} dias úteis`,
       texto: "para ficar pronta",
     },
-    {
-      destaque: `${Math.round(CUPOM_DESCONTO * 100)}% de desconto`,
-      texto: `levando ${CUPOM_MIN_ITENS} ou mais, cupom ${CUPOM_CODIGO}`,
-    },
+    cupom
+      ? {
+          destaque: `${rotuloDesconto(cupom)} de desconto`,
+          texto: cupom.minCadeiras > 1 ? `levando ${cupom.minCadeiras} ou mais, cupom ${cupom.codigo}` : `com o cupom ${cupom.codigo}`,
+        }
+      : { destaque: "Feito à mão", texto: "trançada uma a uma no ateliê" },
   ];
 }
 
@@ -40,7 +41,9 @@ function itens(soPersonalizada: boolean) {
 // homepage and compact under the header of the catalog pages.
 // `soPersonalizada`: for pages where every chair is already personalized
 // (/desenhos), lead with the personalized price instead.
-export function OfferStrip({ compact = false, soPersonalizada = false }: { compact?: boolean; soPersonalizada?: boolean }) {
+export async function OfferStrip({ compact = false, soPersonalizada = false }: { compact?: boolean; soPersonalizada?: boolean }) {
+  // The automatic coupon set in the admin ("Cupons"), smallest minimum first.
+  const cupom = (await cuponsAutomaticos()).sort((a, b) => a.minCadeiras - b.minCadeiras)[0];
   return (
     <section aria-label="Condições" className={compact ? "border-b border-line bg-paper" : "border-y border-line bg-paper"}>
       <ul
@@ -48,7 +51,7 @@ export function OfferStrip({ compact = false, soPersonalizada = false }: { compa
           compact ? "px-6 py-4" : "px-6 py-8"
         }`}
       >
-        {itens(soPersonalizada).map((item, i) => (
+        {itens(soPersonalizada, cupom).map((item, i) => (
           <li
             key={item.destaque}
             className={`px-4 py-2 ${i % 2 === 1 ? "border-l border-line" : ""} ${
