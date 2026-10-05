@@ -605,6 +605,7 @@ Three defaults were corrected on 2026-10-05 because they still said orders were 
 
 - Homepage carousel photos are a `fotos` field (`carrossel`, max 8) in Páginas → Página inicial (`app/admin/(painel)/paginas/fotos.tsx`: add/remove/reorder/adjust; posts `carrossel.ordem` JSON tokens "u:<url>"/"n:<k>" + `carrossel.novos` files; the action only keeps URLs that were already in the saved/default list). `components/home/carousel.tsx` takes `fotos` (defaults = the 3 original /photos/carousel-*.jpg).
 - Every admin photo field (FotoSlot, GaleriaFotos, carousel) has "Ajustar": `app/admin/ajustar-foto.tsx` (react-easy-crop, MIT) — shapes Original/Quadrada/Em pé (4:5)/Deitada (3:2)/Larga (16:9), zoom, rotate; outputs a ≤2000px JPEG File that replaces the field's file (adjusting a saved photo uploads a new copy; in the gallery the old one is marked for removal).
+- Homepage "Nossas cadeiras" row cards made smaller (user: "muito grande") — 23.5% of the column on desktop, 34% sm, 76% phones — and the whole card photo is a link to the WhatsApp order (same message as "Ou pedir direto pelo WhatsApp"; gallery arrows sit above it), on every ModeloCard.
 - Homepage "Nossas cadeiras" row now spans the full screen width (user: chairs should slide out at the screen edges); first card aligns with the text column via `lg:px-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))]`, card widths computed from the viewport so they keep the old size.
 
 ## Security (2026-09-30 pass)

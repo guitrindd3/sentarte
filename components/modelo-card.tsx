@@ -77,6 +77,16 @@ export function ModeloCard({
         ) : (
           <WeavePattern colorA={ativo.corA} colorB={ativo.corB} cell={30} band={20} className="h-full w-full" />
         )}
+        {/* The whole photo is the order link (user 2026-10-05) — same as "Ou pedir direto
+            pelo WhatsApp"; the gallery arrows/thumbnails below sit on top of it. */}
+        <a
+          href={whatsappUrl(whatsappNumero, mensagemWhatsapp)}
+          target="_blank"
+          rel="noreferrer"
+          data-rastro={`Foto da cadeira (pedido WhatsApp): ${ativo.nome}`}
+          aria-label={`Pedir ${ativo.nome} pelo WhatsApp`}
+          className="absolute inset-0"
+        />
         {temVariantes ? (
           <>
             <button
