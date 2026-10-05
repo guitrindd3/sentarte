@@ -47,17 +47,10 @@ export function AutoScrollRow({ className, children }: { className: string; chil
     };
 
     const pausar = () => {
-      if (pausadoAte !== Infinity) pausadoAte = performance.now() + PAUSA_MS;
+      pausadoAte = performance.now() + PAUSA_MS;
     };
-    // Desktop: stand still while the mouse is over the row.
-    const parar = (e: PointerEvent) => {
-      if (e.pointerType === "mouse") pausadoAte = Infinity;
-    };
-    const voltar = (e: PointerEvent) => {
-      if (e.pointerType === "mouse") pausadoAte = performance.now() + 800;
-    };
-    el.addEventListener("pointerenter", parar);
-    el.addEventListener("pointerleave", voltar);
+    // No pause on mouse hover (user 2026-10-05: "quero que ele continue") — only
+    // while someone drags, swipes or scrolls the row by hand.
     el.addEventListener("pointerdown", pausar);
     el.addEventListener("touchstart", pausar, { passive: true });
     el.addEventListener("touchmove", pausar, { passive: true });
@@ -65,8 +58,6 @@ export function AutoScrollRow({ className, children }: { className: string; chil
     raf = requestAnimationFrame(passo);
     return () => {
       cancelAnimationFrame(raf);
-      el.removeEventListener("pointerenter", parar);
-      el.removeEventListener("pointerleave", voltar);
       el.removeEventListener("pointerdown", pausar);
       el.removeEventListener("touchstart", pausar);
       el.removeEventListener("touchmove", pausar);

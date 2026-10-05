@@ -42,8 +42,8 @@ export function Carousel({
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  // Auto-advance, except while the visitor is hovering/focused on the
-  // carousel or has asked the OS for reduced motion.
+  // Auto-advance, except while keyboard focus is inside the carousel or the
+  // visitor asked the OS for reduced motion. No pause on mouse hover (user 2026-10-05).
   useEffect(() => {
     if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), INTERVALO_MS);
@@ -54,8 +54,6 @@ export function Carousel({
     <section
       className="relative overflow-hidden bg-espresso md:min-h-[92vh]"
       aria-roledescription="carrossel"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
