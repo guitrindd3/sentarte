@@ -387,5 +387,9 @@
       "estrelas": 5
     }
   ],
-  "paginas": {}
+  "paginas": {
+    "inicio": {
+      "escolhaTitulo": "Escolha a sua cadeiras"
+    }
+  }
 }
