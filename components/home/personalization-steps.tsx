@@ -21,13 +21,20 @@ const STEPS = [
   },
 ];
 
-export function PersonalizationSteps() {
+export function PersonalizationSteps({
+  titulo = "Como funciona a personalização",
+  passos,
+}: {
+  titulo?: string;
+  passos?: { titulo: string; texto: string }[];
+}) {
+  const lista = passos?.length ? passos.map((p, i) => ({ ...p, numero: String(i + 1) })) : STEPS;
   return (
     <section className="bg-canvas-deep px-6 pb-8 pt-12 md:pb-10 md:pt-16">
       <div className="mx-auto max-w-6xl">
-        <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Como funciona a personalização</h2>
+        <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">{titulo}</h2>
         <ol className="mt-10 grid gap-8 md:grid-cols-4">
-          {STEPS.map((step, i) => (
+          {lista.map((step, i) => (
             <li key={step.numero}>
               <div
                 className={`border-t-2 border-line pt-4 md:border-t-0 md:pt-0 ${

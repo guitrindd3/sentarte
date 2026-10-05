@@ -4,6 +4,8 @@ import { JsonLd } from "@/components/json-ld";
 import { OfferStrip } from "@/components/offer-strip";
 import { ModeloCard } from "@/components/modelo-card";
 import { PageHeader } from "@/components/page-header";
+import { textoSimples } from "@/components/texto-rico";
+import { textosDaPagina } from "@/lib/textos-paginas";
 import { getContent } from "@/lib/content-store";
 import { DESENHO_TEMAS } from "@/lib/desenho-model";
 
@@ -17,6 +19,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function DesenhosPage() {
+  const tp = textosDaPagina((await getContent()).paginas, "desenhos");
   const content = await getContent();
   const cadeiras = content.categorias.find((c) => c.slug === "cadeiras");
   const modelos = cadeiras
@@ -30,8 +33,8 @@ export default async function DesenhosPage() {
     <>
       <PageHeader
         voltarPara="/categoria/cadeiras"
-        titulo="Animes e desenhos"
-        resumo="Desenhos, personagens e frases tecidos na cadeira. Os exemplos abaixo são pedidos que já fizemos — conta pra gente o que você tem em mente e a gente tece."
+        titulo={textoSimples(tp.linha("titulo"))}
+        resumo={textoSimples(tp.linha("resumo"))}
       />
       <OfferStrip compact soPersonalizada />
       {modelos.length > 0 ? <JsonLd data={chairListJsonLd(modelos, { soPersonalizada: true })} /> : null}

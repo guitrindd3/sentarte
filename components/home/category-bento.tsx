@@ -15,7 +15,7 @@ const COLECOES = [
   { nome: "Monte a sua trama", href: "/personalizar", linkLabel: "Montar a minha" },
 ];
 
-export function CategoryBento({ categorias }: { categorias: Categoria[] }) {
+export function CategoryBento({ categorias, titulo = "Escolha a sua cadeira" }: { categorias: Categoria[]; titulo?: string }) {
   const cadeiras = categorias.find((c) => c.slug === "cadeiras");
   if (!cadeiras) return null;
 
@@ -27,7 +27,7 @@ export function CategoryBento({ categorias }: { categorias: Categoria[] }) {
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-12 md:py-16">
-      <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Escolha a sua cadeira</h2>
+      <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">{titulo}</h2>
       <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
         {cards.map(({ modelo, href, linkLabel }) => (
           <CoverLinkCard

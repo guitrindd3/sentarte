@@ -2,18 +2,11 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
+import { TextoRico, textoSimples } from "@/components/texto-rico";
+import { textosDaPagina } from "@/lib/textos-paginas";
 import { JsonLd } from "@/components/json-ld";
 import { rotuloDesconto } from "@/lib/cupom";
 import { cuponsAutomaticos } from "@/lib/cupons-store";
-import {
-  formatBRL,
-  PARCELAS_MAX,
-  PIX_DESCONTO,
-  precoPix,
-  PRAZO_PRODUCAO_DIAS_UTEIS,
-  PRECO_CADEIRA,
-  PRECO_CADEIRA_COM_NOME,
-} from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
@@ -25,48 +18,11 @@ export const metadata: Metadata = pageMetadata({
   path: "/faq",
 });
 
-const PERGUNTAS_FIXAS = [
-  {
-    pergunta: "Como faço um pedido?",
-    resposta:
-      "Pelo WhatsApp. Você escolhe o modelo, a cor e a personalização (quando o modelo permitir), e a gente confirma um resumo completo antes de começar a trançar.",
-  },
-  {
-    pergunta: "Quanto custa uma cadeira?",
-    resposta: `A cadeira de praia sai por ${formatBRL(PRECO_CADEIRA)}. Com um nome ou outra personalização trançada, sai por ${formatBRL(PRECO_CADEIRA_COM_NOME)}. No Pix tem ${Math.round(PIX_DESCONTO * 100)}% de desconto (${formatBRL(precoPix(PRECO_CADEIRA))}), e no cartão dá para parcelar em até ${PARCELAS_MAX}x (com a taxa do cartão).`,
-  },
-  {
-    pergunta: "Quais são as medidas da cadeira?",
-    resposta:
-      "A cadeira fixa tem 73 cm de altura, 54 cm de largura e 53 cm de profundidade, aguenta até 110 kg e pesa de 1,3 a 2 kg. A reclinável (8 posições) tem 88 x 54,5 x 67 cm e aguenta até 100 kg. A infantil tem 49,5 x 41,5 x 39 cm e aguenta até 30 kg. A tabela completa está na página das cadeiras.",
-  },
-  {
-    pergunta: "Quanto custa o frete?",
-    resposta: "Depende de onde você mora. É só colocar o seu CEP no carrinho que o valor e o prazo aparecem na hora, antes de pagar.",
-  },
-  {
-    pergunta: "Qual o prazo de produção?",
-    resposta: `Cada cadeira é feita sob encomenda, à mão, e fica pronta em até ${PRAZO_PRODUCAO_DIAS_UTEIS} dias úteis depois que o pedido é confirmado. Depois disso, é só o tempo de entrega até você.`,
-  },
-  {
-    pergunta: "Posso escolher as cores do meu time?",
-    resposta:
-      "Sim. As cores entram direto na trama, fio a fio — sem adesivo e sem estampa que descasca com o tempo.",
-  },
-  {
-    pergunta: "Como faço a manutenção da cadeira?",
-    resposta:
-      "Basta lavar com água e sabão neutro e deixar secar à sombra. A corda náutica não absorve água, então não precisa de nenhum cuidado além disso.",
-  },
-  {
-    pergunta: "Como funcionam trocas e devoluções?",
-    resposta:
-      "Consulte os detalhes na página de trocas e devoluções. Por serem peças feitas sob medida, a troca por arrependimento segue regras diferentes das de defeito de fabricação.",
-  },
-];
 
 export default async function FaqPage() {
-  const { site } = await getContent();
+  const { site, paginas } = await getContent();
+  const tp = textosDaPagina(paginas, "faq");
+  const PERGUNTAS_FIXAS = tp.blocos("perguntas").map((b) => ({ pergunta: textoSimples(b.titulo, site.nome), resposta: b.texto }));
   // The multi-chair discount comes from the admin's automatic coupon (if one is on).
   const multi = (await cuponsAutomaticos()).filter((c) => c.minCadeiras >= 2).sort((a, b) => a.minCadeiras - b.minCadeiras)[0];
   const PERGUNTAS = multi
@@ -82,7 +38,7 @@ export default async function FaqPage() {
 
   return (
     <>
-      <PageHeader titulo="Perguntas frequentes" />
+      <PageHeader titulo={textoSimples(tp.linha("titulo"), site.nome)} />
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -90,21 +46,21 @@ export default async function FaqPage() {
           mainEntity: PERGUNTAS.map((item) => ({
             "@type": "Question",
             name: item.pergunta,
-            acceptedAnswer: { "@type": "Answer", text: item.resposta },
+            acceptedAnswer: { "@type": "Answer", text: textoSimples(item.resposta, site.nome) },
           })),
         }}
       />
       <section className="mx-auto max-w-6xl px-6 py-16 [&>*]:max-w-3xl">
         <div className="divide-y divide-line border-y border-line">
-          {PERGUNTAS.map((item) => (
-            <details key={item.pergunta} className="group py-5">
+          {PERGUNTAS.map((item, i) => (
+            <details key={i} className="group py-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-serif text-lg text-ink">
                 {item.pergunta}
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line font-sans text-xl leading-none text-ink transition-transform group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
-                {item.resposta}
-              </p>
+              <div className="mt-3 max-w-[60ch] space-y-2 text-sm leading-relaxed text-ink-soft">
+                <TextoRico texto={item.resposta} whatsappNumero={site.whatsappNumero} nome={site.nome} />
+              </div>
             </details>
           ))}
         </div>

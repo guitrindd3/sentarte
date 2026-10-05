@@ -4,6 +4,7 @@ import { logoutAction } from "../../actions";
 // Phone-only overflow menu (the bottom bar has room for 5 tabs).
 const ITENS = [
   { href: "/admin/cupons", titulo: "Cupons", texto: "Códigos de desconto para o carrinho." },
+  { href: "/admin/paginas", titulo: "Páginas do site", texto: "Textos do Sobre, FAQ, políticas e das seções da página inicial." },
   { href: "/admin/depoimentos", titulo: "Depoimentos", texto: "Elogios de clientes na página inicial." },
   { href: "/admin/site", titulo: "Textos e contato", texto: "Boas-vindas, WhatsApp, Instagram e Google." },
   { href: "/admin/seguranca", titulo: "Segurança", texto: "Código no celular e histórico de entradas." },

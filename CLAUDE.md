@@ -596,6 +596,11 @@ Admin "Cupons" (`app/admin/(painel)/cupons`; phones: Mais → Cupons). Stored in
 
 An "Ateliê SentArte" profile already existed (category Artesanato, Serra area, same WhatsApp); the user added the site link to it. Its share link is `site.googleUrl` (content, editable in /admin "Textos e contato"): footer "Avaliações no Google", a card on /contato, and in admin Clientes a "Pedir avaliação" WhatsApp button on paid orders plus a copyable review-request message. If the user later gets the direct "Pedir avaliações" link from the profile dashboard, they can paste it in that field. Profile ownership (verified/managed by the atelier account) wasn't confirmed yet.
 
+## Editable page texts — admin "Páginas" (2026-10-05)
+
+User: "quero editar o Sobre… deve ter telas aonde mexo em cada uma das páginas". `lib/textos-paginas.ts` lists every page with fixed text (home sections, Sobre, Contato, FAQ, Monte a sua trama, Times/Boho/Desenhos headers, Envio, Trocas, Privacidade, Termos): fields (`linha`, `texto`, `blocos` = list of {titulo, texto}, optionally `fixo`) and the CURRENT wording as `padrao`. Saved in `SiteContent.paginas[pageId]` — only fields that differ from the default (so improving a default reaches untouched pages). Pages read `textosDaPagina(content.paginas, id)`; rich text renders with `components/texto-rico.tsx` (blank line = paragraph, `{preco}`/`{preco_nome}`/`{preco_pix}`/`{pix}`/`{parcelas}`/`{prazo}`/`{nome}` placeholders from lib/offer.ts, `[words](whatsapp|/path|https://…)` links; `textoSimples()` for titles/JSON-LD). Policy pages share `components/pagina-de-texto.tsx`. Admin: `/admin/paginas` list + `/admin/paginas/[id]` editor (`EditorBlocos` client list with add/remove/reorder), "Voltar ao texto original". Saving commits like other content (site updates in 1-2 min). When adding a new fixed text to a page, add it to the registry instead of hard-coding it. Not in "Páginas": the chair specs table (`lib/medidas.ts`), the builder's own UI texts, and the dynamic FAQ coupon answer.
+Three defaults were corrected on 2026-10-05 because they still said orders were WhatsApp-only (FAQ "Como faço um pedido?", Envio production start, Termos intro).
+
 ## Security (2026-09-30 pass)
 
 - Security headers + CSP in `next.config.ts` (`headers()`), `poweredByHeader:

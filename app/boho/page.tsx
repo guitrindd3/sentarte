@@ -4,6 +4,8 @@ import { JsonLd } from "@/components/json-ld";
 import { OfferStrip } from "@/components/offer-strip";
 import { ModeloCard } from "@/components/modelo-card";
 import { PageHeader } from "@/components/page-header";
+import { textoSimples } from "@/components/texto-rico";
+import { textosDaPagina } from "@/lib/textos-paginas";
 import { getContent } from "@/lib/content-store";
 import { BOHO_PADROES } from "@/lib/boho-model";
 
@@ -17,6 +19,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function BohoPage() {
+  const tp = textosDaPagina((await getContent()).paginas, "boho");
   const content = await getContent();
   const cadeiras = content.categorias.find((c) => c.slug === "cadeiras");
   const modelos = cadeiras
@@ -30,8 +33,8 @@ export default async function BohoPage() {
     <>
       <PageHeader
         voltarPara="/categoria/cadeiras"
-        titulo="Cadeiras boho"
-        resumo="Estampas boho exclusivas, em tons terrosos — cada padrão é uma trama diferente."
+        titulo={textoSimples(tp.linha("titulo"))}
+        resumo={textoSimples(tp.linha("resumo"))}
       />
       <OfferStrip compact />
       {modelos.length > 0 ? <JsonLd data={chairListJsonLd(modelos)} /> : null}

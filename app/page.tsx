@@ -9,7 +9,9 @@ import { PullQuote } from "@/components/home/pull-quote";
 import { TeamShowcase } from "@/components/home/team-showcase";
 import type { Metadata } from "next";
 import { OfferStrip } from "@/components/offer-strip";
+import { textoSimples } from "@/components/texto-rico";
 import { getContent } from "@/lib/content-store";
+import { textosDaPagina } from "@/lib/textos-paginas";
 
 export const dynamic = "force-dynamic";
 
@@ -19,19 +21,21 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const content = await getContent();
+  const t = textosDaPagina(content.paginas, "inicio");
+  const zap = content.site.whatsappNumero;
 
   return (
     <>
       <Carousel hero={content.hero} whatsappNumero={content.site.whatsappNumero} />
       <OfferStrip />
-      <CategoryBento categorias={content.categorias} />
-      <TeamShowcase categorias={content.categorias} whatsappNumero={content.site.whatsappNumero} />
-      <PersonalizationSteps />
-      <PullQuote />
-      <MaterialSpec />
+      <CategoryBento categorias={content.categorias} titulo={t.linha("escolhaTitulo")} />
+      <TeamShowcase categorias={content.categorias} whatsappNumero={zap} titulo={t.linha("nossasTitulo")} texto={textoSimples(t.linha("nossasTexto"))} />
+      <PersonalizationSteps titulo={t.linha("passosTitulo")} passos={t.blocos("passos").map((b) => ({ titulo: b.titulo, texto: textoSimples(b.texto) }))} />
+      <PullQuote frase={textoSimples(t.linha("frase"))} assinatura={textoSimples(t.linha("fraseAssinatura"))} />
+      <MaterialSpec titulo={t.linha("materialTitulo")} texto={textoSimples(t.linha("materialTexto"))} itens={t.blocos("materialItens").map((b) => ({ titulo: b.titulo, texto: textoSimples(b.texto) }))} />
       <MedidasCadeiras whatsappNumero={content.site.whatsappNumero} />
-      <Depoimentos depoimentos={content.depoimentos} />
-      <ContactCta whatsappNumero={content.site.whatsappNumero} instagramHandle={content.site.instagramHandle} />
+      <Depoimentos depoimentos={content.depoimentos} titulo={t.linha("depoimentosTitulo")} />
+      <ContactCta whatsappNumero={zap} instagramHandle={content.site.instagramHandle} titulo={t.linha("contatoTitulo")} texto={textoSimples(t.linha("contatoTexto"))} />
     </>
   );
 }

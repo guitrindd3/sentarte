@@ -19,20 +19,27 @@ const FEATURES = [
   },
 ];
 
-export function MaterialSpec() {
+export function MaterialSpec({
+  titulo = "A linha que sustenta cada peça",
+  texto,
+  itens,
+}: {
+  titulo?: string;
+  texto?: string;
+  itens?: { titulo: string; texto: string }[];
+}) {
+  // Icons stay with their position; the words come from the admin ("Páginas").
+  const destaques = FEATURES.map((f, i) => ({ ...f, titulo: itens?.[i]?.titulo ?? f.titulo, valor: itens?.[i]?.texto ?? f.valor }));
   return (
     <section className="bg-canvas-deep px-6 pb-12 pt-8 text-ink md:pb-16 md:pt-10">
       <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2 md:items-start">
         <div>
-          <h2 className="font-serif text-2xl font-medium tracking-tight">A linha que sustenta cada peça</h2>
+          <h2 className="font-serif text-2xl font-medium tracking-tight">{titulo}</h2>
           <p className="mt-4 max-w-[52ch] text-sm leading-relaxed text-ink-soft">
-            Trabalhamos com corda náutica 100% polipropileno — um material que não absorve
-            água, por isso não apodrece nem mofa mesmo com contato constante com a maresia. A
-            estrutura é em alumínio, que não enferruja e mantém a cadeira leve e fácil de dobrar
-            e transportar.
+            {texto ?? "Trabalhamos com corda náutica 100% polipropileno — um material que não absorve água, por isso não apodrece nem mofa mesmo com contato constante com a maresia. A estrutura é em alumínio, que não enferruja e mantém a cadeira leve e fácil de dobrar e transportar."}
           </p>
           <dl className="mt-8 space-y-5">
-            {FEATURES.map(({ titulo, valor, Icon }) => (
+            {destaques.map(({ titulo, valor, Icon }) => (
               <div key={titulo} className="flex gap-3">
                 <Icon className="mt-0.5 h-5 w-5 shrink-0 text-clay" />
                 <div>

@@ -10,11 +10,9 @@ import { getTeamPairs } from "@/lib/team-models";
 // One row that drifts by itself and loops, on phones and desktop alike.
 export function TeamShowcase({
   categorias,
-  whatsappNumero,
-}: {
+  whatsappNumero, titulo = "Nossas cadeiras", texto }: {
   categorias: Categoria[];
-  whatsappNumero: string;
-}) {
+  whatsappNumero: string; titulo?: string; texto?: string }) {
   const cadeiras = categorias.find((c) => c.slug === "cadeiras");
   if (!cadeiras) return null;
   const porNome = (nome: string) => cadeiras.modelos.find((m) => m.nome === nome);
@@ -58,10 +56,9 @@ export function TeamShowcase({
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Nossas cadeiras</h2>
+            <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">{titulo}</h2>
             <p className="mt-2 max-w-[60ch] text-sm text-ink-soft">
-              De time, boho ou com o seu desenho preferido — todas trançadas à mão, e qualquer uma pode
-              levar um nome no encosto.
+              {texto ?? "De time, boho ou com o seu desenho preferido — todas trançadas à mão, e qualquer uma pode levar um nome no encosto."}
             </p>
           </div>
         </div>

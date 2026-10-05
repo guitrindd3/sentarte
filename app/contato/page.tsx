@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { InstagramIcon, StarIcon, WhatsAppIcon } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
+import { textoSimples } from "@/components/texto-rico";
+import { textosDaPagina } from "@/lib/textos-paginas";
 import { getContent } from "@/lib/content-store";
 import { instagramUrl, whatsappUrl } from "@/lib/urls";
 
@@ -15,13 +17,14 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function ContatoPage() {
+  const tp = textosDaPagina((await getContent()).paginas, "contato");
   const { site } = await getContent();
 
   return (
     <>
       <PageHeader
-        titulo="Fale com a gente"
-        resumo="Todo pedido — orçamento, dúvida de modelo ou prazo — passa pelo WhatsApp. É por lá que a gente confirma cor, trama e personalização antes de começar a trançar."
+        titulo={textoSimples(tp.linha("titulo"))}
+        resumo={textoSimples(tp.linha("resumo"))}
       />
       <section className="mx-auto max-w-6xl px-6 py-16 [&>*]:max-w-3xl">
         <div className="grid gap-4 sm:grid-cols-2">

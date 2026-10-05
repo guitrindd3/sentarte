@@ -4,6 +4,8 @@ import { getTeamPairs } from "@/lib/team-models";
 import { JsonLd } from "@/components/json-ld";
 import { OfferStrip } from "@/components/offer-strip";
 import { PageHeader } from "@/components/page-header";
+import { textoSimples } from "@/components/texto-rico";
+import { textosDaPagina } from "@/lib/textos-paginas";
 import { TeamGrid } from "@/components/team-grid";
 import { getContent } from "@/lib/content-store";
 
@@ -17,14 +19,15 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function TimesPage() {
+  const tp = textosDaPagina((await getContent()).paginas, "times");
   const content = await getContent();
 
   return (
     <>
       <PageHeader
         voltarPara="/categoria/cadeiras"
-        titulo="Cadeiras de time"
-        resumo="As cores e o escudo do seu time, trançados direto na estrutura — sem adesivo, sem estampa. Escolha com ou sem um nome no encosto."
+        titulo={textoSimples(tp.linha("titulo"))}
+        resumo={textoSimples(tp.linha("resumo"))}
       />
       <OfferStrip compact />
       <JsonLd data={chairListJsonLd(getTeamPairs(content.categorias).map((t) => t.base))} />

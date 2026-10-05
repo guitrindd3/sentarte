@@ -4,6 +4,8 @@ import { BackLink } from "@/components/back-link";
 import { VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { ChairBuilder } from "@/components/chair-builder";
 import { getContent } from "@/lib/content-store";
+import { TextoRico, textoSimples } from "@/components/texto-rico";
+import { textosDaPagina } from "@/lib/textos-paginas";
 import { MedidasCadeiras } from "@/components/medidas-cadeiras";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +19,7 @@ export const metadata: Metadata = pageMetadata({
 
 export default async function PersonalizarPage() {
   const content = await getContent();
+  const tp = textosDaPagina(content.paginas, "personalizar");
 
   return (
     <>
@@ -29,11 +32,9 @@ export default async function PersonalizarPage() {
         </div>
         <div className="mx-auto mt-2 grid max-w-6xl items-center gap-10 px-6 md:grid-cols-[1fr_auto]">
           <div className="max-w-2xl">
-            <h1 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">Monte a sua trama</h1>
+            <h1 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{textoSimples(tp.linha("titulo"))}</h1>
             <p className="mt-4 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
-              Escolha o modelo, a forma do trançado e as cores para ver uma prévia. Quer um nome ou uma
-              frase trançada junto? É só escrever. Quando estiver do seu jeito, manda pra gente pelo
-              WhatsApp.
+              <TextoRico inline texto={tp.linha("resumo")} whatsappNumero={content.site.whatsappNumero} />
             </p>
           </div>
           <div className="mx-auto hidden w-full max-w-[17rem] border border-line bg-paper p-2 shadow-[6px_6px_0_0_var(--line)] md:block">

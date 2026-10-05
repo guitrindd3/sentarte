@@ -65,7 +65,7 @@ export default async function VisaoGeral() {
     },
     { href: "/admin/catalogo", titulo: "Trocar fotos e textos", texto: "Escolha a cadeira e edite o que quiser." },
     { href: "/admin/depoimentos", titulo: "Adicionar depoimento", texto: "Elogio de cliente com foto da cadeira." },
-    { href: "/admin/site", titulo: "Textos de boas-vindas", texto: "Frase da página inicial, WhatsApp e Instagram." },
+    { href: "/admin/paginas", titulo: "Textos das páginas", texto: "Sobre, perguntas frequentes, políticas e a página inicial." },
   ];
 
   return (

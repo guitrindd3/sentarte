@@ -21,6 +21,7 @@ function normalizar(data: Partial<SiteContent>): SiteContent {
     hero: { ...DEFAULT_CONTENT.hero, ...data.hero },
     categorias: data.categorias ?? DEFAULT_CONTENT.categorias,
     depoimentos: data.depoimentos ?? [],
+    paginas: data.paginas ?? {},
   };
 }
 

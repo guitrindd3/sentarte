@@ -15,6 +15,7 @@ import {
 } from "@/lib/auth";
 import { excluirInteressado, excluirPedido } from "@/lib/clientes";
 import { normalizarCodigo } from "@/lib/cupom";
+import { paginaEditavel, type Bloco, type ValorCampo } from "@/lib/textos-paginas";
 import { excluirCupom, listarCupons, salvarCupom } from "@/lib/cupons-store";
 import { redisAtivo } from "@/lib/redis";
 import {
@@ -504,5 +505,51 @@ export async function excluirCupomAction(codigo: string) {
     await excluirCupom(codigo);
     revalidatePath("/admin/cupons");
     return `Cupom ${codigo} apagado.`;
+  });
+}
+
+// --- Páginas (texts of each site page) ----------------------------------------------
+
+export async function salvarPaginaAction(paginaId: string, _p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const pg = paginaEditavel(paginaId);
+    if (!pg) throw new Aviso(SUMIU);
+    const content = await getContentForWrite();
+    const novo: Record<string, ValorCampo> = {};
+    for (const c of pg.campos) {
+      let v: ValorCampo;
+      if (c.tipo === "blocos") {
+        const titulos = formData.getAll(`${c.id}.titulo`).map((x) => String(x).trim());
+        const textos = formData.getAll(`${c.id}.texto`).map((x) => String(x).trim());
+        v = titulos.map((titulo, i) => ({ titulo, texto: textos[i] ?? "" })).filter((b) => b.titulo || b.texto);
+        if (c.fixo && v.length !== (pg.padrao[c.id] as Bloco[]).length) throw new Aviso(`"${c.rotulo}" precisa ter todos os itens preenchidos.`);
+      } else {
+        v = String(formData.get(c.id) ?? "").replace(/\r\n/g, "\n").trim();
+        if (!v && c.tipo === "linha" && c.id === "titulo") throw new Aviso("O título não pode ficar vazio.");
+      }
+      // Only what differs from the original wording is stored.
+      if (JSON.stringify(v) !== JSON.stringify(pg.padrao[c.id])) novo[c.id] = v;
+    }
+    if (Object.keys(novo).length) content.paginas = { ...content.paginas, [pg.id]: novo };
+    else {
+      const resto = { ...content.paginas };
+      delete resto[pg.id];
+      content.paginas = resto;
+    }
+    await saveContent(content, `edita a página "${pg.nome}"`);
+    return PRONTO;
+  });
+}
+
+export async function restaurarPaginaAction(paginaId: string) {
+  return executar(async () => {
+    const pg = paginaEditavel(paginaId);
+    if (!pg) throw new Aviso(SUMIU);
+    const content = await getContentForWrite();
+    const resto = { ...content.paginas };
+    delete resto[pg.id];
+    content.paginas = resto;
+    await saveContent(content, `volta a página "${pg.nome}" ao texto original`);
+    return { msg: "Pronto: a página voltou ao texto original.", ir: `/admin/paginas/${pg.id}` };
   });
 }

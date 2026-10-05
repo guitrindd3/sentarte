@@ -1,3 +1,4 @@
+import type { TextosSalvos } from "./textos-paginas";
 export type Modelo = {
   id: string;
   nome: string;
@@ -53,6 +54,8 @@ export type SiteContent = {
   categorias: Categoria[];
   /** Shown on the homepage only when there is at least one. */
   depoimentos: Depoimento[];
+  /** Page texts edited in /admin "Páginas" (only fields changed from the defaults in lib/textos-paginas.ts). */
+  paginas: TextosSalvos;
 };
 
 export const DEFAULT_CONTENT: SiteContent = {
@@ -71,6 +74,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     tags: ["Feito à mão", "Corda náutica e alumínio", "Resistente à maresia"],
   },
   depoimentos: [],
+  paginas: {},
   categorias: [
     {
       id: "cat-cadeiras",
