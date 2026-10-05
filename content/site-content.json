@@ -390,6 +390,9 @@
   "paginas": {
     "inicio": {
       "escolhaTitulo": "Escolha a sua cadeiras"
+    },
+    "termos": {
+      "titulo": "Termos de uso (teste)"
     }
   }
 }
