@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import conteudoDoRepo from "@/content/site-content.json";
 import { DEFAULT_CONTENT, type SiteContent } from "./content-schema";
-import { githubConfigurado, gravarArquivo, lerArquivo } from "./github-store";
+import { githubConfigurado, gravarCommit, lerArquivo, type ArquivoNovo } from "./github-store";
 import { CATEGORIAS_OCULTAS } from "./offer";
 
 // Site content lives in the repo (content/site-content.json) since
@@ -71,16 +71,28 @@ export async function getContentForWrite(): Promise<SiteContent> {
   return content;
 }
 
-export async function saveContent(content: SiteContent): Promise<void> {
+/**
+ * Saves the content plus any photos staged with prepararFoto() in a single
+ * commit (one redeploy per save). `mensagem` shows up in the admin's
+ * "Últimas alterações", so describe the change in plain Portuguese.
+ */
+export async function saveContent(content: SiteContent, mensagem = "atualiza conteúdo do site", fotos: ArquivoNovo[] = []) {
   const sha = shaDaLeitura.get(content);
   if (!sha) throw new Error("saveContent: content wasn't read with getContentForWrite()");
-  await gravarArquivo(CAMINHO, JSON.stringify(content, null, 2) + "\n", "Painel: atualiza conteúdo do site", sha);
+  await gravarCommit(
+    [...fotos, { caminho: CAMINHO, dados: `${JSON.stringify(content, null, 2)}\n` }],
+    `Painel: ${mensagem}`,
+    { caminho: CAMINHO, sha }
+  );
 }
 
-/** Saves an uploaded photo into public/catalogo and returns its site URL. */
-export async function salvarFoto(arquivo: File): Promise<string> {
+/** Stages an uploaded photo for public/catalogo: returns its future site URL
+ * and the file to hand to saveContent() — nothing is written yet. */
+export async function prepararFoto(arquivo: File): Promise<{ url: string; arquivo: ArquivoNovo }> {
   const ext = arquivo.type === "image/png" ? "png" : arquivo.type === "image/webp" ? "webp" : "jpg";
   const nome = `${crypto.randomUUID()}.${ext}`;
-  await gravarArquivo(`public/catalogo/${nome}`, Buffer.from(await arquivo.arrayBuffer()), "Painel: nova foto");
-  return `/catalogo/${nome}`;
+  return {
+    url: `/catalogo/${nome}`,
+    arquivo: { caminho: `public/catalogo/${nome}`, dados: Buffer.from(await arquivo.arrayBuffer()) },
+  };
 }

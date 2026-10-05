@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Bodoni_Moda } from "next/font/google";
 import { CartDrawer } from "@/components/cart-drawer";
+import { ForaDoAdmin } from "@/components/fora-do-admin";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Analytics } from "@vercel/analytics/next";
@@ -65,9 +66,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="pt-BR" className={`${display.variable} ${body.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans antialiased">
         <CartProvider>
-          <SiteHeader siteName={site.nome} whatsappNumero={site.whatsappNumero} />
+          <ForaDoAdmin>
+            <SiteHeader siteName={site.nome} whatsappNumero={site.whatsappNumero} />
+          </ForaDoAdmin>
           <main className="flex-1">{children}</main>
-          <SiteFooter />
+          <ForaDoAdmin>
+            <SiteFooter />
+          </ForaDoAdmin>
           <CartDrawer
             whatsappNumero={site.whatsappNumero}
             pagamentoAtivo={Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN)}

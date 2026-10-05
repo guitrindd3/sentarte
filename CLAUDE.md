@@ -552,6 +552,15 @@ frame, no white bands — user 2026-10-02).
   history around 2026-09-21), then update the env var on Vercel — there's no
   in-app "change password" flow.
 
+## Admin panel redesign (2026-10-05)
+
+The user found the one-page /admin "muito minimalista" and confusing (saved, looked at the site, nothing yet). Now a route group `app/admin/(painel)/` with its own shell (espresso sidebar on desktop, bottom tab bar on phones; the public header/footer are hidden on /admin via `components/fora-do-admin.tsx`): Início (counts, shortcuts, "Últimas alterações" from GitHub commits starting with "Painel:", models missing a photo), Cadeiras (`catalogo`: category tabs, searchable photo grid, add model → goes straight to its editor), one editor page per model (`catalogo/[catId]/[modeloId]`: drag-and-drop photo slots with preview, variants, extra-photo gallery, order up/down, inline delete confirm, warning when the name ties it to /times, /boho, /desenhos — see `lib/admin-grupos.ts`), Depoimentos, Textos e contato.
+- Every action returns a `Resultado` (`executar()` in actions.ts) shown as a toast; `AdminForm` (`app/admin/_ui.tsx`) submits by hand through useActionState so a failed save keeps what was typed, and remounts its fields after a successful one. Server pages can't pass render-function children to it (client boundary) — form state for `BarraSalvar`/`SaveButton` comes from context.
+- One save = ONE commit: photos are staged with `prepararFoto()` and committed together with the content by `gravarCommit()` (Git Data API) in `lib/github-store.ts` — before, each photo was its own commit and its own redeploy. Commit messages are "Painel: <what changed>" in Portuguese (shown in the panel's history).
+- "Site atualizado / Atualizando o site…" chip: `/api/admin/status` compares the serving deploy's `VERCEL_GIT_COMMIT_SHA` with the newest commit on main; polls fast for a few minutes after a save and toasts when the change is live.
+- Photos are shrunk in the browser before upload (≤2000px JPEG, also converts HEIC when the browser can decode it).
+- Local check: `next start` + Playwright with a session cookie signed with `SESSION_SECRET` from `.env.local`; saving fails locally (no `GITHUB_TOKEN`, it's a Vercel Secret) — which exercises the error toast.
+
 ## Security (2026-09-30 pass)
 
 - Security headers + CSP in `next.config.ts` (`headers()`), `poweredByHeader:

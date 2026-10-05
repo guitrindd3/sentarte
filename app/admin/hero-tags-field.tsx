@@ -16,8 +16,9 @@ export function HeroTagsField({ initialTags }: { initialTags: string[] }) {
 
   return (
     <div>
-      <span className="text-sm text-ink-soft">Selos</span>
-      <div className="mt-1 space-y-2">
+      <span className="text-sm font-semibold text-ink">Selos</span>
+      <span className="mt-0.5 block text-xs text-ink-soft">Palavras curtas que aparecem como etiquetas, como &quot;Feito à mão&quot;.</span>
+      <div className="mt-1.5 space-y-2">
         {tags.map((tag, i) => (
           <div key={tag.id} className="flex gap-2">
             <input
@@ -33,7 +34,7 @@ export function HeroTagsField({ initialTags }: { initialTags: string[] }) {
               type="button"
               onClick={() => setTags((prev) => prev.filter((t) => t.id !== tag.id))}
               aria-label={`Remover selo ${i + 1}`}
-              className="shrink-0 px-2 text-sm text-clay hover:underline"
+              className="shrink-0 rounded-full px-3 text-sm font-medium text-clay hover:bg-clay/10"
             >
               Remover
             </button>
@@ -43,7 +44,7 @@ export function HeroTagsField({ initialTags }: { initialTags: string[] }) {
       <button
         type="button"
         onClick={() => setTags((prev) => [...prev, { id: makeId(), value: "" }])}
-        className="mt-2 border border-dashed border-rattan px-3 py-1.5 text-sm text-ink-soft transition-colors hover:border-ink hover:text-ink"
+        className="mt-2 rounded-full border border-dashed border-rattan px-4 py-1.5 text-sm font-medium text-wood-dark transition-colors hover:border-wood hover:bg-rattan/10"
       >
         + Adicionar selo
       </button>
