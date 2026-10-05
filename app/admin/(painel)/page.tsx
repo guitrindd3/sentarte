@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { avaliacoesPendentes } from "@/lib/avaliacoes";
-import { pedidosRecentes, type PedidoCliente } from "@/lib/clientes";
+import { listarInteressados, pedidosRecentes, type Interessado, type PedidoCliente } from "@/lib/clientes";
 import { getAdminContent } from "@/lib/content-store";
 import { githubConfigurado, ultimosCommits, type CommitResumo } from "@/lib/github-store";
 import { ondeAparece } from "@/lib/admin-grupos";
@@ -12,6 +12,12 @@ import { Card } from "../_ui";
 function saudacao() {
   const h = Number(new Intl.DateTimeFormat("pt-BR", { hour: "numeric", timeZone: "America/Sao_Paulo" }).format(new Date()));
   return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+}
+
+/** People who joined the WhatsApp news list in the last 7 days. */
+function novosInteressados(lista: Interessado[]) {
+  const desde = Date.now() - 7 * 86400000;
+  return lista.filter((i) => i.em > desde);
 }
 
 function carrinhosAbandonados(pedidos: PedidoCliente[]) {
@@ -40,10 +46,12 @@ export default async function VisaoGeral() {
   // Carts that went to Mercado Pago and never got paid, last 7 days; reviews waiting for approval.
   let abandonados: PedidoCliente[] = [];
   let avaliacoesEsperando = 0;
+  let novosNaLista: Interessado[] = [];
   if (redisAtivo()) {
     try {
       abandonados = carrinhosAbandonados(await pedidosRecentes(30));
       avaliacoesEsperando = (await avaliacoesPendentes()).length;
+      novosNaLista = novosInteressados(await listarInteressados());
     } catch {}
   }
 
@@ -90,6 +98,23 @@ export default async function VisaoGeral() {
             ★ {avaliacoesEsperando} {avaliacoesEsperando === 1 ? "avaliação nova esperando" : "avaliações novas esperando"} a sua aprovação
           </span>
           <span className="rounded-full bg-wood px-4 py-2 text-sm font-semibold text-paper">Ver avaliações</span>
+        </Link>
+      ) : null}
+
+      {novosNaLista.length ? (
+        <Link
+          href="/admin/clientes"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-verde/30 bg-verde/5 px-5 py-4 transition hover:border-verde"
+        >
+          <span>
+            <span className="block font-semibold text-verde-escuro">
+              {novosNaLista.length} {novosNaLista.length === 1 ? "pessoa entrou" : "pessoas entraram"} na lista de novidades esta semana
+            </span>
+            <span className="block text-sm text-ink">
+              {novosNaLista.slice(0, 3).map((i) => i.nome.split(" ")[0]).join(", ")}. Mande uma novidade ou um cupom pelo WhatsApp.
+            </span>
+          </span>
+          <span className="rounded-full bg-verde px-4 py-2 text-sm font-semibold text-paper">Ver lista</span>
         </Link>
       ) : null}
 
