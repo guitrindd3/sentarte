@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { atualizarComMercadoPago, listarInteressados, pedidosRecentes, type Interessado, type PedidoCliente } from "@/lib/clientes";
+import { getAdminContent } from "@/lib/content-store";
 import { formatBRL } from "@/lib/offer";
 import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
@@ -30,6 +31,10 @@ function mensagem(p: PedidoCliente) {
   return `Oi, ${primeiroNome(p.nome)}! Aqui é do Ateliê SentArte. Vi que você começou um pedido no site (${itens}) e o pagamento não foi concluído. Posso te ajudar com alguma coisa?`;
 }
 
+function pedidoDeAvaliacao(nome: string, link: string) {
+  return `Oi, ${primeiroNome(nome)}! Aqui é do Ateliê SentArte. Espero que esteja curtindo a sua cadeira! Se puder, deixa uma avaliação pra gente no Google? Leva 1 minutinho e ajuda muito o ateliê: ${link}`;
+}
+
 function referencias() {
   return { agora: Date.now() };
 }
@@ -46,6 +51,7 @@ export default async function Clientes() {
     console.error("clientes", err);
   }
   const { agora } = referencias();
+  const { site } = await getAdminContent();
   const naoTerminou = pedidos.filter((p) => situacao(p, agora).t === "Não terminou").length;
 
   return (
@@ -101,6 +107,16 @@ export default async function Clientes() {
                     >
                       Chamar no WhatsApp
                     </a>
+                    {p.status === "pago" && site.googleUrl ? (
+                      <a
+                        href={whatsappUrl(p.whatsapp, pedidoDeAvaliacao(p.nome, site.googleUrl))}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full border border-verde px-4 py-2 text-sm font-semibold text-verde-escuro hover:bg-verde/5"
+                      >
+                        Pedir avaliação
+                      </a>
+                    ) : null}
                     {p.vid ? (
                       <Link href={`/admin/acessos/visitas?id=${p.vid}`} className="rounded-full px-3 py-2 text-sm font-medium text-wood-dark hover:bg-rattan/10">
                         Ver o que fez no site
@@ -114,6 +130,16 @@ export default async function Clientes() {
           </ul>
         )}
       </Card>
+
+      {site.googleUrl ? (
+        <Card
+          titulo="Pedir avaliação no Google"
+          descricao="Avaliações fazem o ateliê aparecer mais no Google Maps. Depois de entregar, mande esta mensagem para o cliente no WhatsApp (troque o nome)."
+          acao={<CopiarNumeros numeros={[]} texto={pedidoDeAvaliacao("Cliente", site.googleUrl)} rotulo="Copiar mensagem" />}
+        >
+          <p className="rounded-xl bg-canvas px-4 py-3 text-sm text-ink">{pedidoDeAvaliacao("Cliente", site.googleUrl)}</p>
+        </Card>
+      ) : null}
 
       <Card
         titulo="Lista de novidades"

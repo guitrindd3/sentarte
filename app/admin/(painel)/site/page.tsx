@@ -44,6 +44,9 @@ export default async function TextosDoSite() {
               </div>
             </Field>
           </div>
+          <Field label="Link do Google (avaliações)" dica="O link do Perfil da Empresa no Google. Aparece no rodapé, no Contato e na mensagem de pedir avaliação.">
+            <input name="googleUrl" type="url" defaultValue={site.googleUrl} placeholder="https://..." className={inputClass} />
+          </Field>
           <Field label="Nome do site">
             <CampoTexto name="nome" defaultValue={site.nome} max={40} />
           </Field>

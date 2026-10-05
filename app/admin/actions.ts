@@ -216,6 +216,9 @@ export async function updateSiteAction(_p: Resultado, formData: FormData) {
     content.site.instagramHandle = txt(formData, "instagramHandle", content.site.instagramHandle)
       .replace(/^@/, "")
       .trim();
+    const google = txt(formData, "googleUrl", content.site.googleUrl).trim();
+    if (google && !/^https:\/\/[^\s]+$/.test(google)) throw new Aviso("O link do Google precisa começar com https://");
+    content.site.googleUrl = google;
     if (content.site.whatsappNumero.length < 12) throw new Aviso("O WhatsApp precisa ter o 55 + DDD + número (ex.: 5527999999999).");
     await saveContent(content, "edita as configurações do site");
     return PRONTO;

@@ -42,6 +42,8 @@ export type SiteContent = {
     descricao: string;
     whatsappNumero: string;
     instagramHandle: string;
+    /** Google Business Profile link (reviews), editable in /admin "Textos e contato". */
+    googleUrl: string;
   };
   hero: {
     titulo: string;
@@ -60,6 +62,7 @@ export const DEFAULT_CONTENT: SiteContent = {
       "Cadeiras de praia personalizadas, trançadas à mão em corda náutica e alumínio: de time, boho, com desenho ou com o seu nome. Enviamos para todo o Brasil.",
     whatsappNumero: "5527995201669",
     instagramHandle: "ateliesentarte",
+    googleUrl: "https://share.google/bKZENAGHKnARnTU1y",
   },
   hero: {
     titulo: "Ateliê SentArte",

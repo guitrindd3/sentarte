@@ -592,6 +592,10 @@ Admin "Cupons" (`app/admin/(painel)/cupons`; phones: Mais → Cupons). Stored in
 - Cart: "Tem cupom de desconto?" field (`lib/use-cupons.ts`, `/api/cupom` lookup, 30/min/IP, typed code remembered in localStorage and re-checked). `/api/checkout` re-checks the code server-side (`cuponsDoPedido`) and stores it on the order; uses are counted when the order becomes "pago" (`marcarPedido`). WhatsApp-closed orders aren't counted.
 - The offer strip's 4th item and the FAQ's multi-chair answer come from the automatic coupon (fallback "Feito à mão" / question hidden).
 
+## Google Business Profile (2026-10-05)
+
+An "Ateliê SentArte" profile already existed (category Artesanato, Serra area, same WhatsApp); the user added the site link to it. Its share link is `site.googleUrl` (content, editable in /admin "Textos e contato"): footer "Avaliações no Google", a card on /contato, and in admin Clientes a "Pedir avaliação" WhatsApp button on paid orders plus a copyable review-request message. If the user later gets the direct "Pedir avaliações" link from the profile dashboard, they can paste it in that field. Profile ownership (verified/managed by the atelier account) wasn't confirmed yet.
+
 ## Security (2026-09-30 pass)
 
 - Security headers + CSP in `next.config.ts` (`headers()`), `poweredByHeader:

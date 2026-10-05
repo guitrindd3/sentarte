@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { ListaNovidades } from "@/components/lista-novidades";
-import { InstagramIcon, LockIcon, WhatsAppIcon } from "@/components/icons";
+import { InstagramIcon, LockIcon, StarIcon, WhatsAppIcon } from "@/components/icons";
 import { getContent } from "@/lib/content-store";
 import { FOOTER_LINKS } from "@/lib/nav";
 import { instagramUrl, whatsappUrl } from "@/lib/urls";
 
 export async function SiteFooter() {
   const content = await getContent();
-  const { nome, whatsappNumero, instagramHandle } = content.site;
+  const { nome, whatsappNumero, instagramHandle, googleUrl } = content.site;
 
   return (
     <footer className="border-t border-line bg-canvas-deep text-ink">
@@ -76,6 +76,12 @@ export async function SiteFooter() {
               <InstagramIcon className="h-4 w-4" />
               Instagram
             </a>
+            {googleUrl ? (
+              <a href={googleUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 py-1.5 transition-colors hover:text-ink">
+                <StarIcon className="h-4 w-4" />
+                Avaliações no Google
+              </a>
+            ) : null}
           </div>
         </div>
       </div>

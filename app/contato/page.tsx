@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
-import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
+import { InstagramIcon, StarIcon, WhatsAppIcon } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
 import { getContent } from "@/lib/content-store";
 import { instagramUrl, whatsappUrl } from "@/lib/urls";
@@ -49,6 +49,20 @@ export default async function ContatoPage() {
               <span className="block text-sm text-ink-soft">@{site.instagramHandle}</span>
             </span>
           </a>
+          {site.googleUrl ? (
+            <a
+              href={site.googleUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-3 border border-line bg-paper p-5 transition-colors hover:border-ink sm:col-span-2"
+            >
+              <StarIcon className="h-6 w-6 text-ink" />
+              <span>
+                <span className="block font-serif text-lg text-ink">Avaliações no Google</span>
+                <span className="block text-sm text-ink-soft">Já comprou? Conte como ficou a sua cadeira</span>
+              </span>
+            </a>
+          ) : null}
         </div>
       </section>
     </>
