@@ -45,11 +45,15 @@ export default async function VisaoGeral() {
 
   // Carts that went to Mercado Pago and never got paid, last 7 days; reviews waiting for approval.
   let abandonados: PedidoCliente[] = [];
+  let paraEnviar: PedidoCliente[] = [];
   let avaliacoesEsperando = 0;
   let novosNaLista: Interessado[] = [];
   if (redisAtivo()) {
     try {
-      abandonados = carrinhosAbandonados(await pedidosRecentes(30));
+      const recentes = await pedidosRecentes(80);
+      abandonados = carrinhosAbandonados(recentes.slice(0, 30));
+      // Paid orders the atelier still has to weave/ship.
+      paraEnviar = recentes.filter((p) => p.status === "pago" && (p.etapa ?? "producao") === "producao");
       avaliacoesEsperando = (await avaliacoesPendentes()).length;
       novosNaLista = novosInteressados(await listarInteressados());
     } catch {}
@@ -88,6 +92,21 @@ export default async function VisaoGeral() {
           Tudo o que você salvar aqui aparece no site em 1 a 2 minutos. O aviso lá em cima mostra quando terminou de atualizar.
         </p>
       </div>
+
+      {paraEnviar.length ? (
+        <Link
+          href={paraEnviar.length === 1 ? `/admin/clientes/${paraEnviar[0].ref}` : "/admin/clientes"}
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-verde bg-verde/10 px-5 py-4 transition hover:bg-verde/15"
+        >
+          <span>
+            <span className="block font-semibold text-verde-escuro">
+              {paraEnviar.length} {paraEnviar.length === 1 ? "pedido pago para fazer e enviar" : "pedidos pagos para fazer e enviar"}
+            </span>
+            <span className="block text-sm text-ink">{paraEnviar.slice(0, 3).map((p) => p.nome.split(" ")[0]).join(", ")}. Abra o pedido para ver o endereço e gerar a etiqueta.</span>
+          </span>
+          <span className="rounded-full bg-verde px-4 py-2 text-sm font-semibold text-paper">Ver {paraEnviar.length === 1 ? "pedido" : "pedidos"}</span>
+        </Link>
+      ) : null}
 
       {avaliacoesEsperando ? (
         <Link

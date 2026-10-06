@@ -64,6 +64,7 @@ export async function POST(req: Request) {
     },
     auto_return: "approved",
     external_reference: ref,
+    notification_url: `${SITE_URL}/api/mercadopago`,
     statement_descriptor: "SENTARTE",
     metadata: { forma, entrega: `${entrega.cidade}/${entrega.uf}`, frete: frete.valor, servico_frete: frete.servico ?? "", cupom: conta.cupom?.codigo ?? "", desconto: conta.desconto },
   };

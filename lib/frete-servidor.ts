@@ -44,6 +44,15 @@ const lerCaixa = (v: string | undefined) => {
   return c.length === 4 && c.every((x) => x > 0) ? c : null;
 };
 
+/** Packed size per chair type: [alturaCm, larguraCm, comprimentoCm, pesoKg] (null = not configured). */
+export function caixasPorTipo() {
+  return {
+    normal: lerCaixa(process.env.FRETE_CAIXA),
+    infantil: lerCaixa(process.env.FRETE_CAIXA_INFANTIL) ?? lerCaixa(ESTIMATIVAS.infantil),
+    reclinavel: lerCaixa(process.env.FRETE_CAIXA_RECLINAVEL) ?? lerCaixa(ESTIMATIVAS.reclinavel),
+  };
+}
+
 export type ChairsPorTipo = { normal: number; infantil: number; reclinavel: number };
 
 /** null = can't quote online (not configured, bad CEP, no carrier). */
@@ -55,11 +64,7 @@ export async function calcularFrete(cep: string, porTipo: ChairsPorTipo, valorDe
 
   const token = process.env.MELHORENVIO_TOKEN;
   const origem = (process.env.FRETE_CEP_ORIGEM ?? "").replace(/\D/g, "");
-  const caixas = {
-    normal: lerCaixa(process.env.FRETE_CAIXA),
-    infantil: lerCaixa(process.env.FRETE_CAIXA_INFANTIL) ?? lerCaixa(ESTIMATIVAS.infantil),
-    reclinavel: lerCaixa(process.env.FRETE_CAIXA_RECLINAVEL) ?? lerCaixa(ESTIMATIVAS.reclinavel),
-  };
+  const caixas = caixasPorTipo();
   if (!token || origem.length !== 8 || !caixas.normal) return null;
   const seguroPorCadeira = Math.round((valorDeclarado / qtdCadeiras) * 100) / 100;
   const produtos = (Object.keys(caixas) as (keyof ChairsPorTipo)[])

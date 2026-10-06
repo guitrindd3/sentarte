@@ -19,7 +19,9 @@ const primeiroNome = (n: string) => n.trim().split(/\s+/)[0] ?? n;
 
 /** "Didn't finish" = still waiting 30+ minutes after going to pay. */
 function situacao(p: PedidoCliente, agora: number) {
-  if (p.status === "pago") return { t: "Pago", c: "bg-verde text-paper" };
+  if (p.status === "pago" && p.etapa === "entregue") return { t: "Entregue", c: "bg-canvas-deep text-ink" };
+  if (p.status === "pago" && p.etapa === "enviado") return { t: "Pago, enviado", c: "bg-verde/15 text-verde-escuro" };
+  if (p.status === "pago") return { t: "Pago, fazer e enviar", c: "bg-verde text-paper" };
   if (p.status === "pendente") return { t: "Pagamento pendente", c: "bg-rattan/25 text-wood-dark" };
   if (p.status === "recusado") return { t: "Pagamento recusado", c: "bg-clay/15 text-clay-dark" };
   return agora - p.em > 30 * 60000 ? { t: "Não terminou", c: "bg-clay text-paper" } : { t: "Pagando agora…", c: "bg-canvas-deep text-ink" };
@@ -81,9 +83,9 @@ export default async function Clientes() {
                 <li key={p.ref} className="rounded-xl border border-line/70 p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-semibold text-ink">
+                      <Link href={`/admin/clientes/${p.ref}`} className="font-semibold text-ink underline-offset-2 hover:underline">
                         {p.nome} <span className="font-normal text-ink-soft">({p.cidade})</span>
-                      </p>
+                      </Link>
                       <p className="text-sm text-ink-soft">
                         {telefone(p.whatsapp)}, {quando(p.em)}
                       </p>
@@ -99,6 +101,11 @@ export default async function Clientes() {
                     {formatBRL(p.valor)} no {p.forma === "pix" ? "Pix" : "cartão"}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {p.status === "pago" ? (
+                      <Link href={`/admin/clientes/${p.ref}`} className="inline-flex items-center gap-2 rounded-full bg-wood px-4 py-2 text-sm font-semibold text-paper hover:bg-wood-dark">
+                        Abrir pedido (entrega e etiqueta)
+                      </Link>
+                    ) : null}
                     <a
                       href={whatsappUrl(p.whatsapp, mensagem(p))}
                       target="_blank"

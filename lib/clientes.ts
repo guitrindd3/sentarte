@@ -1,5 +1,8 @@
 import "server-only";
+import { avisarVenda } from "./avisos";
 import { contarUsoDoCupom } from "./cupons-store";
+import { anotarNoCaminho } from "./estatisticas";
+import { codigoDoPedido, type DadosEntrega } from "./pedido";
 import { redis, redisAtivo, type Cmd } from "./redis";
 
 // Customers who identified themselves (2026-10-05, admin "Clientes"):
@@ -12,6 +15,11 @@ const PEDIDO_S = 180 * 24 * 3600;
 const kp = (ref: string) => `pedido:${ref}`;
 
 export type StatusPedido = "aguardando" | "pago" | "pendente" | "recusado";
+/** After payment (2026-10-06): set by the atelier in admin, shown on /acompanhar. */
+export type EtapaPedido = "producao" | "enviado" | "entregue";
+
+/** One Melhor Envio shipment (one label per chair) — see lib/melhor-envio.ts. */
+export type EnvioME = { id: string; servico: string; status?: string; rastreio?: string };
 
 export type PedidoCliente = {
   ref: string;
@@ -26,7 +34,22 @@ export type PedidoCliente = {
   vid?: string;
   /** Coupon code applied, if any (its paid uses are counted when this order is paid). */
   cupom?: string;
+  // Since 2026-10-06 (labels + order tracking): full delivery data, CPF and
+  // chairs per type — needed to ship. Older orders don't have them.
+  entrega?: DadosEntrega;
+  porTipo?: { normal: number; infantil: number; reclinavel: number };
+  frete?: { valor: number; servico?: string };
+  pagoEm?: number;
+  etapa?: EtapaPedido;
+  /** When each step happened (shown on /acompanhar). */
+  etapaEm?: Partial<Record<EtapaPedido, number>>;
+  rastreio?: string;
+  transportadora?: string;
+  envios?: EnvioME[];
+  etiquetaUrl?: string;
 };
+
+const kcod = (cod: string) => `pedido:cod:${cod}`;
 
 export async function salvarPedidoIniciado(p: Omit<PedidoCliente, "em" | "status">) {
   if (!redisAtivo()) return;
@@ -35,6 +58,7 @@ export async function salvarPedidoIniciado(p: Omit<PedidoCliente, "em" | "status
   try {
     await redis([
       ["SET", kp(p.ref), JSON.stringify(dados), "EX", PEDIDO_S],
+      ["SET", kcod(codigoDoPedido(p.ref)), p.ref, "EX", PEDIDO_S],
       ["ZADD", "pedidos", em, p.ref],
       ["ZREMRANGEBYRANK", "pedidos", 0, -501],
     ]);
@@ -47,19 +71,54 @@ export async function salvarPedidoIniciado(p: Omit<PedidoCliente, "em" | "status
 export async function marcarPedido(ref: string, status: StatusPedido): Promise<PedidoCliente | null> {
   if (!redisAtivo() || !/^[a-z0-9-]{6,40}$/i.test(ref)) return null;
   try {
-    const [bruto] = (await redis([["GET", kp(ref)]])) as (string | null)[];
-    if (!bruto) return null;
-    const p = JSON.parse(bruto) as PedidoCliente;
+    const p = await lerPedido(ref);
+    if (!p) return null;
     if (p.status === status || p.status === "pago") return p;
     p.status = status;
-    await redis([["SET", kp(ref), JSON.stringify(p), "KEEPTTL"]]);
-    // Counted once: an order that's already "pago" returns above.
-    if (status === "pago" && p.cupom) await contarUsoDoCupom(p.cupom);
+    if (status === "pago") {
+      p.pagoEm = Date.now();
+      p.etapa = "producao";
+      p.etapaEm = { ...p.etapaEm, producao: p.pagoEm };
+    }
+    await gravarPedido(p);
+    // Payment can be confirmed by several paths at once (webhook, Pix polling,
+    // /pedido) — this flag makes the coupon count and the sale alert happen once.
+    if (status === "pago") {
+      const [primeira] = await redis([["SET", `${kp(ref)}:pago`, 1, "NX", "EX", PEDIDO_S]]);
+      if (primeira === "OK") {
+        if (p.cupom) await contarUsoDoCupom(p.cupom);
+        if (p.vid) await anotarNoCaminho(p.vid, { k: "p", x: p.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) });
+        await avisarVenda(p).catch((err) => console.error("avisarVenda", err));
+      }
+    }
     return p;
   } catch (err) {
     console.error("marcarPedido", err);
     return null;
   }
+}
+
+export async function lerPedido(ref: string): Promise<PedidoCliente | null> {
+  if (!/^[a-z0-9-]{6,40}$/i.test(ref)) return null;
+  const [bruto] = (await redis([["GET", kp(ref)]])) as (string | null)[];
+  if (!bruto) return null;
+  try {
+    return JSON.parse(bruto) as PedidoCliente;
+  } catch {
+    return null;
+  }
+}
+
+export async function gravarPedido(p: PedidoCliente) {
+  await redis([["SET", kp(p.ref), JSON.stringify(p), "KEEPTTL"]]);
+}
+
+/** Finds an order by its short number (what the customer types on /acompanhar). */
+export async function pedidoPeloCodigo(codigo: string): Promise<PedidoCliente | null> {
+  const cod = codigo.replace(/[^a-z0-9]/gi, "").toUpperCase();
+  if (cod.length !== 8) return null;
+  const [ref] = (await redis([["GET", kcod(cod)]])) as (string | null)[];
+  return ref ? lerPedido(ref) : null;
 }
 
 export async function pedidosRecentes(limite = 80): Promise<PedidoCliente[]> {
@@ -77,7 +136,7 @@ export async function pedidosRecentes(limite = 80): Promise<PedidoCliente[]> {
 }
 
 export async function excluirPedido(ref: string) {
-  await redis([["DEL", kp(ref)], ["ZREM", "pedidos", ref]]);
+  await redis([["DEL", kp(ref)], ["DEL", `${kp(ref)}:pago`], ["DEL", kcod(codigoDoPedido(ref))], ["ZREM", "pedidos", ref]]);
 }
 
 /**

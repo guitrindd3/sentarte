@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prepararPedido, registrarPedido, type CorpoPedido } from "@/lib/checkout-servidor";
+import { SITE_URL } from "@/lib/nav";
 import { descricaoItem } from "@/lib/pedido";
 
 // Pix paid INSIDE the site (2026-10-05, user didn't want buyers sent to the
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
       description: `Pedido SentArte — ${conta.qtdCadeiras} cadeira${conta.qtdCadeiras === 1 ? "" : "s"}`.slice(0, 120),
       payment_method_id: "pix",
       external_reference: ref,
+      notification_url: `${SITE_URL}/api/mercadopago`,
       date_of_expiration: dataMP(expira),
       statement_descriptor: "SENTARTE",
       payer: { email, first_name: nome.slice(0, 40), last_name: sobrenome.join(" ").slice(0, 60) || nome.slice(0, 40) },

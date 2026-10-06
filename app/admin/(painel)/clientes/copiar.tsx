@@ -11,7 +11,7 @@ export function CopiarNumeros({ numeros, texto, rotulo }: { numeros: string[]; t
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(texto ?? numeros.map((n) => `+${n}`).join("\n"));
-          avisar("ok", texto ? "Mensagem copiada." : `${numeros.length} números copiados.`);
+          avisar("ok", texto ? "Copiado!" : `${numeros.length} números copiados.`);
         } catch {
           avisar("erro", "Não deu para copiar neste navegador.");
         }

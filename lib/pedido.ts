@@ -51,7 +51,22 @@ export type DadosEntrega = {
   uf: string;
   /** Only needed for the in-site Pix (Mercado Pago sends the receipt there). */
   email?: string;
+  /** Required since 2026-10-06: carriers ask for it on the shipping label. Not kept in localStorage. */
+  cpf?: string;
 };
+
+/** Brazilian CPF check digits. */
+export function cpfValido(cpf: string | undefined) {
+  const n = (cpf ?? "").replace(/\D/g, "");
+  if (n.length !== 11 || /^(\d)\1{10}$/.test(n)) return false;
+  const dig = (ate: number) => {
+    let soma = 0;
+    for (let i = 0; i < ate; i++) soma += Number(n[i]) * (ate + 1 - i);
+    const r = (soma * 10) % 11;
+    return r === 10 ? 0 : r;
+  };
+  return dig(9) === Number(n[9]) && dig(10) === Number(n[10]);
+}
 
 export const ENTREGA_VAZIA: DadosEntrega = {
   nome: "",
@@ -73,7 +88,8 @@ export function entregaCompleta(d: DadosEntrega) {
       d.endereco.trim() &&
       d.numero.trim() &&
       d.cidade.trim() &&
-      d.uf.trim()
+      d.uf.trim() &&
+      cpfValido(d.cpf)
   );
 }
 
@@ -104,3 +120,8 @@ export type PedidoSalvo = {
 };
 
 export const PEDIDO_STORAGE_KEY = "sentarte-pedido";
+
+/** Short public order number shown to the customer (e.g. "7K3D9Q2A"); /acompanhar finds the order by it. */
+export function codigoDoPedido(ref: string) {
+  return ref.replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase();
+}

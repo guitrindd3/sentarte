@@ -65,6 +65,21 @@ export async function registrarPedido(p: Pronto, vid?: string) {
     valor: p.valor,
     vid: vidValido(vid) ? vid : undefined,
     cupom: p.conta.cupom?.codigo,
+    entrega: {
+      nome: p.entrega.nome.trim().slice(0, 80),
+      telefone: p.telefone,
+      email: (p.entrega.email ?? "").trim().slice(0, 120) || undefined,
+      cpf: (p.entrega.cpf ?? "").replace(/\D/g, ""),
+      cep: p.entrega.cep.replace(/\D/g, ""),
+      endereco: p.entrega.endereco.trim().slice(0, 120),
+      numero: p.entrega.numero.trim().slice(0, 15),
+      complemento: (p.entrega.complemento ?? "").trim().slice(0, 60),
+      bairro: (p.entrega.bairro ?? "").trim().slice(0, 60),
+      cidade: p.entrega.cidade.trim().slice(0, 60),
+      uf: p.entrega.uf.trim().toUpperCase().slice(0, 2),
+    },
+    porTipo: p.conta.porTipo,
+    frete: { valor: p.frete.valor, servico: p.frete.servico },
   });
   await anotarNoCaminho(vid, {
     k: "$",

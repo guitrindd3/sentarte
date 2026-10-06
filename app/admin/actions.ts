@@ -13,7 +13,21 @@ import {
   verifyPassword,
   verifySession,
 } from "@/lib/auth";
-import { excluirInteressado, excluirPedido } from "@/lib/clientes";
+import { excluirInteressado, excluirPedido, gravarPedido, lerPedido, type EtapaPedido } from "@/lib/clientes";
+import { desligarGmail, desligarNtfy, estadoAvisos, ligarNtfy, salvarGmail, testarAvisos } from "@/lib/avisos";
+import {
+  atualizarEnvios,
+  colocarNoCarrinho,
+  cotarEnvio,
+  ErroEnvio,
+  pagarEImprimir,
+  remetenteCompleto,
+  salvarRemetente,
+  tirarDoCarrinho,
+  type OpcaoEnvio,
+  type Remetente,
+} from "@/lib/melhor-envio";
+import { cpfValido } from "@/lib/pedido";
 import { avaliacoesPendentes, tirarAvaliacao } from "@/lib/avaliacoes";
 import { normalizarCodigo } from "@/lib/cupom";
 import { paginaEditavel, type Bloco, type ValorCampo } from "@/lib/textos-paginas";
@@ -658,4 +672,191 @@ export async function novosCodigosReservaAction(codigo: string): Promise<{ reser
   await registrarEntrada("Gerou novos códigos reserva", true, await headers());
   revalidatePath("/admin/seguranca");
   return { reservas };
+}
+
+// --- orders: delivery steps + Melhor Envio labels (2026-10-06) ----------------------
+
+async function pedidoOuAviso(ref: string) {
+  const p = await lerPedido(ref);
+  if (!p) throw new Aviso(SUMIU);
+  return p;
+}
+
+function erroDeEnvio(err: unknown): never {
+  if (err instanceof ErroEnvio) throw new Aviso(err.message);
+  throw err;
+}
+
+export async function definirEtapaAction(ref: string, etapa: EtapaPedido) {
+  return executar(async () => {
+    const p = await pedidoOuAviso(ref);
+    if (p.status !== "pago") throw new Aviso("Esse pedido ainda não foi pago.");
+    p.etapa = etapa;
+    p.etapaEm = { ...p.etapaEm, [etapa]: p.etapaEm?.[etapa] ?? Date.now() };
+    await gravarPedido(p);
+    revalidatePath(`/admin/clientes/${ref}`);
+    return etapa === "producao" ? "Marcado como em produção." : etapa === "enviado" ? "Marcado como enviado." : "Marcado como entregue.";
+  });
+}
+
+export async function salvarRastreioAction(ref: string, _p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const p = await pedidoOuAviso(ref);
+    p.rastreio = String(formData.get("rastreio") ?? "").trim().toUpperCase().slice(0, 80) || undefined;
+    p.transportadora = String(formData.get("transportadora") ?? "").trim().slice(0, 40) || undefined;
+    if (p.rastreio && p.status === "pago" && (p.etapa ?? "producao") === "producao") {
+      p.etapa = "enviado";
+      p.etapaEm = { ...p.etapaEm, enviado: Date.now() };
+    }
+    await gravarPedido(p);
+    revalidatePath(`/admin/clientes/${ref}`);
+    return p.rastreio ? "Rastreio salvo. O cliente já vê na página do pedido." : "Rastreio apagado.";
+  });
+}
+
+export async function cotarEnvioAction(ref: string): Promise<{ ok: true; opcoes: OpcaoEnvio[] } | { ok: false; erro: string }> {
+  await requireAdmin();
+  try {
+    const p = await lerPedido(ref);
+    if (!p) return { ok: false, erro: SUMIU };
+    const opcoes = await cotarEnvio(p);
+    return opcoes.length ? { ok: true, opcoes } : { ok: false, erro: "Nenhuma transportadora atende esse endereço agora." };
+  } catch (err) {
+    console.error("cotarEnvio", err);
+    return { ok: false, erro: err instanceof ErroEnvio ? err.message : "Não deu para falar com o Melhor Envio agora." };
+  }
+}
+
+export async function criarEnvioAction(ref: string, servico: OpcaoEnvio) {
+  return executar(async () => {
+    const p = await pedidoOuAviso(ref);
+    if (p.envios?.length) throw new Aviso("Esse pedido já tem envio no Melhor Envio.");
+    p.envios = await colocarNoCarrinho(p, servico).catch(erroDeEnvio);
+    p.transportadora = servico.nome;
+    await gravarPedido(p);
+    revalidatePath(`/admin/clientes/${ref}`);
+    return "Envio colocado no carrinho do Melhor Envio.";
+  });
+}
+
+export async function pagarEnvioAction(ref: string) {
+  return executar(async () => {
+    const p = await pedidoOuAviso(ref);
+    if (!p.envios?.length) throw new Aviso("Coloque o envio no carrinho primeiro.");
+    p.etiquetaUrl = await pagarEImprimir(p.envios).catch(erroDeEnvio);
+    const envios = p.envios;
+    p.envios = await atualizarEnvios(envios).catch(() => envios);
+    const codigos = p.envios.map((e) => e.rastreio).filter(Boolean);
+    if (codigos.length) p.rastreio = codigos.join(", ");
+    await gravarPedido(p);
+    revalidatePath(`/admin/clientes/${ref}`);
+    return "Etiqueta paga e gerada! Imprima e cole no pacote.";
+  });
+}
+
+export async function atualizarEnvioAction(ref: string) {
+  return executar(async () => {
+    const p = await pedidoOuAviso(ref);
+    if (!p.envios?.length) throw new Aviso("Esse pedido não tem envio no Melhor Envio.");
+    p.envios = await atualizarEnvios(p.envios).catch(erroDeEnvio);
+    const codigos = p.envios.map((e) => e.rastreio).filter(Boolean);
+    if (codigos.length) p.rastreio = codigos.join(", ");
+    const st = p.envios.map((e) => e.status);
+    if (p.status === "pago" && st.length && st.every((s) => s === "delivered") && p.etapa !== "entregue") {
+      p.etapa = "entregue";
+      p.etapaEm = { ...p.etapaEm, entregue: Date.now() };
+    } else if (p.status === "pago" && st.some((s) => s === "posted" || s === "delivered") && (p.etapa ?? "producao") === "producao") {
+      p.etapa = "enviado";
+      p.etapaEm = { ...p.etapaEm, enviado: Date.now() };
+    }
+    await gravarPedido(p);
+    revalidatePath(`/admin/clientes/${ref}`);
+    return codigos.length ? "Envio atualizado." : "Atualizado. O código de rastreio ainda não saiu.";
+  });
+}
+
+export async function tirarEnvioAction(ref: string) {
+  return executar(async () => {
+    const p = await pedidoOuAviso(ref);
+    if (!p.envios?.length) throw new Aviso("Esse pedido não tem envio no carrinho.");
+    if (p.etiquetaUrl) throw new Aviso("A etiqueta já foi paga. Para cancelar, use o site do Melhor Envio.");
+    await tirarDoCarrinho(p.envios).catch(erroDeEnvio);
+    p.envios = undefined;
+    p.transportadora = undefined;
+    await gravarPedido(p);
+    revalidatePath(`/admin/clientes/${ref}`);
+    return "Envio tirado do carrinho do Melhor Envio.";
+  });
+}
+
+// --- sale alerts + shipping sender (admin "Avisos e envio") -------------------------
+
+export async function ligarNtfyAction() {
+  return executar(async () => {
+    await ligarNtfy();
+    revalidatePath("/admin/avisos");
+    return "Aviso no celular ligado. Agora siga os passos para receber no seu celular.";
+  });
+}
+
+export async function desligarNtfyAction() {
+  return executar(async () => {
+    await desligarNtfy();
+    revalidatePath("/admin/avisos");
+    return "Aviso no celular desligado.";
+  });
+}
+
+export async function salvarGmailAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
+    const senha = String(formData.get("senha") ?? "").replace(/\s+/g, "");
+    if (!/^[^\s@]+@gmail\.com$/.test(email)) throw new Aviso("Use um e-mail do Gmail (termina com @gmail.com).");
+    if (!/^[a-z]{16}$/i.test(senha)) throw new Aviso("A senha de app do Google tem 16 letras. Copie de novo do Google.");
+    await salvarGmail(email, senha);
+    revalidatePath("/admin/avisos");
+    return "E-mail salvo. Clique em “Mandar aviso de teste” para conferir.";
+  });
+}
+
+export async function desligarGmailAction() {
+  return executar(async () => {
+    await desligarGmail();
+    revalidatePath("/admin/avisos");
+    return "Aviso por e-mail desligado.";
+  });
+}
+
+export async function testarAvisosAction() {
+  return executar(async () => {
+    const e = await estadoAvisos();
+    if (!e.ntfy && !e.email) throw new Aviso("Ligue o aviso no celular ou por e-mail primeiro.");
+    const erros = await testarAvisos();
+    if (erros.length) throw new Aviso(`Não deu para mandar pelo ${erros.join(" nem pelo ")}.`);
+    return "Aviso de teste enviado! Confira o celular / e-mail.";
+  });
+}
+
+export async function salvarRemetenteAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const t = (k: string, max = 80) => String(formData.get(k) ?? "").trim().slice(0, max);
+    const r: Remetente = {
+      nome: t("nome"),
+      telefone: t("telefone", 20),
+      email: t("email", 120),
+      cpf: t("cpf", 20).replace(/\D/g, ""),
+      cep: t("cep", 10).replace(/\D/g, ""),
+      endereco: t("endereco", 120),
+      numero: t("numero", 15),
+      complemento: t("complemento", 60),
+      bairro: t("bairro", 60),
+      cidade: t("cidade", 60),
+      uf: t("uf", 2).toUpperCase(),
+    };
+    if (!cpfValido(r.cpf)) throw new Aviso("Confira o CPF do remetente.");
+    if (!remetenteCompleto(r)) throw new Aviso("Preencha todos os campos (só o complemento é opcional).");
+    await salvarRemetente(r);
+    revalidatePath("/admin/avisos");
+    return "Dados do remetente salvos.";
+  });
 }

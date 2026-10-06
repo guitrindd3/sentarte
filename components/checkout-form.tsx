@@ -12,6 +12,7 @@ import { guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import {
   calcularPedido,
   ENTREGA_VAZIA,
+  cpfValido,
   entregaCompleta,
   PEDIDO_STORAGE_KEY,
   type DadosEntrega,
@@ -23,7 +24,7 @@ const ENTREGA_KEY = "sentarte-entrega";
 function carregarEntrega(): DadosEntrega {
   try {
     const raw = window.localStorage.getItem(ENTREGA_KEY);
-    return raw ? { ...ENTREGA_VAZIA, ...(JSON.parse(raw) as Partial<DadosEntrega>) } : ENTREGA_VAZIA;
+    return raw ? { ...ENTREGA_VAZIA, ...(JSON.parse(raw) as Partial<DadosEntrega>), cpf: "" } : ENTREGA_VAZIA;
   } catch {
     return ENTREGA_VAZIA;
   }
@@ -101,8 +102,8 @@ export function CheckoutForm({
       // Card form opens right here; the order summary is kept for /pedido.
       const referencia = crypto.randomUUID();
       try {
-        window.localStorage.setItem(ENTREGA_KEY, JSON.stringify(d));
-        const salvo: PedidoSalvo = { referencia, forma, itens: itensDoPedido(), entrega: d, total: conta.total + (valorFrete ?? 0) };
+        window.localStorage.setItem(ENTREGA_KEY, JSON.stringify({ ...d, cpf: undefined }));
+        const salvo: PedidoSalvo = { referencia, forma, itens: itensDoPedido(), entrega: { ...d, cpf: undefined }, total: conta.total + (valorFrete ?? 0) };
         window.localStorage.setItem(PEDIDO_STORAGE_KEY, JSON.stringify(salvo));
       } catch {}
       setCartao({ referencia });
@@ -120,7 +121,7 @@ export function CheckoutForm({
       tipoCadeira: i.tipoCadeira,
     }));
     try {
-      window.localStorage.setItem(ENTREGA_KEY, JSON.stringify(d));
+      window.localStorage.setItem(ENTREGA_KEY, JSON.stringify({ ...d, cpf: undefined }));
       if (forma === "pix") {
         // Pix is paid right here (QR code / copia e cola), no Mercado Pago page.
         const r = await fetch("/api/pix", {
@@ -130,7 +131,7 @@ export function CheckoutForm({
         });
         const p = (await r.json()) as Partial<PixGerado> & { erro?: string };
         if (!r.ok || !p.id || !p.copiaECola) throw new Error(p.erro || "Não deu para gerar o Pix agora.");
-        const salvoPix: PedidoSalvo = { referencia: p.referencia ?? referencia, forma, itens, entrega: d, total: p.valor ?? conta.totalPix };
+        const salvoPix: PedidoSalvo = { referencia: p.referencia ?? referencia, forma, itens, entrega: { ...d, cpf: undefined }, total: p.valor ?? conta.totalPix };
         window.localStorage.setItem(PEDIDO_STORAGE_KEY, JSON.stringify(salvoPix));
         setPix(p as PixGerado);
         setEnviando(null);
@@ -204,6 +205,23 @@ export function CheckoutForm({
           <label className="col-span-2">
             <span className="text-ink-soft">E-mail (para o comprovante)</span>
             <input value={d.email ?? ""} onChange={set("email")} type="email" inputMode="email" autoComplete="email" placeholder="voce@email.com" className={campo} />
+          </label>
+          <label className="col-span-2">
+            <span className="text-ink-soft">CPF (vai na etiqueta de envio)</span>
+            <input
+              value={d.cpf ?? ""}
+              onChange={(e) => {
+                const n = e.target.value.replace(/\D/g, "").slice(0, 11);
+                const f = n.replace(/^(\d{3})(\d)/, "$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1-$2");
+                setD((v) => ({ ...v, cpf: f }));
+              }}
+              inputMode="numeric"
+              placeholder="000.000.000-00"
+              className={campo}
+            />
+            {(d.cpf ?? "").replace(/\D/g, "").length === 11 && !cpfValido(d.cpf) ? (
+              <span className="mt-1 block text-xs text-clay">Esse CPF não parece certo. Confira os números.</span>
+            ) : null}
           </label>
           <label>
             <span className="text-ink-soft">CEP {buscandoCep ? "…" : ""}</span>
@@ -284,7 +302,7 @@ export function CheckoutForm({
           Pagamento seguro pelo Mercado Pago. Depois de pagar, você volta para cá e manda o resumo no WhatsApp.
         </p>
         <p className="mt-2 text-center text-[0.7rem] leading-snug text-ink-soft">
-          Seu nome, WhatsApp e o pedido ficam guardados para a gente falar com você sobre ele.{" "}
+          Seus dados e o pedido ficam guardados para a gente falar com você, enviar e mostrar o andamento da entrega.{" "}
           <a href="/politica-de-privacidade" target="_blank" className="underline underline-offset-2">Privacidade</a>
         </p>
       </div>

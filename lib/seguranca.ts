@@ -27,13 +27,13 @@ const K = {
 function chave() {
   return createHash("sha256").update(`totp|${process.env.SESSION_SECRET ?? ""}`).digest();
 }
-function cifrar(texto: string) {
+export function cifrar(texto: string) {
   const iv = randomBytes(12);
   const c = createCipheriv("aes-256-gcm", chave(), iv);
   const enc = Buffer.concat([c.update(texto, "utf8"), c.final()]);
   return [iv, c.getAuthTag(), enc].map((b) => b.toString("base64")).join(".");
 }
-function decifrar(dado: string) {
+export function decifrar(dado: string) {
   const [iv, tag, enc] = dado.split(".").map((p) => Buffer.from(p, "base64"));
   const d = createDecipheriv("aes-256-gcm", chave(), iv);
   d.setAuthTag(tag);

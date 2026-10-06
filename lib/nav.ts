@@ -14,6 +14,7 @@ export const FOOTER_LINKS = {
     { label: "Sobre o SentArte", href: "/sobre" },
     { label: "Contato", href: "/contato" },
     { label: "Perguntas frequentes", href: "/faq" },
+    { label: "Acompanhar pedido", href: "/acompanhar" },
   ],
   politicas: [
     { label: "Privacidade", href: "/politica-de-privacidade" },

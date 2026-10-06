@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prepararPedido, registrarPedido, type CorpoPedido } from "@/lib/checkout-servidor";
 import { marcarPedido } from "@/lib/clientes";
-import { anotarNoCaminho } from "@/lib/estatisticas";
 import { PARCELAS_MAX } from "@/lib/offer";
+import { SITE_URL } from "@/lib/nav";
 import { descricaoItem } from "@/lib/pedido";
 
 // Card paid INSIDE the site (2026-10-06): the Mercado Pago Card Payment Brick
@@ -69,6 +69,7 @@ export async function POST(req: Request) {
       payment_method_id: c.payment_method_id,
       issuer_id: c.issuer_id ? Number(c.issuer_id) : undefined,
       external_reference: ref,
+      notification_url: `${SITE_URL}/api/mercadopago`,
       statement_descriptor: "SENTARTE",
       payer: {
         email,
@@ -94,8 +95,7 @@ export async function POST(req: Request) {
   }
   await registrarPedido(pronto, corpo.vid);
   if (pg.status === "approved") {
-    const pedido = await marcarPedido(ref, "pago");
-    if (pedido?.vid) await anotarNoCaminho(pedido.vid, { k: "p", x: valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) });
+    await marcarPedido(ref, "pago");
   } else if (pg.status === "in_process" || pg.status === "pending") {
     await marcarPedido(ref, "pendente");
   } else if (pg.status === "rejected") {

@@ -326,7 +326,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
         {
           titulo: "Pedidos pagos pelo site",
           texto:
-            "Quando você clica em pagar, guardamos seu nome, WhatsApp, cidade e os itens do pedido por até 6 meses, para confirmar o pagamento e falar com você sobre ele, inclusive se o pagamento não for concluído.",
+            "Quando você clica em pagar, guardamos seu nome, WhatsApp, e-mail, CPF, endereço de entrega e os itens do pedido por até 6 meses, para confirmar o pagamento, falar com você sobre ele (inclusive se o pagamento não for concluído) e mostrar o andamento em Acompanhar pedido. O nome, o endereço, o telefone e o CPF vão para a transportadora pelo Melhor Envio, só para gerar a etiqueta e a declaração de conteúdo do envio. A página Acompanhar pedido mostra só o primeiro nome, a cidade, os itens e as etapas — nunca o endereço, o telefone ou o CPF.",
         },
         {
           titulo: "Lista de novidades",

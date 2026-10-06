@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { CheckIcon, WhatsAppIcon } from "@/components/icons";
 import { useCart } from "@/lib/cart-context";
 import { formatBRL } from "@/lib/offer";
-import { descricaoItem, entregaEmTexto, PEDIDO_STORAGE_KEY, type PedidoSalvo } from "@/lib/pedido";
+import { codigoDoPedido, descricaoItem, entregaEmTexto, PEDIDO_STORAGE_KEY, type PedidoSalvo } from "@/lib/pedido";
 import { whatsappUrl } from "@/lib/urls";
 
 type Props = {
@@ -65,6 +65,7 @@ export function PedidoResultado({ situacao, pagamentoId, referencia, valorPago, 
     situacao === "aprovado" && valorPago
       ? `Pago: ${formatBRL(valorPago)}${pedido?.forma === "pix" ? " no Pix" : parcelas && parcelas > 1 ? ` no cartão em ${parcelas}x` : " no cartão"}`
       : `Pagamento: ${situacao === "pendente" ? "em análise" : "não concluído"}`,
+    ...(referencia && situacao !== "recusado" ? [`Nº do pedido: ${codigoDoPedido(referencia)}`] : []),
     ...(pagamentoId ? [`Nº do pagamento (Mercado Pago): ${pagamentoId}`] : []),
     ...(pedido ? ["", "Entrega:", entregaEmTexto(pedido.entrega)] : []),
   ].join("\n");
@@ -93,6 +94,21 @@ export function PedidoResultado({ situacao, pagamentoId, referencia, valorPago, 
           <p className="mt-4 text-sm text-ink">
             Valor pago: <strong>{formatBRL(valorPago)}</strong>
           </p>
+        ) : null}
+
+        {referencia && situacao !== "recusado" ? (
+          <div className="mt-6 border border-line bg-canvas px-4 py-3 text-sm">
+            <p className="text-ink-soft">
+              Número do pedido: <strong className="font-mono text-base tracking-wider text-ink">{codigoDoPedido(referencia)}</strong>
+            </p>
+            <p className="mt-1 text-ink-soft">
+              Acompanhe a produção e a entrega em{" "}
+              <Link href={`/acompanhar/${referencia}`} className="font-medium text-ink underline underline-offset-2">
+                Acompanhar pedido
+              </Link>
+              . Guarde esse link.
+            </p>
+          </div>
         ) : null}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">

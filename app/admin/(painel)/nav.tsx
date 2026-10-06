@@ -26,6 +26,11 @@ const ITENS: { href: string; rotulo: string; icone: ReactNode }[] = [
     ),
   },
   {
+    href: "/admin/avisos",
+    rotulo: "Avisos e envio",
+    icone: <path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0" />,
+  },
+  {
     href: "/admin/cupons",
     rotulo: "Cupons",
     icone: <path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5V10a2 2 0 0 0 0 4v2.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5V14a2 2 0 0 0 0-4zM9.5 14.5l5-5M9.75 9.75h.01M14.25 14.25h.01" />,
@@ -72,7 +77,7 @@ const MAIS = {
   rotulo: "Mais",
   icone: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth="3" />,
 };
-const DENTRO_DE_MAIS = ["/admin/mais", "/admin/cupons", "/admin/paginas", "/admin/depoimentos", "/admin/site", "/admin/seguranca"];
+const DENTRO_DE_MAIS = ["/admin/mais", "/admin/avisos", "/admin/cupons", "/admin/paginas", "/admin/depoimentos", "/admin/site", "/admin/seguranca"];
 
 function ativo(pathname: string, href: string) {
   if (href === "/admin/mais") return DENTRO_DE_MAIS.some((h) => pathname.startsWith(h));
