@@ -33,9 +33,12 @@ type Servico = {
 const cacheCotacoes = new Map<string, { em: number; frete: Frete | null }>();
 const DEZ_MIN = 10 * 60 * 1000;
 
-// Folded infantil/reclinável packages were never measured (2026-10-05): estimated
-// from the open sizes in lib/medidas.ts until the user sends the real ones.
-const ESTIMATIVAS: Record<"infantil" | "reclinavel", string> = { infantil: "8,42,50,1.2", reclinavel: "12,56,92,2.6" };
+// Folded infantil/reclinável packages (2026-10-06, user: "pesquise e se baseie"):
+// from market aluminum frames of the same model (Mor 2121/2122 infantil
+// 0,74-0,87 kg folded 39x7x52 cm; Mor reclinável 8 posições 1,8-1,9 kg folded
+// 80x56x10 cm) + the rope (user: 200-400 g — 200 g infantil, 400 g reclinável)
+// + 100 g plastic bag, like the fixed chair. Env vars override.
+const ESTIMATIVAS: Record<"infantil" | "reclinavel", string> = { infantil: "8,42,53,1.2", reclinavel: "12,56,82,2.4" };
 const lerCaixa = (v: string | undefined) => {
   const c = (v ?? "").split(",").map((x) => Number(x.trim()));
   return c.length === 4 && c.every((x) => x > 0) ? c : null;
