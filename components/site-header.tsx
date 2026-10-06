@@ -38,7 +38,19 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
     >
       <div className="border-b border-line bg-canvas/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3">
-          <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
+          <Link
+            href="/"
+            className="flex items-center gap-3"
+            onClick={(e) => {
+              setOpen(false);
+              // Already on the homepage: the logo scrolls back to the top
+              // (user 2026-10-06) instead of doing nothing.
+              if (window.location.pathname === "/" && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+          >
             <Image src="/brand/logo.png" alt="" width={40} height={40} className="h-10 w-10" />
             <span className="font-serif text-2xl font-medium tracking-tight text-ink">{siteName}</span>
           </Link>
