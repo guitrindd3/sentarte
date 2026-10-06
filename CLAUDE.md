@@ -625,6 +625,10 @@ Only the builder offers a chair type (user: no photos, chosen only there): Infan
 
 Ran `npx knip` (no unused source files). Removed: unused assets `public/brand/bem-vindo.png`, `public/photos/hero-beach.jpg`, `public/photos/rope-texture.jpg`, `public/catalogo/flamengo.jpg`; dead `UserIcon`; needless exports; the Vercel Blob hosts from the CSP and `images.remotePatterns` (`blob:` stays for admin previews); `@vercel/analytics` (Web Analytics was never enabled on the project — it recorded nothing; stats are our own, see "Site statistics"); the create-next-app README. Kept on purpose: `public/google590b889b4b231e43.html` (Search Console), `lib/chair-render.ts` / `lib/formas-extras-2.ts` exports used by offline render scripts. Notes above that mention those removed files are historical.
 
+## Pix inside the site (2026-10-06)
+
+User didn't want buyers sent to the Mercado Pago page. Pix is now paid INSIDE the cart drawer: `/api/pix` creates a Payments API Pix (`payment_method_id: "pix"`, 30-min `date_of_expiration`, idempotency key `<ref>-pix-site`) and returns the QR (`qr_code_base64`) + copia e cola; `components/pix-no-site.tsx` shows them and polls `/api/pix/status` (checks `external_reference` = this order) every 4 s; when approved it marks the order paid and goes to `/pedido?payment_id=…&external_reference=…`, which confirms again, clears the cart and offers the WhatsApp summary. Mercado Pago requires the payer's e-mail for this → the checkout form now has an e-mail field (required only for Pix). Card still uses Checkout Pro (redirect) until the user sends the **Public Key** for the Card Payment Brick. Order math shared by both in `lib/checkout-servidor.ts` (`prepararPedido` / `registrarPedido`).
+
 ## Security (2026-09-30 pass)
 
 - Security headers + CSP in `next.config.ts` (`headers()`), `poweredByHeader:

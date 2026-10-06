@@ -49,6 +49,8 @@ export type DadosEntrega = {
   bairro: string;
   cidade: string;
   uf: string;
+  /** Only needed for the in-site Pix (Mercado Pago sends the receipt there). */
+  email?: string;
 };
 
 export const ENTREGA_VAZIA: DadosEntrega = {

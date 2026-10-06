@@ -6,6 +6,7 @@ import type { CartItem } from "@/lib/cart-context";
 import type { CupomPublico } from "@/lib/cupom";
 import { formatBRL, PARCELAS_MAX, PIX_DESCONTO } from "@/lib/offer";
 import { idDaVisita } from "@/lib/rastro";
+import { PixNoSite, type PixGerado } from "@/components/pix-no-site";
 import { guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import {
   calcularPedido,
@@ -47,6 +48,8 @@ export function CheckoutForm({
   const [enviando, setEnviando] = useState<"pix" | "cartao" | null>(null);
   const [erro, setErro] = useState("");
   const [buscandoCep, setBuscandoCep] = useState(false);
+  const [pix, setPix] = useState<PixGerado | null>(null);
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((d.email ?? "").trim());
   const conta = calcularPedido(items, cupons);
   const estadoFrete = useFrete(d.cep, items);
   const valorFrete = estadoFrete.tipo === "ok" ? estadoFrete.frete.valor : null;
@@ -93,6 +96,21 @@ export function CheckoutForm({
     }));
     try {
       window.localStorage.setItem(ENTREGA_KEY, JSON.stringify(d));
+      if (forma === "pix") {
+        // Pix is paid right here (QR code / copia e cola), no Mercado Pago page.
+        const r = await fetch("/api/pix", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ itens, entrega: d, email: d.email, referencia, vid: idDaVisita(), cupom: codigoDigitado }),
+        });
+        const p = (await r.json()) as Partial<PixGerado> & { erro?: string };
+        if (!r.ok || !p.id || !p.copiaECola) throw new Error(p.erro || "Não deu para gerar o Pix agora.");
+        const salvoPix: PedidoSalvo = { referencia: p.referencia ?? referencia, forma, itens, entrega: d, total: p.valor ?? conta.totalPix };
+        window.localStorage.setItem(PEDIDO_STORAGE_KEY, JSON.stringify(salvoPix));
+        setPix(p as PixGerado);
+        setEnviando(null);
+        return;
+      }
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,6 +128,19 @@ export function CheckoutForm({
   };
 
   const campo = "mt-1 w-full border border-line bg-canvas px-3 py-2 text-base text-ink focus:border-ink focus:outline-none";
+
+  if (pix) {
+    return (
+      <PixNoSite
+        pix={pix}
+        onCancelar={() => setPix(null)}
+        onNovo={() => {
+          setPix(null);
+          void pagar("pix");
+        }}
+      />
+    );
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -129,6 +160,10 @@ export function CheckoutForm({
           <label className="col-span-2">
             <span className="text-ink-soft">WhatsApp</span>
             <input value={d.telefone} onChange={set("telefone")} inputMode="tel" autoComplete="tel" placeholder="(27) 99999-9999" className={campo} />
+          </label>
+          <label className="col-span-2">
+            <span className="text-ink-soft">E-mail (para o comprovante do Pix)</span>
+            <input value={d.email ?? ""} onChange={set("email")} type="email" inputMode="email" autoComplete="email" placeholder="voce@email.com" className={campo} />
           </label>
           <label>
             <span className="text-ink-soft">CEP {buscandoCep ? "…" : ""}</span>
@@ -184,14 +219,16 @@ export function CheckoutForm({
           </p>
         ) : !ok ? (
           <p className="mb-3 text-xs text-ink-soft">Preencha os dados acima para pagar.</p>
+        ) : !emailOk ? (
+          <p className="mb-3 text-xs text-ink-soft">Para o Pix, coloque o seu e-mail (o comprovante vai para ele).</p>
         ) : null}
         <button
           type="button"
-          disabled={!ok || enviando !== null}
+          disabled={!ok || !emailOk || enviando !== null}
           onClick={() => pagar("pix")}
           className="flex w-full items-center justify-between rounded-full bg-verde px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-verde-escuro disabled:opacity-40"
         >
-          <span>{enviando === "pix" ? "Abrindo o Pix…" : `Pagar no Pix (${Math.round(PIX_DESCONTO * 100)}% off)`}</span>
+          <span>{enviando === "pix" ? "Gerando o Pix…" : `Pagar no Pix (${Math.round(PIX_DESCONTO * 100)}% off)`}</span>
           <span>{formatBRL(conta.totalPix + (valorFrete ?? 0))}</span>
         </button>
         <button

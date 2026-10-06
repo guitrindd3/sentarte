@@ -1,73 +1,28 @@
 import { NextResponse } from "next/server";
-import { tipoValido } from "@/lib/offer";
-import { normalizarWhatsapp, salvarPedidoIniciado } from "@/lib/clientes";
-import { cuponsDoPedido } from "@/lib/cupons-store";
-import { anotarNoCaminho, vidValido } from "@/lib/estatisticas";
+import { prepararPedido, registrarPedido, type CorpoPedido } from "@/lib/checkout-servidor";
 import { SITE_URL } from "@/lib/nav";
-import { calcularFrete } from "@/lib/frete-servidor";
 import { PARCELAS_MAX } from "@/lib/offer";
-import {
-  calcularPedido,
-  descricaoItem,
-  entregaCompleta,
-  type DadosEntrega,
-  type ItemDoPedido,
-} from "@/lib/pedido";
+import { descricaoItem } from "@/lib/pedido";
 
 // Creates a Mercado Pago Checkout Pro payment and returns its URL. Needs the
 // MERCADOPAGO_ACCESS_TOKEN env var (production access token of the store's
 // Mercado Pago account). The amount is recomputed here from lib/pedido.ts —
 // never taken from the request.
 
-type Corpo = { forma: "pix" | "cartao"; itens: ItemDoPedido[]; entrega: DadosEntrega; referencia: string; vid?: string; cupom?: string };
-
 export async function POST(req: Request) {
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!token) return NextResponse.json({ erro: "Pagamento online ainda não configurado." }, { status: 503 });
 
-  let corpo: Corpo;
+  let corpo: CorpoPedido;
   try {
-    corpo = (await req.json()) as Corpo;
+    corpo = (await req.json()) as CorpoPedido;
   } catch {
     return NextResponse.json({ erro: "Pedido inválido." }, { status: 400 });
   }
-  const { forma, entrega, referencia } = corpo;
-  const itens = (Array.isArray(corpo.itens) ? corpo.itens : [])
-    .slice(0, 30)
-    .map((i) => ({
-      categoriaSlug: String(i.categoriaSlug ?? ""),
-      modeloNome: String(i.modeloNome ?? "").slice(0, 120),
-      quantidade: Math.max(1, Math.min(20, Math.floor(Number(i.quantidade) || 1))),
-      nomePersonalizado: i.nomePersonalizado ? String(i.nomePersonalizado).slice(0, 40) : undefined,
-      tipoCadeira: tipoValido(i.tipoCadeira),
-      variante: i.variante ? String(i.variante).slice(0, 40) : undefined,
-    }));
+  const pronto = await prepararPedido(corpo);
+  if (!pronto.ok) return NextResponse.json({ erro: pronto.erro }, { status: 400 });
+  const { forma, ref, itens, conta, frete, valorProdutos, valor, entrega, telefone } = pronto;
 
-  // Coupons are looked up again here (the browser only sends the typed code).
-  let cupons: Awaited<ReturnType<typeof cuponsDoPedido>> = [];
-  try {
-    cupons = await cuponsDoPedido(typeof corpo.cupom === "string" ? corpo.cupom.slice(0, 30) : undefined);
-  } catch (err) {
-    console.error("checkout cupons", err);
-  }
-  const conta = calcularPedido(itens, cupons);
-  if (!conta.pagavel || conta.total <= 0) {
-    return NextResponse.json({ erro: "Esse carrinho só pode ser fechado pelo WhatsApp." }, { status: 400 });
-  }
-  if (forma !== "pix" && forma !== "cartao") return NextResponse.json({ erro: "Forma de pagamento inválida." }, { status: 400 });
-  if (!entrega || !entregaCompleta(entrega)) {
-    return NextResponse.json({ erro: "Preencha os dados de entrega." }, { status: 400 });
-  }
-  const ref = /^[a-z0-9-]{6,40}$/i.test(String(referencia)) ? String(referencia) : crypto.randomUUID();
-  // shipping is recomputed here too (Espírito Santo ships free, see lib/frete-servidor.ts)
-  const frete = await calcularFrete(entrega.cep, conta.porTipo, conta.total);
-  if (!frete) {
-    return NextResponse.json({ erro: "Para esse CEP o frete é combinado pelo WhatsApp." }, { status: 400 });
-  }
-  const valorProdutos = forma === "pix" ? conta.totalPix : conta.total;
-  const valor = Math.round((valorProdutos + frete.valor) * 100) / 100;
-
-  const telefone = entrega.telefone.replace(/\D/g, "");
   const preferencia = {
     items: [
       {
@@ -130,17 +85,6 @@ export async function POST(req: Request) {
   const pref = (await res.json()) as { init_point?: string };
   if (!pref.init_point) return NextResponse.json({ erro: "Resposta inesperada do Mercado Pago." }, { status: 502 });
   // Kept so the atelier can follow up if the payment never completes (admin "Clientes").
-  await salvarPedidoIniciado({
-    ref,
-    nome: entrega.nome.trim().slice(0, 80),
-    whatsapp: normalizarWhatsapp(telefone) ?? telefone,
-    cidade: `${entrega.cidade.trim()}/${entrega.uf.trim()}`.slice(0, 60),
-    forma,
-    itens: itens.map(descricaoItem),
-    valor,
-    vid: vidValido(corpo.vid) ? corpo.vid : undefined,
-    cupom: conta.cupom?.codigo,
-  });
-  await anotarNoCaminho(corpo.vid, { k: "$", x: `${forma === "pix" ? "Pix" : "cartão"}, ${valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}` });
+  await registrarPedido(pronto, corpo.vid);
   return NextResponse.json({ url: pref.init_point, referencia: ref, valor });
 }
