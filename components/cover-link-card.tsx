@@ -48,7 +48,8 @@ export function CoverLinkCard({
             alt={modelo.nome}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105 group-active:scale-100"
-            sizes="(min-width: 1024px) 360px, (min-width: 640px) 45vw, 100vw"
+            // Compact cards sit 2 per row on phones / 4 on desktop (homepage).
+            sizes={compacto ? "(min-width: 1024px) 280px, 50vw" : "(min-width: 1024px) 360px, (min-width: 640px) 45vw, 100vw"}
           />
         ) : (
           <WeavePattern
