@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { headers } from "next/headers";
 import {
@@ -526,6 +526,8 @@ export async function salvarCupomAction(_p: Resultado, formData: FormData) {
     });
     if (antigo && original !== codigo) await excluirCupom(original);
     revalidatePath("/admin/cupons");
+    updateTag("cupons");
+    revalidateSite();
     return antigo ? `Cupom ${codigo} salvo. Já está valendo no site.` : `Cupom ${codigo} criado. Já está valendo no site.`;
   });
 }
@@ -538,6 +540,8 @@ export async function alternarCupomAction(codigo: string) {
     void _usos;
     await salvarCupom({ ...resto, ativo: !c.ativo });
     revalidatePath("/admin/cupons");
+    updateTag("cupons");
+    revalidateSite();
     return c.ativo ? `Cupom ${codigo} desligado.` : `Cupom ${codigo} ligado.`;
   });
 }
@@ -546,6 +550,8 @@ export async function excluirCupomAction(codigo: string) {
   return executar(async () => {
     await excluirCupom(codigo);
     revalidatePath("/admin/cupons");
+    updateTag("cupons");
+    revalidateSite();
     return `Cupom ${codigo} apagado.`;
   });
 }

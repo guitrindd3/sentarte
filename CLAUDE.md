@@ -668,3 +668,8 @@ Git connection existed). SSO/Vercel Authentication protection is disabled on
 this project on purpose so the public site isn't gated. A Vercel Blob store
 (`sentarte-content`) is attached to the project — `BLOB_READ_WRITE_TOKEN` is
 auto-provisioned by Vercel, don't hand-set it.
+
+## Speed pass (2026-10-06)
+
+User: "o site está muito lento". Public pages (/, /times, /boho, /desenhos, /personalizar, /sobre, /contato, /faq, policies, /categoria/[slug] via generateStaticParams) are no longer `force-dynamic`: `export const revalidate = 600` → pre-rendered, served from cache (`x-nextjs-cache: HIT`), rebuilt at most every 10 min and on every admin save (`revalidateSite()` = `revalidatePath("/", "layout")`). /busca, /c, /pedido stay dynamic. Anything a public page reads at render time must be cacheable: Redis reads use `fetch` with `no-store`, which forces the page dynamic — so the offer strip/FAQ use `cuponsDaVitrine` (`unstable_cache`, tag `cupons`, 10 min); the coupon admin actions call `updateTag("cupons")` + `revalidateSite()`. Cart/checkout/`/api/cupom` stay live. Don't add per-request reads (cookies, headers, live Redis) to these pages — use a client component + API route instead.
+The "Monte a sua trama" clip was re-encoded (690 KB → 165 KB, no audio, faststart; ffmpeg-static in the scratchpad) and has a poster `public/videos/monte-sua-cadeira.jpg` (its first frame) — before, it showed a black box until it loaded.

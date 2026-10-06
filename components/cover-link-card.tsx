@@ -4,6 +4,8 @@ import { WeavePattern, type WeaveShape } from "@/components/weave-pattern";
 import type { Modelo } from "@/lib/content-schema";
 
 export const VIDEO_MONTE_SUA_CADEIRA = "/videos/monte-sua-cadeira.mp4";
+// First frame of the clip, shown while it loads (it was a black box before, 2026-10-06).
+export const POSTER_MONTE_SUA_CADEIRA = "/videos/monte-sua-cadeira.jpg";
 
 export function CoverLinkCard({
   modelo,
@@ -31,11 +33,12 @@ export function CoverLinkCard({
         {videoUrl ? (
           <video
             src={videoUrl}
+            poster={POSTER_MONTE_SUA_CADEIRA}
             autoPlay
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             aria-hidden="true"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />

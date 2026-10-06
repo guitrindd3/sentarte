@@ -9,7 +9,9 @@ import { textosDaPagina } from "@/lib/textos-paginas";
 import { getContent } from "@/lib/content-store";
 import { DESENHO_TEMAS } from "@/lib/desenho-model";
 
-export const dynamic = "force-dynamic";
+// Pre-rendered and cached (2026-10-06, the site felt slow): rebuilt every 10 min
+// at most, and right away when the admin saves (revalidatePath("/", "layout")).
+export const revalidate = 600;
 
 export const metadata: Metadata = pageMetadata({
   title: "Cadeira de praia com desenho, anime ou nome",

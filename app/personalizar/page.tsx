@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { BackLink } from "@/components/back-link";
-import { VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
+import { VIDEO_MONTE_SUA_CADEIRA, POSTER_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { ChairBuilder } from "@/components/chair-builder";
 import { getContent } from "@/lib/content-store";
 import { TextoRico, textoSimples } from "@/components/texto-rico";
 import { textosDaPagina } from "@/lib/textos-paginas";
 import { MedidasCadeiras } from "@/components/medidas-cadeiras";
 
-export const dynamic = "force-dynamic";
+// Pre-rendered and cached (2026-10-06, the site felt slow): rebuilt every 10 min
+// at most, and right away when the admin saves (revalidatePath("/", "layout")).
+export const revalidate = 600;
 
 export const metadata: Metadata = pageMetadata({
   title: "Monte a sua cadeira de praia",
@@ -40,13 +42,14 @@ export default async function PersonalizarPage() {
           <div className="mx-auto hidden w-full max-w-[17rem] border border-line bg-paper p-2 shadow-[6px_6px_0_0_var(--line)] md:block">
             <video
               src={VIDEO_MONTE_SUA_CADEIRA}
+              poster={POSTER_MONTE_SUA_CADEIRA}
               width={480}
               height={848}
               autoPlay
               muted
               loop
               playsInline
-              preload="auto"
+              preload="metadata"
               aria-label="Vídeo de uma cadeira sendo trançada"
               className="block aspect-[480/848] h-auto w-full bg-canvas object-cover"
             />

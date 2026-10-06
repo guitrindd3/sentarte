@@ -37,7 +37,14 @@ const ORDEM_CARTOES_ESPECIAIS: Record<string, number> = {
   [MONTE_A_SUA_TRAMA_NOME]: 3,
 };
 
-export const dynamic = "force-dynamic";
+// Pre-rendered and cached (2026-10-06, the site felt slow): rebuilt every 10 min
+// at most, and right away when the admin saves (revalidatePath("/", "layout")).
+export const revalidate = 600;
+
+export async function generateStaticParams() {
+  const { categorias } = await getContent();
+  return categorias.map((c) => ({ slug: c.slug }));
+}
 
 export async function generateMetadata({
   params,

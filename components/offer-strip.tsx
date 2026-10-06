@@ -1,5 +1,5 @@
 import { rotuloDesconto, type CupomPublico } from "@/lib/cupom";
-import { cuponsAutomaticos } from "@/lib/cupons-store";
+import { cuponsDaVitrine } from "@/lib/cupons-store";
 import {
   formatBRL,
   PARCELAS_MAX,
@@ -43,7 +43,7 @@ function itens(soPersonalizada: boolean, cupom?: CupomPublico) {
 // (/desenhos), lead with the personalized price instead.
 export async function OfferStrip({ compact = false, soPersonalizada = false }: { compact?: boolean; soPersonalizada?: boolean }) {
   // The automatic coupon set in the admin ("Cupons"), smallest minimum first.
-  const cupom = (await cuponsAutomaticos()).sort((a, b) => a.minCadeiras - b.minCadeiras)[0];
+  const cupom = (await cuponsDaVitrine()).sort((a, b) => a.minCadeiras - b.minCadeiras)[0];
   return (
     <section aria-label="Condições" className={compact ? "border-b border-line bg-paper" : "border-y border-line bg-paper"}>
       <ul

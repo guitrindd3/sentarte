@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { CUPOM_PADRAO, normalizarCodigo, type Cupom, type CupomPublico } from "./cupom";
 import { diaBR } from "./estatisticas";
 import { redis, redisAtivo } from "./redis";
@@ -63,6 +64,13 @@ export async function cuponsAutomaticos(): Promise<CupomPublico[]> {
     return [];
   }
 }
+
+/**
+ * The same list for page rendering (offer strip, FAQ): cached 10 min under the
+ * "cupons" tag so pages can be pre-rendered (2026-10-06 speed pass). The
+ * coupon admin actions call updateTag("cupons"). Cart/checkout stay live.
+ */
+export const cuponsDaVitrine = unstable_cache(cuponsAutomaticos, ["cupons-vitrine"], { revalidate: 600, tags: ["cupons"] });
 
 /** A typed code, if it exists and is usable now. */
 export async function buscarCupom(codigo: string): Promise<{ cupom?: CupomPublico; erro?: string }> {
