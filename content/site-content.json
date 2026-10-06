@@ -385,6 +385,14 @@
       "texto": "Muito bom",
       "fotoUrl": "/catalogo/796d0e35-1464-4492-8f14-c30401cbcd59.jpg",
       "estrelas": 5
+    },
+    {
+      "id": "dep-a7707b99",
+      "nome": "Guilherme",
+      "cidade": "Espírito Santo, serra",
+      "texto": "Do jeito que eu pedi 🙌🏼",
+      "estrelas": 5,
+      "fotoUrl": "/catalogo/93838221-76a7-4ef5-9c77-7e399a6255d6.jpg"
     }
   ],
   "paginas": {}
