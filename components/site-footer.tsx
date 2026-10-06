@@ -10,7 +10,7 @@ export async function SiteFooter() {
   const { nome, whatsappNumero, instagramHandle, googleUrl } = content.site;
 
   return (
-    <footer className="border-t border-line bg-canvas-deep text-ink">
+    <footer id="rodape" className="border-t border-line bg-canvas-deep text-ink">
       <div className="border-b border-line">
         <div className="mx-auto grid max-w-6xl gap-4 px-6 py-8 md:grid-cols-[1fr_1.4fr] md:items-center md:gap-10">
           <div>
@@ -39,6 +39,13 @@ export async function SiteFooter() {
                 </Link>
               </li>
             ))}
+            {/* Staff entrance to /admin (moved here from the bottom corner 2026-10-06: the WhatsApp button covered it) */}
+            <li>
+              <Link href="/admin" data-sem-rastro className="inline-flex items-center gap-1.5 py-1.5 transition-colors hover:text-ink">
+                <LockIcon className="h-3.5 w-3.5" />
+                Área do ateliê
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -91,11 +98,6 @@ export async function SiteFooter() {
           <p>
             © {new Date().getFullYear()} {nome}. Todos os direitos reservados.
           </p>
-          {/* Staff entrance to /admin (user 2026-10-05) — kept in the footer, not the header, so customers don't read it as a login. */}
-          <Link href="/admin" data-sem-rastro className="inline-flex items-center gap-1.5 py-1 transition-colors hover:text-ink">
-            <LockIcon className="h-3.5 w-3.5" />
-            Área do ateliê
-          </Link>
         </div>
       </div>
     </footer>

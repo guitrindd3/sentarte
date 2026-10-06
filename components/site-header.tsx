@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { CartIcon, CloseIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "@/components/icons";
+import { CartIcon, CloseIcon, LockIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "@/components/icons";
 import { useCart } from "@/lib/cart-context";
 import { NAV_LINKS } from "@/lib/nav";
 import { whatsappUrl } from "@/lib/urls";
@@ -125,6 +125,16 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
                 <WhatsAppIcon className="h-4 w-4" />
                 Falar no WhatsApp
               </a>
+              {/* Staff entrance, easy to find on the phone (user 2026-10-06) */}
+              <Link
+                href="/admin"
+                data-sem-rastro
+                onClick={() => setOpen(false)}
+                className="mt-2 inline-flex items-center gap-2 border-t border-line pt-4 text-sm text-ink-soft"
+              >
+                <LockIcon className="h-4 w-4" />
+                Área do ateliê
+              </Link>
             </nav>
           </div>
         ) : null}

@@ -349,7 +349,7 @@ fabricated legal identifiers (CNPJ, address) unless the user supplies them.
   meta tag. `@vercel/analytics` is mounted in the layout.
 - Brand is spelled **SentArte** (matches `site.nome` in the admin content).
 - The header's admin (person) icon was removed — it read as a customer
-  login. Reach the panel at `/admin` — since 2026-10-05 also via a small "Área do ateliê" lock link in the footer's bottom bar (user asked for a button; kept out of the header on purpose).
+  login. Reach the panel at `/admin` — "Área do ateliê" lock link at the end of the phone ☰ menu and in the footer's "Institucional" list (2026-10-06; it was in the footer's bottom corner, under the WhatsApp button). The floating WhatsApp button (`components/whatsapp-float.tsx`) hides while the footer (`#rodape`) is on screen.
 - Homepage: `CategoryBento` now shows the four collection cover cards
   (times/boho/desenhos/monte a sua) instead of category tiles. (A homepage
   mini live preview, `PreviewPromo`, was added and then removed the same day
