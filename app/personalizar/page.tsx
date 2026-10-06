@@ -32,12 +32,13 @@ export default async function PersonalizarPage() {
         <div className="mx-auto max-w-6xl px-6">
           <BackLink />
         </div>
-        <div className="mx-auto mt-2 grid max-w-6xl items-center gap-10 px-6 md:grid-cols-[1fr_auto]">
+        <div className="mx-auto mt-2 grid max-w-6xl items-start gap-10 px-6 md:grid-cols-[1fr_auto]">
           <div className="max-w-2xl">
             <h1 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{textoSimples(tp.linha("titulo"))}</h1>
             <p className="mt-4 max-w-[60ch] text-sm leading-relaxed text-ink-soft">
               <TextoRico inline texto={tp.linha("resumo")} whatsappNumero={content.site.whatsappNumero} />
             </p>
+            <MedidasCadeiras embutido whatsappNumero={content.site.whatsappNumero} />
           </div>
           <div className="mx-auto hidden w-full max-w-[17rem] border border-line bg-paper p-2 shadow-[6px_6px_0_0_var(--line)] md:block">
             <video
@@ -59,7 +60,6 @@ export default async function PersonalizarPage() {
       <section className="mx-auto max-w-6xl px-6 py-14">
         <ChairBuilder whatsappNumero={content.site.whatsappNumero} />
       </section>
-      <MedidasCadeiras whatsappNumero={content.site.whatsappNumero} />
     </>
   );
 }
