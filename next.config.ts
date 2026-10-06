@@ -4,14 +4,18 @@ import type { NextConfig } from "next";
 // for Next's inline bootstrapping and the JSON-LD blocks; everything else is
 // same-origin except ViaCEP (address lookup). `blob:` images = the admin's
 // photo previews. (Vercel Blob hosts removed 2026-10-05: photos live in the repo.)
+// Mercado Pago (2026-10-06): the card form inside the site is Mercado Pago's
+// Card Payment Brick — its SDK, secure-field iframes, fonts and API calls.
+const MP = "https://*.mercadopago.com https://*.mercadopago.com.br https://*.mercadolibre.com https://*.mercadolivre.com https://*.mlstatic.com";
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self' data:",
+  `script-src 'self' 'unsafe-inline' https://sdk.mercadopago.com ${MP}`,
+  `style-src 'self' 'unsafe-inline' ${MP}`,
+  `img-src 'self' data: blob: ${MP}`,
+  `font-src 'self' data: ${MP}`,
   "media-src 'self'",
-  "connect-src 'self' https://viacep.com.br",
+  `connect-src 'self' https://viacep.com.br ${MP}`,
+  `frame-src ${MP}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

@@ -7,6 +7,7 @@ import type { CupomPublico } from "@/lib/cupom";
 import { formatBRL, PARCELAS_MAX, PIX_DESCONTO } from "@/lib/offer";
 import { idDaVisita } from "@/lib/rastro";
 import { PixNoSite, type PixGerado } from "@/components/pix-no-site";
+import { CartaoNoSite, PUBLIC_KEY_MP } from "@/components/cartao-no-site";
 import { guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import {
   calcularPedido,
@@ -49,6 +50,8 @@ export function CheckoutForm({
   const [erro, setErro] = useState("");
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [pix, setPix] = useState<PixGerado | null>(null);
+  // Card inside the site (Mercado Pago Card Payment Brick) once the public key exists.
+  const [cartao, setCartao] = useState<{ referencia: string } | null>(null);
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((d.email ?? "").trim());
   const conta = calcularPedido(items, cupons);
   const estadoFrete = useFrete(d.cep, items);
@@ -81,8 +84,30 @@ export function CheckoutForm({
     }
   };
 
-  const pagar = async (forma: "pix" | "cartao") => {
+  const itensDoPedido = () =>
+    items.map((i) => ({
+      categoriaSlug: i.categoriaSlug,
+      categoriaTitulo: i.categoriaTitulo,
+      modeloNome: i.modeloNome,
+      quantidade: i.quantidade,
+      nomePersonalizado: i.nomePersonalizado,
+      variante: i.variante,
+      tipoCadeira: i.tipoCadeira,
+    }));
+
+  const pagar = async (forma: "pix" | "cartao", naPaginaDoMercadoPago = false) => {
     setErro("");
+    if (forma === "cartao" && PUBLIC_KEY_MP && !naPaginaDoMercadoPago) {
+      // Card form opens right here; the order summary is kept for /pedido.
+      const referencia = crypto.randomUUID();
+      try {
+        window.localStorage.setItem(ENTREGA_KEY, JSON.stringify(d));
+        const salvo: PedidoSalvo = { referencia, forma, itens: itensDoPedido(), entrega: d, total: conta.total + (valorFrete ?? 0) };
+        window.localStorage.setItem(PEDIDO_STORAGE_KEY, JSON.stringify(salvo));
+      } catch {}
+      setCartao({ referencia });
+      return;
+    }
     setEnviando(forma);
     const referencia = crypto.randomUUID();
     const itens = items.map((i) => ({
@@ -129,6 +154,21 @@ export function CheckoutForm({
 
   const campo = "mt-1 w-full border border-line bg-canvas px-3 py-2 text-base text-ink focus:border-ink focus:outline-none";
 
+  if (cartao) {
+    return (
+      <CartaoNoSite
+        valor={Math.round((conta.total + (valorFrete ?? 0)) * 100) / 100}
+        email={(d.email ?? "").trim()}
+        corpoPedido={{ itens: itensDoPedido(), entrega: d, referencia: cartao.referencia, vid: idDaVisita(), cupom: codigoDigitado }}
+        onVoltar={() => setCartao(null)}
+        onPaginaMercadoPago={() => {
+          setCartao(null);
+          void pagar("cartao", true);
+        }}
+      />
+    );
+  }
+
   if (pix) {
     return (
       <PixNoSite
@@ -162,7 +202,7 @@ export function CheckoutForm({
             <input value={d.telefone} onChange={set("telefone")} inputMode="tel" autoComplete="tel" placeholder="(27) 99999-9999" className={campo} />
           </label>
           <label className="col-span-2">
-            <span className="text-ink-soft">E-mail (para o comprovante do Pix)</span>
+            <span className="text-ink-soft">E-mail (para o comprovante)</span>
             <input value={d.email ?? ""} onChange={set("email")} type="email" inputMode="email" autoComplete="email" placeholder="voce@email.com" className={campo} />
           </label>
           <label>
@@ -220,7 +260,7 @@ export function CheckoutForm({
         ) : !ok ? (
           <p className="mb-3 text-xs text-ink-soft">Preencha os dados acima para pagar.</p>
         ) : !emailOk ? (
-          <p className="mb-3 text-xs text-ink-soft">Para o Pix, coloque o seu e-mail (o comprovante vai para ele).</p>
+          <p className="mb-3 text-xs text-ink-soft">Coloque o seu e-mail: o comprovante do pagamento vai para ele.</p>
         ) : null}
         <button
           type="button"
@@ -233,7 +273,7 @@ export function CheckoutForm({
         </button>
         <button
           type="button"
-          disabled={!ok || enviando !== null}
+          disabled={!ok || (Boolean(PUBLIC_KEY_MP) && !emailOk) || enviando !== null}
           onClick={() => pagar("cartao")}
           className="mt-2 flex w-full items-center justify-between rounded-full border-2 border-verde px-5 py-3 text-sm font-semibold text-verde-escuro transition-colors hover:bg-verde/5 disabled:opacity-40"
         >
