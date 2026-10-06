@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { CheckIcon, ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
+import { useEffect, useRef, useState } from "react";
+import { CheckIcon, WhatsAppIcon } from "@/components/icons";
 import { useCart } from "@/lib/cart-context";
 import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
@@ -21,7 +21,6 @@ import { whatsappUrl } from "@/lib/urls";
 // repaints that real photo (lib/chair-render.ts) as the customer picks the
 // weave shape, the two thread colors and the name.
 
-const FOTO_VAZIA = "/monte/cadeira-vazia.jpg";
 const FOTO_TRANCADA = "/monte/cadeira-trancada.jpg";
 /** Visible crop of the tall 480x848 frame (just the chair). */
 const CORTE_Y0 = 150;
@@ -165,7 +164,9 @@ function desenhar(
 }
 
 export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
-  const [passo, setPasso] = useState(0); // 0 = not started yet
+  // Opens straight on step 1 with the woven chair (user 2026-10-06: no empty
+  // frame / "Começar a montar" any more).
+  const [passo, setPasso] = useState(1);
   const [foto, setFoto] = useState<ImageData | null>(null);
   const [forma, setForma] = useState<Forma>("lisa");
   // Chair type (user 2026-10-05): only chosen here, in the builder. The picture
@@ -207,7 +208,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const passosRef = useRef<HTMLDivElement>(null);
   const faixaRef = useRef<HTMLDivElement>(null);
-  const passoAnterior = useRef(0);
+  const passoAnterior = useRef(1);
   const miniRef = useRef<HTMLCanvasElement>(null);
   const [cadeiraFora, setCadeiraFora] = useState(false);
 
@@ -279,10 +280,6 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
   const mostrarForma = (i: number) => (termoBusca ? ROTULOS_BUSCA[i].includes(termoBusca) : FORMAS_VISIVEIS[i].grupo === grupo);
   const achadas = termoBusca ? ROTULOS_BUSCA.filter((r) => r.includes(termoBusca)).length : -1;
 
-  // "Começar a montar" goes straight to step 1 — the weaving clip used to play
-  // first (~2s); the user didn't want to wait for it (2026-10-05).
-  const comecar = useCallback(() => setPasso((p) => (p === 0 ? 1 : p)), []);
-
   // Name step: press/drag on the chair to move the name.
   // Step 1 with a reduced shape: drag moves the shape instead.
   const arrastaForma = passo === 1 && escalaForma < 0.97 && forma !== "meio-a-meio";
@@ -350,7 +347,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
     ) : null;
 
   const recomecar = () => {
-    setPasso(0);
+    setPasso(1);
     setAdicionado(false);
   };
 
@@ -450,14 +447,6 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       <div ref={faixaRef} className="self-start md:sticky md:top-[calc(var(--altura-topo,4rem)+1rem)]">
       <div className="relative mx-auto w-full max-w-md overflow-hidden border border-line bg-canvas md:max-w-[min(28rem,calc((100vh-var(--altura-topo,4rem)-7.5rem)*0.83))]">
         <div className="relative aspect-[464/560]">
-          {/* eslint-disable-next-line @next/next/no-img-element -- fixed local frame, same crop as the canvas */}
-          <img
-            src={FOTO_VAZIA}
-            alt="Estrutura da cadeira de praia, ainda sem trançado"
-            className={`absolute inset-0 h-full w-full object-cover object-[50%_59%] transition-opacity duration-500 ${
-              passo === 0 ? "opacity-100" : "opacity-0"
-            }`}
-          />
           {/* eslint-disable-next-line @next/next/no-img-element -- fallback under the canvas until the first repaint lands */}
           <img
             src={FOTO_TRANCADA}
@@ -500,21 +489,6 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
             </p>
           ) : null}
 
-          {passo === 0 ? (
-            <div className="absolute inset-x-4 bottom-4 border border-line bg-paper/95 p-5 text-center backdrop-blur md:hidden">
-              <p className="font-serif text-xl font-medium tracking-tight text-ink">Vamos montar a sua cadeira?</p>
-              <p className="mt-1 text-sm text-ink-soft">São 3 passos: trançado, cores e nome.</p>
-              <button
-                type="button"
-                onClick={comecar}
-                disabled={!foto}
-                className="pulso-verde mt-4 inline-flex items-center gap-2 rounded-full bg-verde px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-verde-escuro disabled:opacity-50"
-              >
-                Começar a montar
-                <ChevronDownIcon className="h-4 w-4 -rotate-90" />
-              </button>
-            </div>
-          ) : null}
         </div>
       </div>
 
@@ -547,23 +521,6 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
       {/* The steps */}
       <div ref={passosRef} className="flex scroll-mt-4 flex-col">
-        {passo === 0 ? (
-          <div className="mb-8 hidden items-center justify-between gap-6 border border-verde/40 bg-verde/5 p-5 md:flex">
-            <div>
-              <p className="font-serif text-xl font-medium tracking-tight text-ink">Vamos montar a sua cadeira?</p>
-              <p className="mt-1 text-sm text-ink-soft">São 3 passos: trançado, cores e nome.</p>
-            </div>
-            <button
-              type="button"
-              onClick={comecar}
-              disabled={!foto}
-              className="pulso-verde inline-flex shrink-0 items-center gap-2 rounded-full bg-verde px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-verde-escuro disabled:opacity-50"
-            >
-              Começar a montar
-              <ChevronDownIcon className="h-4 w-4 -rotate-90" />
-            </button>
-          </div>
-        ) : null}
         <fieldset className="mb-6">
           <legend className="text-sm font-medium text-ink">Tipo de cadeira</legend>
           <div className="mt-2 grid grid-cols-3 gap-1.5 sm:gap-2" role="radiogroup" aria-label="Tipo de cadeira">

@@ -389,8 +389,7 @@ chair's middle x=223 (ASSENTO_MEIO_X), which is also the 3-color split.
 weaving clip instead of a drawn illustration (the old flat SVG
 `Configurator`/`ChairPreview` and the Press Start 2P font were removed —
 the user said it "não ta legal" and didn't want anything paid, e.g. AI 3D
-services). Flow: shows `public/monte/cadeira-vazia.jpg` (clip frame 1,
-empty frame) → "Começar a montar" goes STRAIGHT to step 1 (since 2026-10-05 the
+services). Flow (since 2026-10-06 the builder OPENS directly on step 1 with the woven chair — the empty frame `cadeira-vazia.jpg` and the "Começar a montar" intro were removed, user) — before that: empty frame → "Começar a montar" went STRAIGHT to step 1 (since 2026-10-05 the
 weaving clip no longer plays inside the builder — user didn't want to wait; it
 still loops in the page header) → from then on a canvas repaints `public/monte/cadeira-trancada.jpg`
 (clip frame at ~1.75s, black/white weave, no name) via
