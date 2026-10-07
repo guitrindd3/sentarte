@@ -6,6 +6,9 @@ import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
 import { excluirInteressadoAction, excluirPedidoAction } from "../../actions";
 import { BotaoExcluir, Card } from "../../_ui";
+import { listarCupons, motivoInvalido } from "@/lib/cupons-store";
+import type { CupomPublico } from "@/lib/cupom";
+import { BotaoChamar, EscolherCupom } from "./chamar-lista";
 import { CopiarNumeros } from "./copiar";
 
 const quando = (t: number) =>
@@ -47,8 +50,14 @@ export default async function Clientes() {
   }
   let pedidos: PedidoCliente[] = [];
   let lista: Interessado[] = [];
+  let cupons: CupomPublico[] = [];
   try {
-    [pedidos, lista] = await Promise.all([pedidosRecentes().then(atualizarComMercadoPago), listarInteressados()]);
+    const [p, l, c] = await Promise.all([pedidosRecentes().then(atualizarComMercadoPago), listarInteressados(), listarCupons()]);
+    pedidos = p;
+    lista = l;
+    cupons = c
+      .filter((x) => !motivoInvalido(x))
+      .map(({ codigo, tipo, valor, minCadeiras, automatico }) => ({ codigo, tipo, valor, minCadeiras, automatico }));
   } catch (err) {
     console.error("clientes", err);
   }
@@ -156,6 +165,8 @@ export default async function Clientes() {
         {lista.length === 0 ? (
           <p className="text-sm text-ink-soft">Ninguém se cadastrou ainda. A caixinha fica no rodapé de todas as páginas do site.</p>
         ) : (
+          <>
+          <EscolherCupom cupons={cupons} />
           <ul className="divide-y divide-line/60">
             {lista.map((i) => (
               <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -166,19 +177,13 @@ export default async function Clientes() {
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <a
-                    href={whatsappUrl(i.whatsapp, `Oi, ${primeiroNome(i.nome)}! Aqui é do Ateliê SentArte. `)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-full border border-verde px-3 py-1.5 text-sm font-semibold text-verde-escuro hover:bg-verde/5"
-                  >
-                    Chamar
-                  </a>
+                  <BotaoChamar nome={i.nome} whatsapp={i.whatsapp} cupons={cupons} />
                   <BotaoExcluir action={excluirInteressadoAction.bind(null, i.id)} rotulo="Tirar" pergunta={`Tirar ${primeiroNome(i.nome)} da lista?`} />
                 </div>
               </li>
             ))}
           </ul>
+          </>
         )}
       </Card>
     </div>
