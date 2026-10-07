@@ -395,5 +395,10 @@
       "fotoUrl": "/catalogo/93838221-76a7-4ef5-9c77-7e399a6255d6.jpg"
     }
   ],
-  "paginas": {}
+  "paginas": {
+    "sobre": {
+      "resumo": "Nossas peças são produzidas ponto a ponto, onde dedico horas de trabalho minucioso, para transformar cordas em obras de arte funcionais.",
+      "foto": "/catalogo/44b87b5c-4346-433f-83bc-af0433724097.jpg"
+    }
+  }
 }
