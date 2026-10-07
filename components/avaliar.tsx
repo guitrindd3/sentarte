@@ -90,7 +90,7 @@ export function Avaliar({ googleUrl }: { googleUrl?: string }) {
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block text-sm">
           <span className="text-ink-soft">Seu nome</span>
-          <input name="nome" required maxLength={60} className="mt-1 w-full border border-line bg-canvas px-3 py-2 text-base text-ink focus:border-ink focus:outline-none sm:text-sm" />
+          <input name="nome" autoComplete="name" required maxLength={60} className="mt-1 w-full border border-line bg-canvas px-3 py-2 text-base text-ink focus:border-ink focus:outline-none sm:text-sm" />
         </label>
         <label className="block text-sm">
           <span className="text-ink-soft">Cidade (opcional)</span>

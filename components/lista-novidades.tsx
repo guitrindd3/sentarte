@@ -48,7 +48,7 @@ export function ListaNovidades() {
     >
       <div className="flex flex-col gap-2 sm:flex-row">
         <label className="sr-only" htmlFor="nov-nome">Seu nome</label>
-        <input id="nov-nome" name="nome" required maxLength={60} placeholder="Seu nome" className="min-w-0 flex-1 border border-line bg-paper px-3 py-2.5 text-base text-ink placeholder:text-ink-soft focus:border-ink focus:outline-none sm:text-sm" />
+        <input id="nov-nome" name="nome" autoComplete="name" required maxLength={60} placeholder="Seu nome" className="min-w-0 flex-1 border border-line bg-paper px-3 py-2.5 text-base text-ink placeholder:text-ink-soft focus:border-ink focus:outline-none sm:text-sm" />
         <label className="sr-only" htmlFor="nov-whats">Seu WhatsApp com DDD</label>
         <input id="nov-whats" name="whatsapp" required inputMode="tel" autoComplete="tel" maxLength={20} placeholder="WhatsApp com DDD" className="min-w-0 flex-1 border border-line bg-paper px-3 py-2.5 text-base text-ink placeholder:text-ink-soft focus:border-ink focus:outline-none sm:text-sm" />
         {/* honeypot */}
