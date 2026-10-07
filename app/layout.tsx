@@ -94,6 +94,16 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             sameAs: [instagramUrl(site.instagramHandle)],
           }}
         />
+        {/* Tells Google the site's name, so results say "SentArte" instead of "Vercel". */}
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: site.nome,
+            alternateName: ["Ateliê SentArte", "Sentarte"],
+            url: `${SITE_URL}/`,
+          }}
+        />
         <Rastreador />
       </body>
     </html>
