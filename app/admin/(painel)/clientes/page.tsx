@@ -4,11 +4,12 @@ import { getAdminContent } from "@/lib/content-store";
 import { formatBRL } from "@/lib/offer";
 import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
-import { excluirInteressadoAction, excluirPedidoAction } from "../../actions";
+import { editarInteressadoAction, excluirInteressadoAction, excluirPedidoAction } from "../../actions";
 import { BotaoExcluir, Card } from "../../_ui";
 import { listarCupons, motivoInvalido } from "@/lib/cupons-store";
 import type { CupomPublico } from "@/lib/cupom";
-import { BotaoChamar, EscolherCupom } from "./chamar-lista";
+import { EscolherCupom } from "./chamar-lista";
+import { LinhaInteressado } from "./linha-interessado";
 import { CopiarNumeros } from "./copiar";
 
 const quando = (t: number) =>
@@ -169,18 +170,15 @@ export default async function Clientes() {
           <EscolherCupom cupons={cupons} />
           <ul className="divide-y divide-line/60">
             {lista.map((i) => (
-              <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="font-semibold text-ink">{i.nome}</p>
-                  <p className="text-sm text-ink-soft">
-                    {telefone(i.whatsapp)}, desde {quando(i.em)}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <BotaoChamar nome={i.nome} whatsapp={i.whatsapp} cupons={cupons} />
-                  <BotaoExcluir action={excluirInteressadoAction.bind(null, i.id)} rotulo="Tirar" pergunta={`Tirar ${primeiroNome(i.nome)} da lista?`} />
-                </div>
-              </li>
+              <LinhaInteressado
+                key={i.id}
+                nome={i.nome}
+                whatsapp={i.whatsapp}
+                desde={quando(i.em)}
+                cupons={cupons}
+                editar={editarInteressadoAction.bind(null, i.id)}
+                excluir={excluirInteressadoAction.bind(null, i.id)}
+              />
             ))}
           </ul>
           </>

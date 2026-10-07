@@ -13,7 +13,7 @@ import {
   verifyPassword,
   verifySession,
 } from "@/lib/auth";
-import { excluirInteressado, excluirPedido, gravarPedido, lerPedido, type EtapaPedido } from "@/lib/clientes";
+import { editarInteressado, excluirInteressado, excluirPedido, normalizarWhatsapp, gravarPedido, lerPedido, type EtapaPedido } from "@/lib/clientes";
 import { desligarGmail, desligarNtfy, estadoAvisos, ligarNtfy, salvarGmail, testarAvisos } from "@/lib/avisos";
 import {
   atualizarEnvios,
@@ -495,6 +495,19 @@ export async function excluirPedidoAction(ref: string) {
   return executar(async () => {
     await excluirPedido(ref);
     return "Pedido apagado da lista.";
+  });
+}
+
+export async function editarInteressadoAction(id: string, _p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const nome = String(formData.get("nome") ?? "").trim().replace(/\s+/g, " ").slice(0, 60);
+    if (!nome) throw new Aviso("Escreva o nome da pessoa.");
+    const whatsapp = normalizarWhatsapp(String(formData.get("whatsapp") ?? ""));
+    if (!whatsapp) throw new Aviso("WhatsApp inválido. Use o DDD + número, ex.: (27) 99999-9999.");
+    const r = await editarInteressado(id, { nome, whatsapp });
+    if (r === "sumiu") throw new Aviso("Esse contato não está mais na lista. Atualize a página.");
+    if (r === "repetido") throw new Aviso("Esse WhatsApp já está em outro cadastro da lista.");
+    return "Cadastro atualizado.";
   });
 }
 

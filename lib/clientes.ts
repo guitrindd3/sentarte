@@ -209,6 +209,27 @@ export async function listarInteressados(): Promise<Interessado[]> {
   });
 }
 
+/** Fixes a name/number typed at sign-up. The list is keyed by number, so a new number moves the entry. */
+export async function editarInteressado(id: string, dados: { nome: string; whatsapp: string }) {
+  const [bruto] = (await redis([["HGET", "interessados", id]])) as (string | null)[];
+  if (!bruto) return "sumiu" as const;
+  const atual = JSON.parse(bruto) as Interessado;
+  const novo: Interessado = { ...atual, nome: dados.nome, whatsapp: dados.whatsapp, id: dados.whatsapp };
+  if (novo.id === id) {
+    await redis([["HSET", "interessados", id, JSON.stringify(novo)]]);
+    return "ok" as const;
+  }
+  const [existe] = await redis([["HEXISTS", "interessados", novo.id]]);
+  if (Number(existe)) return "repetido" as const;
+  await redis([
+    ["HDEL", "interessados", id],
+    ["ZREM", "interessados:ordem", id],
+    ["HSET", "interessados", novo.id, JSON.stringify(novo)],
+    ["ZADD", "interessados:ordem", atual.em, novo.id],
+  ]);
+  return "ok" as const;
+}
+
 export async function excluirInteressado(id: string) {
   await redis([["HDEL", "interessados", id], ["ZREM", "interessados:ordem", id]]);
 }

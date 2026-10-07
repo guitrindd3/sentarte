@@ -199,10 +199,13 @@ export function AdminForm({
   action,
   children,
   className,
+  aoSalvar,
 }: {
   action: Acao;
   children: ReactNode | ((s: { sujo: boolean; pendente: boolean }) => ReactNode);
   className?: string;
+  /** Called after a successful save (e.g. to close an inline editor). */
+  aoSalvar?: () => void;
 }) {
   const [sujo, setSujo] = useState(false);
   const [versao, setVersao] = useState(0);
@@ -224,6 +227,7 @@ export function AdminForm({
       definirSujo(false);
       setVersao((v) => v + 1);
       if (r.ir) router.push(r.ir);
+      aoSalvar?.();
     } else if (r) {
       avisar("erro", r.erro);
     }
