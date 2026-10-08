@@ -10,6 +10,7 @@ import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
 import { ROTULOS_EXTRAS } from "@/lib/formas-extras";
 import { ROTULOS_EXTRAS_2 } from "@/lib/formas-extras-2";
 import { FORMAS_OCULTAS, ROTULOS_EXTRAS_3 } from "@/lib/formas-extras-3";
+import { ROTULOS_GATOS } from "@/lib/formas-gatos";
 import { codificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
 import { rastrear } from "@/lib/rastro";
@@ -116,6 +117,7 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   { valor: "concha", rotulo: "Concha", grupo: "divertidos" },
   { valor: "melancia", rotulo: "Melancia", grupo: "divertidos" },
   { valor: "gatinho", rotulo: "Gatinho", grupo: "divertidos" },
+  ...ROTULOS_GATOS,
   { valor: "cacto", rotulo: "Cacto", grupo: "divertidos" },
   ...ROTULOS_EXTRAS,
   ...ROTULOS_EXTRAS_2,

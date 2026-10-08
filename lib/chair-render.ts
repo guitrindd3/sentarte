@@ -15,6 +15,7 @@
 import { FORMAS_EXTRAS } from "./formas-extras";
 import { FORMAS_EXTRAS_2 } from "./formas-extras-2";
 import { FORMAS_EXTRAS_3 } from "./formas-extras-3";
+import { FORMAS_GATOS } from "./formas-gatos";
 import { GLYPH_H, GLYPH_W, glyphPixel, normalizarTexto } from "./pixel-font";
 
 export type Forma =
@@ -916,7 +917,7 @@ export function celulaDaForma(forma: Forma, i: number, j: number, cols: number, 
       return r > 7 && r < 12 && raio;
     }
   }
-  return (FORMAS_EXTRAS[forma] ?? FORMAS_EXTRAS_2[forma] ?? FORMAS_EXTRAS_3[forma])?.(i, j, cols, rows) ?? false;
+  return (FORMAS_EXTRAS[forma] ?? FORMAS_EXTRAS_2[forma] ?? FORMAS_EXTRAS_3[forma] ?? FORMAS_GATOS[forma])?.(i, j, cols, rows) ?? false;
 }
 
 const espirais = new Map<string, Set<number>>();
