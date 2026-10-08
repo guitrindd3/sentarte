@@ -114,23 +114,3 @@ body::before {
 }
 .pulso-verde { animation: pulso-verde 1.8s ease-out infinite; }
 @media (prefers-reduced-motion: reduce) { .pulso-verde { animation: none; } }
-
-/* Admin "Acessos": numbers stay blurred until hover / tap / "Mostrar números" (app/admin/(painel)/acessos/numeros.tsx). */
-.num-oculto {
-  filter: blur(6px);
-  transition: filter 0.2s ease;
-  cursor: pointer;
-  user-select: none;
-}
-.num-oculto:hover,
-.num-oculto.aberto,
-.num-alvo.aberto .num-oculto,
-.num-alvo:hover .num-oculto,
-.num-alvo:focus-visible .num-oculto,
-[data-numeros="sim"] .num-oculto {
-  filter: none;
-  user-select: auto;
-}
-@media (prefers-reduced-motion: reduce) {
-  .num-oculto { transition: none; }
-}

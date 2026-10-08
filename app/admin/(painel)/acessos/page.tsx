@@ -5,7 +5,6 @@ import { nomeDaPagina } from "@/lib/paginas";
 import { Card } from "../../_ui";
 import { AbasAcessos } from "./abas";
 import { diaCurto, Explicacao, fmt, GraficoDias, Numero, Ranking } from "./graficos";
-import { MostrarNumeros } from "./numeros";
 
 const PERIODOS = [
   { dias: 1, rotulo: "Hoje" },
@@ -82,8 +81,6 @@ export default async function Acessos({ searchParams }: PageProps<"/admin/acesso
           <p className="mt-2 max-w-prose text-ink-soft">Suas próprias visitas, com o painel aberto, não entram na conta.</p>
           <AbasAcessos atual="resumo" />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-        <MostrarNumeros />
         <div className="flex rounded-full border border-line bg-paper p-1">
           {PERIODOS.map((p) => (
             <Link
@@ -94,7 +91,6 @@ export default async function Acessos({ searchParams }: PageProps<"/admin/acesso
               {p.rotulo}
             </Link>
           ))}
-        </div>
         </div>
       </div>
 
@@ -122,8 +118,7 @@ export default async function Acessos({ searchParams }: PageProps<"/admin/acesso
         <Explicacao
           dicas={[
             "Escolha o período no canto direito: Hoje, 7, 30 ou 90 dias.",
-            "Clique em qualquer quadro, barra do gráfico ou linha das listas para abrir os detalhes daquilo.",
-            "Os números ficam escondidos para a tela não ficar carregada: passe o mouse ou toque em cima para ver, ou use “Mostrar números” para ver todos.",
+            "Clique em qualquer número, barra do gráfico ou linha das listas para abrir os detalhes daquilo.",
             "Ninguém é identificado: não aparece nome nem telefone, só cidade aproximada, aparelho e de onde a pessoa veio.",
           ]}
         >
@@ -161,7 +156,7 @@ export default async function Acessos({ searchParams }: PageProps<"/admin/acesso
           ) : null}
 
           <p className="text-sm text-ink-soft">
-            Nas listas abaixo, quanto maior a barra, mais vezes aconteceu. Passe o mouse numa linha para ver o número; clique para ver os detalhes.
+            Nas listas abaixo, o número é quantas vezes aconteceu e a porcentagem é a parte daquele item no total da lista. Clique numa linha para ver os detalhes.
           </p>
 
           <div className="grid gap-6 lg:grid-cols-2">

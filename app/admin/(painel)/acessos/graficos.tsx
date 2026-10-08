@@ -30,10 +30,8 @@ export function Ranking({
             <div className="flex items-baseline justify-between gap-3 text-sm">
               <span className="min-w-0 truncate text-ink">{nome(x.nome)}</span>
               <span className="flex shrink-0 items-baseline gap-2">
-                <span className="num-oculto flex items-baseline gap-2">
-                  <span className="text-xs text-ink-soft">{Math.round((x.n / total) * 100)}%</span>
-                  <span className="font-semibold tabular-nums text-ink">{fmt(x.n)}</span>
-                </span>
+                <span className="text-xs text-ink-soft">{Math.round((x.n / total) * 100)}%</span>
+                <span className="font-semibold tabular-nums text-ink">{fmt(x.n)}</span>
                 {href ? <span aria-hidden className="text-ink-soft transition group-hover:translate-x-0.5 group-hover:text-ink">›</span> : null}
               </span>
             </div>
@@ -45,11 +43,11 @@ export function Ranking({
         return (
           <li key={x.nome}>
             {href ? (
-              <Link href={href(x.nome)} className="num-alvo group -mx-2 block rounded-lg px-2 py-1.5 transition hover:bg-canvas" title={`Ver detalhes de ${nome(x.nome)}`}>
+              <Link href={href(x.nome)} className="group -mx-2 block rounded-lg px-2 py-1.5 transition hover:bg-canvas" title={`Ver detalhes de ${nome(x.nome)}`}>
                 {conteudo}
               </Link>
             ) : (
-              <div className="num-alvo group py-1.5">{conteudo}</div>
+              <div className="group py-1.5">{conteudo}</div>
             )}
           </li>
         );
@@ -113,15 +111,13 @@ export function GraficoDias({
 export function Numero({ n, rotulo, dica, href }: { n: number | string; rotulo: string; dica?: string; href?: string }) {
   const corpo = (
     <>
+      <p className="font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{typeof n === "number" ? fmt(n) : n}</p>
       <p className="mt-1 text-sm font-medium text-ink">{rotulo}</p>
-      <p className="mt-1 font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-        <span className="num-oculto inline-block">{typeof n === "number" ? fmt(n) : n}</span>
-      </p>
-      {dica ? <p className={`text-xs text-ink-soft ${/\d/.test(dica) ? "num-oculto" : ""}`}>{dica}</p> : null}
+      {dica ? <p className="text-xs text-ink-soft">{dica}</p> : null}
       {href ? <p className="mt-2 text-xs font-semibold text-wood-dark group-hover:underline">Ver detalhes ›</p> : null}
     </>
   );
-  const cls = "num-alvo rounded-2xl border border-line/70 bg-paper p-4 sm:p-5";
+  const cls = "rounded-2xl border border-line/70 bg-paper p-4 sm:p-5";
   return href ? (
     <Link href={href} className={`${cls} group block transition hover:border-wood`}>
       {corpo}
