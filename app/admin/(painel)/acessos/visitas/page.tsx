@@ -4,6 +4,7 @@ import { estatisticasAtivas, visita, visitasRecentes, type Passo, type Visita } 
 import { nomeDaPagina } from "@/lib/paginas";
 import { Card } from "../../../_ui";
 import { AbasAcessos } from "../abas";
+import { Explicacao } from "../graficos";
 
 const FILTROS = [
   { id: "", rotulo: "Todas" },
@@ -12,6 +13,14 @@ const FILTROS = [
   { id: "pagar", rotulo: "Foi pagar" },
   { id: "lista", rotulo: "Entrou na lista" },
 ] as const;
+
+const EXPLICA_FILTRO: Record<string, string> = {
+  "": "Todas as visitas, da mais recente para a mais antiga.",
+  carrinho: "Só as visitas em que a pessoa colocou alguma cadeira no carrinho.",
+  whatsapp: "Só as visitas em que a pessoa tocou num botão de WhatsApp para falar com você.",
+  pagar: "Só as visitas em que a pessoa preencheu os dados e foi para o pagamento (pagando ou não).",
+  lista: "Só as visitas em que a pessoa se cadastrou na lista de novidades.",
+};
 
 const hora = (t: number) =>
   new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).format(new Date(t));
@@ -81,7 +90,7 @@ export default async function Visitas({ searchParams }: PageProps<"/admin/acesso
   const cabecalho = (
     <div>
       <h1 className="font-serif text-3xl font-medium tracking-tight text-ink sm:text-4xl">Acessos do site</h1>
-      <p className="mt-2 max-w-prose text-ink-soft">O que cada visitante fez, passo a passo. Sem nome nem número: só cidade aproximada, aparelho e de onde veio.</p>
+      <p className="mt-2 max-w-prose text-ink-soft">Suas próprias visitas, com o painel aberto, não entram na conta.</p>
       <AbasAcessos atual="visitas" />
     </div>
   );
@@ -109,6 +118,27 @@ export default async function Visitas({ searchParams }: PageProps<"/admin/acesso
   return (
     <div className="space-y-6">
       {cabecalho}
+
+      {typeof id === "string" ? (
+        <Explicacao
+          titulo="Uma visita, passo a passo"
+          dicas={["A bolinha verde marca pagamento; as marrons, carrinho e ida ao pagamento.", "Os horários são de Brasília."]}
+        >
+          Tudo o que essa pessoa fez no site, na ordem em que aconteceu: páginas que abriu, onde clicou, o que pesquisou e o que colocou no carrinho.
+          Não aparece nome nem telefone, só a cidade aproximada, o aparelho e de onde ela veio.
+        </Explicacao>
+      ) : (
+        <Explicacao
+          dicas={[
+            "Cada cartão é uma visita: uma pessoa navegando no site, do momento em que entra até sair. Clique no cartão para abrir o passo a passo.",
+            "As etiquetas coloridas resumem o que a pessoa fez: Carrinho, WhatsApp, Foi pagar, Pagou, Lista.",
+            "Use os botões de filtro para ver só quem fez alguma coisa importante. As visitas ficam guardadas 30 dias.",
+          ]}
+        >
+          {EXPLICA_FILTRO[filtro]}
+          {dia ? ` Só do dia ${dia.slice(8, 10)}/${dia.slice(5, 7)}.` : ""}
+        </Explicacao>
+      )}
 
       {dia && typeof id !== "string" ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-wood/40 bg-paper px-5 py-3 text-sm">

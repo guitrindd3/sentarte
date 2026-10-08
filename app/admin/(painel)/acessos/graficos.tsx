@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { Contagem } from "@/lib/estatisticas";
 
 export const fmt = (n: number) => n.toLocaleString("pt-BR");
@@ -123,5 +124,22 @@ export function Numero({ n, rotulo, dica, href }: { n: number | string; rotulo: 
     </Link>
   ) : (
     <div className={cls}>{corpo}</div>
+  );
+}
+
+/** "What am I looking at" box shown at the top of each Acessos screen. */
+export function Explicacao({ titulo = "O que você está vendo", children, dicas }: { titulo?: string; children: ReactNode; dicas?: ReactNode[] }) {
+  return (
+    <div className="rounded-2xl border border-wood/30 bg-[#f6efe6] px-5 py-4 text-sm leading-relaxed text-ink">
+      <p className="font-semibold">{titulo}</p>
+      <p className="mt-1 text-ink">{children}</p>
+      {dicas?.length ? (
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-soft">
+          {dicas.map((d, i) => (
+            <li key={i}>{d}</li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   );
 }

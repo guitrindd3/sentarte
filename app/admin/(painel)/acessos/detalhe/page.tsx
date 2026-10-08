@@ -12,7 +12,7 @@ import {
 } from "@/lib/estatisticas";
 import { nomeDaPagina } from "@/lib/paginas";
 import { Card } from "../../../_ui";
-import { diaCurto, fmt, GraficoDias, Numero, Ranking } from "../graficos";
+import { diaCurto, Explicacao, fmt, GraficoDias, Numero, Ranking } from "../graficos";
 
 // Detail of one item of the "Acessos" summary (2026-10-08, user: "quero poder
 // clicar em algumas coisas e ver mais detalhado"): its day-by-day count from the
@@ -47,6 +47,30 @@ const horaBR = (t: number) =>
   Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: "America/Sao_Paulo" }).format(new Date(t)));
 const quando = (t: number) =>
   new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).format(new Date(t));
+
+/** One sentence on top of the page: what this item is and what the numbers count. */
+function oQueE(g: GrupoDetalhe, nome: string) {
+  switch (g) {
+    case "pag":
+      return `Quantas vezes a página “${nome}” foi aberta e o que fizeram as pessoas que passaram por ela.`;
+    case "busca":
+      return `Quantas vezes alguém pesquisou “${nome}” (na lupa do site ou na busca de trançados do Monte a sua trama) e o que essas pessoas fizeram depois. Se muita gente procura algo que o site não tem, vale a pena criar.`;
+    case "clique":
+      return `Quantas vezes tocaram em “${nome}” e o que as pessoas que tocaram fizeram no site.`;
+    case "carrinho":
+      return `Quantas vezes a cadeira “${nome}” foi colocada no carrinho, e se quem colocou chegou a pagar ou a chamar no WhatsApp.`;
+    case "ref":
+      return nome.startsWith("Direto")
+        ? "Pessoas que entraram direto: digitaram o endereço, usaram um link salvo ou abriram um link que não diz de onde veio (o WhatsApp às vezes faz isso)."
+        : `Pessoas que chegaram ao site vindo de ${nome}. Mostra se as suas postagens e links lá estão trazendo gente, e o que essa gente faz no site.`;
+    case "local":
+      return `Pessoas que acessaram de ${nome}. A cidade é aproximada (vem da internet da pessoa), às vezes aparece uma cidade vizinha.`;
+    case "disp":
+      return `Acessos feitos pelo ${nome.toLowerCase()}, e o que essas pessoas fizeram no site.`;
+    case "hora":
+      return `O movimento do site entre ${nome} (horário de Brasília), somando todos os dias do período. Ajuda a escolher a melhor hora para postar ou responder.`;
+  }
+}
 
 /** Did this visit touch the item? */
 function tocou(v: Visita, g: GrupoDetalhe, valor: string) {
@@ -156,20 +180,30 @@ export default async function Detalhe({ searchParams }: PageProps<"/admin/acesso
         </div>
       </div>
 
+      <Explicacao
+        dicas={[
+          `Os quatro números contam os últimos ${dias} dias (troque o período no canto direito).`,
+          "“Dia a dia” mostra cada dia numa barra; clique numa barra para ver tudo o que aconteceu no site naquele dia.",
+          "“O que essas pessoas fizeram” olha só as visitas que passaram por aqui, e as listas abaixo também. Tudo é clicável.",
+        ]}
+      >
+        {oQueE(g, nome)}
+      </Explicacao>
+
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Numero n={total} rotulo={UNIDADE[g]} dica={`nos últimos ${dias} dias`} />
-        <Numero n={total ? (total / dias).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : "0"} rotulo="por dia, em média" />
-        <Numero n={melhor ? diaCurto(melhor.dia) : "–"} rotulo="dia de mais movimento" dica={melhor ? `${fmt(melhor.n)} nesse dia` : undefined} href={melhor ? `/admin/acessos?dia=${melhor.dia}` : undefined} />
-        <Numero n={comMovimento} rotulo={comMovimento === 1 ? "dia com movimento" : "dias com movimento"} dica={`de ${dias}`} />
+        <Numero n={!total ? "0" : total / dias < 0.1 ? "< 0,1" : (total / dias).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} rotulo="por dia, em média" dica="o total dividido pelos dias do período" />
+        <Numero n={melhor ? diaCurto(melhor.dia) : "–"} rotulo="dia de mais movimento" dica={melhor ? `${fmt(melhor.n)} nesse dia; clique para ver o dia` : undefined} href={melhor ? `/admin/acessos?dia=${melhor.dia}` : undefined} />
+        <Numero n={comMovimento} rotulo={comMovimento === 1 ? "dia com movimento" : "dias com movimento"} dica={`de ${dias} dias, quantos tiveram pelo menos 1`} />
       </div>
 
-      <Card titulo="Dia a dia" descricao="Clique numa barra para ver tudo o que aconteceu no site naquele dia.">
+      <Card titulo="Dia a dia" descricao="Cada barra é um dia: quanto mais alta, mais vezes aconteceu. Passe o mouse para ver o número; clique para ver tudo o que aconteceu no site naquele dia.">
         <GraficoDias rotulo={UNIDADE[g]} dias={serie} href={(d) => `/admin/acessos?dia=${d}`} />
       </Card>
 
       <Card
         titulo="O que essas pessoas fizeram"
-        descricao={`${fmt(daqui.length)} ${daqui.length === 1 ? "visita passou" : "visitas passaram"} por aqui nos últimos ${Math.min(dias, 30)} dias (o passo a passo das visitas fica guardado 30 dias).`}
+        descricao={`Das ${fmt(daqui.length)} ${daqui.length === 1 ? "visita que passou" : "visitas que passaram"} por aqui nos últimos ${Math.min(dias, 30)} dias, quantas chegaram a cada etapa da compra. Uma visita é uma pessoa navegando no site, do momento em que entra até sair. O passo a passo das visitas fica guardado 30 dias.`}
       >
         {daqui.length === 0 ? (
           <p className="text-sm text-ink-soft">Nenhuma visita guardada passou por aqui ainda.</p>
@@ -189,24 +223,24 @@ export default async function Detalhe({ searchParams }: PageProps<"/admin/acesso
 
       {daqui.length ? (
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card titulo={g === "pag" ? "Também abriram" : "Páginas que abriram"}>
+          <Card titulo={g === "pag" ? "Também abriram" : "Páginas que abriram"} descricao="Outras páginas que essas mesmas pessoas abriram, e em quantas visitas.">
             <Ranking itens={outrasPaginas} nome={nomePagina} href={detalhe("pag")} vazio="Não abriram outras páginas." />
           </Card>
-          <Card titulo="Cadeiras que colocaram no carrinho">
+          <Card titulo="Cadeiras que colocaram no carrinho" descricao="Quais cadeiras essas pessoas colocaram no carrinho.">
             <Ranking itens={cadeiras} href={detalhe("carrinho")} vazio="Ninguém dessas visitas colocou cadeira no carrinho." />
           </Card>
           {g !== "ref" ? (
-            <Card titulo="De onde vieram">
+            <Card titulo="De onde vieram" descricao="Por onde essas pessoas chegaram ao site.">
               <Ranking itens={contar(daqui.map((v) => v.origem ?? "Direto (link ou digitou)"))} href={detalhe("ref")} vazio="Sem dados." />
             </Card>
           ) : null}
           {g !== "local" ? (
-            <Card titulo="Cidades">
+            <Card titulo="Cidades" descricao="De onde essas pessoas acessaram (aproximado).">
               <Ranking itens={contar(daqui.map((v) => v.local))} href={detalhe("local")} vazio="Sem dados de cidade." />
             </Card>
           ) : null}
           {g !== "disp" ? (
-            <Card titulo="Celular ou computador">
+            <Card titulo="Celular ou computador" descricao="Em que aparelho essas pessoas estavam.">
               <Ranking itens={contar(daqui.map((v) => v.disp))} href={detalhe("disp")} vazio="Sem dados." />
             </Card>
           ) : null}
@@ -214,7 +248,7 @@ export default async function Detalhe({ searchParams }: PageProps<"/admin/acesso
       ) : null}
 
       {daqui.length ? (
-        <Card titulo="Visitas" descricao="As mais recentes primeiro. Clique para ver o passo a passo.">
+        <Card titulo="Visitas" descricao="Cada linha é uma pessoa que passou por aqui, a mais recente primeiro: cidade, aparelho, quando entrou e quantas coisas fez. Clique para ver, na ordem, tudo o que ela fez no site.">
           <ul className="divide-y divide-line/60">
             {daqui.slice(0, 20).map((v) => (
               <li key={v.id}>
