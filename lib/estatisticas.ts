@@ -144,10 +144,20 @@ export type Relatorio = {
   grupos: Record<Exclude<Grupo, "geral">, Contagem>;
 };
 
-/** Everything the dashboard shows, for the last `n` days (today included). */
-export async function relatorio(n: number): Promise<Relatorio> {
+/** The last `n` days (today included), oldest first, as YYYY-MM-DD. */
+export function ultimosDias(n: number) {
   const dias: string[] = [];
   for (let i = n - 1; i >= 0; i--) dias.push(diaBR(new Date(Date.now() - i * 86400000)));
+  return dias;
+}
+
+/** Everything the dashboard shows, for the last `n` days (today included). */
+export function relatorio(n: number) {
+  return relatorioDosDias(ultimosDias(n));
+}
+
+/** The same report for an explicit list of days (e.g. one clicked day). */
+export async function relatorioDosDias(dias: string[]): Promise<Relatorio> {
 
   const cmds: Cmd[] = [];
   for (const d of dias) {
@@ -196,6 +206,15 @@ export async function relatorio(n: number): Promise<Relatorio> {
       local: ordenar(soma.local),
     },
   };
+}
+
+export type GrupoDetalhe = Exclude<Grupo, "geral">;
+export const GRUPOS_DETALHE: GrupoDetalhe[] = ["pag", "ref", "disp", "busca", "clique", "carrinho", "hora", "local"];
+
+/** Day-by-day count of one item (a page, a search, a click…) — for the detail page. */
+export async function serieDoItem(g: GrupoDetalhe, valor: string, dias: string[]) {
+  const r = await pipeline(dias.map((d): Cmd => ["HGET", chave(d, g), valor]));
+  return dias.map((dia, i) => ({ dia, n: Number(r[i]) || 0 }));
 }
 
 // --- visit journeys (2026-10-05) ---------------------------------------------

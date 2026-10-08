@@ -73,8 +73,10 @@ function Selos({ v }: { v: Visita }) {
 }
 
 export default async function Visitas({ searchParams }: PageProps<"/admin/acessos/visitas">) {
-  const { f, id } = await searchParams;
+  const { f, id, d } = await searchParams;
   const filtro = FILTROS.find((x) => x.id === f)?.id ?? "";
+  // One day, from the summary chart (`?d=YYYY-MM-DD`).
+  const dia = typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : "";
 
   const cabecalho = (
     <div>
@@ -93,18 +95,31 @@ export default async function Visitas({ searchParams }: PageProps<"/admin/acesso
       const v = await visita(id);
       lista = v ? [v] : [];
     } else {
-      lista = await visitasRecentes(filtro ? 300 : 60);
+      lista = await visitasRecentes(filtro || dia ? 300 : 60);
     }
   } catch (err) {
     console.error("visitas", err);
   }
-  if (filtro) lista = lista.filter((v) => v[filtro as "carrinho" | "whatsapp" | "pagar" | "lista"]).slice(0, 60);
+  if (dia) lista = lista.filter((v) => diaBR(v.inicio) === dia);
+  if (filtro) lista = lista.filter((v) => v[filtro as "carrinho" | "whatsapp" | "pagar" | "lista"]);
+  lista = lista.slice(0, 60);
 
   const { hoje, ontem } = diasDeReferencia();
 
   return (
     <div className="space-y-6">
       {cabecalho}
+
+      {dia && typeof id !== "string" ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-wood/40 bg-paper px-5 py-3 text-sm">
+          <p className="text-ink">
+            Só as visitas do dia <strong>{`${dia.slice(8, 10)}/${dia.slice(5, 7)}`}</strong>.
+          </p>
+          <Link href={filtro ? `/admin/acessos/visitas?f=${filtro}` : "/admin/acessos/visitas"} className="font-medium text-ink-soft underline hover:text-ink">
+            Ver todos os dias
+          </Link>
+        </div>
+      ) : null}
 
       {typeof id === "string" ? (
         <Link href="/admin/acessos/visitas" className="inline-block text-sm font-medium text-ink-soft hover:text-ink">
@@ -116,7 +131,7 @@ export default async function Visitas({ searchParams }: PageProps<"/admin/acesso
             {FILTROS.map((x) => (
               <Link
                 key={x.id}
-                href={x.id ? `/admin/acessos/visitas?f=${x.id}` : "/admin/acessos/visitas"}
+                href={`/admin/acessos/visitas?${new URLSearchParams({ ...(x.id ? { f: x.id } : {}), ...(dia ? { d: dia } : {}) })}`}
                 className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
                   x.id === filtro ? "border-espresso bg-espresso text-paper" : "border-line bg-paper text-ink hover:border-wood"
                 }`}
