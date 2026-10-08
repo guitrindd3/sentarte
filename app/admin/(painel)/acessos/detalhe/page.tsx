@@ -13,6 +13,7 @@ import {
 import { nomeDaPagina } from "@/lib/paginas";
 import { Card } from "../../../_ui";
 import { diaCurto, Explicacao, fmt, GraficoDias, Numero, Ranking } from "../graficos";
+import { MostrarNumeros } from "../numeros";
 
 // Detail of one item of the "Acessos" summary (2026-10-08, user: "quero poder
 // clicar em algumas coisas e ver mais detalhado"): its day-by-day count from the
@@ -167,6 +168,8 @@ export default async function Detalhe({ searchParams }: PageProps<"/admin/acesso
           <p className="text-sm font-medium text-ink-soft">{TITULO[g]}</p>
           <h1 className="break-words font-serif text-3xl font-medium tracking-tight text-ink sm:text-4xl">{nome}</h1>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+        <MostrarNumeros />
         <div className="flex rounded-full border border-line bg-paper p-1">
           {PERIODOS.map((p) => (
             <Link
@@ -178,11 +181,13 @@ export default async function Detalhe({ searchParams }: PageProps<"/admin/acesso
             </Link>
           ))}
         </div>
+        </div>
       </div>
 
       <Explicacao
         dicas={[
-          `Os quatro números contam os últimos ${dias} dias (troque o período no canto direito).`,
+          `Os quadros contam os últimos ${dias} dias (troque o período no canto direito).`,
+          "Os números ficam escondidos para a tela não ficar carregada: passe o mouse ou toque em cima para ver, ou use “Mostrar números” para ver todos.",
           "“Dia a dia” mostra cada dia numa barra; clique numa barra para ver tudo o que aconteceu no site naquele dia.",
           "“O que essas pessoas fizeram” olha só as visitas que passaram por aqui, e as listas abaixo também. Tudo é clicável.",
         ]}
@@ -203,18 +208,20 @@ export default async function Detalhe({ searchParams }: PageProps<"/admin/acesso
 
       <Card
         titulo="O que essas pessoas fizeram"
-        descricao={`Das ${fmt(daqui.length)} ${daqui.length === 1 ? "visita que passou" : "visitas que passaram"} por aqui nos últimos ${Math.min(dias, 30)} dias, quantas chegaram a cada etapa da compra. Uma visita é uma pessoa navegando no site, do momento em que entra até sair. O passo a passo das visitas fica guardado 30 dias.`}
+        descricao={`Das visitas que passaram por aqui nos últimos ${Math.min(dias, 30)} dias, quantas chegaram a cada etapa da compra (passe o mouse ou toque para ver). Uma visita é uma pessoa navegando no site, do momento em que entra até sair. O passo a passo das visitas fica guardado 30 dias.`}
       >
         {daqui.length === 0 ? (
           <p className="text-sm text-ink-soft">Nenhuma visita guardada passou por aqui ainda.</p>
         ) : (
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {fizeram.map((x) => (
-              <div key={x.t} className="rounded-xl bg-canvas px-4 py-3">
-                <p className="font-serif text-2xl font-semibold text-ink">
-                  {fmt(x.n)} <span className="text-sm font-normal text-ink-soft">({Math.round((x.n / daqui.length) * 100)}%)</span>
-                </p>
+              <div key={x.t} className="num-alvo cursor-pointer rounded-xl bg-canvas px-4 py-3">
                 <p className="text-sm text-ink">{x.t}</p>
+                <p className="mt-1 font-serif text-2xl font-semibold text-ink">
+                  <span className="num-oculto inline-block">
+                    {fmt(x.n)} <span className="text-sm font-normal text-ink-soft">({Math.round((x.n / daqui.length) * 100)}%)</span>
+                  </span>
+                </p>
               </div>
             ))}
           </div>
