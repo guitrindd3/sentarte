@@ -14,6 +14,7 @@ import { ROTULOS_GATOS } from "@/lib/formas-gatos";
 import { CATEGORIAS, categoriaDa, type Categoria } from "@/lib/formas-categorias";
 import { ROTULOS_EXTRAS_4 } from "@/lib/formas-extras-4";
 import { ROTULOS_EXTRAS_5 } from "@/lib/formas-extras-5";
+import { ROTULOS_BOHO_TRIBAL } from "@/lib/formas-boho-tribal";
 import { codificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
 import { rastrear } from "@/lib/rastro";
@@ -122,6 +123,7 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   ...ROTULOS_EXTRAS_3,
   ...ROTULOS_EXTRAS_4,
   ...ROTULOS_EXTRAS_5,
+  ...ROTULOS_BOHO_TRIBAL,
 ];
 /** What the shape grid shows: near-duplicates stay out (they still render for old links). */
 const FORMAS_VISIVEIS = FORMAS.filter((f) => !FORMAS_OCULTAS.has(f.valor)).map((f) => ({ ...f, grupo: categoriaDa(f.valor, f.grupo) }));
