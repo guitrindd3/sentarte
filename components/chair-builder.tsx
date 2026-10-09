@@ -13,6 +13,7 @@ import { FORMAS_OCULTAS, ROTULOS_EXTRAS_3 } from "@/lib/formas-extras-3";
 import { ROTULOS_GATOS } from "@/lib/formas-gatos";
 import { CATEGORIAS, categoriaDa, type Categoria } from "@/lib/formas-categorias";
 import { ROTULOS_EXTRAS_4 } from "@/lib/formas-extras-4";
+import { ROTULOS_EXTRAS_5 } from "@/lib/formas-extras-5";
 import { codificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
 import { rastrear } from "@/lib/rastro";
@@ -31,7 +32,7 @@ const CORTE_H = 560;
 
 type Grupo = Categoria;
 
-// Six tabs since 2026-10-09 (lib/formas-categorias.ts decides which tab each shape is in).
+// Ten tabs since 2026-10-09 (lib/formas-categorias.ts decides which tab each shape is in).
 const GRUPOS = CATEGORIAS;
 
 const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
@@ -120,6 +121,7 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   ...ROTULOS_EXTRAS_2,
   ...ROTULOS_EXTRAS_3,
   ...ROTULOS_EXTRAS_4,
+  ...ROTULOS_EXTRAS_5,
 ];
 /** What the shape grid shows: near-duplicates stay out (they still render for old links). */
 const FORMAS_VISIVEIS = FORMAS.filter((f) => !FORMAS_OCULTAS.has(f.valor)).map((f) => ({ ...f, grupo: categoriaDa(f.valor, f.grupo) }));
@@ -632,7 +634,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
               {/* Style tabs: the open one is filled; a green dot marks the tab
                   holding the chosen shape when another tab is open. */}
               <div
-                className="mt-4 grid grid-cols-3 gap-1 rounded-2xl border border-line bg-canvas p-1 lg:flex lg:rounded-full"
+                className="mt-4 grid grid-cols-3 gap-1 rounded-2xl border border-line bg-canvas p-1 sm:grid-cols-5"
                 role="tablist"
                 aria-label="Estilos"
               >
@@ -650,7 +652,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                         setBusca("");
                       }}
                       aria-label={g.rotulo}
-                      className={`relative flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-[0.8rem] transition-colors lg:px-2 ${
+                      className={`relative whitespace-nowrap rounded-full px-1 py-1.5 text-[0.8rem] transition-colors ${
                         aberto && !termoBusca ? "bg-ink font-medium text-canvas" : "text-ink-soft hover:bg-paper hover:text-ink"
                       }`}
                     >
