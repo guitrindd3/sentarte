@@ -11,6 +11,8 @@ import { ROTULOS_EXTRAS } from "@/lib/formas-extras";
 import { ROTULOS_EXTRAS_2 } from "@/lib/formas-extras-2";
 import { FORMAS_OCULTAS, ROTULOS_EXTRAS_3 } from "@/lib/formas-extras-3";
 import { ROTULOS_GATOS } from "@/lib/formas-gatos";
+import { CATEGORIAS, categoriaDa, type Categoria } from "@/lib/formas-categorias";
+import { ROTULOS_EXTRAS_4 } from "@/lib/formas-extras-4";
 import { codificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
 import { rastrear } from "@/lib/rastro";
@@ -27,15 +29,10 @@ const FOTO_TRANCADA = "/monte/cadeira-trancada.jpg";
 const CORTE_Y0 = 150;
 const CORTE_H = 560;
 
-type Grupo = "basicos" | "time" | "boho" | "divertidos";
+type Grupo = Categoria;
 
-// `curto` is what phones show, so the four tabs fit on one line.
-const GRUPOS: { valor: Grupo; rotulo: string; curto: string }[] = [
-  { valor: "basicos", rotulo: "Básicos", curto: "Básicos" },
-  { valor: "time", rotulo: "Estilo time", curto: "Time" },
-  { valor: "boho", rotulo: "Estilo boho", curto: "Boho" },
-  { valor: "divertidos", rotulo: "Divertidos", curto: "Divertidos" },
-];
+// Six tabs since 2026-10-09 (lib/formas-categorias.ts decides which tab each shape is in).
+const GRUPOS = CATEGORIAS;
 
 const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   { valor: "lisa", rotulo: "Lisa", grupo: "basicos" },
@@ -122,9 +119,10 @@ const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   ...ROTULOS_EXTRAS,
   ...ROTULOS_EXTRAS_2,
   ...ROTULOS_EXTRAS_3,
+  ...ROTULOS_EXTRAS_4,
 ];
 /** What the shape grid shows: near-duplicates stay out (they still render for old links). */
-const FORMAS_VISIVEIS = FORMAS.filter((f) => !FORMAS_OCULTAS.has(f.valor));
+const FORMAS_VISIVEIS = FORMAS.filter((f) => !FORMAS_OCULTAS.has(f.valor)).map((f) => ({ ...f, grupo: categoriaDa(f.valor, f.grupo) }));
 /** Lowercase, no accents — so "coracao" finds "Coração". */
 const semAcento = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 const ROTULOS_BUSCA = FORMAS_VISIVEIS.map((f) => semAcento(f.rotulo));
@@ -634,7 +632,7 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
               {/* Style tabs: the open one is filled; a green dot marks the tab
                   holding the chosen shape when another tab is open. */}
               <div
-                className="mt-4 grid grid-cols-4 gap-1 rounded-full border border-line bg-canvas p-1 sm:flex"
+                className="mt-4 grid grid-cols-3 gap-1 rounded-2xl border border-line bg-canvas p-1 lg:flex lg:rounded-full"
                 role="tablist"
                 aria-label="Estilos"
               >
@@ -652,12 +650,11 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                         setBusca("");
                       }}
                       aria-label={g.rotulo}
-                      className={`relative flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-[0.8rem] transition-colors sm:px-3 sm:text-sm ${
+                      className={`relative flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-[0.8rem] transition-colors lg:px-2 ${
                         aberto && !termoBusca ? "bg-ink font-medium text-canvas" : "text-ink-soft hover:bg-paper hover:text-ink"
                       }`}
                     >
-                      <span className="sm:hidden">{g.curto}</span>
-                      <span className="hidden sm:inline">{g.rotulo}</span>
+                      {g.curto}
                       {temEscolhido && !aberto ? (
                         <span
                           className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-verde"
