@@ -495,6 +495,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
 
         </div>
       </div>
+      {/* User 2026-10-10: the preview must say it's only illustrative. */}
+      <p className="mx-auto mt-2 w-full max-w-md text-center text-xs leading-snug text-ink-soft md:max-w-[min(28rem,calc((100vh-var(--altura-topo,4rem)-7.5rem)*0.83))]">
+        Imagem meramente ilustrativa. Como cada cadeira é trançada à mão, as cores e o desenho podem ter pequenas variações.
+      </p>
 
         {passo > 0 && controle ? (
           <div className="mx-auto mt-3 w-full max-w-md md:max-w-[min(28rem,calc((100vh-var(--altura-topo,4rem)-7.5rem)*0.83))]">
@@ -895,7 +899,8 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                 </button>
               </div>
               <p className="mt-4 text-xs text-ink-soft">
-                A imagem é uma prévia. Antes de trançar, a gente confirma tudo com você pelo WhatsApp.
+                A imagem é meramente ilustrativa: as cores dos fios e o desenho podem variar um pouco na cadeira trançada à mão.
+                Antes de trançar, a gente confirma tudo com você pelo WhatsApp.
               </p>
             </div>
           ) : null}
