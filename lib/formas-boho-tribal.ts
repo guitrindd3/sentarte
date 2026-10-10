@@ -1,5 +1,5 @@
 import type { Categoria } from "./formas-categorias";
-import { meio, mod, type Teste } from "./formas-extras-2";
+import { meio, mod, repetido, type Teste } from "./formas-extras-2";
 
 // Boho tribal all-over patterns (2026-10-09, user: "no estilo boho acrescente
 // mais estilo tribal... que preenchem a cadeira inteira... mais 20"). Each one
@@ -218,6 +218,262 @@ add("tribal-xadrez", "Xadrez tribal", (i, j, cols, rows) => {
   if (Math.abs(a) === 4 || Math.abs(b) === 4) return false;
   if (mod(na + nb, 2) === 0) return Math.abs(a) <= 2 && Math.abs(b) <= 2;
   return Math.abs(a) === Math.abs(b) || Math.max(Math.abs(a), Math.abs(b)) === 3;
+});
+
+// ===================== second round (2026-10-10, "pode colocar mais") =====================
+
+/** Tiles a small sprite over the whole panel, staggered, only whole copies. */
+const sprites = (d: string[], gap = 2) => repetido(d, gap);
+
+// 21 — berber net: thick diamond lattice with a small cross in each cell
+add("tribal-berbere", "Berbere", (i, j, cols, rows) => {
+  const x = cx(i, cols);
+  const y = cy(j, rows);
+  const u = mod(x + y, 14);
+  const v = mod(x - y, 14);
+  if (u <= 1 || v <= 1) return true;
+  const a = cel(x, 14).d;
+  const b = cel(y, 14).d;
+  const a2 = cel(x + 7, 14).d;
+  const b2 = cel(y + 7, 14).d;
+  const cruz = (p: number, q: number) => (p === 0 && Math.abs(q) <= 1) || (q === 0 && Math.abs(p) <= 1);
+  return cruz(a, b) || cruz(a2, b2);
+});
+
+// 22 — x crosses alternating with dots
+add("tribal-xis-e-pontos", "Xis e pontos", (i, j, cols, rows) => {
+  const { d: a, n: na } = cel(cx(i, cols), 6);
+  const { d: b, n: nb } = cel(cy(j, rows), 6);
+  if (mod(na + nb, 2) === 0) return Math.abs(a) === Math.abs(b) && Math.abs(a) <= 2;
+  return Math.abs(a) + Math.abs(b) <= 1;
+});
+
+// 23 — square spirals lattice
+add("tribal-espirais", "Espirais tribais", sprites([
+  "XXXXXXX",
+  "X......",
+  "X.XXXX.",
+  "X.X..X.",
+  "X.X.XX.",
+  "X.X....",
+  "X.XXXXX",
+], 2));
+
+// 24 — honeycomb outlines with a dot
+add("tribal-hexagonos", "Hexágonos tribais", (i, j, cols, rows) => {
+  const x = cx(i, cols);
+  const { d: b, n } = cel(cy(j, rows), 8);
+  const a = cel(x + (mod(n, 2) ? 5 : 0), 10).d;
+  const A = Math.abs(a);
+  const B = Math.abs(b);
+  const hexa = (r: number) => B <= r && A + B * 0.5 <= r * 1.15;
+  return (hexa(3.6) && !hexa(2.6)) || (A === 0 && B === 0);
+});
+
+// 25 — kilim eight-point stars
+add("tribal-estrelas-oito", "Estrelas de kilim", (i, j, cols, rows) => {
+  const a = Math.abs(cel(cx(i, cols), 12).d);
+  const b = Math.abs(cel(cy(j, rows), 12).d);
+  const quadrado = a <= 3 && b <= 3;
+  const losangoS = a + b <= 5;
+  const estrela = quadrado || losangoS;
+  return estrela && !(a + b <= 1);
+});
+
+// 26 — ciranda: rows of little people holding hands
+add("tribal-ciranda", "Ciranda", sprites([
+  "..X..",
+  ".XXX.",
+  "XXXXX",
+  "..X..",
+  ".X.X.",
+  "X...X",
+], 0));
+
+// 27 — llamas in rows
+add("tribal-lhamas", "Lhamas em fileira", sprites([
+  "X.X......",
+  "XXX......",
+  "XX.......",
+  ".X.......",
+  ".X.......",
+  ".XXXXXXX.",
+  ".XXXXXXXX",
+  ".X.X..X.X",
+], 1));
+
+// 28 — tribal birds in rows
+add("tribal-passaros", "Pássaros tribais", sprites([
+  ".XX.....",
+  "XXXX..XX",
+  ".XXXXXX.",
+  "..XXXX..",
+  "...X.X..",
+], 2));
+
+// 29 — leaf chevrons in columns
+add("tribal-folhas", "Folhas tribais", (i, j, cols, rows) => {
+  const { d: x } = cel(cx(i, cols), 7);
+  const y = cy(j, rows);
+  if (x === 0) return true;
+  const ax = Math.abs(x);
+  return ax <= 3 && mod(y - ax, 4) === 0;
+});
+
+// 30 — little cacti in rows
+add("tribal-cactos", "Cactos tribais", sprites([
+  "..X..",
+  "X.X..",
+  "X.X.X",
+  "XXX.X",
+  "..XXX",
+  "..X..",
+  "..X..",
+], 2));
+
+// 31 — stepped mountain outlines in rows, with a base line
+add("tribal-serras", "Serras tribais", (i, j, cols, rows) => {
+  const { d: x, n } = cel(cx(i, cols), 12);
+  const y = mod(cy(j, rows) + 4, 9);
+  const ax = Math.abs(x);
+  if (y === 8) return true;
+  const topo = 1 + ax;
+  return y === topo || y === topo + 1 || (mod(n, 2) === 0 && ax === 0 && y >= topo);
+});
+
+// 32 — kente cloth: blocks of horizontal / vertical stripes
+add("tribal-kente", "Kente", (i, j, cols, rows) => {
+  const { d: a, n: na } = cel(cx(i, cols), 8);
+  const { d: b, n: nb } = cel(cy(j, rows), 8);
+  if (Math.abs(a) === 4 || Math.abs(b) === 4) return true;
+  return mod(na + nb, 2) === 0 ? mod(b, 2) === 0 : mod(a, 2) === 0;
+});
+
+// 33 — aztec chain of stepped S hooks
+add("tribal-corrente-asteca", "Corrente asteca", sprites([
+  "XXXXX...",
+  "X...X...",
+  "X.X.X...",
+  "X.XXXXXX",
+  "X...X..X",
+  "XXXXX..X",
+  "....X..X",
+  "....XXXX",
+], 1));
+
+// 34 — suns and moons alternating
+add("tribal-sol-e-lua", "Sóis e luas", (i, j, cols, rows) => {
+  const { d: a, n: na } = cel(cx(i, cols), 10);
+  const { d: b, n: nb } = cel(cy(j, rows), 10);
+  const r = Math.hypot(a, b);
+  if (mod(na + nb, 2) === 0) return r <= 1.8 || (r > 2.8 && r <= 4 && (a === 0 || b === 0 || Math.abs(a) === Math.abs(b)));
+  return r <= 3.6 && Math.hypot(a + 1.6, b) > 2.8;
+});
+
+// 35 — rows of arrowheads
+add("tribal-pontas-de-flecha", "Pontas de flecha", sprites([
+  "...X...",
+  "..XXX..",
+  ".XXXXX.",
+  "XXXXXXX",
+  "..X.X..",
+], 2));
+
+// 36 — persian rug: border, corner motifs and a central medallion
+add("tribal-tapete-persa", "Tapete persa", (i, j, cols, rows) => {
+  const x = cx(i, cols);
+  const y = cy(j, rows);
+  const bx = meio(cols);
+  const by = meio(rows);
+  const borda = Math.abs(x) >= bx - 1 || Math.abs(y) >= by - 1;
+  const bordaInterna = Math.abs(x) === bx - 4 || Math.abs(y) === by - 4;
+  const dentro = Math.abs(x) <= bx - 4 && Math.abs(y) <= by - 4;
+  const faixa = Math.abs(x) >= bx - 3 || Math.abs(y) >= by - 3;
+  if (borda) return true;
+  if (faixa && !dentro) return mod(x + y, 4) === 0;
+  if (bordaInterna) return true;
+  const d = losango(x, Math.round(y * 1.2));
+  if (d <= 2 || d === 5 || d === 6) return true;
+  const ca = losango(Math.abs(x) - (bx - 7), Math.abs(y) - (by - 7));
+  return ca <= 1;
+});
+
+// 37 — heavy tribal borders top and bottom, plain stripes in between
+add("tribal-barrado", "Barrado tribal", (i, j, cols, rows) => {
+  const y = j;
+  const x = cx(i, cols);
+  const perto = Math.min(y, rows - 1 - y);
+  if (perto === 0 || perto === 6) return true;
+  if (perto >= 1 && perto <= 5) {
+    const t = mod(x, 6);
+    return losango(t - 3, perto - 3) <= 2 && losango(t - 3, perto - 3) !== 1;
+  }
+  return mod(perto, 3) === 0 && perto < rows / 2 - 1;
+});
+
+// 38 — rows of teardrops, alternating up and down
+add("tribal-gotas", "Gotas tribais", (i, j, cols, rows) => {
+  const { d: b, n } = cel(cy(j, rows), 8);
+  const a = cel(cx(i, cols) + (mod(n, 2) ? 4 : 0), 8).d;
+  const yy = mod(n, 2) ? -b : b;
+  const r = Math.hypot(a, yy - 1);
+  return (r <= 2.3 && r > 1.1) || (yy < -0 && Math.abs(a) <= Math.max(0, (yy + 4) * 0.6) && yy >= -3 && Math.abs(a) > (yy + 4) * 0.6 - 1.2);
+});
+
+// 39 — thorny vertical vines
+add("tribal-espinhos", "Espinhos", (i, j, cols, rows) => {
+  const { d: x, n } = cel(cx(i, cols), 7);
+  const y = cy(j, rows) + (mod(n, 2) ? 2 : 0);
+  if (x === 0) return true;
+  return (x === 1 && mod(y, 4) === 0) || (x === -1 && mod(y, 4) === 2) || (x === 2 && mod(y, 4) === 3) || (x === -2 && mod(y, 4) === 1);
+});
+
+// 40 — tribal snakes: wavy bands with diamonds on the body
+add("tribal-cobras", "Cobras tribais", (i, j, cols, rows) => {
+  const { d: y0, n } = cel(cy(j, rows), 10);
+  const centro = 2.2 * Math.sin(((i + n * 5) * 2 * Math.PI) / 14);
+  const dy = y0 - centro;
+  if (Math.abs(dy) > 2.2) return false;
+  if (Math.abs(dy) >= 1.5) return true;
+  return mod(i, 4) === 0 || (mod(i, 4) === 2 && Math.abs(dy) < 0.6);
+});
+
+// 41 — navajo checker of stepped diamonds
+add("tribal-xadrez-navajo", "Xadrez navajo", (i, j, cols, rows) => {
+  const { d: a, n: na } = cel(cx(i, cols), 10);
+  const { d: b, n: nb } = cel(cy(j, rows), 10);
+  const degrau = Math.abs(a) + 2 * Math.floor(Math.abs(b) / 2);
+  const dentro = degrau <= 4;
+  return mod(na + nb, 2) === 0 ? dentro : !dentro && Math.abs(a) <= 4 && Math.abs(b) <= 4;
+});
+
+// 42 — tribal fish in rows
+add("tribal-peixes", "Peixes tribais", sprites([
+  "..XXXX..X",
+  ".XX.X.XXX",
+  "XX.X.X.XX",
+  ".XX.X.XXX",
+  "..XXXX..X",
+], 1));
+
+// 43 — tribal sun rays radiating from the center of the chair
+add("tribal-raios", "Raios tribais", (i, j, cols, rows) => {
+  const x = cx(i, cols);
+  const y = cy(j, rows);
+  const r = Math.hypot(x, y);
+  if (r <= 3) return true;
+  if (r <= 4.2) return false;
+  const a = Math.atan2(y, x);
+  const setor = mod(Math.floor(((a + Math.PI) / (2 * Math.PI)) * 24), 2);
+  return setor === 0 && mod(Math.floor(r), 3) !== 0;
+});
+
+// 44 — woven basket squares (offset squares with an inner dot)
+add("tribal-cestaria", "Cestaria", (i, j, cols, rows) => {
+  const { d: b, n } = cel(cy(j, rows), 6);
+  const a = cel(cx(i, cols) + (mod(n, 2) ? 3 : 0), 6).d;
+  const m = Math.max(Math.abs(a), Math.abs(b));
+  return m === 2 || (a === 0 && b === 0);
 });
 
 export const FORMAS_BOHO_TRIBAL: Record<string, Teste> = Object.fromEntries(lista.map((f) => [f.valor, f.teste]));

@@ -26,6 +26,10 @@ export const FORMAS_OCULTAS = new Set<string>([
   "onda-3-14", "quadrados-3", "espiral-quadrada-dupla", "mandala-simples", "mandala-pontos", "kilim-largo",
   "coracaozinhos", "florzinhas", "ancoras", "notinhas", "cerejinhas", "fantasminhas", "gatinhos", "borboletinhas",
   "fig-oculos2",
+  // 2026-10-10, user: "vi que tinha muitos repetidos" (Estilo boho) — look-alikes of other boho patterns
+  "zz-8-16-2", "ondas-duplas", "losangos-pontilhados", "losangos-tres", "losangos-em-coluna", "contas-e-cruzes",
+  "kilim-de-cruzes", "kilim-xadrez", "grega-boho", "diamantes-cheios", "triangulos-contorno", "grinalda",
+  "roda-de-contas", "chevron-lateral", "flechas-para-baixo", "sol-de-pontas-duplas",
 ]);
 
 const lista: { valor: string; rotulo: string; grupo: Grupo; teste: Teste }[] = [];
