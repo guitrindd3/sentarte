@@ -19,6 +19,7 @@ import { FORMAS_GATOS } from "./formas-gatos";
 import { FORMAS_EXTRAS_4 } from "./formas-extras-4";
 import { FORMAS_EXTRAS_5 } from "./formas-extras-5";
 import { FORMAS_BOHO_TRIBAL } from "./formas-boho-tribal";
+import { FORMAS_BOHO_CULTURAS } from "./formas-boho-culturas";
 import { GLYPH_H, GLYPH_W, glyphPixel, normalizarTexto } from "./pixel-font";
 
 export type Forma =
@@ -920,7 +921,7 @@ export function celulaDaForma(forma: Forma, i: number, j: number, cols: number, 
       return r > 7 && r < 12 && raio;
     }
   }
-  return (FORMAS_EXTRAS[forma] ?? FORMAS_EXTRAS_2[forma] ?? FORMAS_EXTRAS_3[forma] ?? FORMAS_GATOS[forma] ?? FORMAS_EXTRAS_4[forma] ?? FORMAS_EXTRAS_5[forma] ?? FORMAS_BOHO_TRIBAL[forma])?.(i, j, cols, rows) ?? false;
+  return (FORMAS_EXTRAS[forma] ?? FORMAS_EXTRAS_2[forma] ?? FORMAS_EXTRAS_3[forma] ?? FORMAS_GATOS[forma] ?? FORMAS_EXTRAS_4[forma] ?? FORMAS_EXTRAS_5[forma] ?? FORMAS_BOHO_TRIBAL[forma] ?? FORMAS_BOHO_CULTURAS[forma])?.(i, j, cols, rows) ?? false;
 }
 
 const espirais = new Map<string, Set<number>>();
