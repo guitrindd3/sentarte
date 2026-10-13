@@ -162,6 +162,19 @@ const ASSENTO_PAINEL: [number, number][] = [
   [ASSENTO_MEIO_X + 128, ASSENTO_DESENHO_Y1],
   [ASSENTO_MEIO_X - 128, ASSENTO_DESENHO_Y1],
 ];
+/** Seat straps wrapped over the side tubes, left and right of the pattern
+ * panel: painted in the detail color like the backrest's side straps (user
+ * 2026-10-13: "as linhas do assento que estão na horizontal também com a mesma
+ * cor"). The panel's slanted edges are extended to bound them. */
+const ASSENTO_LADO_Y0 = 488;
+const ASSENTO_LADO_Y1 = 626;
+const ladoDoAssento = (x: number, y: number) => {
+  if (y < ASSENTO_LADO_Y0 || y >= ASSENTO_LADO_Y1) return false;
+  const t = (y - ASSENTO_DESENHO_Y0) / (ASSENTO_DESENHO_Y1 - ASSENTO_DESENHO_Y0);
+  const esq = ASSENTO_PAINEL[0][0] + (ASSENTO_PAINEL[3][0] - ASSENTO_PAINEL[0][0]) * t;
+  const dir = ASSENTO_PAINEL[1][0] + (ASSENTO_PAINEL[2][0] - ASSENTO_PAINEL[1][0]) * t;
+  return x < esq || x >= dir;
+};
 /** Seat pattern grid. Same row count as the backrest's pattern area, so the
  * figures (heart, anchor…) fit whole and centered; cells come out roughly
  * square on screen. */
@@ -1221,6 +1234,10 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
       const l = brilho(i);
       if (saturacao(i) > 60 || l > 140) continue; // floor/pool through the gaps
       const P = x >= ASSENTO_MEIO_X ? C : A;
+      if (ladoDoAssento(x + 0.5, y + 0.5)) {
+        pinta(i, B, sombraEscuro(l));
+        continue;
+      }
       let detalhe = false;
       if (Number.isFinite(pEsq) && x + 0.5 >= pEsq && x + 0.5 < pDir) {
         const u = (x + 0.5 - pEsq) / (pDir - pEsq);

@@ -421,6 +421,10 @@ Frames were extracted with `ffmpeg-static` (npm, free) — not a project
 dependency. A sharper pair of real photos (empty frame + fully white-woven,
 same camera position) would look better; the user was told this.
 
+## Seat side straps (2026-10-13)
+
+User: the backrest's horizontal side straps are the detail color, the seat's should match. `ladoDoAssento()` in `lib/chair-render.ts` paints the seat webbing left/right of the pattern panel (the panel's slanted edges extended, y 488–626) in `corB`, like `LATERAIS` on the backrest. The front/back bands of exposed vertical strands stay the main color.
+
 ## Mobile & navigation (2026-09-30)
 
 - Every inner page has a "Voltar" (`components/back-link.tsx`) at the top —
