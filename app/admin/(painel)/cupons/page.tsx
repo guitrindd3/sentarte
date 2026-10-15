@@ -18,8 +18,8 @@ function mensagemDivulgacao(c: Cupom) {
   const quando = c.minCadeiras > 1 ? ` levando ${c.minCadeiras} cadeiras ou mais` : "";
   const ate = c.validoAte ? ` Válido até ${dataBR(c.validoAte)}.` : "";
   return c.automatico
-    ? `Ganhe ${rotuloDesconto(c)} de desconto${quando} no site do Ateliê SentArte: o desconto entra sozinho no carrinho!${ate} sentarte.vercel.app`
-    : `Use o cupom ${c.codigo} no carrinho do site e ganhe ${rotuloDesconto(c)} de desconto${quando}!${ate} sentarte.vercel.app`;
+    ? `Ganhe ${rotuloDesconto(c)} de desconto${quando} no site do Ateliê SentArte: o desconto entra sozinho no carrinho!${ate} sentarte.com.br`
+    : `Use o cupom ${c.codigo} no carrinho do site e ganhe ${rotuloDesconto(c)} de desconto${quando}!${ate} sentarte.com.br`;
 }
 
 /** Create/edit form (the same fields both ways). */

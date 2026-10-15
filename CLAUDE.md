@@ -661,9 +661,13 @@ dev servers from earlier sessions can linger.
 ## Deploy
 
 Vercel project `sentarte` on the `ateliesentarte@gmail.com` account (team slug
-`ateliesentarte-4506`, since 2026-09-24), production alias `sentarte.vercel.app`
-(reclaimed 2026-09-29 after deleting the old `guitrindd3` project;
-`sentarte-ten.vercel.app` 308-redirects to it), GitHub repo `guitrindd3/sentarte`. The Vercel
+`ateliesentarte-4506`, since 2026-09-24). Production domain is **`sentarte.com.br`**
+(since 2026-10-15; registered at Registro.br in the business owner's name, DNS in
+Registro.br advanced mode: A `@`→76.76.21.21, CNAME `www`→cname.vercel-dns.com;
+`www` 308-redirects to the apex). `SITE_URL` in `lib/nav.ts` must match it —
+Mercado Pago `notification_url`s are built from it. The old alias
+`sentarte.vercel.app` (reclaimed 2026-09-29) and `sentarte-ten.vercel.app`
+redirect to the `.com.br`. GitHub repo `guitrindd3/sentarte`. The Vercel
 project is Git-connected (as of 2026-09-20) — push to `main` and it
 auto-builds/deploys; no need to hand-inline files through the Vercel MCP
 `create_deployment` tool anymore (that was the workaround used before the

@@ -26,7 +26,7 @@ export default async function Paginas() {
                   {editada ? <span className="rounded-full bg-rattan/15 px-2.5 py-0.5 text-xs font-semibold text-wood-dark">Editada</span> : null}
                 </span>
                 <span className="mt-1 text-sm text-ink-soft">{p.descricao}</span>
-                <span className="mt-3 font-mono text-xs text-ink-soft/80">sentarte.vercel.app{p.caminho}</span>
+                <span className="mt-3 font-mono text-xs text-ink-soft/80">sentarte.com.br{p.caminho}</span>
               </Link>
             </li>
           );

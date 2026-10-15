@@ -1,4 +1,4 @@
-export const SITE_URL = "https://sentarte.vercel.app";
+export const SITE_URL = "https://sentarte.com.br";
 
 export const NAV_LINKS = [
   { label: "Cadeiras", href: "/categoria/cadeiras" },
