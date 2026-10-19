@@ -122,6 +122,7 @@ export default async function CadeiraPage({ params }: PageProps<"/cadeira/[slug]
         </div>
         <div className="mt-4">
           <ProdutoCompra
+            slug={p.slug}
             modelo={p.base}
             personalizado={p.personalizado}
             categoria={p.categoria.titulo}

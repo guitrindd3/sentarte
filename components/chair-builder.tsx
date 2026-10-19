@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckIcon, WhatsAppIcon } from "@/components/icons";
+import { CheckIcon, CompartilharIcon, WhatsAppIcon } from "@/components/icons";
 import { useCart } from "@/lib/cart-context";
 import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
@@ -421,6 +421,40 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }, "image/png");
+  };
+
+  // "Compartilhar" (2026-10-19): the phone's share sheet with the chair picture
+  // + its link (stories, WhatsApp, Instagram...); without it, copies the link.
+  const [compartilhado, setCompartilhado] = useState("");
+  const textoCompartilhar = "Olha a cadeira de praia que eu montei na SentArte!";
+  const compartilhar = async () => {
+    rastrear({ t: "c", l: "Compartilhar cadeira montada" });
+    const imagem = await new Promise<File | null>((ok) => {
+      if (!foto) return ok(null);
+      const c = document.createElement("canvas");
+      c.width = IMG_W;
+      c.height = CORTE_H;
+      desenhar(c, foto, opcoes, { y0: CORTE_Y0, h: CORTE_H });
+      c.toBlob((b) => ok(b ? new File([b], "minha-cadeira-sentarte.png", { type: "image/png" }) : null), "image/png");
+    });
+    try {
+      if (imagem && navigator.canShare?.({ files: [imagem] })) {
+        await navigator.share({ files: [imagem], text: `${textoCompartilhar} ${linkCadeira}` });
+        return;
+      }
+      if (navigator.share) {
+        await navigator.share({ title: "Minha cadeira SentArte", text: textoCompartilhar, url: linkCadeira });
+        return;
+      }
+    } catch (err) {
+      if ((err as Error).name === "AbortError") return; // closed the share sheet
+    }
+    try {
+      await navigator.clipboard.writeText(linkCadeira);
+      setCompartilhado("Link copiado! É só colar onde quiser.");
+    } catch {
+      setCompartilhado(linkCadeira);
+    }
   };
 
   const adicionarAoCarrinho = () => {
@@ -891,6 +925,31 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   {adicionado ? <CheckIcon className="h-4 w-4" /> : null}
                   {adicionado ? "Adicionada ao carrinho" : "Adicionar ao carrinho"}
                 </button>
+              </div>
+              <div className="mt-5 border border-line bg-paper p-4">
+                <p className="text-sm font-medium text-ink">Mostre para alguém</p>
+                <p className="mt-0.5 text-xs text-ink-soft">Mande para quem vai ganhar, para a família opinar ou poste no story.</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={compartilhar}
+                    className="inline-flex items-center gap-2 border border-ink bg-ink px-4 py-2 text-sm font-medium text-canvas transition-colors hover:bg-transparent hover:text-ink"
+                  >
+                    <CompartilharIcon className="h-4 w-4" />
+                    Compartilhar
+                  </button>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`${textoCompartilhar} ${linkCadeira}`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    data-rastro="Compartilhar cadeira montada (WhatsApp)"
+                    className="inline-flex items-center gap-2 border border-line px-4 py-2 text-sm text-ink transition-colors hover:border-ink"
+                  >
+                    <WhatsAppIcon className="h-4 w-4" />
+                    Mandar para um amigo
+                  </a>
+                </div>
+                {compartilhado ? <p className="mt-2 break-all text-xs text-ink" role="status">{compartilhado}</p> : null}
               </div>
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs">
                 <button type="button" onClick={salvarImagem} className="text-ink underline hover:text-ink-soft">

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cepGuardado, guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import { CheckoutForm } from "@/components/checkout-form";
@@ -8,20 +9,44 @@ import { calcularPedido } from "@/lib/pedido";
 import { useCart } from "@/lib/cart-context";
 import { CloseIcon, MinusIcon, PlusIcon, WhatsAppIcon } from "@/components/icons";
 import { WeavePattern } from "@/components/weave-pattern";
-import { rotuloDesconto } from "@/lib/cupom";
+import { melhorCupom, rotuloDesconto } from "@/lib/cupom";
 import { useCupons } from "@/lib/use-cupons";
 import {
   CATEGORIA_COM_PRECO,
   formatBRL,
   PARCELAS_MAX,
   PIX_DESCONTO,
+  precoCadeira,
   precoPix,
   precoItemCadeira,
+  PRECO_CADEIRA,
 } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 
-export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero: string; pagamentoAtivo: boolean }) {
-  const { items, count, isOpen, closeCart, removeItem, setQuantidade, clear, etapa, setEtapa } = useCart();
+/** A chair the cart can suggest ("Combina com o seu pedido"), from lib/produtos.ts. */
+export type Sugestao = {
+  slug: string;
+  nome: string;
+  modeloId: string;
+  imagemUrl?: string;
+  corA: string;
+  corB: string;
+  grupo: string;
+  desenho: boolean;
+};
+
+export function CartDrawer({
+  whatsappNumero,
+  pagamentoAtivo,
+  sugestoes = [],
+  categoriaTitulo = "Cadeiras de praia",
+}: {
+  whatsappNumero: string;
+  pagamentoAtivo: boolean;
+  sugestoes?: Sugestao[];
+  categoriaTitulo?: string;
+}) {
+  const { items, count, isOpen, closeCart, removeItem, setQuantidade, clear, etapa, setEtapa, addItem } = useCart();
   const [cep, setCep] = useState("");
   useEffect(() => {
     // CEP typed last time (localStorage) — only after hydration, like the cart itself
@@ -39,11 +64,29 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
   // A chair with a woven name costs PRECO_CADEIRA_COM_NOME.
   const cadeiras = items.filter((i) => i.categoriaSlug === CATEGORIA_COM_PRECO);
   const { qtdCadeiras, subtotal, desconto, total, cupom } = conta;
-  // "Take N more and get X%": the automatic coupon the cart doesn't reach yet.
-  const proximo = cupons.automaticos
-    .filter((c) => c.minCadeiras > qtdCadeiras)
-    .sort((a, b) => a.minCadeiras - b.minCadeiras)[0];
-  const faltamParaCupom = proximo && !cupom ? proximo.minCadeiras - qtdCadeiras : 0;
+  // "Compre junto" (2026-10-19): the next automatic coupon tier that gives a
+  // bigger discount than the one applied now, priced with plain chairs, and
+  // what the customer saves in reais by reaching it.
+  const subida = (() => {
+    if (!qtdCadeiras) return null;
+    const taxaAtual = subtotal ? desconto / subtotal : 0;
+    for (const c of [...cupons.automaticos].filter((c) => c.minCadeiras > qtdCadeiras).sort((a, b) => a.minCadeiras - b.minCadeiras)) {
+      const faltam = c.minCadeiras - qtdCadeiras;
+      const novoSubtotal = subtotal + faltam * PRECO_CADEIRA;
+      const novo = melhorCupom(cupons.cupons, novoSubtotal, c.minCadeiras);
+      if (!novo || novo.cupom.codigo !== c.codigo || novo.desconto / novoSubtotal <= taxaAtual + 0.0001) continue;
+      return { faltam, cupom: c, descontoNovo: novo.desconto };
+    }
+    return null;
+  })();
+  // Suggestions: chairs not in the cart yet, same collection as what's in it first.
+  const noCarrinho = new Set(items.map((i) => i.modeloNome.replace(/ personalizado$/, "")));
+  const gruposNoCarrinho = new Set(sugestoes.filter((s) => noCarrinho.has(s.nome)).map((s) => s.grupo));
+  const paraSugerir = qtdCadeiras
+    ? [...sugestoes.filter((s) => !noCarrinho.has(s.nome) && s.imagemUrl)]
+        .sort((a, b) => Number(gruposNoCarrinho.has(b.grupo)) - Number(gruposNoCarrinho.has(a.grupo)))
+        .slice(0, 3)
+    : [];
   const digitadoSemMinimo = cupons.digitado && cupom?.codigo !== cupons.digitado.codigo ? cupons.digitado : null;
   const estadoFrete = useFrete(cep, cadeiras);
   const valorFrete = estadoFrete.tipo === "ok" ? estadoFrete.frete.valor : null;
@@ -184,6 +227,49 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
               ))}
             </ul>
           )}
+          {paraSugerir.length ? (
+            <div className="mt-6">
+              <p className="font-serif text-base font-medium text-ink">Combina com o seu pedido</p>
+              <ul className="mt-3 grid grid-cols-3 gap-2">
+                {paraSugerir.map((s) => {
+                  const preco = precoCadeira(s.desenho);
+                  return (
+                    <li key={s.slug} className="flex flex-col border border-line bg-canvas">
+                      <Link href={`/cadeira/${s.slug}`} onClick={closeCart} className="relative block aspect-square overflow-hidden">
+                        {s.imagemUrl ? <Image src={s.imagemUrl} alt={s.nome} fill className="object-cover" sizes="100px" /> : null}
+                      </Link>
+                      <div className="flex flex-1 flex-col p-2">
+                        <p className="line-clamp-2 text-xs font-medium leading-tight text-ink">{s.nome}</p>
+                        <p className="mt-0.5 text-[0.7rem] text-ink-soft">{formatBRL(preco)}</p>
+                        <button
+                          type="button"
+                          data-rastro={`Compre junto: ${s.nome}`}
+                          onClick={() =>
+                            addItem({
+                              id: `${CATEGORIA_COM_PRECO}:${s.modeloId}`,
+                              categoriaSlug: CATEGORIA_COM_PRECO,
+                              categoriaTitulo,
+                              modeloId: s.modeloId,
+                              modeloNome: s.nome,
+                              imagemUrl: s.imagemUrl,
+                              corA: s.corA,
+                              corB: s.corB,
+                              personalizada: s.desenho || undefined,
+                            })
+                          }
+                          className="mt-auto inline-flex items-center justify-center gap-1 border border-ink px-1 pt-1 pb-1 text-[0.7rem] font-medium text-ink transition-colors hover:bg-ink hover:text-canvas"
+                        >
+                          <PlusIcon className="h-3 w-3" />
+                          Adicionar
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="mt-2 text-[0.7rem] text-ink-soft">Sem nome. Para trançar um nome, abra a cadeira.</p>
+            </div>
+          ) : null}
         </div>
 
         {items.length > 0 && !naEntrega ? (
@@ -289,9 +375,11 @@ export function CartDrawer({ whatsappNumero, pagamentoAtivo }: { whatsappNumero:
                   <dd>{formatBRL(pixComFrete)}</dd>
                 </div>
                 <p className="text-xs text-ink-soft">ou em até {PARCELAS_MAX}x no cartão</p>
-                {faltamParaCupom > 0 && proximo ? (
-                  <p className="pt-1 text-xs text-ink">
-                    Leve mais {faltamParaCupom} e ganhe {rotuloDesconto(proximo)} de desconto com o cupom {proximo.codigo}.
+                {subida ? (
+                  <p className="mt-1 border border-ink/20 bg-canvas px-3 py-2 text-xs text-ink">
+                    Leve mais {subida.faltam} {subida.faltam === 1 ? "cadeira" : "cadeiras"} e o desconto sobe para{" "}
+                    <strong className="font-semibold">{rotuloDesconto(subida.cupom)}</strong> (cupom {subida.cupom.codigo}): são{" "}
+                    <strong className="font-semibold">{formatBRL(subida.descontoNovo)}</strong> de desconto no pedido.
                   </p>
                 ) : null}
               </dl>

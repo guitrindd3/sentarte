@@ -224,3 +224,28 @@ export function ChevronDownIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function CompartilharIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M12 15V3.5M7.5 8 12 3.5 16.5 8M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5" />
+    </svg>
+  );
+}
+
+/** Heart; `cheio` fills it (a saved favorite). */
+export function CoracaoIcon({ className, cheio = false }: IconProps & { cheio?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" fill={cheio ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.3a4.3 4.3 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z" />
+    </svg>
+  );
+}
+
+export function PresenteIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M4 9.5h16v3.5H4zM5.5 13v7h13v-7M12 9.5V20M12 9.5S10.8 5 8.5 5a2.25 2.25 0 0 0 0 4.5M12 9.5S13.2 5 15.5 5a2.25 2.25 0 0 1 0 4.5" />
+    </svg>
+  );
+}

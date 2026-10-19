@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Archivo, Bodoni_Moda } from "next/font/google";
 import { CartDrawer } from "@/components/cart-drawer";
+import { FaixaNatal } from "@/components/faixa-natal";
 import { ForaDoAdmin } from "@/components/fora-do-admin";
+import { TextoRico } from "@/components/texto-rico";
+import { textosDaPagina } from "@/lib/textos-paginas";
 import { Rastreador } from "@/components/rastreador";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -12,6 +15,8 @@ import { getContent } from "@/lib/content-store";
 import { SITE_URL } from "@/lib/nav";
 import { formatBRL, PRECO_CADEIRA, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
 import { instagramUrl } from "@/lib/urls";
+import { produtosDaLoja } from "@/lib/produtos";
+import { DESENHO_TEMAS } from "@/lib/desenho-model";
 import "./globals.css";
 
 const display = Bodoni_Moda({
@@ -60,13 +65,34 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { site } = await getContent();
+  const content = await getContent();
+  const { site, paginas } = content;
+  const sugestoes = produtosDaLoja(content).map((p) => ({
+    slug: p.slug,
+    nome: p.base.nome,
+    modeloId: p.base.id,
+    imagemUrl: p.base.imagemUrl,
+    corA: p.base.corA,
+    corB: p.base.corB,
+    grupo: p.grupo,
+    desenho: DESENHO_TEMAS.includes(p.base.nome),
+  }));
+  // Christmas strip: "DD/MM/AAAA" typed in the admin → ISO date; no strip when blank or invalid.
+  const natal = textosDaPagina(paginas, "natal");
+  const [d, m, a] = natal.linha("ate").split("/").map((x) => x.trim());
+  const ateNatal = /^\d{1,2}$/.test(d ?? "") && /^\d{1,2}$/.test(m ?? "") && /^\d{4}$/.test(a ?? "") ? `${a}-${m.padStart(2, "0")}-${d.padStart(2, "0")}` : "";
+  const textoNatal = natal.linha("texto").trim().replace(/\{data\}/g, ateNatal ? `${d.padStart(2, "0")}/${m.padStart(2, "0")}` : "");
 
   return (
     <html lang="pt-BR" className={`${display.variable} ${body.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans antialiased">
         <CartProvider>
           <ForaDoAdmin>
+            {textoNatal && ateNatal ? (
+              <FaixaNatal ate={ateNatal}>
+                <TextoRico texto={textoNatal} whatsappNumero={site.whatsappNumero} inline />
+              </FaixaNatal>
+            ) : null}
             <SiteHeader siteName={site.nome} whatsappNumero={site.whatsappNumero} />
           </ForaDoAdmin>
           <main className="flex-1">{children}</main>
@@ -76,6 +102,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <CartDrawer
             whatsappNumero={site.whatsappNumero}
             pagamentoAtivo={Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN)}
+            sugestoes={sugestoes}
+            categoriaTitulo={content.categorias.find((c) => c.slug === "cadeiras")?.titulo}
           />
           <WhatsAppFloat whatsappNumero={site.whatsappNumero} />
         </CartProvider>

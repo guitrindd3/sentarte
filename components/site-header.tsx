@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { CartIcon, CloseIcon, LockIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "@/components/icons";
+import { CartIcon, CloseIcon, CoracaoIcon, LockIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "@/components/icons";
+import { useFavoritos } from "@/lib/favoritos";
 import { useCart } from "@/lib/cart-context";
 import { NAV_LINKS } from "@/lib/nav";
 import { whatsappUrl } from "@/lib/urls";
@@ -11,6 +12,7 @@ import { whatsappUrl } from "@/lib/urls";
 export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; whatsappNumero: string }) {
   const [open, setOpen] = useState(false);
   const { count, openCart } = useCart();
+  const { lista: favoritos } = useFavoritos();
   const contactMsg = whatsappUrl(whatsappNumero, "Oi! Vim pelo site e queria saber mais sobre as cadeiras.");
 
   // Publishes the header's real height as --altura-topo so things pinned
@@ -86,6 +88,19 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
                 className="-m-2 p-2 text-ink-soft transition-colors hover:text-ink"
               >
                 <SearchIcon className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/favoritos"
+                aria-label={`Favoritos${favoritos.length ? ` (${favoritos.length})` : ""}`}
+                title="Favoritos"
+                className="relative -m-2 p-2 text-ink-soft transition-colors hover:text-ink"
+              >
+                <CoracaoIcon cheio={favoritos.length > 0} className="h-5 w-5" />
+                {favoritos.length > 0 ? (
+                  <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[0.6rem] font-medium leading-none text-canvas">
+                    {favoritos.length}
+                  </span>
+                ) : null}
               </Link>
               <button
                 type="button"

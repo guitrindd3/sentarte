@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { BotaoFavorito } from "@/components/botao-favorito";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
 import { formatBRL, PARCELAS_MAX, precoPix, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
@@ -90,6 +91,9 @@ export function ModeloCard({
             className="absolute inset-0 cursor-pointer"
           />
         )}
+        {pagina ? (
+          <BotaoFavorito slug={pagina.slice("/cadeira/".length)} nome={modelo.nome} className="absolute right-2 top-2" />
+        ) : null}
         {temVariantes ? (
           <>
             <button

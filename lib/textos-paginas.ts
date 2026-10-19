@@ -237,6 +237,32 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
     ),
   },
   {
+    id: "natal",
+    nome: "Faixa de Natal",
+    caminho: "/",
+    descricao: "A faixa fina no topo de todas as páginas. Some sozinha no dia seguinte à data limite.",
+    campos: [
+      {
+        id: "texto",
+        rotulo: "Texto da faixa",
+        tipo: "linha",
+        max: 140,
+        dica: "{data} vira a data limite. Deixe em branco para tirar a faixa do site.",
+      },
+      {
+        id: "ate",
+        rotulo: "Data limite (dia/mês/ano)",
+        tipo: "linha",
+        max: 10,
+        dica: "Último dia para pedir e receber antes do Natal (produção de até {prazo} dias úteis + o frete). Ex: 04/12/2026",
+      },
+    ],
+    padrao: {
+      texto: "Natal chegando: peça até {data} para receber antes do dia 25. [Escolher a minha](/categoria/cadeiras)",
+      ate: "04/12/2026",
+    },
+  },
+  {
     id: "cadeira",
     nome: "Página de cada cadeira",
     caminho: "/cadeira/flamengo",

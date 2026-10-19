@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { BotaoFavorito } from "@/components/botao-favorito";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
 import { formatBRL, PARCELAS_MAX, precoPix, PRECO_CADEIRA_COM_NOME, PRAZO_PRODUCAO_DIAS_UTEIS } from "@/lib/offer";
@@ -21,7 +22,9 @@ export function ProdutoCompra({
   categoria,
   categoriaSlug,
   whatsappNumero,
+  slug,
 }: {
+  slug: string;
   modelo: Modelo;
   personalizado?: Modelo;
   categoria: string;
@@ -135,7 +138,10 @@ export function ProdutoCompra({
       {/* Choices */}
       <div>
         <p className="text-sm text-ink-soft">{categoria}</p>
-        <h1 className="mt-1 font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{modelo.nome}</h1>
+        <div className="mt-1 flex items-start justify-between gap-4">
+          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{modelo.nome}</h1>
+          <BotaoFavorito slug={slug} nome={modelo.nome} className="shrink-0" />
+        </div>
         <p className="mt-3 max-w-[55ch] leading-relaxed text-ink-soft">{e.ativo.descricao}</p>
 
         {e.temPreco ? (
