@@ -22,19 +22,19 @@
       "corB": "#EDE3D0",
       "modelos": [
         {
-          "id": "mod-60128627-f011-4a55-b52c-1c70ecf4344a",
-          "nome": "Monte a sua trama",
-          "descricao": "Escolha o modelo, a forma do trançado e as cores. Uma cadeira sua, do seu jeito.",
-          "corA": "#15564C",
-          "corB": "#0E3E37"
-        },
-        {
           "id": "mod-8e110a6c-a507-4def-9224-a486410af9ad",
           "nome": "Cadeiras boho",
           "descricao": "Estampas boho exclusivas, em tons terrosos — cada padrão é uma trama diferente.",
           "corA": "#15564C",
           "corB": "#BD502E",
           "imagemUrl": "/catalogo/cadeiras-boho.jpg"
+        },
+        {
+          "id": "mod-60128627-f011-4a55-b52c-1c70ecf4344a",
+          "nome": "Monte a sua trama",
+          "descricao": "Escolha o modelo, a forma do trançado e as cores. Uma cadeira sua, do seu jeito.",
+          "corA": "#15564C",
+          "corB": "#0E3E37"
         },
         {
           "id": "mod-a2743711-282e-44ad-9a12-b8f834cdbce8",
