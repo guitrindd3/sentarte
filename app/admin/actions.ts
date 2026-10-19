@@ -28,11 +28,12 @@ import {
   type Remetente,
 } from "@/lib/melhor-envio";
 import { cpfValido } from "@/lib/pedido";
-import { avaliacoesPendentes, tirarAvaliacao } from "@/lib/avaliacoes";
+import { avaliacoesPendentes, fotoDaAvaliacao, tirarAvaliacao } from "@/lib/avaliacoes";
 import { normalizarCodigo } from "@/lib/cupom";
 import { paginaEditavel, type Bloco, type ValorCampo } from "@/lib/textos-paginas";
 import { excluirCupom, listarCupons, salvarCupom } from "@/lib/cupons-store";
 import { redisAtivo } from "@/lib/redis";
+import { salvarVagas } from "@/lib/vagas";
 import {
   confirmarDoisFatores,
   conferirSegundoFator,
@@ -418,7 +419,13 @@ export async function aprovarAvaliacaoAction(id: string, _p: Resultado, formData
     if (!pendente) throw new Aviso(SUMIU);
     const nome = String(formData.get("nome") ?? pendente.nome).trim().slice(0, 80) || pendente.nome;
     const texto = String(formData.get("texto") ?? pendente.texto).trim().slice(0, 600) || pendente.texto;
-    const foto = await imagemValida(formData.get("foto"));
+    // A new photo chosen by the admin wins; else the customer's own photo, unless removed.
+    let foto = await imagemValida(formData.get("foto"));
+    if (!foto && pendente.temFoto && formData.get("semFotoDoCliente") !== "on") {
+      const dataUrl = await fotoDaAvaliacao(id);
+      const b64 = dataUrl?.split(",")[1];
+      if (b64) foto = new File([Buffer.from(b64, "base64")], "cliente.jpg", { type: "image/jpeg" });
+    }
     const preparada = foto ? await prepararFoto(foto) : undefined;
     const content = await getContentForWrite();
     content.depoimentos = [
@@ -871,5 +878,19 @@ export async function salvarRemetenteAction(_p: Resultado, formData: FormData) {
     await salvarRemetente(r);
     revalidatePath("/admin/avisos");
     return "Dados do remetente salvos.";
+  });
+}
+
+// --- vagas de produção (2026-10-19) ---------------------------------------------------
+
+export async function salvarVagasAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const total = Number(formData.get("total"));
+    if (!Number.isFinite(total) || total < 0) throw new Aviso("Coloque quantas cadeiras dá para fazer por semana.");
+    const r = String(formData.get("restantes") ?? "").trim();
+    const restantes = r === "" ? undefined : Number(r);
+    if (restantes !== undefined && (!Number.isFinite(restantes) || restantes < 0)) throw new Aviso("O número de vagas que sobram não está certo.");
+    await salvarVagas(formData.get("ligado") === "on", total, restantes);
+    return "Vagas salvas! Já aparece no site.";
   });
 }

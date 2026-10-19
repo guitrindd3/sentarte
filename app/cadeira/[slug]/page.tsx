@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/back-link";
 import { Depoimentos } from "@/components/home/depoimentos";
+import { FotosClientes } from "@/components/fotos-clientes";
 import { JsonLd } from "@/components/json-ld";
 import { MedidasCadeiras } from "@/components/medidas-cadeiras";
 import { ProdutoCompra } from "@/components/produto-compra";
@@ -202,6 +203,7 @@ export default async function CadeiraPage({ params }: PageProps<"/cadeira/[slug]
       ) : null}
 
       <div className="border-t border-line pb-14">
+        <FotosClientes depoimentos={content.depoimentos} />
         <Depoimentos
           depoimentos={content.depoimentos}
           titulo="O que dizem os clientes"

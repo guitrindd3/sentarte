@@ -5,6 +5,18 @@ import { idDaVisita } from "@/lib/rastro";
 
 const ROTULOS = ["", "Não gostei", "Poderia ser melhor", "Boa", "Muito boa", "Amei!"];
 
+/** Shrinks the customer's photo in the browser to a ≤1200px JPEG data URL (small enough to send as JSON). */
+async function encolherFoto(arquivo: File): Promise<string> {
+  const img = await createImageBitmap(arquivo);
+  const escala = Math.min(1, 1200 / Math.max(img.width, img.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(img.width * escala);
+  c.height = Math.round(img.height * escala);
+  c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+  img.close();
+  return c.toDataURL("image/jpeg", 0.82);
+}
+
 /** "Já tem a sua? Avalie" — stars + comment, reviewed by the atelier before it shows. */
 export function Avaliar({ googleUrl }: { googleUrl?: string }) {
   const [aberto, setAberto] = useState(false);
@@ -12,6 +24,7 @@ export function Avaliar({ googleUrl }: { googleUrl?: string }) {
   const [passando, setPassando] = useState(0);
   const [estado, setEstado] = useState<"livre" | "enviando" | "ok">("livre");
   const [erro, setErro] = useState("");
+  const [foto, setFoto] = useState("");
 
   if (estado === "ok") {
     return (
@@ -34,7 +47,7 @@ export function Avaliar({ googleUrl }: { googleUrl?: string }) {
   if (!aberto) {
     return (
       <button type="button" onClick={() => setAberto(true)} className="inline-flex items-center gap-2 border border-ink px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-canvas">
-        ★ Já tem a sua? Avalie
+        ★ Já tem a sua? Avalie e mande uma foto
       </button>
     );
   }
@@ -54,7 +67,7 @@ export function Avaliar({ googleUrl }: { googleUrl?: string }) {
           const res = await fetch("/api/avaliacoes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ estrelas, nome: f.get("nome"), cidade: f.get("cidade"), texto: f.get("texto"), site: f.get("site"), vid: idDaVisita() }),
+            body: JSON.stringify({ estrelas, nome: f.get("nome"), cidade: f.get("cidade"), texto: f.get("texto"), site: f.get("site"), vid: idDaVisita(), foto: foto || undefined }),
           });
           const j = (await res.json()) as { ok?: boolean; erro?: string };
           if (!res.ok || !j.ok) throw new Error(j.erro || "Não deu para enviar agora.");
@@ -101,8 +114,40 @@ export function Avaliar({ googleUrl }: { googleUrl?: string }) {
         <span className="text-ink-soft">Conte como ficou</span>
         <textarea name="texto" required minLength={3} maxLength={600} rows={3} className="mt-1 w-full border border-line bg-canvas px-3 py-2 text-base text-ink focus:border-ink focus:outline-none sm:text-sm" />
       </label>
+      <div className="mt-3 text-sm">
+        <span className="text-ink-soft">Foto com a cadeira (opcional)</span>
+        <div className="mt-1 flex items-center gap-3">
+          {foto ? (
+            // eslint-disable-next-line @next/next/no-img-element -- local preview (data URL)
+            <img src={foto} alt="Sua foto" className="h-16 w-16 border border-line object-cover" />
+          ) : null}
+          <label className="cursor-pointer border border-line bg-canvas px-3 py-2 text-ink transition-colors hover:border-ink">
+            {foto ? "Trocar foto" : "Escolher foto"}
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={async (e) => {
+                const arquivo = e.target.files?.[0];
+                if (!arquivo) return;
+                try {
+                  setFoto(await encolherFoto(arquivo));
+                  setErro("");
+                } catch {
+                  setErro("Não deu para abrir essa foto. Tente outra (JPG ou PNG).");
+                }
+              }}
+            />
+          </label>
+          {foto ? (
+            <button type="button" onClick={() => setFoto("")} className="text-xs text-ink-soft underline">
+              Tirar
+            </button>
+          ) : null}
+        </div>
+      </div>
       <input name="site" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" />
-      <p className="mt-2 text-xs text-ink-soft">Seu nome, cidade e comentário aparecem no site depois que o ateliê conferir.</p>
+      <p className="mt-2 text-xs text-ink-soft">Seu nome, cidade, comentário e foto aparecem no site depois que o ateliê conferir.</p>
       {erro ? <p className="mt-2 text-sm text-clay-dark">{erro}</p> : null}
       <div className="mt-4 flex items-center gap-3">
         <button type="submit" disabled={estado === "enviando"} className="border border-ink bg-ink px-5 py-2.5 text-sm font-medium text-canvas transition-colors hover:bg-transparent hover:text-ink disabled:opacity-60">

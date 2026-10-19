@@ -14,7 +14,7 @@ export function FaixaNatal({ ate, children }: { ate: string; children: ReactNode
   }, [ate]);
   if (passou) return null;
   return (
-    <div className="relative z-50 bg-espresso px-4 py-2 text-center text-xs text-canvas sm:text-sm [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2">
+    <div className="relative z-50 bg-espresso px-4 py-2 text-center text-xs text-canvas sm:text-sm [&_a]:font-medium [&_a]:!text-canvas [&_a]:underline [&_a]:underline-offset-2">
       {children}
     </div>
   );

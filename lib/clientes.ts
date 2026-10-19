@@ -4,6 +4,7 @@ import { contarUsoDoCupom } from "./cupons-store";
 import { anotarNoCaminho } from "./estatisticas";
 import { codigoDoPedido, type DadosEntrega } from "./pedido";
 import { redis, redisAtivo, type Cmd } from "./redis";
+import { usarVagas } from "./vagas";
 
 // Customers who identified themselves (2026-10-05, admin "Clientes"):
 // - orders started with "Pagar agora" (name, WhatsApp, items) — so the
@@ -87,6 +88,8 @@ export async function marcarPedido(ref: string, status: StatusPedido): Promise<P
       const [primeira] = await redis([["SET", `${kp(ref)}:pago`, 1, "NX", "EX", PEDIDO_S]]);
       if (primeira === "OK") {
         if (p.cupom) await contarUsoDoCupom(p.cupom);
+        const cadeiras = p.porTipo ? p.porTipo.normal + p.porTipo.infantil + p.porTipo.reclinavel : 1;
+        await usarVagas(cadeiras);
         if (p.vid) await anotarNoCaminho(p.vid, { k: "p", x: p.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) });
         await avisarVenda(p).catch((err) => console.error("avisarVenda", err));
       }

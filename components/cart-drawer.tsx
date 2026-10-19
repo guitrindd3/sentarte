@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cepGuardado, guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import { CheckoutForm } from "@/components/checkout-form";
+import { VagasSemana } from "@/components/vagas-semana";
 import { calcularPedido } from "@/lib/pedido";
 import { useCart } from "@/lib/cart-context";
 import { CloseIcon, MinusIcon, PlusIcon, WhatsAppIcon } from "@/components/icons";
@@ -375,6 +376,7 @@ export function CartDrawer({
                   <dd>{formatBRL(pixComFrete)}</dd>
                 </div>
                 <p className="text-xs text-ink-soft">ou em até {PARCELAS_MAX}x no cartão</p>
+                <VagasSemana className="pt-1 text-xs" />
                 {subida ? (
                   <p className="mt-1 border border-ink/20 bg-canvas px-3 py-2 text-xs text-ink">
                     Leve mais {subida.faltam} {subida.faltam === 1 ? "cadeira" : "cadeiras"} e o desconto sobe para{" "}

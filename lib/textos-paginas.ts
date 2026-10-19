@@ -392,7 +392,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
         {
           titulo: "Avaliações",
           texto:
-            "Se você avaliar a sua cadeira aqui no site, seu nome, a cidade (se informar), as estrelas e o comentário aparecem na página inicial depois que o ateliê conferir. Para tirar a sua avaliação, é só pedir pelo WhatsApp.",
+            "Se você avaliar a sua cadeira aqui no site, seu nome, a cidade (se informar), as estrelas, o comentário e a foto (se mandar) aparecem no site depois que o ateliê conferir. A foto fica guardada só para essa conferência até ser aprovada ou recusada. Para tirar a sua avaliação ou a sua foto, é só pedir pelo WhatsApp.",
         },
         {
           titulo: "Seus direitos",

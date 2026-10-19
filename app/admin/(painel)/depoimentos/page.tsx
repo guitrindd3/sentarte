@@ -1,5 +1,5 @@
 import { Estrelas } from "@/components/estrelas";
-import { avaliacoesPendentes, type AvaliacaoPendente } from "@/lib/avaliacoes";
+import { avaliacoesPendentes, fotoDaAvaliacao, type AvaliacaoPendente } from "@/lib/avaliacoes";
 import { getAdminContent } from "@/lib/content-store";
 import { redisAtivo } from "@/lib/redis";
 import { addDepoimentoAction, aprovarAvaliacaoAction, deleteDepoimentoAction, estrelasDepoimentoAction, recusarAvaliacaoAction } from "../../actions";
@@ -24,9 +24,13 @@ const quando = (t: number) =>
 export default async function Depoimentos() {
   const { depoimentos } = await getAdminContent();
   let pendentes: AvaliacaoPendente[] = [];
+  let fotos: Record<string, string | null> = {};
   if (redisAtivo()) {
     try {
       pendentes = await avaliacoesPendentes();
+      fotos = Object.fromEntries(
+        await Promise.all(pendentes.filter((a) => a.temFoto).map(async (a) => [a.id, await fotoDaAvaliacao(a.id)] as const))
+      );
     } catch {}
   }
 
@@ -43,7 +47,7 @@ export default async function Depoimentos() {
       {pendentes.length ? (
         <Card
           titulo={`Esperando aprovação (${pendentes.length})`}
-          descricao="Avaliações mandadas pelo site. Você pode corrigir o texto e pôr uma foto antes de aprovar. Recuse spam ou o que não for de cliente."
+          descricao="Avaliações mandadas pelo site. Você pode corrigir o texto e trocar ou tirar a foto antes de aprovar. Fotos aprovadas entram na galeria “Fotos de clientes”. Recuse spam ou o que não for de cliente."
           className="border-2 border-rattan/50"
         >
           <ul className="space-y-4">
@@ -54,7 +58,14 @@ export default async function Depoimentos() {
                   <span>{quando(a.em)}</span>
                 </div>
                 <AdminForm action={aprovarAvaliacaoAction.bind(null, a.id)} className="grid gap-4 sm:grid-cols-[8rem_1fr]">
-                  <FotoSlot name="foto" rotulo="Foto (opcional)" vazio="Pôr foto" formato="quadrada" />
+                  <FotoSlot
+                    name="foto"
+                    removerName="semFotoDoCliente"
+                    atual={fotos[a.id] ?? undefined}
+                    rotulo={fotos[a.id] ? "Foto do cliente" : "Foto (opcional)"}
+                    vazio="Pôr foto"
+                    formato="quadrada"
+                  />
                   <div className="space-y-3">
                     <div className="grid gap-3 sm:grid-cols-3">
                       <Field label="Nome">

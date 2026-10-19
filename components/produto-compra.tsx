@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { BotaoFavorito } from "@/components/botao-favorito";
+import { VagasSemana } from "@/components/vagas-semana";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
 import { formatBRL, PARCELAS_MAX, precoPix, PRECO_CADEIRA_COM_NOME, PRAZO_PRODUCAO_DIAS_UTEIS } from "@/lib/offer";
@@ -207,6 +208,7 @@ export function ProdutoCompra({
           </button>
           <AddToCartButton item={e.itemDoCarrinho} disabled={e.faltaNome} contorno />
           {e.faltaNome ? <p className="text-xs text-ink-soft">Escreva o nome para comprar ou adicionar ao carrinho.</p> : null}
+          {e.temPreco ? <VagasSemana className="mt-2" /> : null}
         </div>
 
         {e.temPreco ? (
