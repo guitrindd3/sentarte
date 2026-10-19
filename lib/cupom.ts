@@ -11,6 +11,8 @@ export type CupomPublico = {
   minCadeiras: number;
   /** Applied by itself, without typing (like the old SENTARTE for 2+ chairs). */
   automatico: boolean;
+  /** A vale-presente (lib/vale.ts): reais, one use, and it adds up with the best other coupon. */
+  vale?: boolean;
 };
 
 export type Cupom = CupomPublico & {

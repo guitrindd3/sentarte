@@ -52,6 +52,7 @@ const publico = (c: Cupom): CupomPublico => ({
   valor: c.valor,
   minCadeiras: c.minCadeiras,
   automatico: c.automatico,
+  ...(c.vale ? { vale: true } : {}),
 });
 
 /** Coupons offered to everyone right now: the automatic ones that are valid. */
@@ -94,6 +95,29 @@ export async function cuponsDoPedido(digitado?: string) {
     if (r.cupom && !lista.some((c) => c.codigo === r.cupom!.codigo)) lista.push(r.cupom);
   }
   return lista;
+}
+
+/** Vale-presente codes bought on the site (one use each, see lib/vale.ts). */
+export async function criarCuponsDeVale(vales: { codigo: string; valor: number; descricao: string; validoAte: string }[]) {
+  if (!vales.length) return;
+  await redis(
+    vales.map((v) => {
+      const c: Cupom = {
+        codigo: v.codigo,
+        tipo: "valor",
+        valor: v.valor,
+        minCadeiras: 1,
+        automatico: false,
+        vale: true,
+        ativo: true,
+        validoAte: v.validoAte,
+        limiteUsos: 1,
+        descricao: v.descricao,
+        criadoEm: Date.now(),
+      };
+      return ["HSETNX", K.cupons, c.codigo, JSON.stringify(c)];
+    })
+  );
 }
 
 export async function salvarCupom(c: Cupom) {

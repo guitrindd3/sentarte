@@ -14,6 +14,7 @@ const STATIC_ROUTES = [
   "/boho",
   "/desenhos",
   "/personalizar",
+  "/vale-presente",
   "/sobre",
   "/contato",
   "/faq",

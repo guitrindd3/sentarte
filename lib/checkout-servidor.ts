@@ -4,6 +4,7 @@ import { cuponsDoPedido } from "./cupons-store";
 import { anotarNoCaminho, vidValido } from "./estatisticas";
 import { calcularFrete } from "./frete-servidor";
 import { tipoValido } from "./offer";
+import { valorDoVale } from "./vale";
 import { calcularPedido, descricaoItem, entregaCompleta, type DadosEntrega, type ItemDoPedido } from "./pedido";
 
 // Shared by the card (Checkout Pro redirect, /api/checkout) and the in-site
@@ -40,10 +41,11 @@ export async function prepararPedido(corpo: CorpoPedido) {
   const conta = calcularPedido(itens, cupons);
   if (!conta.pagavel || conta.total <= 0) return { ok: false, erro: "Esse carrinho só pode ser fechado pelo WhatsApp." } as const;
   if (forma !== "pix" && forma !== "cartao") return { ok: false, erro: "Forma de pagamento inválida." } as const;
-  if (!entrega || !entregaCompleta(entrega)) return { ok: false, erro: "Preencha os dados de entrega." } as const;
+  if (!entrega || !entregaCompleta(entrega, conta.soVale)) return { ok: false, erro: "Preencha os dados de entrega." } as const;
   const ref = /^[a-z0-9-]{6,40}$/i.test(String(referencia)) ? String(referencia) : crypto.randomUUID();
   // shipping is recomputed here too (Espírito Santo ships free, see lib/frete-servidor.ts)
-  const frete = await calcularFrete(entrega.cep, conta.porTipo, conta.total);
+  // a vale-presente only order ships nothing
+  const frete = conta.soVale ? { valor: 0, servico: "Sem envio (vale-presente)" } : await calcularFrete(entrega.cep, conta.porTipo, conta.totalCadeiras);
   if (!frete) return { ok: false, erro: "Para esse CEP o frete é combinado pelo WhatsApp." } as const;
   const valorProdutos = forma === "pix" ? conta.totalPix : conta.total;
   const valor = Math.round((valorProdutos + frete.valor) * 100) / 100;
@@ -59,12 +61,17 @@ export async function registrarPedido(p: Pronto, vid?: string) {
     ref: p.ref,
     nome: p.entrega.nome.trim().slice(0, 80),
     whatsapp: normalizarWhatsapp(p.telefone) ?? p.telefone,
-    cidade: `${p.entrega.cidade.trim()}/${p.entrega.uf.trim()}`.slice(0, 60),
+    cidade: p.entrega.cidade.trim() ? `${p.entrega.cidade.trim()}/${p.entrega.uf.trim()}`.slice(0, 60) : "Vale-presente (sem envio)",
     forma: p.forma,
     itens: p.itens.map(descricaoItem),
     valor: p.valor,
     vid: vidValido(vid) ? vid : undefined,
     cupom: p.conta.cupom?.codigo,
+    valeUsado: p.conta.vale?.codigo,
+    vales: p.itens.flatMap((i) => {
+      const valor = valorDoVale(i);
+      return valor === null ? [] : Array.from({ length: i.quantidade }, () => ({ valor, para: i.nomePersonalizado }));
+    }),
     entrega: {
       nome: p.entrega.nome.trim().slice(0, 80),
       telefone: p.telefone,

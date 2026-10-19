@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prepararPedido, registrarPedido, type CorpoPedido } from "@/lib/checkout-servidor";
 import { SITE_URL } from "@/lib/nav";
 import { PARCELAS_MAX } from "@/lib/offer";
-import { descricaoItem } from "@/lib/pedido";
+import { descricaoItem, tituloDoPedido } from "@/lib/pedido";
 
 // Creates a Mercado Pago Checkout Pro payment and returns its URL. Needs the
 // MERCADOPAGO_ACCESS_TOKEN env var (production access token of the store's
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     items: [
       {
         id: ref,
-        title: `Pedido SentArte — ${conta.qtdCadeiras} cadeira${conta.qtdCadeiras === 1 ? "" : "s"}`,
+        title: tituloDoPedido(conta),
         description: itens.map(descricaoItem).join(" | ").slice(0, 250),
         category_id: "home",
         quantity: 1,
@@ -41,11 +41,15 @@ export async function POST(req: Request) {
     payer: {
       name: entrega.nome.trim().slice(0, 80),
       phone: { area_code: telefone.slice(0, 2), number: telefone.slice(2) },
-      address: {
-        zip_code: entrega.cep.replace(/\D/g, ""),
-        street_name: entrega.endereco.trim().slice(0, 120),
-        street_number: entrega.numero.trim().slice(0, 10),
-      },
+      ...(conta.soVale
+        ? {}
+        : {
+            address: {
+              zip_code: entrega.cep.replace(/\D/g, ""),
+              street_name: entrega.endereco.trim().slice(0, 120),
+              street_number: entrega.numero.trim().slice(0, 10),
+            },
+          }),
     },
     payment_methods:
       forma === "pix"

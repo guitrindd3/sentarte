@@ -2,6 +2,7 @@ import type { CartItem } from "./cart-context";
 import { DESENHO_TEMAS } from "./desenho-model";
 import { melhorCupom, type CupomPublico } from "./cupom";
 import { CATEGORIA_COM_PRECO, PIX_DESCONTO, precoCadeira } from "./offer";
+import { valorDoVale } from "./vale";
 
 // Order math shared by the cart drawer (display) and /api/checkout (the
 // amount actually charged). The server recomputes everything from here —
@@ -20,23 +21,56 @@ function precoUnitario(item: ItemDoPedido) {
   return precoCadeira(Boolean(item.nomePersonalizado?.trim()) || desenho, item.tipoCadeira);
 }
 
-/** `cupons`: the coupons on offer (automatic + typed); the best one is applied, no stacking. */
+/**
+ * `cupons`: the coupons on offer (automatic + typed). The best ordinary coupon
+ * is applied (no stacking); a typed vale-presente comes off on top of it.
+ * Both only discount chairs; a vale-presente bought in the cart is charged in
+ * full (no coupon, no Pix discount) and needs no shipping.
+ */
 export function calcularPedido(items: ItemDoPedido[], cupons: CupomPublico[] = []) {
   const cadeiras = items.filter((i) => i.categoriaSlug === CATEGORIA_COM_PRECO);
+  const vales = items.flatMap((i) => {
+    const valor = valorDoVale(i);
+    return valor === null ? [] : [{ item: i, valor }];
+  });
   const qtdCadeiras = cadeiras.reduce((s, i) => s + i.quantidade, 0);
+  const qtdVales = vales.reduce((s, v) => s + v.item.quantidade, 0);
+  const valorVales = arred(vales.reduce((s, v) => s + v.item.quantidade * v.valor, 0));
   const subtotal = arred(cadeiras.reduce((s, i) => s + i.quantidade * precoUnitario(i), 0));
-  const aplicado = melhorCupom(cupons, subtotal, qtdCadeiras);
+  const aplicado = melhorCupom(cupons.filter((c) => !c.vale), subtotal, qtdCadeiras);
   const cupom = aplicado?.cupom ?? null;
   const temCupom = Boolean(aplicado);
   const desconto = aplicado?.desconto ?? 0;
-  const total = arred(subtotal - desconto);
-  const totalPix = arred(total * (1 - PIX_DESCONTO));
-  /** Only chairs have a fixed price, so only an all-chair cart can be paid online. */
-  const pagavel = items.length > 0 && cadeiras.length === items.length;
+  const resto = arred(subtotal - desconto);
+  const valeUsado = melhorCupom(cupons.filter((c) => c.vale), resto, qtdCadeiras);
+  const vale = valeUsado?.cupom ?? null;
+  const descontoVale = valeUsado?.desconto ?? 0;
+  const totalCadeiras = arred(resto - descontoVale);
+  const total = arred(totalCadeiras + valorVales);
+  const totalPix = arred(totalCadeiras * (1 - PIX_DESCONTO) + valorVales);
+  /** Only chairs and vales have a fixed price, so only those carts can be paid online. */
+  const pagavel = items.length > 0 && cadeiras.length + vales.length === items.length;
   // Chairs per type, for the shipping quote (each type has its own package).
   const porTipo = { normal: 0, infantil: 0, reclinavel: 0 };
   for (const i of cadeiras) porTipo[i.tipoCadeira ?? "normal"] += i.quantidade;
-  return { qtdCadeiras, subtotal, temCupom, cupom, desconto, total, totalPix, pagavel, porTipo };
+  return {
+    qtdCadeiras,
+    subtotal,
+    temCupom,
+    cupom,
+    desconto,
+    vale,
+    descontoVale,
+    totalCadeiras,
+    qtdVales,
+    valorVales,
+    /** Only vales: nothing to ship. */
+    soVale: qtdVales > 0 && qtdCadeiras === 0,
+    total,
+    totalPix,
+    pagavel,
+    porTipo,
+  };
 }
 
 export type DadosEntrega = {
@@ -80,7 +114,9 @@ export const ENTREGA_VAZIA: DadosEntrega = {
   uf: "",
 };
 
-export function entregaCompleta(d: DadosEntrega) {
+/** `soVale`: an order with only vales-presente needs no address (nothing is shipped). */
+export function entregaCompleta(d: DadosEntrega, soVale = false) {
+  if (soVale) return Boolean(d.nome.trim() && d.telefone.replace(/\D/g, "").length >= 10 && cpfValido(d.cpf));
   return Boolean(
     d.nome.trim() &&
       d.telefone.replace(/\D/g, "").length >= 10 &&
@@ -94,6 +130,7 @@ export function entregaCompleta(d: DadosEntrega) {
 }
 
 export function entregaEmTexto(d: DadosEntrega) {
+  if (!d.endereco.trim()) return `${d.nome} · ${d.telefone}`;
   return [
     `${d.nome} · ${d.telefone}`,
     `${d.endereco}, ${d.numero}${d.complemento ? ` (${d.complemento})` : ""}`,
@@ -103,11 +140,21 @@ export function entregaEmTexto(d: DadosEntrega) {
 
 /** One line per cart item, as it goes to WhatsApp and to Mercado Pago. */
 export function descricaoItem(i: ItemDoPedido) {
+  const vale = valorDoVale(i) !== null;
   return (
     `${i.modeloNome} (x${i.quantidade})` +
     (i.variante ? ` — cor: ${i.variante}` : "") +
-    (i.nomePersonalizado ? ` — nome: "${i.nomePersonalizado}"` : "")
+    (i.nomePersonalizado ? (vale ? ` — para: ${i.nomePersonalizado}` : ` — nome: "${i.nomePersonalizado}"`) : "")
   );
+}
+
+/** Payment title for Mercado Pago, e.g. "Pedido SentArte — 2 cadeiras e 1 vale-presente". */
+export function tituloDoPedido(conta: { qtdCadeiras: number; qtdVales: number }) {
+  const partes = [
+    conta.qtdCadeiras ? `${conta.qtdCadeiras} cadeira${conta.qtdCadeiras === 1 ? "" : "s"}` : "",
+    conta.qtdVales ? `${conta.qtdVales} vale${conta.qtdVales === 1 ? "" : "s"}-presente` : "",
+  ].filter(Boolean);
+  return `Pedido SentArte — ${partes.join(" e ")}`;
 }
 
 /** What the success page needs after coming back from Mercado Pago. */

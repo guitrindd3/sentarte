@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prepararPedido, registrarPedido, type CorpoPedido } from "@/lib/checkout-servidor";
 import { SITE_URL } from "@/lib/nav";
-import { descricaoItem } from "@/lib/pedido";
+import { descricaoItem, tituloDoPedido } from "@/lib/pedido";
 
 // Pix paid INSIDE the site (2026-10-05, user didn't want buyers sent to the
 // Mercado Pago page): creates a Pix payment through the Payments API and
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     },
     body: JSON.stringify({
       transaction_amount: valor,
-      description: `Pedido SentArte — ${conta.qtdCadeiras} cadeira${conta.qtdCadeiras === 1 ? "" : "s"}`.slice(0, 120),
+      description: tituloDoPedido(conta).slice(0, 120),
       payment_method_id: "pix",
       external_reference: ref,
       notification_url: `${SITE_URL}/api/mercadopago`,

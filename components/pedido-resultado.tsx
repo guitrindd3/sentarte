@@ -15,6 +15,10 @@ type Props = {
   valorPago?: number;
   parcelas?: number;
   whatsappNumero: string;
+  /** Vale-presente codes created for this paid order. */
+  vales?: { codigo: string; valor: number; para?: string; validoAte: string }[];
+  /** Paid with vales, but the codes aren't there yet (another tab is creating them). */
+  esperandoVale?: boolean;
 };
 
 const TEXTOS = {
@@ -36,7 +40,7 @@ const TEXTOS = {
   },
 };
 
-export function PedidoResultado({ situacao, pagamentoId, referencia, valorPago, parcelas, whatsappNumero }: Props) {
+export function PedidoResultado({ situacao, pagamentoId, referencia, valorPago, parcelas, whatsappNumero, vales, esperandoVale }: Props) {
   const { clear, openCart } = useCart();
   const [pedido, setPedido] = useState<PedidoSalvo | null>(null);
 
@@ -67,7 +71,8 @@ export function PedidoResultado({ situacao, pagamentoId, referencia, valorPago, 
       : `Pagamento: ${situacao === "pendente" ? "em análise" : "não concluído"}`,
     ...(referencia && situacao !== "recusado" ? [`Nº do pedido: ${codigoDoPedido(referencia)}`] : []),
     ...(pagamentoId ? [`Nº do pagamento (Mercado Pago): ${pagamentoId}`] : []),
-    ...(pedido ? ["", "Entrega:", entregaEmTexto(pedido.entrega)] : []),
+    ...(vales?.length ? ["", `Vale-presente: ${vales.map((v) => v.codigo).join(", ")}`] : []),
+    ...(pedido ? ["", vales?.length && !pedido.entrega.endereco ? "Contato:" : "Entrega:", entregaEmTexto(pedido.entrega)] : []),
   ].join("\n");
 
   return (
@@ -89,6 +94,29 @@ export function PedidoResultado({ situacao, pagamentoId, referencia, valorPago, 
               <li key={k}>{descricaoItem(i)}</li>
             ))}
           </ul>
+        ) : null}
+        {vales?.length ? (
+          <div className="mt-6 border-2 border-ink bg-canvas p-4">
+            <p className="font-serif text-lg font-medium text-ink">{vales.length === 1 ? "Seu vale-presente" : "Seus vales-presente"}</p>
+            <ul className="mt-2 space-y-3">
+              {vales.map((v) => (
+                <li key={v.codigo}>
+                  <p className="font-mono text-2xl font-semibold tracking-widest text-ink">{v.codigo}</p>
+                  <p className="text-sm text-ink-soft">
+                    {formatBRL(v.valor)}
+                    {v.para ? ` para ${v.para}` : ""}, vale até {v.validoAte.split("-").reverse().join("/")}
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-ink-soft">
+              Guarde e mande para quem vai ganhar. Para usar, é só digitar o código em &ldquo;Tem cupom de desconto?&rdquo; no carrinho. Ele também fica na página Acompanhar pedido.
+            </p>
+          </div>
+        ) : esperandoVale ? (
+          <p className="mt-6 border border-line bg-canvas p-4 text-sm text-ink">
+            O código do seu vale-presente está sendo criado. Atualize esta página em alguns segundos, ou veja em Acompanhar pedido.
+          </p>
         ) : null}
         {valorPago ? (
           <p className="mt-4 text-sm text-ink">

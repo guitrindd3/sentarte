@@ -83,6 +83,13 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
               <li key={k}>{i}</li>
             ))}
           </ul>
+          {p.codigosVale?.length ? (
+            <p className="mt-3 rounded-xl bg-canvas px-3 py-2 text-sm text-ink">
+              Vale-presente criado: {p.codigosVale.map((v) => <strong key={v.codigo} className="mr-2 font-mono">{v.codigo}</strong>)}
+              <span className="block text-xs text-ink-soft">Aparece em Cupons. Vale uma vez, até {p.codigosVale[0].validoAte.split("-").reverse().join("/")}.</span>
+            </p>
+          ) : null}
+          {p.valeUsado ? <p className="mt-2 text-sm text-ink-soft">Pagou parte com o vale-presente {p.valeUsado}.</p> : null}
           <dl className="mt-4 space-y-1 border-t border-line/70 pt-4 text-sm">
             <div className="flex justify-between gap-3">
               <dt className="text-ink-soft">Total pago</dt>

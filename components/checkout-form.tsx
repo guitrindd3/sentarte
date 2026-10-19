@@ -9,6 +9,7 @@ import { idDaVisita } from "@/lib/rastro";
 import { PixNoSite, type PixGerado } from "@/components/pix-no-site";
 import { CartaoNoSite, PUBLIC_KEY_MP } from "@/components/cartao-no-site";
 import { guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
+import { CATEGORIA_VALE } from "@/lib/vale";
 import {
   calcularPedido,
   ENTREGA_VAZIA,
@@ -55,9 +56,11 @@ export function CheckoutForm({
   const [cartao, setCartao] = useState<{ referencia: string } | null>(null);
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((d.email ?? "").trim());
   const conta = calcularPedido(items, cupons);
-  const estadoFrete = useFrete(d.cep, items);
-  const valorFrete = estadoFrete.tipo === "ok" ? estadoFrete.frete.valor : null;
-  const ok = entregaCompleta(d) && valorFrete !== null;
+  const soVale = conta.soVale;
+  // Shipping is only quoted for the chairs; an order with only vales-presente ships nothing.
+  const estadoFrete = useFrete(soVale ? "" : d.cep, items.filter((i) => i.categoriaSlug !== CATEGORIA_VALE));
+  const valorFrete = soVale ? 0 : estadoFrete.tipo === "ok" ? estadoFrete.frete.valor : null;
+  const ok = entregaCompleta(d, soVale) && valorFrete !== null;
 
   const set = (campo: keyof DadosEntrega) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setD((v) => ({ ...v, [campo]: e.target.value }));
@@ -190,8 +193,10 @@ export function CheckoutForm({
           <ChevronDownIcon className="h-4 w-4 rotate-90" />
           Voltar ao carrinho
         </button>
-        <p className="mt-2 font-serif text-lg font-medium text-ink">Dados para entrega</p>
-        <p className="text-xs text-ink-soft">O frete é calculado pelo CEP.</p>
+        <p className="mt-2 font-serif text-lg font-medium text-ink">{soVale ? "Seus dados" : "Dados para entrega"}</p>
+        <p className="text-xs text-ink-soft">
+          {soVale ? "O vale-presente não tem envio: o código aparece aqui na tela assim que o pagamento for aprovado." : "O frete é calculado pelo CEP."}
+        </p>
 
         <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <label className="col-span-2">
@@ -207,7 +212,7 @@ export function CheckoutForm({
             <input value={d.email ?? ""} onChange={set("email")} type="email" inputMode="email" autoComplete="email" placeholder="voce@email.com" className={campo} />
           </label>
           <label className="col-span-2">
-            <span className="text-ink-soft">CPF (vai na etiqueta de envio)</span>
+            <span className="text-ink-soft">{soVale ? "CPF (para o pagamento)" : "CPF (vai na etiqueta de envio)"}</span>
             <input
               value={d.cpf ?? ""}
               onChange={(e) => {
@@ -223,6 +228,8 @@ export function CheckoutForm({
               <span className="mt-1 block text-xs text-clay">Esse CPF não parece certo. Confira os números.</span>
             ) : null}
           </label>
+          {soVale ? null : (
+            <>
           <label>
             <span className="text-ink-soft">CEP {buscandoCep ? "…" : ""}</span>
             <input
@@ -262,16 +269,20 @@ export function CheckoutForm({
             <span className="text-ink-soft">UF</span>
             <input value={d.uf} onChange={set("uf")} maxLength={2} autoComplete="address-level1" className={`${campo} uppercase`} />
           </label>
+            </>
+          )}
         </div>
       </div>
 
       <div className="border-t border-line px-6 py-4">
         {erro ? <p className="mb-3 text-sm text-clay">{erro}</p> : null}
-        <div className="mb-3 flex justify-between text-sm text-ink-soft">
-          <span>Frete</span>
-          <span>{textoFrete(estadoFrete) ?? formatBRL(valorFrete ?? 0)}</span>
-        </div>
-        {estadoFrete.tipo === "indisponivel" ? (
+        {soVale ? null : (
+          <div className="mb-3 flex justify-between text-sm text-ink-soft">
+            <span>Frete</span>
+            <span>{textoFrete(estadoFrete) ?? formatBRL(valorFrete ?? 0)}</span>
+          </div>
+        )}
+        {!soVale && estadoFrete.tipo === "indisponivel" ? (
           <p className="mb-3 text-xs text-ink">
             Para esse CEP a gente calcula o frete pelo WhatsApp. Volte ao carrinho e feche por lá.
           </p>
@@ -286,7 +297,7 @@ export function CheckoutForm({
           onClick={() => pagar("pix")}
           className="flex w-full items-center justify-between rounded-full bg-verde px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-verde-escuro disabled:opacity-40"
         >
-          <span>{enviando === "pix" ? "Gerando o Pix…" : `Pagar no Pix (${Math.round(PIX_DESCONTO * 100)}% off)`}</span>
+          <span>{enviando === "pix" ? "Gerando o Pix…" : soVale ? "Pagar no Pix" : `Pagar no Pix (${Math.round(PIX_DESCONTO * 100)}% off)`}</span>
           <span>{formatBRL(conta.totalPix + (valorFrete ?? 0))}</span>
         </button>
         <button

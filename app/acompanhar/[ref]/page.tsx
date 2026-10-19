@@ -77,12 +77,23 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
   if (!p) notFound();
   const { site } = await getContent();
   const lista = passos(p);
+  const soVale = Boolean(p.vales?.length) && (!p.porTipo || p.porTipo.normal + p.porTipo.infantil + p.porTipo.reclinavel === 0);
   const primeiroNome = p.nome.trim().split(/\s+/)[0];
 
   return (
     <>
-      <PageHeader titulo={`Pedido ${codigoDoPedido(p.ref)}`} resumo={`Olá, ${primeiroNome}! Aqui você acompanha o seu pedido para ${p.cidade}.`} voltarPara="/acompanhar" />
+      <PageHeader titulo={`Pedido ${codigoDoPedido(p.ref)}`} resumo={`Olá, ${primeiroNome}! Aqui você acompanha o seu pedido${soVale ? "" : ` para ${p.cidade}`}.`} voltarPara="/acompanhar" />
       <section className="mx-auto grid max-w-6xl gap-8 px-6 py-14 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+        {soVale ? (
+          <div className="max-w-xl text-sm leading-relaxed text-ink-soft">
+            <p className="font-serif text-lg font-medium tracking-tight text-ink">Pedido de vale-presente</p>
+            <p className="mt-1">
+              {p.status === "pago"
+                ? "Pagamento aprovado. O vale-presente não tem envio: o código está aqui ao lado, pronto para dar de presente."
+                : "Assim que o pagamento for aprovado, o código do vale-presente aparece aqui."}
+            </p>
+          </div>
+        ) : (
         <ol className="relative max-w-xl">
           {lista.map((s, i) => (
             <li key={s.titulo} className="relative flex gap-4 pb-8 last:pb-0">
@@ -110,6 +121,7 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
             </li>
           ))}
         </ol>
+        )}
 
         <aside className="h-fit border border-line bg-paper p-5 text-sm">
           <p className="font-serif text-lg font-medium tracking-tight text-ink">Resumo</p>
@@ -118,6 +130,20 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
               <li key={k}>{i}</li>
             ))}
           </ul>
+          {p.codigosVale?.length ? (
+            <div className="mt-3 border-2 border-ink bg-canvas p-3">
+              <p className="font-medium text-ink">{p.codigosVale.length === 1 ? "Código do vale-presente" : "Códigos dos vales-presente"}</p>
+              {p.codigosVale.map((v) => (
+                <p key={v.codigo} className="mt-1">
+                  <strong className="font-mono text-lg tracking-widest text-ink">{v.codigo}</strong>
+                  <span className="block text-xs text-ink-soft">
+                    {formatBRL(v.valor)}
+                    {v.para ? ` para ${v.para}` : ""}, vale até {v.validoAte.split("-").reverse().join("/")}. Use em &ldquo;Tem cupom de desconto?&rdquo; no carrinho.
+                  </span>
+                </p>
+              ))}
+            </div>
+          ) : null}
           <p className="mt-3 border-t border-line pt-3 text-ink-soft">
             Total: <strong className="text-ink">{formatBRL(p.valor)}</strong> no {p.forma === "pix" ? "Pix" : "cartão"}
           </p>

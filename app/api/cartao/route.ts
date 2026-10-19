@@ -3,7 +3,7 @@ import { prepararPedido, registrarPedido, type CorpoPedido } from "@/lib/checkou
 import { marcarPedido } from "@/lib/clientes";
 import { PARCELAS_MAX } from "@/lib/offer";
 import { SITE_URL } from "@/lib/nav";
-import { descricaoItem } from "@/lib/pedido";
+import { descricaoItem, tituloDoPedido } from "@/lib/pedido";
 
 // Card paid INSIDE the site (2026-10-06): the Mercado Pago Card Payment Brick
 // (in the browser) turns the card into a one-time token — the card number never
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     body: JSON.stringify({
       transaction_amount: valor,
       token: c.token,
-      description: `Pedido SentArte — ${conta.qtdCadeiras} cadeira${conta.qtdCadeiras === 1 ? "" : "s"}`.slice(0, 120),
+      description: tituloDoPedido(conta).slice(0, 120),
       installments: parcelas,
       payment_method_id: c.payment_method_id,
       issuer_id: c.issuer_id ? Number(c.issuer_id) : undefined,
@@ -82,7 +82,9 @@ export async function POST(req: Request) {
       additional_info: {
         items: [{ id: ref, title: itens.map(descricaoItem).join(" | ").slice(0, 120), quantity: 1, unit_price: valor }],
         payer: { first_name: nome.slice(0, 40), phone: { area_code: pronto.telefone.slice(0, 2), number: pronto.telefone.slice(2) } },
-        shipments: { receiver_address: { zip_code: entrega.cep.replace(/\D/g, ""), street_name: entrega.endereco.slice(0, 120), street_number: entrega.numero.slice(0, 10) } },
+        ...(conta.soVale
+          ? {}
+          : { shipments: { receiver_address: { zip_code: entrega.cep.replace(/\D/g, ""), street_name: entrega.endereco.slice(0, 120), street_number: entrega.numero.slice(0, 10) } } }),
       },
       metadata: { forma: "cartao", no_site: true, entrega: `${entrega.cidade}/${entrega.uf}`, frete: frete.valor, cupom: conta.cupom?.codigo ?? "", desconto: conta.desconto },
     }),

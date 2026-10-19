@@ -38,11 +38,12 @@ export default async function PedidoPage({ searchParams }: PageProps<"/pedido">)
   const refUrl = pick("external_reference");
   const pagamento = confirmado && refUrl && confirmado.external_reference === refUrl ? confirmado : null;
   const { site } = await getContent();
+  let pedidoMarcado: Awaited<ReturnType<typeof marcarPedido>> = null;
   if (pagamento?.external_reference) {
     const st = pagamento.status;
     const novo = st === "approved" ? "pago" : st === "pending" || st === "in_process" || st === "authorized" ? "pendente" : st === "rejected" || st === "cancelled" ? "recusado" : null;
     // also counts the coupon, notes the visit journey and sends the sale alert (once)
-    if (novo) await marcarPedido(pagamento.external_reference, novo);
+    if (novo) pedidoMarcado = await marcarPedido(pagamento.external_reference, novo);
   }
 
   const status = pagamento?.status ?? pick("status") ?? pick("collection_status");
@@ -63,6 +64,8 @@ export default async function PedidoPage({ searchParams }: PageProps<"/pedido">)
       valorPago={pagamento?.status === "approved" ? pagamento.transaction_amount : undefined}
       parcelas={pagamento?.installments}
       whatsappNumero={site.whatsappNumero}
+      vales={pagamento?.status === "approved" ? pedidoMarcado?.codigosVale : undefined}
+      esperandoVale={pagamento?.status === "approved" && Boolean(pedidoMarcado?.vales?.length) && !pedidoMarcado?.codigosVale?.length}
     />
   );
 }

@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cepGuardado, guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import { CheckoutForm } from "@/components/checkout-form";
+import { CATEGORIA_VALE, valorDoVale } from "@/lib/vale";
 import { VagasSemana } from "@/components/vagas-semana";
 import { calcularPedido } from "@/lib/pedido";
 import { useCart } from "@/lib/cart-context";
-import { CloseIcon, MinusIcon, PlusIcon, WhatsAppIcon } from "@/components/icons";
+import { CloseIcon, MinusIcon, PlusIcon, PresenteIcon, WhatsAppIcon } from "@/components/icons";
 import { WeavePattern } from "@/components/weave-pattern";
 import { melhorCupom, rotuloDesconto } from "@/lib/cupom";
 import { useCupons } from "@/lib/use-cupons";
@@ -18,7 +19,6 @@ import {
   PARCELAS_MAX,
   PIX_DESCONTO,
   precoCadeira,
-  precoPix,
   precoItemCadeira,
   PRECO_CADEIRA,
 } from "@/lib/offer";
@@ -64,7 +64,7 @@ export function CartDrawer({
   // Only chairs have a fixed price; anything else is priced over WhatsApp.
   // A chair with a woven name costs PRECO_CADEIRA_COM_NOME.
   const cadeiras = items.filter((i) => i.categoriaSlug === CATEGORIA_COM_PRECO);
-  const { qtdCadeiras, subtotal, desconto, total, cupom } = conta;
+  const { qtdCadeiras, subtotal, desconto, total, cupom, vale, descontoVale, valorVales, soVale } = conta;
   // "Compre junto" (2026-10-19): the next automatic coupon tier that gives a
   // bigger discount than the one applied now, priced with plain chairs, and
   // what the customer saves in reais by reaching it.
@@ -74,7 +74,7 @@ export function CartDrawer({
     for (const c of [...cupons.automaticos].filter((c) => c.minCadeiras > qtdCadeiras).sort((a, b) => a.minCadeiras - b.minCadeiras)) {
       const faltam = c.minCadeiras - qtdCadeiras;
       const novoSubtotal = subtotal + faltam * PRECO_CADEIRA;
-      const novo = melhorCupom(cupons.cupons, novoSubtotal, c.minCadeiras);
+      const novo = melhorCupom(cupons.cupons.filter((x) => !x.vale), novoSubtotal, c.minCadeiras);
       if (!novo || novo.cupom.codigo !== c.codigo || novo.desconto / novoSubtotal <= taxaAtual + 0.0001) continue;
       return { faltam, cupom: c, descontoNovo: novo.desconto };
     }
@@ -88,25 +88,35 @@ export function CartDrawer({
         .sort((a, b) => Number(gruposNoCarrinho.has(b.grupo)) - Number(gruposNoCarrinho.has(a.grupo)))
         .slice(0, 3)
     : [];
-  const digitadoSemMinimo = cupons.digitado && cupom?.codigo !== cupons.digitado.codigo ? cupons.digitado : null;
+  const digitadoSemMinimo =
+    cupons.digitado && cupom?.codigo !== cupons.digitado.codigo && vale?.codigo !== cupons.digitado.codigo ? cupons.digitado : null;
   const estadoFrete = useFrete(cep, cadeiras);
   const valorFrete = estadoFrete.tipo === "ok" ? estadoFrete.frete.valor : null;
   const prazoFrete = estadoFrete.tipo === "ok" ? estadoFrete.frete.prazoDias : undefined;
-  const totalComFrete = total + (valorFrete ?? 0);
-  const pixComFrete = precoPix(total) + (valorFrete ?? 0);
+  // a vale-presente only cart ships nothing
+  const freteFinal = soVale ? 0 : valorFrete;
+  const totalComFrete = total + (freteFinal ?? 0);
+  const pixComFrete = conta.totalPix + (freteFinal ?? 0);
 
   const resumoValores =
-    qtdCadeiras === 0
+    qtdCadeiras === 0 && !valorVales
       ? []
       : [
           "",
-          `Subtotal: ${formatBRL(subtotal)}`,
+          `Subtotal: ${formatBRL(subtotal + valorVales)}`,
           ...(cupom ? [`Cupom ${cupom.codigo} (${rotuloDesconto(cupom)}): -${formatBRL(desconto)}`] : []),
-          valorFrete === null
-            ? `Frete: a calcular${cep ? ` (CEP ${cep})` : ""}`
-            : `Frete (CEP ${cep}): ${valorFrete === 0 ? "grátis" : formatBRL(valorFrete)}`,
-          `Total: ${formatBRL(totalComFrete)}${valorFrete === null ? " + frete" : ""}`,
-          `No Pix (${Math.round(PIX_DESCONTO * 100)}% off): ${formatBRL(pixComFrete)}${valorFrete === null ? " + frete" : ""}`,
+          ...(vale ? [`Vale-presente ${vale.codigo}: -${formatBRL(descontoVale)}`] : []),
+          ...(soVale
+            ? []
+            : [
+                valorFrete === null
+                  ? `Frete: a calcular${cep ? ` (CEP ${cep})` : ""}`
+                  : `Frete (CEP ${cep}): ${valorFrete === 0 ? "grátis" : formatBRL(valorFrete)}`,
+              ]),
+          `Total: ${formatBRL(totalComFrete)}${freteFinal === null ? " + frete" : ""}`,
+          ...(pixComFrete < totalComFrete
+            ? [`No Pix (${Math.round(PIX_DESCONTO * 100)}% off): ${formatBRL(pixComFrete)}${freteFinal === null ? " + frete" : ""}`]
+            : []),
         ];
 
   const mensagem =
@@ -121,7 +131,7 @@ export function CartDrawer({
                 ? ` — ${formatBRL(precoItemCadeira(i))} cada`
                 : "") +
               (i.variante ? ` — cor: ${i.variante}` : "") +
-              (i.nomePersonalizado ? ` — nome: "${i.nomePersonalizado}"` : "")
+              (i.nomePersonalizado ? (i.categoriaSlug === CATEGORIA_VALE ? ` — para: ${i.nomePersonalizado}` : ` — nome: "${i.nomePersonalizado}"`) : "")
           ),
           ...resumoValores,
           "",
@@ -180,7 +190,13 @@ export function CartDrawer({
                         sizes="64px"
                       />
                     ) : (
-                      <WeavePattern colorA={item.corA} colorB={item.corB} cell={10} band={7} className="h-full w-full" />
+                      item.categoriaSlug === CATEGORIA_VALE ? (
+                        <span className="flex h-full w-full items-center justify-center bg-canvas text-ink">
+                          <PresenteIcon className="h-7 w-7" />
+                        </span>
+                      ) : (
+                        <WeavePattern colorA={item.corA} colorB={item.corB} cell={10} band={7} className="h-full w-full" />
+                      )
                     )}
                   </div>
                   <div className="flex flex-1 flex-col">
@@ -190,10 +206,14 @@ export function CartDrawer({
                       <p className="text-xs italic text-ink-soft">Cor: {item.variante}</p>
                     ) : null}
                     {item.nomePersonalizado ? (
-                      <p className="text-xs italic text-ink-soft">Nome: {item.nomePersonalizado}</p>
+                      <p className="text-xs italic text-ink-soft">
+                        {item.categoriaSlug === CATEGORIA_VALE ? "Para" : "Nome"}: {item.nomePersonalizado}
+                      </p>
                     ) : null}
                     {item.categoriaSlug === CATEGORIA_COM_PRECO ? (
                       <p className="text-xs text-ink">{formatBRL(precoItemCadeira(item))}</p>
+                    ) : valorDoVale(item) !== null ? (
+                      <p className="text-xs text-ink">{formatBRL(valorDoVale(item)!)}</p>
                     ) : null}
                     <div className="mt-2 flex items-center gap-3">
                       <div className="flex items-center border border-line">
@@ -275,13 +295,13 @@ export function CartDrawer({
 
         {items.length > 0 && !naEntrega ? (
           <div className="border-t border-line px-6 py-4">
-            {qtdCadeiras > 0 ? (
+            {qtdCadeiras > 0 || valorVales > 0 ? (
               <dl className="space-y-1 text-sm">
                 <div className="flex justify-between text-ink-soft">
                   <dt>
                     Subtotal ({count} {count === 1 ? "item" : "itens"})
                   </dt>
-                  <dd>{formatBRL(subtotal)}</dd>
+                  <dd>{formatBRL(subtotal + valorVales)}</dd>
                 </div>
                 {cupom ? (
                   <div className="flex justify-between text-ink">
@@ -294,6 +314,17 @@ export function CartDrawer({
                       ) : null}
                     </dt>
                     <dd>-{formatBRL(desconto)}</dd>
+                  </div>
+                ) : null}
+                {vale ? (
+                  <div className="flex justify-between text-ink">
+                    <dt className="flex items-center gap-2">
+                      Vale-presente {vale.codigo}
+                      <button type="button" onClick={cupons.remover} className="text-xs text-ink-soft underline underline-offset-2 hover:text-ink">
+                        tirar
+                      </button>
+                    </dt>
+                    <dd>-{formatBRL(descontoVale)}</dd>
                   </div>
                 ) : null}
                 {digitadoSemMinimo ? (
@@ -343,6 +374,8 @@ export function CartDrawer({
                   )
                 ) : null}
                 {cupons.erro ? <p className="text-xs text-clay-dark">{cupons.erro}</p> : null}
+                {soVale ? null : (
+                  <>
                 <div className="flex items-center justify-between gap-3 text-ink-soft">
                   <dt>
                     <label htmlFor="cep-frete">Frete</label>
@@ -367,16 +400,20 @@ export function CartDrawer({
                 {prazoFrete ? (
                   <p className="text-right text-xs text-ink-soft">entrega em até {prazoFrete} dias úteis depois de pronta</p>
                 ) : null}
+                  </>
+                )}
                 <div className="flex justify-between border-t border-line pt-2 font-medium text-ink">
-                  <dt>Total{valorFrete === null ? " (sem frete)" : ""}</dt>
+                  <dt>Total{freteFinal === null ? " (sem frete)" : ""}</dt>
                   <dd>{formatBRL(totalComFrete)}</dd>
                 </div>
-                <div className="flex justify-between text-ink">
-                  <dt>No Pix ({Math.round(PIX_DESCONTO * 100)}% off)</dt>
-                  <dd>{formatBRL(pixComFrete)}</dd>
-                </div>
+                {pixComFrete < totalComFrete ? (
+                  <div className="flex justify-between text-ink">
+                    <dt>No Pix ({Math.round(PIX_DESCONTO * 100)}% off)</dt>
+                    <dd>{formatBRL(pixComFrete)}</dd>
+                  </div>
+                ) : null}
                 <p className="text-xs text-ink-soft">ou em até {PARCELAS_MAX}x no cartão</p>
-                <VagasSemana className="pt-1 text-xs" />
+                {qtdCadeiras > 0 ? <VagasSemana className="pt-1 text-xs" /> : null}
                 {subida ? (
                   <p className="mt-1 border border-ink/20 bg-canvas px-3 py-2 text-xs text-ink">
                     Leve mais {subida.faltam} {subida.faltam === 1 ? "cadeira" : "cadeiras"} e o desconto sobe para{" "}

@@ -1,7 +1,8 @@
 import "server-only";
 import { avisarVenda } from "./avisos";
-import { contarUsoDoCupom } from "./cupons-store";
-import { anotarNoCaminho } from "./estatisticas";
+import { contarUsoDoCupom, criarCuponsDeVale } from "./cupons-store";
+import { anotarNoCaminho, diaBR } from "./estatisticas";
+import { novoCodigoVale, VALIDADE_VALE_DIAS } from "./vale";
 import { codigoDoPedido, type DadosEntrega } from "./pedido";
 import { redis, redisAtivo, type Cmd } from "./redis";
 import { usarVagas } from "./vagas";
@@ -35,6 +36,11 @@ export type PedidoCliente = {
   vid?: string;
   /** Coupon code applied, if any (its paid uses are counted when this order is paid). */
   cupom?: string;
+  /** Vale-presente code spent on this order (its single use is counted when paid). */
+  valeUsado?: string;
+  /** Vales-presente bought in this order; their codes are created when it's paid. */
+  vales?: { valor: number; para?: string }[];
+  codigosVale?: { codigo: string; valor: number; para?: string; validoAte: string }[];
   // Since 2026-10-06 (labels + order tracking): full delivery data, CPF and
   // chairs per type — needed to ship. Older orders don't have them.
   entrega?: DadosEntrega;
@@ -88,6 +94,8 @@ export async function marcarPedido(ref: string, status: StatusPedido): Promise<P
       const [primeira] = await redis([["SET", `${kp(ref)}:pago`, 1, "NX", "EX", PEDIDO_S]]);
       if (primeira === "OK") {
         if (p.cupom) await contarUsoDoCupom(p.cupom);
+        if (p.valeUsado) await contarUsoDoCupom(p.valeUsado);
+        if (p.vales?.length) await criarVales(p);
         const cadeiras = p.porTipo ? p.porTipo.normal + p.porTipo.infantil + p.porTipo.reclinavel : 1;
         await usarVagas(cadeiras);
         if (p.vid) await anotarNoCaminho(p.vid, { k: "p", x: p.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) });
@@ -98,6 +106,24 @@ export async function marcarPedido(ref: string, status: StatusPedido): Promise<P
   } catch (err) {
     console.error("marcarPedido", err);
     return null;
+  }
+}
+
+/** Creates the one-time coupons for the vales-presente bought in a paid order. */
+async function criarVales(p: PedidoCliente) {
+  try {
+    const validoAte = diaBR(new Date(Date.now() + VALIDADE_VALE_DIAS * 86400000));
+    const codigos = (p.vales ?? []).map((v) => ({ codigo: novoCodigoVale(), valor: v.valor, para: v.para, validoAte }));
+    await criarCuponsDeVale(
+      codigos.map((c) => ({
+        ...c,
+        descricao: `Vale-presente${c.para ? ` para ${c.para}` : ""}, comprado por ${p.nome} (pedido ${codigoDoPedido(p.ref)})`,
+      }))
+    );
+    p.codigosVale = codigos;
+    await gravarPedido(p);
+  } catch (err) {
+    console.error("criarVales", err);
   }
 }
 

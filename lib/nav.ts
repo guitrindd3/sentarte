@@ -6,6 +6,7 @@ export const NAV_LINKS = [
   { label: "Boho", href: "/boho" },
   { label: "Desenhos", href: "/desenhos" },
   { label: "Monte a sua", href: "/personalizar" },
+  { label: "Vale-presente", href: "/vale-presente" },
   { label: "Sobre", href: "/sobre" },
 ] as const;
 
@@ -15,6 +16,7 @@ export const FOOTER_LINKS = {
     { label: "Contato", href: "/contato" },
     { label: "Perguntas frequentes", href: "/faq" },
     { label: "Acompanhar pedido", href: "/acompanhar" },
+    { label: "Vale-presente", href: "/vale-presente" },
   ],
   politicas: [
     { label: "Privacidade", href: "/politica-de-privacidade" },
