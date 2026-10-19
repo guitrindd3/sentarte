@@ -1,15 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
-import { CATEGORIA_COM_PRECO, formatBRL, PARCELAS_MAX, precoCadeira, precoPix, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
-import { DESENHO_TEMAS } from "@/lib/desenho-model";
+import { formatBRL, PARCELAS_MAX, precoPix, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
+import { caminhoDoModelo } from "@/lib/produtos";
+import { useEscolhaModelo } from "@/lib/use-escolha-modelo";
 import { whatsappUrl } from "@/lib/urls";
 import type { Modelo } from "@/lib/content-schema";
-import { useCart, type CartItem } from "@/lib/cart-context";
+import { useCart } from "@/lib/cart-context";
 
 export function ModeloCard({
   modelo,
@@ -24,62 +26,29 @@ export function ModeloCard({
   categoriaSlug: string;
   whatsappNumero: string;
 }) {
-  const [wantsNome, setWantsNome] = useState(false);
-  const [varianteIndex, setVarianteIndex] = useState(0);
-  const [nomeTexto, setNomeTexto] = useState("");
   const nomeRef = useRef<HTMLInputElement>(null);
   const { addItem, comprarAgora } = useCart();
-
-  const ativo = wantsNome && personalizado ? personalizado : modelo;
-  // Color options (a real choice, sent with the order) come first, then
-  // extra photos that are just for looking (angles, other customers' names).
-  const cores = [modelo.imagemUrl, ...(modelo.variantes ?? [])].filter((f): f is string => Boolean(f));
-  const usaFotosPersonalizado = wantsNome && Boolean(personalizado);
-  const fotosBase = usaFotosPersonalizado && personalizado
-    ? [personalizado.imagemUrl, ...(personalizado.fotosExtras ?? [])].filter((f): f is string => Boolean(f))
-    : [...cores, ...(modelo.fotosExtras ?? [])];
-  const fotoAtiva = fotosBase[varianteIndex] ?? fotosBase[0];
-  const nomeFinal = wantsNome ? nomeTexto.trim() : "";
+  const {
+    ativo,
+    fotos: fotosBase,
+    fotoAtiva,
+    varianteIndex,
+    setVarianteIndex,
+    mudarVariante,
+    contagemFotos,
+    wantsNome,
+    escolherNome,
+    nomeTexto,
+    setNomeTexto,
+    temPreco,
+    podePersonalizar,
+    preco,
+    faltaNome,
+    mensagemWhatsapp,
+    itemDoCarrinho,
+  } = useEscolhaModelo({ modelo, personalizado, categoria, categoriaSlug });
   const temVariantes = fotosBase.length > 1;
-  // Without a dedicated personalizado photo the customer still picks a color
-  // for the chair the name goes on.
-  const escolheCor = !usaFotosPersonalizado && cores.length > 1;
-  const varianteLabel = escolheCor && varianteIndex < cores.length ? `Opção ${varianteIndex + 1}` : "";
-  const contagemFotos =
-    escolheCor && fotosBase.length === cores.length ? `${cores.length} cores` : `${fotosBase.length} fotos`;
-  const mudarVariante = (passo: number) =>
-    setVarianteIndex((i) => (i + passo + fotosBase.length) % fotosBase.length);
-
-  const temPreco = categoriaSlug === CATEGORIA_COM_PRECO;
-  // Every chair can take a woven name (user 2026-09-29), not only the ones
-  // with a "<Nome> personalizado" photo.
-  // Desenho/anime chairs are already a personalized design: fixed
-  // personalized price, and no name on top (user 2026-09-29).
-  const ehDesenho = DESENHO_TEMAS.includes(modelo.nome);
-  const podePersonalizar = !ehDesenho && (temPreco || Boolean(personalizado));
-  const preco = precoCadeira(wantsNome || ehDesenho);
-  const faltaNome = wantsNome && !nomeFinal;
-  const mensagemWhatsapp = `Oi! Quero pedir uma peça de ${categoria}, modelo "${ativo.nome}"${
-    temPreco ? ` (${formatBRL(preco)})` : ""
-  }.${
-    varianteLabel ? ` Cor: ${varianteLabel}.` : ""
-  }${nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""}`;
-
-  const itemDoCarrinho: Omit<CartItem, "quantidade"> = {
-    id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}${
-      varianteLabel ? `:${varianteLabel}` : ""
-    }`,
-    categoriaSlug,
-    categoriaTitulo: categoria,
-    modeloId: ativo.id,
-    modeloNome: ativo.nome,
-    imagemUrl: fotoAtiva,
-    corA: ativo.corA,
-    corB: ativo.corB,
-    nomePersonalizado: nomeFinal || undefined,
-    personalizada: ehDesenho || undefined,
-    variante: varianteLabel || undefined,
-  };
+  const pagina = caminhoDoModelo(modelo.nome, categoriaSlug);
 
   const pedirNome = () => {
     nomeRef.current?.focus();
@@ -158,7 +127,13 @@ export function ModeloCard({
         ) : null}
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <p className="font-serif text-lg font-medium text-ink">{modelo.nome}</p>
+        {pagina ? (
+          <Link href={pagina} className="font-serif text-lg font-medium text-ink underline-offset-4 hover:underline">
+            {modelo.nome}
+          </Link>
+        ) : (
+          <p className="font-serif text-lg font-medium text-ink">{modelo.nome}</p>
+        )}
         {temPreco ? (
           <p className="mt-1 text-sm text-ink">
             <span className="font-medium">{formatBRL(preco)}</span>
@@ -174,7 +149,7 @@ export function ModeloCard({
           <div className="mt-2 inline-flex w-fit border border-line text-xs" role="group" aria-label="Personalização">
             <button
               type="button"
-              onClick={() => { setWantsNome(false); setVarianteIndex(0); }}
+              onClick={() => escolherNome(false)}
               aria-pressed={!wantsNome}
               className={`px-3 py-1.5 transition-colors ${
                 !wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"
@@ -184,7 +159,7 @@ export function ModeloCard({
             </button>
             <button
               type="button"
-              onClick={() => { setWantsNome(true); setVarianteIndex(0); }}
+              onClick={() => escolherNome(true)}
               aria-pressed={wantsNome}
               className={`border-l border-line px-3 py-1.5 transition-colors ${
                 wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"
@@ -212,6 +187,11 @@ export function ModeloCard({
         ) : null}
 
         <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft" title={ativo.descricao}>{ativo.descricao}</p>
+        {pagina ? (
+          <Link href={pagina} data-rastro={`Ver detalhes: ${modelo.nome}`} className="mt-2 w-fit py-1 text-xs text-ink underline underline-offset-2 hover:text-ink-soft">
+            Ver detalhes, medidas e frete
+          </Link>
+        ) : null}
         <div className="mt-4 grid gap-2">
           <button
             type="button"

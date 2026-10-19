@@ -11,11 +11,14 @@ export function pageMetadata({
   description,
   path,
   noindex,
+  imagem,
 }: {
   title: string;
   description?: string;
   path: string;
   noindex?: boolean;
+  /** og:image for link previews (WhatsApp, Instagram); the layout's default otherwise. */
+  imagem?: string;
 }): Metadata {
   return {
     title,
@@ -28,6 +31,7 @@ export function pageMetadata({
       siteName: SITE_NOME,
       locale: "pt_BR",
       type: "website",
+      ...(imagem ? { images: [{ url: imagem }] } : {}),
     },
     ...(noindex ? { robots: { index: false, follow: true } } : {}),
   };

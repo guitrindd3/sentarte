@@ -237,6 +237,36 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
     ),
   },
   {
+    id: "cadeira",
+    nome: "Página de cada cadeira",
+    caminho: "/cadeira/flamengo",
+    descricao: "O quadro \"Como ela é feita\", igual em todas as páginas de cadeira. Nome, foto, descrição e preço vêm de cada cadeira em Cadeiras.",
+    campos: [
+      { id: "comoTitulo", rotulo: "Título", tipo: "linha", max: 60 },
+      { id: "comoTexto", rotulo: "Texto", tipo: "texto", max: 500 },
+      {
+        id: "detalhes",
+        rotulo: "Os 5 quadrinhos de detalhes",
+        tipo: "blocos",
+        rotulos: ["Nome", "Explicação"],
+        fixo: true,
+        dica: "Depois deles aparece sozinho um sexto: Personalização (com ou sem nome).",
+      },
+    ],
+    padrao: {
+      comoTitulo: "Como ela é feita",
+      comoTexto:
+        "Cada cadeira é trançada à mão, ponto a ponto, no nosso ateliê. A estrutura é de alumínio e o trançado é de corda náutica, feita para aguentar sol, água do mar e maresia.",
+      detalhes: [
+        { titulo: "Estrutura", texto: "Alumínio, leve e que não enferruja" },
+        { titulo: "Trançado", texto: "Corda náutica, resistente à maresia" },
+        { titulo: "Produção", texto: "Até {prazo} dias úteis, feita para você" },
+        { titulo: "Envio", texto: "Para todo o Brasil, com código de rastreio" },
+        { titulo: "Pagamento", texto: "Pix, cartão ou pelo WhatsApp" },
+      ],
+    },
+  },
+  {
     id: "envio",
     nome: "Política de envio",
     caminho: "/politica-de-envio",
