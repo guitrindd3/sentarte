@@ -70,15 +70,26 @@ export function ModeloCard({
         ) : (
           <WeavePattern colorA={ativo.corA} colorB={ativo.corB} cell={30} band={20} className="h-full w-full" />
         )}
-        {/* The whole photo puts the chair in the cart (user 2026-10-05; it was the
-            WhatsApp order link). The gallery arrows/thumbnails sit above it. */}
-        <button
-          type="button"
-          data-rastro={`Foto da cadeira (carrinho): ${ativo.nome}`}
-          aria-label={`Colocar ${ativo.nome} no carrinho`}
-          onClick={() => (faltaNome ? pedirNome() : addItem(itemDoCarrinho))}
-          className="absolute inset-0 cursor-pointer"
-        />
+        {/* The whole photo opens the chair's own page (user 2026-10-19; before it
+            put the chair in the cart, and before that it was the WhatsApp link).
+            Models without a page keep the cart behavior. The gallery arrows/
+            thumbnails sit above it. */}
+        {pagina ? (
+          <Link
+            href={pagina}
+            data-rastro={`Foto da cadeira (página): ${modelo.nome}`}
+            aria-label={`Ver a página de ${modelo.nome}`}
+            className="absolute inset-0"
+          />
+        ) : (
+          <button
+            type="button"
+            data-rastro={`Foto da cadeira (carrinho): ${ativo.nome}`}
+            aria-label={`Colocar ${ativo.nome} no carrinho`}
+            onClick={() => (faltaNome ? pedirNome() : addItem(itemDoCarrinho))}
+            className="absolute inset-0 cursor-pointer"
+          />
+        )}
         {temVariantes ? (
           <>
             <button
