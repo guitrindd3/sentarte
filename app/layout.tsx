@@ -78,20 +78,27 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     desenho: DESENHO_TEMAS.includes(p.base.nome),
   }));
   // Christmas strip: "DD/MM/AAAA" typed in the admin → ISO date; no strip when blank or invalid.
-  const natal = textosDaPagina(paginas, "natal");
-  const [d, m, a] = natal.linha("ate").split("/").map((x) => x.trim());
-  const ateNatal = /^\d{1,2}$/.test(d ?? "") && /^\d{1,2}$/.test(m ?? "") && /^\d{4}$/.test(a ?? "") ? `${a}-${m.padStart(2, "0")}-${d.padStart(2, "0")}` : "";
-  const textoNatal = natal.linha("texto").trim().replace(/\{data\}/g, ateNatal ? `${d.padStart(2, "0")}/${m.padStart(2, "0")}` : "");
+  // Top strips (Natal → Réveillon → janeiro): "DD/MM/AAAA" typed in the admin → ISO date; blank/invalid ones are skipped.
+  const faixasTopo = textosDaPagina(paginas, "natal");
+  const faixas = ["", "2", "3"].flatMap((n) => {
+    const [d, m, a] = faixasTopo.linha(`ate${n}`).split("/").map((x) => x.trim());
+    if (!/^\d{1,2}$/.test(d ?? "") || !/^\d{1,2}$/.test(m ?? "") || !/^\d{4}$/.test(a ?? "")) return [];
+    const texto = faixasTopo.linha(`texto${n}`).trim().replace(/\{data\}/g, `${d.padStart(2, "0")}/${m.padStart(2, "0")}`);
+    return texto ? [{ ate: `${a}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`, texto }] : [];
+  });
 
   return (
     <html lang="pt-BR" className={`${display.variable} ${body.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans antialiased">
         <CartProvider>
           <ForaDoAdmin>
-            {textoNatal && ateNatal ? (
-              <FaixaNatal ate={ateNatal}>
-                <TextoRico texto={textoNatal} whatsappNumero={site.whatsappNumero} inline />
-              </FaixaNatal>
+            {faixas.length ? (
+              <FaixaNatal
+                faixas={faixas.map((f) => ({
+                  ate: f.ate,
+                  conteudo: <TextoRico texto={f.texto} whatsappNumero={site.whatsappNumero} inline />,
+                }))}
+              />
             ) : null}
             <SiteHeader siteName={site.nome} whatsappNumero={site.whatsappNumero} />
           </ForaDoAdmin>

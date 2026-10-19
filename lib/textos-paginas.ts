@@ -237,29 +237,35 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
     ),
   },
   {
+    // id kept as "natal" (first version had only the Christmas strip)
     id: "natal",
-    nome: "Faixa de Natal",
+    nome: "Faixa do topo (Natal, Réveillon, janeiro)",
     caminho: "/",
-    descricao: "A faixa fina no topo de todas as páginas. Some sozinha no dia seguinte à data limite.",
-    campos: [
+    descricao:
+      "A faixa fina no topo de todas as páginas. Aparece uma de cada vez, na ordem: quando passa a data de uma, entra a seguinte. Depois da última, some.",
+    campos: [1, 2, 3].flatMap((n): Campo[] => [
       {
-        id: "texto",
-        rotulo: "Texto da faixa",
+        id: n === 1 ? "texto" : `texto${n}`,
+        rotulo: `${["", "1ª faixa", "2ª faixa", "3ª faixa"][n]}: texto`,
         tipo: "linha",
         max: 140,
-        dica: "{data} vira a data limite. Deixe em branco para tirar a faixa do site.",
+        dica: "{data} vira a data limite. Deixe em branco para pular essa faixa.",
       },
       {
-        id: "ate",
-        rotulo: "Data limite (dia/mês/ano)",
+        id: n === 1 ? "ate" : `ate${n}`,
+        rotulo: `${["", "1ª faixa", "2ª faixa", "3ª faixa"][n]}: data limite (dia/mês/ano)`,
         tipo: "linha",
         max: 10,
-        dica: "Último dia para pedir e receber antes do Natal (produção de até {prazo} dias úteis + o frete). Ex: 04/12/2026",
+        dica: "Último dia em que essa faixa aparece. Conte a produção (até {prazo} dias úteis) + o frete (até uns 10 dias úteis para longe). Ex: 04/12/2026",
       },
-    ],
+    ]),
     padrao: {
       texto: "Natal chegando: peça até {data} para receber antes do dia 25. [Escolher a minha](/categoria/cadeiras)",
       ate: "04/12/2026",
+      texto2: "Réveillon na praia: peça até {data} para receber antes da virada. [Escolher a minha](/categoria/cadeiras)",
+      ate2: "09/12/2026",
+      texto3: "Férias de janeiro: peça até {data} e receba a sua ainda em janeiro. [Escolher a minha](/categoria/cadeiras)",
+      ate3: "12/01/2027",
     },
   },
   {
