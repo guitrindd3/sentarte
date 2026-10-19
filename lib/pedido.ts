@@ -8,16 +8,20 @@ import { valorDoVale } from "./vale";
 // amount actually charged). The server recomputes everything from here —
 // it never trusts a price sent by the browser.
 
-export type ItemDoPedido = Pick<CartItem, "categoriaSlug" | "modeloNome" | "quantidade" | "nomePersonalizado" | "tipoCadeira"> & {
+export type ItemDoPedido = Pick<CartItem, "categoriaSlug" | "modeloNome" | "quantidade" | "nomePersonalizado" | "tipoCadeira" | "personalizada"> & {
   variante?: string;
   categoriaTitulo?: string;
 };
 
 const arred = (v: number) => Math.round(v * 100) / 100;
 
-/** Unit price of a chair line: personalized with a name or a desenho design. */
-function precoUnitario(item: ItemDoPedido) {
-  const desenho = DESENHO_TEMAS.includes(item.modeloNome);
+/**
+ * Unit price of a chair line: personalized with a name or a desenho design.
+ * `desenhos`: the server passes the real list (lib/grupos.ts nomesDesenho); in
+ * the browser the card's own `personalizada` flag counts too.
+ */
+function precoUnitario(item: ItemDoPedido, desenhos?: Set<string>) {
+  const desenho = desenhos ? desenhos.has(item.modeloNome) : DESENHO_TEMAS.includes(item.modeloNome) || Boolean(item.personalizada);
   return precoCadeira(Boolean(item.nomePersonalizado?.trim()) || desenho, item.tipoCadeira);
 }
 
@@ -27,7 +31,7 @@ function precoUnitario(item: ItemDoPedido) {
  * Both only discount chairs; a vale-presente bought in the cart is charged in
  * full (no coupon, no Pix discount) and needs no shipping.
  */
-export function calcularPedido(items: ItemDoPedido[], cupons: CupomPublico[] = []) {
+export function calcularPedido(items: ItemDoPedido[], cupons: CupomPublico[] = [], desenhos?: Set<string>) {
   const cadeiras = items.filter((i) => i.categoriaSlug === CATEGORIA_COM_PRECO);
   const vales = items.flatMap((i) => {
     const valor = valorDoVale(i);
@@ -36,7 +40,7 @@ export function calcularPedido(items: ItemDoPedido[], cupons: CupomPublico[] = [
   const qtdCadeiras = cadeiras.reduce((s, i) => s + i.quantidade, 0);
   const qtdVales = vales.reduce((s, v) => s + v.item.quantidade, 0);
   const valorVales = arred(vales.reduce((s, v) => s + v.item.quantidade * v.valor, 0));
-  const subtotal = arred(cadeiras.reduce((s, i) => s + i.quantidade * precoUnitario(i), 0));
+  const subtotal = arred(cadeiras.reduce((s, i) => s + i.quantidade * precoUnitario(i, desenhos), 0));
   const aplicado = melhorCupom(cupons.filter((c) => !c.vale), subtotal, qtdCadeiras);
   const cupom = aplicado?.cupom ?? null;
   const temCupom = Boolean(aplicado);

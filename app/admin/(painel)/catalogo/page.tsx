@@ -71,7 +71,7 @@ export default async function Catalogo({ searchParams }: PageProps<"/admin/catal
             <GradeModelos
               catId={cat.id}
               modelos={cat.modelos.map((m) => {
-                const onde = ondeAparece(m.nome, cat.slug);
+                const onde = ondeAparece(m.nome, cat.slug, m.grupo);
                 return {
                   id: m.id,
                   nome: m.nome,

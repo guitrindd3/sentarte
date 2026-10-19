@@ -15,6 +15,14 @@ export type Modelo = {
    * 2026-09-29 by a one-off script from the user's local photo folders.
    */
   fotosExtras?: string[];
+  /**
+   * Collection page it shows on (2026-10-19, chairs published from the admin's
+   * Monte a sua trama). The original ones are matched by name instead
+   * (TIMES / BOHO_PADROES / DESENHO_TEMAS) — see lib/grupos.ts.
+   */
+  grupo?: "times" | "boho" | "desenhos";
+  /** The Monte a sua trama design it was made from (chair-link query string). */
+  trama?: string;
 };
 
 export type Categoria = {

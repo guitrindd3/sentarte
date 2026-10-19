@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CheckIcon, CompartilharIcon, WhatsAppIcon } from "@/components/icons";
 import { useCart } from "@/lib/cart-context";
+import { PublicarTrama } from "@/components/publicar-trama";
 import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
 import { MEDIDAS_CADEIRAS } from "@/lib/medidas";
@@ -169,7 +170,7 @@ function desenhar(
   ctx.putImageData(saida, -(corte.x0 ?? 0), -corte.y0);
 }
 
-export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
+export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumero: string; /** /admin/montar: step 4 publishes the chair instead of ordering it. */ painel?: boolean }) {
   // Opens straight on step 1 with the woven chair (user 2026-10-06: no empty
   // frame / "Começar a montar" any more).
   const [passo, setPasso] = useState(1);
@@ -405,6 +406,17 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
       : "Sem nome",
     `Valor: ${formatBRL(preco)}`,
   ].join("\n");
+
+  /** The chair as it looks now, as a PNG file (photo for "Publicar no site"). */
+  const fotoDaCadeira = () =>
+    new Promise<File | null>((ok) => {
+      if (!foto) return ok(null);
+      const c = document.createElement("canvas");
+      c.width = IMG_W;
+      c.height = CORTE_H;
+      desenhar(c, foto, opcoes, { y0: CORTE_Y0, h: CORTE_H });
+      c.toBlob((b) => ok(b ? new File([b], "trama.png", { type: "image/png" }) : null), "image/png");
+    });
 
   const salvarImagem = () => {
     if (!foto) return;
@@ -907,6 +919,10 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                   {formatBRL(precoPix(preco))} no Pix. Frete calculado pelo CEP no carrinho.
                 </span>
               </p>
+              {painel ? (
+                <PublicarTrama codigo={codificarCadeira(opcoes)} gerarFoto={fotoDaCadeira} corA={fioA.cor} corB={fioB.cor} />
+              ) : (
+              <>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <a
                   href={whatsappUrl(whatsappNumero, mensagem)}
@@ -951,6 +967,8 @@ export function ChairBuilder({ whatsappNumero }: { whatsappNumero: string }) {
                 </div>
                 {compartilhado ? <p className="mt-2 break-all text-xs text-ink" role="status">{compartilhado}</p> : null}
               </div>
+              </>
+              )}
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs">
                 <button type="button" onClick={salvarImagem} className="text-ink underline hover:text-ink-soft">
                   Salvar a imagem da minha cadeira

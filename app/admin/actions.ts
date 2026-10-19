@@ -34,6 +34,7 @@ import { paginaEditavel, type Bloco, type ValorCampo } from "@/lib/textos-pagina
 import { excluirCupom, listarCupons, salvarCupom } from "@/lib/cupons-store";
 import { redisAtivo } from "@/lib/redis";
 import { salvarVagas } from "@/lib/vagas";
+import { slugDoModelo } from "@/lib/produtos";
 import {
   confirmarDoisFatores,
   conferirSegundoFator,
@@ -892,5 +893,50 @@ export async function salvarVagasAction(_p: Resultado, formData: FormData) {
     if (restantes !== undefined && (!Number.isFinite(restantes) || restantes < 0)) throw new Aviso("O número de vagas que sobram não está certo.");
     await salvarVagas(formData.get("ligado") === "on", total, restantes);
     return "Vagas salvas! Já aparece no site.";
+  });
+}
+
+// --- Monte a sua trama → "Publicar no site" (2026-10-19) -------------------------------
+
+/** A chair built in /admin/montar becomes a new model in a collection, with the built picture as its photo. */
+export async function publicarTramaAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const nome = String(formData.get("nome") ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
+    const descricao = String(formData.get("descricao") ?? "").trim().slice(0, 240);
+    const colecao = String(formData.get("colecao") ?? "");
+    const trama = String(formData.get("trama") ?? "").slice(0, 600);
+    const cor = (k: string, padrao: string) => {
+      const v = String(formData.get(k) ?? "");
+      return /^#[0-9a-f]{6}$/i.test(v) ? v : padrao;
+    };
+    if (!nome) throw new Aviso("Dê um nome para a cadeira.");
+    if (!descricao) throw new Aviso("Escreva uma descrição curta.");
+    if (!["times", "boho", "desenhos", "cadeiras"].includes(colecao)) throw new Aviso("Escolha a coleção.");
+    if (/ personalizado$/i.test(nome)) throw new Aviso('O nome não pode terminar com "personalizado".');
+    const foto = await imagemValida(formData.get("foto"));
+    if (!foto) throw new Aviso("Não deu para gerar a foto da cadeira. Volte um passo e tente de novo.");
+
+    const content = await getContentForWrite();
+    const cat = content.categorias.find((c) => c.slug === "cadeiras");
+    if (!cat) throw new Aviso(SUMIU);
+    const slug = slugDoModelo(nome);
+    if (!slug || cat.modelos.some((m) => slugDoModelo(m.nome) === slug)) {
+      throw new Aviso(`Já existe uma cadeira chamada "${nome}" (ou com nome parecido). Escolha outro nome.`);
+    }
+    const preparada = await prepararFoto(foto);
+    const novo: Modelo = {
+      id: crypto.randomUUID(),
+      nome,
+      descricao,
+      corA: cor("corA", "#241c14"),
+      corB: cor("corB", "#e8dccb"),
+      imagemUrl: preparada.url,
+      trama: trama || undefined,
+      ...(colecao === "cadeiras" ? {} : { grupo: colecao as "times" | "boho" | "desenhos" }),
+    };
+    cat.modelos.push(novo);
+    await saveContent(content, `publica a trama "${nome}" em ${colecao}`, [preparada.arquivo]);
+    const onde = colecao === "cadeiras" ? "/categoria/cadeiras" : `/${colecao}`;
+    return `Publicada! "${nome}" aparece em ${onde} e em /cadeira/${slug} em 1 a 2 minutos. Para trocar a foto ou o texto, abra Cadeiras.`;
   });
 }

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BOHO_NOME, BOHO_PADROES } from "@/lib/boho-model";
+import { BOHO_NOME } from "@/lib/boho-model";
+import { grupoDoModelo } from "@/lib/grupos";
+import type { Modelo } from "@/lib/content-schema";
 import { BackLink } from "@/components/back-link";
 import { CoverLinkCard, VIDEO_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
-import { DESENHO_NOME, DESENHO_TEMAS } from "@/lib/desenho-model";
+import { DESENHO_NOME } from "@/lib/desenho-model";
 import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
 import { ModeloCard } from "@/components/modelo-card";
 import { WeavePattern } from "@/components/weave-pattern";
@@ -13,7 +15,7 @@ import { pageMetadata } from "@/lib/seo";
 import { OfferStrip } from "@/components/offer-strip";
 import { CATEGORIA_COM_PRECO } from "@/lib/offer";
 import { pairPersonalizados } from "@/lib/modelo-pairs";
-import { TIME_DO_CORACAO_NOME, TIMES } from "@/lib/team-models";
+import { TIME_DO_CORACAO_NOME } from "@/lib/team-models";
 import { instagramUrl, whatsappUrl } from "@/lib/urls";
 
 // On "Cadeiras de praia", the individual team models (Flamengo, Corinthians,
@@ -21,8 +23,10 @@ import { instagramUrl, whatsappUrl } from "@/lib/urls";
 // "Time do coração" is the single link into that dedicated list instead.
 // Same idea for the six boho patterns (-> /boho) and the desenho/anime/frase
 // examples (-> /desenhos), linked from their own cover cards.
-const TEAM_MODEL_NAMES = new Set(TIMES.flatMap((nome) => [nome, `${nome} personalizado`]));
-const HIDDEN_FROM_GRID = new Set([...TEAM_MODEL_NAMES, ...BOHO_PADROES, ...DESENHO_TEMAS]);
+// (lib/grupos.ts: by name for the original chairs, Modelo.grupo for published
+// ones; a "<Nome> personalizado" follows its base model)
+const naColecao = (m: Modelo, todos: Modelo[]) =>
+  grupoDoModelo(m) !== null || grupoDoModelo(todos.find((x) => `${x.nome} personalizado` === m.nome) ?? { nome: "" }) !== null;
 
 const MONTE_A_SUA_TRAMA_NOME = "Monte a sua trama";
 
@@ -82,7 +86,7 @@ export default async function CategoriaPage({ params }: PageProps<"/categoria/[s
       <section className="mx-auto max-w-6xl px-6 py-14">
         {categoria.modelos.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[...pairPersonalizados(categoria.modelos.filter((m) => !HIDDEN_FROM_GRID.has(m.nome)))]
+            {[...pairPersonalizados(categoria.modelos.filter((m) => !naColecao(m, categoria.modelos)))]
               .sort((a, b) => {
                 const pa = ORDEM_CARTOES_ESPECIAIS[a.base.nome] ?? 100;
                 const pb = ORDEM_CARTOES_ESPECIAIS[b.base.nome] ?? 100;

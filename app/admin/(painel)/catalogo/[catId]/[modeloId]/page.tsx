@@ -12,7 +12,7 @@ export default async function EditarModelo({ params }: PageProps<"/admin/catalog
   const i = cat?.modelos.findIndex((m) => m.id === modeloId) ?? -1;
   const m = cat?.modelos[i];
   if (!cat || !m) notFound();
-  const onde = ondeAparece(m.nome, cat.slug);
+  const onde = ondeAparece(m.nome, cat.slug, m.grupo);
   const anterior = cat.modelos[i - 1];
   const proximo = cat.modelos[i + 1];
 
@@ -55,7 +55,7 @@ export default async function EditarModelo({ params }: PageProps<"/admin/catalog
                 <Field
                   label="Nome"
                   dica={
-                    onde.grupo && !onde.capa
+                    onde.grupo && !onde.capa && !m.grupo
                       ? `Atenção: esse nome liga a cadeira à página ${onde.grupo}. Se mudar o nome, ela sai de lá.`
                       : onde.capa
                         ? "Atenção: esse nome liga o cartão à página da coleção. Se mudar, o cartão deixa de funcionar como capa."

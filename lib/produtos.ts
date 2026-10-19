@@ -1,9 +1,10 @@
 import type { Categoria, Modelo, SiteContent } from "./content-schema";
-import { BOHO_NOME, BOHO_PADROES } from "./boho-model";
-import { DESENHO_NOME, DESENHO_TEMAS } from "./desenho-model";
+import { BOHO_NOME } from "./boho-model";
+import { grupoDoModelo } from "./grupos";
+import { DESENHO_NOME } from "./desenho-model";
 import { pairPersonalizados } from "./modelo-pairs";
 import { CATEGORIA_COM_PRECO } from "./offer";
-import { TIME_DO_CORACAO_NOME, TIMES } from "./team-models";
+import { TIME_DO_CORACAO_NOME } from "./team-models";
 
 // Product pages /cadeira/<slug> (2026-10-19, user: "página própria para cada
 // cadeira"). One page per chair the customer can actually buy: the cover
@@ -38,12 +39,7 @@ export function caminhoDoModelo(nome: string, categoriaSlug: string) {
   return `/cadeira/${slugDoModelo(nome.replace(/ personalizado$/, ""))}`;
 }
 
-function grupoDe(nome: string): Grupo {
-  if (TIMES.includes(nome)) return "times";
-  if (BOHO_PADROES.includes(nome)) return "boho";
-  if (DESENHO_TEMAS.includes(nome)) return "desenhos";
-  return "outros";
-}
+const grupoDe = (m: Modelo): Grupo => grupoDoModelo(m) ?? "outros";
 
 export const GRUPOS: Record<Grupo, { titulo: string; href: string }> = {
   times: { titulo: "Times", href: "/times" },
@@ -62,7 +58,7 @@ export function produtosDaLoja(content: SiteContent): Produto[] {
       base,
       personalizado,
       categoria,
-      grupo: grupoDe(base.nome),
+      grupo: grupoDe(base),
     }));
 }
 

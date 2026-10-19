@@ -14,7 +14,9 @@ export function getTeamPairs(categorias: Categoria[]): TeamPair[] {
   const cadeiras = categorias.find((c) => c.slug === "cadeiras");
   if (!cadeiras) return [];
 
-  return TIMES.flatMap((nome) => {
+  // the six original teams by name, then teams published from the admin (Modelo.grupo)
+  const extras = cadeiras.modelos.filter((m) => m.grupo === "times" && !TIMES.includes(m.nome) && !/ personalizado$/.test(m.nome));
+  return [...TIMES, ...extras.map((m) => m.nome)].flatMap((nome) => {
     const base = cadeiras.modelos.find((m) => m.nome === nome);
     if (!base) return [];
     const personalizado = cadeiras.modelos.find((m) => m.nome === `${nome} personalizado`);

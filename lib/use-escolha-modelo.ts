@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CATEGORIA_COM_PRECO, formatBRL, precoCadeira } from "./offer";
-import { DESENHO_TEMAS } from "./desenho-model";
+import { grupoDoModelo } from "./grupos";
 import type { Modelo } from "./content-schema";
 import type { CartItem } from "./cart-context";
 
@@ -48,7 +48,7 @@ export function useEscolhaModelo({
   // with a "<Nome> personalizado" photo.
   // Desenho/anime chairs are already a personalized design: fixed
   // personalized price, and no name on top (user 2026-09-29).
-  const ehDesenho = DESENHO_TEMAS.includes(modelo.nome);
+  const ehDesenho = grupoDoModelo(modelo) === "desenhos";
   const podePersonalizar = !ehDesenho && (temPreco || Boolean(personalizado));
   const preco = precoCadeira(wantsNome || ehDesenho);
   const faltaNome = wantsNome && !nomeFinal;

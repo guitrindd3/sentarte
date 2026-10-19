@@ -5,6 +5,8 @@ import { anotarNoCaminho, vidValido } from "./estatisticas";
 import { calcularFrete } from "./frete-servidor";
 import { tipoValido } from "./offer";
 import { valorDoVale } from "./vale";
+import { getContent } from "./content-store";
+import { nomesDesenho } from "./grupos";
 import { calcularPedido, descricaoItem, entregaCompleta, type DadosEntrega, type ItemDoPedido } from "./pedido";
 
 // Shared by the card (Checkout Pro redirect, /api/checkout) and the in-site
@@ -38,7 +40,7 @@ export async function prepararPedido(corpo: CorpoPedido) {
   } catch (err) {
     console.error("checkout cupons", err);
   }
-  const conta = calcularPedido(itens, cupons);
+  const conta = calcularPedido(itens, cupons, nomesDesenho((await getContent()).categorias));
   if (!conta.pagavel || conta.total <= 0) return { ok: false, erro: "Esse carrinho só pode ser fechado pelo WhatsApp." } as const;
   if (forma !== "pix" && forma !== "cartao") return { ok: false, erro: "Forma de pagamento inválida." } as const;
   if (!entrega || !entregaCompleta(entrega, conta.soVale)) return { ok: false, erro: "Preencha os dados de entrega." } as const;

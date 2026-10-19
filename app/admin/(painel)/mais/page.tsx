@@ -4,6 +4,7 @@ import { logoutAction } from "../../actions";
 // Phone-only overflow menu (the bottom bar has room for 5 tabs).
 const ITENS = [
   { href: "/admin/avisos", titulo: "Avisos e envio", texto: "Aviso de venda no celular/e-mail e o remetente das etiquetas." },
+  { href: "/admin/montar", titulo: "Montar e publicar", texto: "Monte uma trama e publique em Times, Boho, Desenhos ou Cadeiras." },
   { href: "/admin/vagas", titulo: "Vagas da semana", texto: "Quantas cadeiras dá para fazer por semana (aparece no site)." },
   { href: "/admin/cupons", titulo: "Cupons", texto: "Códigos de desconto para o carrinho." },
   { href: "/admin/paginas", titulo: "Páginas do site", texto: "Textos do Sobre, FAQ, políticas e das seções da página inicial." },

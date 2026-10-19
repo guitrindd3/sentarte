@@ -16,7 +16,6 @@ import { SITE_URL } from "@/lib/nav";
 import { formatBRL, PRECO_CADEIRA, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
 import { instagramUrl } from "@/lib/urls";
 import { produtosDaLoja } from "@/lib/produtos";
-import { DESENHO_TEMAS } from "@/lib/desenho-model";
 import "./globals.css";
 
 const display = Bodoni_Moda({
@@ -75,7 +74,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     corA: p.base.corA,
     corB: p.base.corB,
     grupo: p.grupo,
-    desenho: DESENHO_TEMAS.includes(p.base.nome),
+    desenho: p.grupo === "desenhos",
   }));
   // Christmas strip: "DD/MM/AAAA" typed in the admin → ISO date; no strip when blank or invalid.
   // Top strips (Natal → Réveillon → janeiro): "DD/MM/AAAA" typed in the admin → ISO date; blank/invalid ones are skipped.

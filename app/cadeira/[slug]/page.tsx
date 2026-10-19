@@ -13,7 +13,6 @@ import { getContent } from "@/lib/content-store";
 import { SITE_URL } from "@/lib/nav";
 import { formatBRL, precoCadeira, precoPix, PRECO_CADEIRA, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
 import { acharProduto, GRUPOS, produtosDaLoja, relacionados, type Produto } from "@/lib/produtos";
-import { DESENHO_TEMAS } from "@/lib/desenho-model";
 import { pageMetadata } from "@/lib/seo";
 import { TextoRico, textoSimples } from "@/components/texto-rico";
 import { textosDaPagina } from "@/lib/textos-paginas";
@@ -26,7 +25,7 @@ export async function generateStaticParams() {
   return produtosDaLoja(await getContent()).map((p) => ({ slug: p.slug }));
 }
 
-const ehDesenho = (p: Produto) => DESENHO_TEMAS.includes(p.base.nome);
+const ehDesenho = (p: Produto) => p.grupo === "desenhos";
 
 function titulo(p: Produto) {
   if (p.grupo === "times") return `Cadeira de praia do ${p.base.nome}`;

@@ -1,8 +1,7 @@
 import { AutoScrollRow } from "@/components/auto-scroll-row";
 import { ModeloCard } from "@/components/modelo-card";
-import { BOHO_PADROES } from "@/lib/boho-model";
 import type { Categoria, Modelo } from "@/lib/content-schema";
-import { DESENHO_TEMAS } from "@/lib/desenho-model";
+import { modelosDoGrupo } from "@/lib/grupos";
 import { getTeamPairs } from "@/lib/team-models";
 
 // Homepage showcase of every chair on the site — teams, boho patterns and
@@ -15,11 +14,10 @@ export function TeamShowcase({
   whatsappNumero: string; titulo?: string; texto?: string }) {
   const cadeiras = categorias.find((c) => c.slug === "cadeiras");
   if (!cadeiras) return null;
-  const porNome = (nome: string) => cadeiras.modelos.find((m) => m.nome === nome);
   type Item = { base: Modelo; personalizado?: Modelo };
   const times: Item[] = getTeamPairs(categorias);
-  const boho: Item[] = BOHO_PADROES.flatMap((n) => (porNome(n) ? [{ base: porNome(n)! }] : []));
-  const desenhos: Item[] = DESENHO_TEMAS.flatMap((n) => (porNome(n) ? [{ base: porNome(n)! }] : []));
+  const boho: Item[] = modelosDoGrupo(cadeiras, "boho").map((base) => ({ base }));
+  const desenhos: Item[] = modelosDoGrupo(cadeiras, "desenhos").map((base) => ({ base }));
   // Mixed rotation (user 2026-10-02): 2 team, 2 desenho, 2 boho, repeat,
   // until every chair has shown — a shorter group starts over from its first
   // chair so the mix never turns into a long run of one kind.
