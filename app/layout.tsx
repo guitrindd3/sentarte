@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Archivo, Bodoni_Moda } from "next/font/google";
 import { CartDrawer } from "@/components/cart-drawer";
 import { FaixaNatal } from "@/components/faixa-natal";
+import { DATAS_DO_ANO, faixasDoCalendario } from "@/lib/faixas-calendario";
 import { ForaDoAdmin } from "@/components/fora-do-admin";
 import { TextoRico } from "@/components/texto-rico";
 import { textosDaPagina } from "@/lib/textos-paginas";
@@ -76,15 +77,16 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     grupo: p.grupo,
     desenho: p.grupo === "desenhos",
   }));
-  // Christmas strip: "DD/MM/AAAA" typed in the admin → ISO date; no strip when blank or invalid.
-  // Top strips (Natal → Réveillon → janeiro): "DD/MM/AAAA" typed in the admin → ISO date; blank/invalid ones are skipped.
+  // Top strip calendar (lib/faixas-calendario.ts): dates worked out every year, texts from Páginas.
   const faixasTopo = textosDaPagina(paginas, "natal");
-  const faixas = ["", "2", "3"].flatMap((n) => {
-    const [d, m, a] = faixasTopo.linha(`ate${n}`).split("/").map((x) => x.trim());
-    if (!/^\d{1,2}$/.test(d ?? "") || !/^\d{1,2}$/.test(m ?? "") || !/^\d{4}$/.test(a ?? "")) return [];
-    const texto = faixasTopo.linha(`texto${n}`).trim().replace(/\{data\}/g, `${d.padStart(2, "0")}/${m.padStart(2, "0")}`);
-    return texto ? [{ ate: `${a}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`, texto }] : [];
-  });
+  const hojeBR = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  const anoBR = Number(hojeBR.slice(0, 4));
+  const faixas = faixasDoCalendario(
+    [anoBR - 1, anoBR, anoBR + 1],
+    Object.fromEntries(DATAS_DO_ANO.map((d) => [d.id, faixasTopo.linha(d.id === "natal" ? "texto" : `texto_${d.id}`)])),
+    faixasTopo.linha("textoVale"),
+    Math.min(60, Math.max(1, Number(faixasTopo.linha("antecedencia")) || 21))
+  ).filter((f) => f.ate >= hojeBR);
 
   return (
     <html lang="pt-BR" className={`${display.variable} ${body.variable} h-full`}>
@@ -93,7 +95,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <ForaDoAdmin>
             {faixas.length ? (
               <FaixaNatal
+                hojeServidor={hojeBR}
                 faixas={faixas.map((f) => ({
+                  inicio: f.inicio,
                   ate: f.ate,
                   conteudo: <TextoRico texto={f.texto} whatsappNumero={site.whatsappNumero} inline />,
                 }))}

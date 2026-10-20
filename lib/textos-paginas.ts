@@ -9,6 +9,18 @@
 // {preco_pix}, {pix}, {parcelas}, {prazo} and {nome} are filled in from the
 // shop's terms; [words](whatsapp) / [words](/page) / [words](https://…) become links.
 
+
+/** Top-strip dates in Páginas → Faixa do topo (lib/faixas-calendario.ts DATAS_DO_ANO ids). */
+const FAIXAS_DO_ANO: [string, string][] = [
+  ["janeiro", "Férias de janeiro (até 12/01)"],
+  ["carnaval", "Carnaval"],
+  ["maes", "Dia das Mães (2º domingo de maio)"],
+  ["namorados", "Dia dos Namorados (12/06)"],
+  ["pais", "Dia dos Pais (2º domingo de agosto)"],
+  ["criancas", "Dia das Crianças (12/10)"],
+  ["natal", "Natal"],
+  ["reveillon", "Réveillon (até 09/12)"],
+];
 export type Bloco = { titulo: string; texto: string };
 export type ValorCampo = string | Bloco[] | string[];
 
@@ -239,33 +251,44 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
   {
     // id kept as "natal" (first version had only the Christmas strip)
     id: "natal",
-    nome: "Faixa do topo (Natal, Réveillon, janeiro)",
+    nome: "Faixa do topo (datas do ano)",
     caminho: "/",
     descricao:
-      "A faixa fina no topo de todas as páginas. Aparece uma de cada vez, na ordem: quando passa a data de uma, entra a seguinte. Depois da última, some.",
-    campos: [1, 2, 3].flatMap((n): Campo[] => [
-      {
-        id: n === 1 ? "texto" : `texto${n}`,
-        rotulo: `${["", "1ª faixa", "2ª faixa", "3ª faixa"][n]}: texto`,
+      "A faixa fina no topo de todas as páginas. Ela troca sozinha, todo ano, seguindo o calendário: férias de janeiro, Carnaval, Dia das Mães, Namorados, Pais, Crianças, Natal e Réveillon. As datas são calculadas pelo site (Carnaval e Dia das Mães/Pais mudam de dia a cada ano). Você só edita os textos. Deixe um texto em branco para pular aquela data.",
+    campos: [
+      ...FAIXAS_DO_ANO.map(([id, rotulo]): Campo => ({
+        id: id === "natal" ? "texto" : `texto_${id}`,
+        rotulo,
         tipo: "linha",
-        max: 140,
-        dica: "{data} vira a data limite. Deixe em branco para pular essa faixa.",
+        max: 160,
+        dica: "{data} vira o último dia para pedir; {dia} vira a data comemorativa.",
+      })),
+      {
+        id: "textoVale",
+        rotulo: "Depois do prazo (Mães, Namorados, Pais, Crianças, Natal)",
+        tipo: "linha",
+        max: 160,
+        dica: "Aparece entre o último dia para pedir e a data. {evento} vira o nome da data, {dia} a data.",
       },
       {
-        id: n === 1 ? "ate" : `ate${n}`,
-        rotulo: `${["", "1ª faixa", "2ª faixa", "3ª faixa"][n]}: data limite (dia/mês/ano)`,
+        id: "antecedencia",
+        rotulo: "Dias de antecedência para pedir",
         tipo: "linha",
-        max: 10,
-        dica: "Último dia em que essa faixa aparece. Conte a produção (até {prazo} dias úteis) + o frete (até uns 10 dias úteis para longe). Ex: 04/12/2026",
+        max: 2,
+        dica: "Quantos dias antes da data termina o prazo (produção até {prazo} dias úteis + frete). Padrão: 21.",
       },
-    ]),
+    ],
     padrao: {
+      texto_janeiro: "Férias de janeiro: peça até {data} e receba a sua ainda em janeiro. [Escolher a minha](/categoria/cadeiras)",
+      texto_carnaval: "Carnaval chegando ({dia}): peça até {data} e curta o feriado na sua. [Escolher a minha](/categoria/cadeiras)",
+      texto_maes: "Dia das Mães é {dia}: peça até {data} e ela chega a tempo, com o nome dela trançado. [Escolher a dela](/categoria/cadeiras)",
+      texto_namorados: "Dia dos Namorados é {dia}: peça até {data} e surpreenda. [Escolher o presente](/categoria/cadeiras)",
+      texto_pais: "Dia dos Pais é {dia}: peça até {data} e ela chega a tempo, até com o time dele. [Ver os times](/times)",
+      texto_criancas: "Dia das Crianças é {dia}: peça até {data}. Tem cadeira infantil com o nome trançado. [Montar a dela](/personalizar)",
       texto: "Natal chegando: peça até {data} para receber antes do dia 25. [Escolher a minha](/categoria/cadeiras)",
-      ate: "04/12/2026",
-      texto2: "Réveillon na praia: peça até {data} para receber antes da virada. [Escolher a minha](/categoria/cadeiras)",
-      ate2: "09/12/2026",
-      texto3: "Férias de janeiro: peça até {data} e receba a sua ainda em janeiro. [Escolher a minha](/categoria/cadeiras)",
-      ate3: "12/01/2027",
+      texto_reveillon: "Réveillon na praia: peça até {data} para receber antes da virada. [Escolher a minha](/categoria/cadeiras)",
+      textoVale: "{evento} é {dia}: ainda dá tempo com o vale-presente, que chega na hora. [Dar um vale](/vale-presente)",
+      antecedencia: "21",
     },
   },
   {
