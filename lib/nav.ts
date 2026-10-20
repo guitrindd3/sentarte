@@ -21,6 +21,7 @@ export const FOOTER_LINKS = {
   politicas: [
     { label: "Privacidade", href: "/politica-de-privacidade" },
     { label: "Termos de uso", href: "/termos-de-uso" },
+    { label: "Garantia e cuidados", href: "/garantia-e-cuidados" },
     { label: "Trocas e devoluções", href: "/politica-de-troca-e-devolucao" },
     { label: "Envio", href: "/politica-de-envio" },
   ],

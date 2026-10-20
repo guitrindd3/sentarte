@@ -370,7 +370,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
         {
           titulo: "Defeito de fabricação",
           texto:
-            "Se a peça chegar com defeito de fabricação — na trama, na estrutura ou na personalização combinada — entre em contato em até 7 dias corridos após o recebimento. Vamos avaliar o caso e resolver com reparo, troca ou reembolso.",
+            "Se a peça tiver defeito de fabricação — na trama, na estrutura ou na personalização combinada — entre em contato em até 90 dias após o recebimento (é a garantia, veja [Garantia e cuidados](/garantia-e-cuidados)). Vamos avaliar o caso e resolver com reparo, troca ou reembolso.",
         },
         {
           titulo: "Arrependimento",
@@ -380,6 +380,67 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
         {
           titulo: "Como pedir uma troca",
           texto: "Toda solicitação é feita pelo mesmo canal do pedido — [fale com a gente pelo WhatsApp](whatsapp) com fotos da peça e o número do pedido.",
+        },
+      ],
+    },
+  },
+  {
+    // 2026-10-20 (user: "página de garantia e cuidados"). 90 days = the legal
+    // warranty for durable goods (CDC art. 26, II) — don't promise less.
+    id: "garantia",
+    nome: "Garantia e cuidados",
+    caminho: "/garantia-e-cuidados",
+    descricao: "O que a garantia cobre e como cuidar da cadeira.",
+    aviso: "A garantia de 90 dias contra defeito de fabricação é obrigatória por lei (Código de Defesa do Consumidor). Pode dar mais tempo, mas não menos.",
+    campos: [
+      { id: "titulo", rotulo: "Título", tipo: "linha", max: 80 },
+      { id: "intro", rotulo: "Texto de abertura", tipo: "texto", max: 800 },
+      { id: "secoes", rotulo: "Partes da página", tipo: "blocos", rotulos: ["Subtítulo", "Texto"] },
+    ],
+    padrao: {
+      titulo: "Garantia e cuidados",
+      intro:
+        "Cada cadeira sai do ateliê conferida, fio por fio. Aqui está o que a garantia cobre e como cuidar dela para durar muitos verões.",
+      secoes: [
+        {
+          titulo: "Garantia de 90 dias",
+          texto:
+            "Toda cadeira tem garantia de 90 dias contra defeito de fabricação, contados a partir do dia em que você recebe, como manda o Código de Defesa do Consumidor. Vale para a trama (fio que solta ou trançado que afrouxa por falha nossa), para a estrutura que veio com defeito e para a personalização que não ficou como combinado.",
+        },
+        {
+          titulo: "O que a garantia não cobre",
+          texto:
+            "Desgaste natural do uso, cores que desbotam com o sol ao longo do tempo, cortes, rasgos ou queimaduras, uso com peso acima do indicado para o modelo (veja as medidas de cada cadeira) e consertos feitos por outras pessoas.",
+        },
+        {
+          titulo: "Como acionar a garantia",
+          texto:
+            "[Fale com a gente pelo WhatsApp](whatsapp) com o número do pedido e fotos do problema. A gente avalia e resolve com conserto, troca ou devolução do valor.",
+        },
+        {
+          titulo: "Depois da praia ou da piscina",
+          texto:
+            "Passe água doce na cadeira toda, trama e estrutura, para tirar o sal, o cloro e a areia. Deixe secar aberta, na sombra, antes de dobrar e guardar.",
+        },
+        {
+          titulo: "Limpeza",
+          texto:
+            "Para tirar sujeira, use água com sabão neutro e uma esponja ou escova macia. Não use água sanitária, removedor, thinner nem produtos com solvente: eles ressecam e mancham o fio.",
+        },
+        {
+          titulo: "Sol e onde guardar",
+          texto:
+            "A corda náutica aguenta bem o sol, mas sol forte todo dia, por muito tempo, vai desbotando as cores. Quando não estiver usando, guarde em lugar coberto e seco. Evite deixar a cadeira dobrada e molhada dentro de bolsa ou porta-malas.",
+        },
+        {
+          titulo: "Estrutura de alumínio",
+          texto:
+            "O alumínio não enferruja, mas o sal que acumula nas articulações pode deixar o abrir e fechar duro. Lave bem essas partes com água doce. Se continuar duro, uma gota de lubrificante de silicone resolve.",
+        },
+        {
+          titulo: "No dia a dia",
+          texto:
+            "Respeite o peso indicado para cada modelo, não fique em pé na cadeira e não sente na parte de cima do encosto. Se a trama afrouxar muito ou algum fio soltar, [fale com a gente](whatsapp).",
         },
       ],
     },

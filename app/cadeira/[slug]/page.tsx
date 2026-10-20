@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { configBlackFridayDaVitrine } from "@/lib/cupons-store";
+import { hojeBR, naBlackFriday } from "@/lib/black-friday";
 import { BackLink } from "@/components/back-link";
 import { Depoimentos } from "@/components/home/depoimentos";
 import { FotosClientes } from "@/components/fotos-clientes";
@@ -59,6 +61,11 @@ export default async function CadeiraPage({ params }: PageProps<"/cadeira/[slug]
   const parecidas = relacionados(content, p);
   const url = `${SITE_URL}/cadeira/${p.slug}`;
   const tp = textosDaPagina(content.paginas, "cadeira");
+  // Black Friday price in the structured data too, so it matches the page and
+  // the Google Shopping feed (app/feed/google.xml) — Merchant Center checks it.
+  const bf = await configBlackFridayDaVitrine().catch(() => null);
+  const fatorBf = bf?.ligado && bf.minCadeiras <= 1 && naBlackFriday(hojeBR(), bf.inicioAntecipado) ? 1 - bf.percentual / 100 : 1;
+  const precoLd = (v: number) => (Math.round(v * fatorBf * 100) / 100).toFixed(2);
 
   const migalhas = [
     { nome: "Início", href: "/" },
@@ -79,11 +86,12 @@ export default async function CadeiraPage({ params }: PageProps<"/cadeira/[slug]
           url,
           offers: {
             "@type": "AggregateOffer",
-            lowPrice: (comNome ? PRECO_CADEIRA_COM_NOME : PRECO_CADEIRA).toFixed(2),
-            highPrice: PRECO_CADEIRA_COM_NOME.toFixed(2),
+            lowPrice: precoLd(comNome ? PRECO_CADEIRA_COM_NOME : PRECO_CADEIRA),
+            highPrice: precoLd(PRECO_CADEIRA_COM_NOME),
             offerCount: comNome ? 1 : 2,
             priceCurrency: "BRL",
-            availability: "https://schema.org/MadeToOrder",
+            // made to order, but orderable now — same as the feed's in_stock
+            availability: "https://schema.org/InStock",
             url,
           },
         }}
@@ -141,6 +149,9 @@ export default async function CadeiraPage({ params }: PageProps<"/cadeira/[slug]
             <div className="mt-3 max-w-[55ch] space-y-3 leading-relaxed text-ink-soft">
               <TextoRico texto={tp.linha("comoTexto")} whatsappNumero={content.site.whatsappNumero} />
             </div>
+            <Link href="/garantia-e-cuidados" className="mt-4 inline-block py-1 text-sm text-ink underline underline-offset-2 hover:text-ink-soft">
+              Garantia de 90 dias e como cuidar da sua cadeira
+            </Link>
           </div>
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             {[

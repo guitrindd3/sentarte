@@ -18,6 +18,7 @@ const STATIC_ROUTES = [
   "/sobre",
   "/contato",
   "/faq",
+  "/garantia-e-cuidados",
   "/politica-de-envio",
   "/politica-de-troca-e-devolucao",
   "/politica-de-privacidade",
