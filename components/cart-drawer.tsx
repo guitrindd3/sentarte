@@ -261,7 +261,7 @@ export function CartDrawer({
                       </Link>
                       <div className="flex flex-1 flex-col p-2">
                         <p className="line-clamp-2 text-xs font-medium leading-tight text-ink">{s.nome}</p>
-                        <p className="mt-0.5 text-[0.7rem] text-ink-soft">{formatBRL(preco)}</p>
+                        <p className="mt-0.5 text-xs text-ink-soft">{formatBRL(preco)}</p>
                         <button
                           type="button"
                           data-rastro={`Compre junto: ${s.nome}`}
@@ -288,7 +288,7 @@ export function CartDrawer({
                   );
                 })}
               </ul>
-              <p className="mt-2 text-[0.7rem] text-ink-soft">Sem nome. Para trançar um nome, abra a cadeira.</p>
+              <p className="mt-2 text-xs text-ink-soft">Sem nome. Para trançar um nome, abra a cadeira.</p>
             </div>
           ) : null}
         </div>

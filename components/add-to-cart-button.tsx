@@ -8,11 +8,14 @@ export function AddToCartButton({
   item,
   disabled = false,
   contorno = false,
+  curtoNoCelular = false,
 }: {
   item: Omit<CartItem, "quantidade">;
   disabled?: boolean;
   /** Outline style (next to a filled "Comprar"). */
   contorno?: boolean;
+  /** Phones: only the icon (the label stays for screen readers). */
+  curtoNoCelular?: boolean;
 }) {
   const { addItem } = useCart();
   const [justAdded, setJustAdded] = useState(false);
@@ -32,20 +35,21 @@ export function AddToCartButton({
         timeoutRef.current = setTimeout(() => setJustAdded(false), 1800);
       }}
       className={
-        contorno
+        (curtoNoCelular ? "max-sm:px-3.5 " : "") +
+        (contorno
           ? "inline-flex items-center justify-center gap-2 border border-ink px-4 py-2.5 text-sm font-medium text-ink transition-all duration-200 hover:bg-ink hover:text-canvas active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink"
-          : "mt-4 inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas"
+          : "mt-4 inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas")
       }
     >
       {justAdded ? (
         <>
           <CheckIcon className="h-4 w-4" />
-          Adicionado
+          <span className={curtoNoCelular ? "max-sm:sr-only" : ""}>Adicionado</span>
         </>
       ) : (
         <>
           <CartIcon className="h-4 w-4" />
-          Adicionar ao carrinho
+          <span className={curtoNoCelular ? "max-sm:sr-only" : ""}>Adicionar ao carrinho</span>
         </>
       )}
     </button>

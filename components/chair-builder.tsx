@@ -189,6 +189,9 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
     return () => clearTimeout(t);
   }, [busca]);
   const [grupo, setGrupo] = useState<Grupo>("basicos");
+  // Phones show the first shapes of a tab and a "Ver todas" button — with
+  // ~100 per tab, "Próximo" sat thousands of pixels down (2026-10-20).
+  const [todasFormas, setTodasFormas] = useState(false);
   const [formaAssento, setFormaAssento] = useState<Forma>("lisa");
   const [escalaAssento, setEscalaAssento] = useState(1);
   // Which part the shape grid edits (user 2026-10-02: tabs Encosto / Assento).
@@ -286,6 +289,10 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
   const termoBusca = semAcento(busca);
   const mostrarForma = (i: number) => (termoBusca ? ROTULOS_BUSCA[i].includes(termoBusca) : FORMAS_VISIVEIS[i].grupo === grupo);
   const achadas = termoBusca ? ROTULOS_BUSCA.filter((r) => r.includes(termoBusca)).length : -1;
+  const NO_CELULAR = 24;
+  const formasDaAba = FORMAS_VISIVEIS.flatMap((f, i) => (mostrarForma(i) ? [i] : []));
+  const posNaAba = new Map(formasDaAba.map((i, pos) => [i, pos]));
+  const cortaNoCelular = !todasFormas && !termoBusca && formasDaAba.length > NO_CELULAR;
 
   // Name step: press/drag on the chair to move the name.
   // Step 1 with a reduced shape: drag moves the shape instead.
@@ -594,7 +601,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                   }`}
                 >
                   <span className="text-[0.8rem] font-medium leading-tight sm:text-sm">{TIPOS_CADEIRA[t].curto}</span>
-                  <span className={`text-[0.7rem] ${on ? "text-canvas/75" : "text-ink-soft"}`}>{formatBRL(TIPOS_CADEIRA[t].preco)}</span>
+                  <span className={`text-xs ${on ? "text-canvas/75" : "text-ink-soft"}`}>{formatBRL(TIPOS_CADEIRA[t].preco)}</span>
                 </button>
               );
             })}
@@ -704,9 +711,10 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                       onClick={() => {
                         setGrupo(g.valor);
                         setBusca("");
+                        setTodasFormas(false);
                       }}
                       aria-label={g.rotulo}
-                      className={`relative whitespace-nowrap rounded-full px-1 py-1.5 text-[0.8rem] transition-colors ${
+                      className={`relative whitespace-nowrap rounded-full px-1 py-2 text-[0.8rem] transition-colors ${
                         aberto && !termoBusca ? "bg-ink font-medium text-canvas" : "text-ink-soft hover:bg-paper hover:text-ink"
                       }`}
                     >
@@ -729,6 +737,8 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                     onClick={() => escolherForma(f.valor)}
                     aria-pressed={formaAtiva === f.valor}
                     className={`relative flex flex-col items-center gap-1.5 border-2 p-1.5 text-xs transition-all ${
+                      cortaNoCelular && (posNaAba.get(i) ?? 0) >= NO_CELULAR && formaAtiva !== f.valor ? "max-sm:hidden" : ""
+                    } ${
                       formaAtiva === f.valor
                         ? "border-verde bg-verde/5 font-semibold text-verde-escuro shadow-[0_0_0_3px_rgb(31_157_85/0.18)]"
                         : "border-line text-ink-soft hover:border-ink"
@@ -751,6 +761,15 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                   </button>
                 ))}
               </div>
+              {cortaNoCelular ? (
+                <button
+                  type="button"
+                  onClick={() => setTodasFormas(true)}
+                  className="mt-3 w-full rounded-full border border-ink px-4 py-3 text-sm font-medium text-ink sm:hidden"
+                >
+                  Ver todas as {formasDaAba.length} formas desta aba
+                </button>
+              ) : null}
               {parte === "encosto" && forma !== "lisa" && forma !== "meio-a-meio" ? (
                 <p className="mt-4 text-xs text-ink-soft">
                   Use o − e + embaixo da cadeira para mudar o tamanho. Com o desenho menor, dá para arrastar ele na

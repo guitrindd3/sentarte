@@ -140,7 +140,7 @@ export function ModeloCard({
                   </button>
                 ))}
               </div>
-              <span className="text-[0.7rem] font-medium text-canvas [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">
+              <span className="text-xs font-medium text-canvas [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">
                 {contagemFotos}
               </span>
             </div>
@@ -174,7 +174,7 @@ export function ModeloCard({
               type="button"
               onClick={() => escolherNome(false)}
               aria-pressed={!wantsNome}
-              className={`px-3 py-1.5 transition-colors ${
+              className={`px-3 py-2 transition-colors ${
                 !wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"
               }`}
             >
@@ -184,7 +184,7 @@ export function ModeloCard({
               type="button"
               onClick={() => escolherNome(true)}
               aria-pressed={wantsNome}
-              className={`border-l border-line px-3 py-1.5 transition-colors ${
+              className={`border-l border-line px-3 py-2 transition-colors ${
                 wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"
               }`}
             >
@@ -209,13 +209,16 @@ export function ModeloCard({
           </label>
         ) : null}
 
-        <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft" title={ativo.descricao}>{ativo.descricao}</p>
+        {/* phones: no description on the card (it's on the chair's page) — the cards were very long */}
+        <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft max-sm:hidden" title={ativo.descricao}>{ativo.descricao}</p>
+        <span className="flex-1 sm:hidden" />
         {pagina ? (
           <Link href={pagina} data-rastro={`Ver detalhes: ${modelo.nome}`} className="mt-2 w-fit py-1 text-xs text-ink underline underline-offset-2 hover:text-ink-soft">
             Ver detalhes, medidas e frete
           </Link>
         ) : null}
-        <div className="mt-4 grid gap-2">
+        {/* phones: Comprar + a cart icon side by side; stacked from sm */}
+        <div className="mt-4 grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-1">
           <button
             type="button"
             disabled={faltaNome}
@@ -225,7 +228,7 @@ export function ModeloCard({
           >
             Comprar
           </button>
-          <AddToCartButton item={itemDoCarrinho} disabled={faltaNome} contorno />
+          <AddToCartButton item={itemDoCarrinho} disabled={faltaNome} contorno curtoNoCelular />
         </div>
         {faltaNome ? (
           <p className="mt-1.5 text-xs text-ink-soft">Escreva o nome para comprar ou adicionar ao carrinho.</p>

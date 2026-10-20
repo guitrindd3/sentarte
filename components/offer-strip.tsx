@@ -31,7 +31,13 @@ function itens(soPersonalizada: boolean, cupom?: CupomPublico) {
     cupom
       ? {
           destaque: `${rotuloDesconto(cupom)} de desconto`,
-          texto: cupom.minCadeiras > 1 ? `levando ${cupom.minCadeiras} ou mais, cupom ${cupom.codigo}` : `com o cupom ${cupom.codigo}`,
+          texto: cupom.automatico
+            ? cupom.minCadeiras > 1
+              ? `levando ${cupom.minCadeiras} ou mais, já entra no carrinho`
+              : "já entra sozinho no carrinho"
+            : cupom.minCadeiras > 1
+              ? `levando ${cupom.minCadeiras} ou mais, cupom ${cupom.codigo}`
+              : `com o cupom ${cupom.codigo}`,
         }
       : { destaque: "Feito à mão", texto: "trançada uma a uma no ateliê" },
   ];

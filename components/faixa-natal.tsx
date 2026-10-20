@@ -34,10 +34,10 @@ export function FaixaNatal({
   const semana = blackFriday ? naBlackFriday(hoje, blackFriday.inicioAntecipado) : null;
   if (semana && blackFriday) {
     return (
-      <div className="relative z-50 bg-ink px-4 py-2 text-center text-xs text-canvas sm:text-sm [&_a]:font-semibold [&_a]:!text-canvas [&_a]:underline [&_a]:underline-offset-2">
+      <div className="relative z-50 bg-ink px-4 py-2 text-center text-xs text-canvas sm:text-sm [&_a]:inline-block [&_a]:py-1 [&_a]:font-semibold [&_a]:!text-canvas [&_a]:underline [&_a]:underline-offset-2">
         {blackFriday.conteudo}
         {agora !== null && semana.fimMs > agora ? (
-          <span className="ml-2 inline-block rounded-full border border-canvas/40 px-2 py-0.5 text-[0.7rem] font-semibold tabular-nums sm:text-xs">
+          <span className="ml-2 inline-block rounded-full border border-canvas/40 px-2 py-0.5 text-xs font-semibold tabular-nums">
             Termina em {faltam(semana.fimMs - agora)}
           </span>
         ) : null}
@@ -48,7 +48,7 @@ export function FaixaNatal({
   const atual = faixas.find((f) => f.inicio <= hoje && f.ate >= hoje);
   if (!atual) return null;
   return (
-    <div className="relative z-50 bg-espresso px-4 py-2 text-center text-xs text-canvas sm:text-sm [&_a]:font-medium [&_a]:!text-canvas [&_a]:underline [&_a]:underline-offset-2">
+    <div className="relative z-50 bg-espresso px-4 py-2 text-center text-xs text-canvas sm:text-sm [&_a]:inline-block [&_a]:py-1 [&_a]:font-medium [&_a]:!text-canvas [&_a]:underline [&_a]:underline-offset-2">
       {atual.conteudo}
     </div>
   );
