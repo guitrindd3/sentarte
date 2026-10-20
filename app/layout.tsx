@@ -3,6 +3,7 @@ import { Archivo, Bodoni_Moda } from "next/font/google";
 import { CartDrawer } from "@/components/cart-drawer";
 import { FaixaNatal } from "@/components/faixa-natal";
 import { DATAS_DO_ANO, faixasDoCalendario } from "@/lib/faixas-calendario";
+import { configBlackFridayDaVitrine } from "@/lib/cupons-store";
 import { ForaDoAdmin } from "@/components/fora-do-admin";
 import { TextoRico } from "@/components/texto-rico";
 import { textosDaPagina } from "@/lib/textos-paginas";
@@ -87,15 +88,25 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     faixasTopo.linha("textoVale"),
     Math.min(60, Math.max(1, Number(faixasTopo.linha("antecedencia")) || 21))
   ).filter((f) => f.ate >= hojeBR);
+  // Black Friday week (lib/black-friday.ts): settings from the admin's Cupons page, text from Páginas.
+  const bf = await configBlackFridayDaVitrine();
+  const textoBf = bf.ligado
+    ? faixasTopo
+        .linha("textoBlackFriday")
+        .trim()
+        .replace(/\{desconto\}/g, `${bf.percentual.toLocaleString("pt-BR")}%`)
+        .replace(/\{condicao\}/g, bf.minCadeiras > 1 ? ` levando ${bf.minCadeiras} ou mais` : "")
+    : "";
 
   return (
     <html lang="pt-BR" className={`${display.variable} ${body.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans antialiased">
         <CartProvider>
           <ForaDoAdmin>
-            {faixas.length ? (
+            {faixas.length || textoBf ? (
               <FaixaNatal
                 hojeServidor={hojeBR}
+                blackFriday={textoBf ? <TextoRico texto={textoBf} whatsappNumero={site.whatsappNumero} inline /> : null}
                 faixas={faixas.map((f) => ({
                   inicio: f.inicio,
                   ate: f.ate,

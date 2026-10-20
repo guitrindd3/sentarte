@@ -12,6 +12,9 @@ import { useCart } from "@/lib/cart-context";
 import { useEscolhaModelo } from "@/lib/use-escolha-modelo";
 import { cepGuardado, guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import { whatsappUrl } from "@/lib/urls";
+import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
+import { LogoBlackFriday } from "@/components/logo-black-friday";
+import { SeloBlackFriday } from "@/components/selo-black-friday";
 import type { Modelo } from "@/lib/content-schema";
 
 // Top of the product page /cadeira/<slug>: big photo gallery (tap to zoom),
@@ -33,6 +36,8 @@ export function ProdutoCompra({
   whatsappNumero: string;
 }) {
   const e = useEscolhaModelo({ modelo, personalizado, categoria, categoriaSlug });
+  const bf = useBlackFriday();
+  const precoBf = precoBlackFriday(e.preco, bf);
   const { comprarAgora } = useCart();
   const [zoom, setZoom] = useState(false);
   const [cep, setCep] = useState("");
@@ -98,6 +103,7 @@ export function ProdutoCompra({
                 className="object-cover"
                 sizes="(min-width: 768px) 55vw, 100vw"
               />
+              {bf && e.temPreco ? <LogoBlackFriday className="z-10 w-[34%]" /> : null}
               <button
                 type="button"
                 onClick={() => setZoom(true)}
@@ -147,13 +153,17 @@ export function ProdutoCompra({
 
         {e.temPreco ? (
           <div className="mt-6 border-y border-line py-5">
-            <p className="text-3xl font-medium text-ink">{formatBRL(e.preco)}</p>
+            {bf ? <SeloBlackFriday cupom={bf.cupom} className="mb-2" /> : null}
+            <p className="text-3xl font-medium text-ink">
+              {precoBf ? <s className="mr-2 text-xl text-ink-soft">{formatBRL(e.preco)}</s> : null}
+              {formatBRL(precoBf ?? e.preco)}
+            </p>
             <p className="mt-1 text-sm text-ink">
-              <strong className="font-semibold">{formatBRL(precoPix(e.preco))} no Pix</strong>
+              <strong className="font-semibold">{formatBRL(precoPix(precoBf ?? e.preco))} no Pix</strong>
               <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
             </p>
             {!e.wantsNome && e.podePersonalizar ? (
-              <p className="mt-1 text-xs text-ink-soft">Com o seu nome trançado: {formatBRL(PRECO_CADEIRA_COM_NOME)}</p>
+              <p className="mt-1 text-xs text-ink-soft">Com o seu nome trançado: {formatBRL(precoBlackFriday(PRECO_CADEIRA_COM_NOME, bf) ?? PRECO_CADEIRA_COM_NOME)}</p>
             ) : null}
           </div>
         ) : null}

@@ -31,7 +31,7 @@ import { cpfValido } from "@/lib/pedido";
 import { avaliacoesPendentes, fotoDaAvaliacao, tirarAvaliacao } from "@/lib/avaliacoes";
 import { normalizarCodigo } from "@/lib/cupom";
 import { paginaEditavel, type Bloco, type ValorCampo } from "@/lib/textos-paginas";
-import { excluirCupom, listarCupons, salvarCupom } from "@/lib/cupons-store";
+import { excluirCupom, listarCupons, salvarConfigBlackFriday, salvarCupom } from "@/lib/cupons-store";
 import { redisAtivo } from "@/lib/redis";
 import { salvarVagas } from "@/lib/vagas";
 import { slugDoModelo } from "@/lib/produtos";
@@ -564,6 +564,20 @@ export async function salvarCupomAction(_p: Resultado, formData: FormData) {
     updateTag("cupons");
     revalidateSite();
     return antigo ? `Cupom ${codigo} salvo. Já está valendo no site.` : `Cupom ${codigo} criado. Já está valendo no site.`;
+  });
+}
+
+/** Black Friday week settings (lib/black-friday.ts). */
+export async function salvarBlackFridayAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const percentual = Number(String(formData.get("percentual") ?? "").replace(",", "."));
+    if (!(percentual > 0) || percentual > 50) throw new Aviso("O desconto da Black Friday vai de 1% a 50%.");
+    const minCadeiras = Math.min(10, Math.max(1, Math.floor(Number(formData.get("minCadeiras")) || 1)));
+    await salvarConfigBlackFriday({ ligado: formData.get("ligado") === "on", percentual: Math.round(percentual * 10) / 10, minCadeiras });
+    revalidatePath("/admin/cupons");
+    updateTag("cupons");
+    revalidateSite();
+    return formData.get("ligado") === "on" ? "Black Friday salva. Ela entra sozinha na semana certa." : "Black Friday desligada.";
   });
 }
 

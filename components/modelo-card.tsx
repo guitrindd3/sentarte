@@ -10,6 +10,9 @@ import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
 import { formatBRL, PARCELAS_MAX, precoPix, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
 import { caminhoDoModelo } from "@/lib/produtos";
 import { useEscolhaModelo } from "@/lib/use-escolha-modelo";
+import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
+import { LogoBlackFriday } from "@/components/logo-black-friday";
+import { SeloBlackFriday } from "@/components/selo-black-friday";
 import { whatsappUrl } from "@/lib/urls";
 import type { Modelo } from "@/lib/content-schema";
 import { useCart } from "@/lib/cart-context";
@@ -48,6 +51,8 @@ export function ModeloCard({
     mensagemWhatsapp,
     itemDoCarrinho,
   } = useEscolhaModelo({ modelo, personalizado, categoria, categoriaSlug });
+  const bf = useBlackFriday();
+  const precoBf = precoBlackFriday(preco, bf);
   const temVariantes = fotosBase.length > 1;
   const pagina = caminhoDoModelo(modelo.nome, categoriaSlug);
 
@@ -91,6 +96,7 @@ export function ModeloCard({
             className="absolute inset-0 cursor-pointer"
           />
         )}
+        {bf && temPreco ? <LogoBlackFriday className="w-[42%]" /> : null}
         {pagina ? (
           <BotaoFavorito slug={pagina.slice("/cadeira/".length)} nome={modelo.nome} className="absolute right-2 top-2" />
         ) : null}
@@ -149,13 +155,15 @@ export function ModeloCard({
         ) : (
           <p className="font-serif text-lg font-medium text-ink">{modelo.nome}</p>
         )}
+        {bf && temPreco && !precoBf ? <SeloBlackFriday cupom={bf.cupom} className="mt-1" /> : null}
         {temPreco ? (
           <p className="mt-1 text-sm text-ink">
-            <span className="font-medium">{formatBRL(preco)}</span>
+            {precoBf ? <s className="mr-1.5 text-ink-soft">{formatBRL(preco)}</s> : null}
+            <span className="font-medium">{formatBRL(precoBf ?? preco)}</span>
             <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
             <span className="block text-xs text-ink-soft">
-              {formatBRL(precoPix(preco))} no Pix
-              {wantsNome || !podePersonalizar ? null : <>. Com nome: {formatBRL(PRECO_CADEIRA_COM_NOME)}</>}
+              {formatBRL(precoPix(precoBf ?? preco))} no Pix
+              {wantsNome || !podePersonalizar ? null : <>. Com nome: {formatBRL(precoBlackFriday(PRECO_CADEIRA_COM_NOME, bf) ?? PRECO_CADEIRA_COM_NOME)}</>}
             </span>
           </p>
         ) : null}

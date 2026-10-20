@@ -3,13 +3,45 @@ import { unstable_cache } from "next/cache";
 import { CUPOM_PADRAO, normalizarCodigo, type Cupom, type CupomPublico } from "./cupom";
 import { diaBR } from "./estatisticas";
 import { redis, redisAtivo } from "./redis";
+import { BLACK_FRIDAY_PADRAO, CODIGO_BLACK_FRIDAY, cupomBlackFriday, naBlackFriday, type ConfigBlackFriday } from "./black-friday";
 
 // Coupons live in Redis (hash `cupons`, by code) so the admin's changes work
 // instantly, without a deploy. Paid uses are counted in `cupons:usos`.
 // The first read seeds SENTARTE (5% from 2 chairs, automatic) — the terms
 // that were hard-coded in lib/offer.ts before 2026-10-05.
 
-const K = { cupons: "cupons", usos: "cupons:usos", semeado: "cupons:semeado" };
+const K = { cupons: "cupons", usos: "cupons:usos", semeado: "cupons:semeado", blackFriday: "blackfriday" };
+
+/** Black Friday settings (lib/black-friday.ts); the default until the admin saves. */
+export async function configBlackFriday(): Promise<ConfigBlackFriday> {
+  if (!redisAtivo()) return { ...BLACK_FRIDAY_PADRAO, ligado: false };
+  try {
+    const [bruto] = (await redis([["GET", K.blackFriday]])) as (string | null)[];
+    return bruto ? { ...BLACK_FRIDAY_PADRAO, ...(JSON.parse(bruto) as Partial<ConfigBlackFriday>) } : BLACK_FRIDAY_PADRAO;
+  } catch (err) {
+    console.error("configBlackFriday", err);
+    return { ...BLACK_FRIDAY_PADRAO, ligado: false };
+  }
+}
+
+/** Paid uses of a code (also BLACKFRIDAY, which isn't in the `cupons` hash). */
+export async function usosDoCupom(codigo: string) {
+  const [n] = (await redis([["HGET", K.usos, codigo]])) as (string | null)[];
+  return Number(n) || 0;
+}
+
+export async function salvarConfigBlackFriday(c: ConfigBlackFriday) {
+  await redis([["SET", K.blackFriday, JSON.stringify(c)]]);
+}
+
+/** For pre-rendered pages (top strip): cached like cuponsDaVitrine. */
+export const configBlackFridayDaVitrine = unstable_cache(configBlackFriday, ["blackfriday-vitrine"], { revalidate: 600, tags: ["cupons"] });
+
+/** The BLACKFRIDAY coupon when it's on and today is in Black Friday week. */
+async function cupomBlackFridayDeHoje(): Promise<CupomPublico | null> {
+  const c = await configBlackFriday();
+  return c.ligado && naBlackFriday(diaBR()) ? cupomBlackFriday(c) : null;
+}
 
 export type CupomComUsos = Cupom & { usos: number };
 
@@ -59,7 +91,9 @@ const publico = (c: Cupom): CupomPublico => ({
 export async function cuponsAutomaticos(): Promise<CupomPublico[]> {
   if (!redisAtivo()) return [CUPOM_PADRAO];
   try {
-    return (await listarCupons()).filter((c) => c.automatico && !motivoInvalido(c)).map(publico);
+    const lista = (await listarCupons()).filter((c) => c.automatico && !motivoInvalido(c)).map(publico);
+    const bf = await cupomBlackFridayDeHoje();
+    return bf ? [...lista.filter((c) => c.codigo !== CODIGO_BLACK_FRIDAY), bf] : lista;
   } catch (err) {
     console.error("cuponsAutomaticos", err);
     return [];
@@ -78,8 +112,12 @@ export async function buscarCupom(codigo: string): Promise<{ cupom?: CupomPublic
   const cod = normalizarCodigo(codigo);
   if (!cod) return { erro: "Digite o código do cupom." };
   if (!redisAtivo()) return cod === CUPOM_PADRAO.codigo ? { cupom: CUPOM_PADRAO } : { erro: "Cupom não encontrado." };
+  if (cod === CODIGO_BLACK_FRIDAY) {
+    const bf = await cupomBlackFridayDeHoje();
+    if (bf) return { cupom: bf };
+  }
   const c = (await listarCupons()).find((x) => x.codigo === cod);
-  if (!c) return { erro: "Cupom não encontrado." };
+  if (!c) return { erro: cod === CODIGO_BLACK_FRIDAY ? "A Black Friday não está valendo agora." : "Cupom não encontrado." };
   const motivo = motivoInvalido(c);
   if (motivo === "vencido") return { erro: "Esse cupom já venceu." };
   if (motivo === "esgotado") return { erro: "Esse cupom já foi usado o máximo de vezes." };

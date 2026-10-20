@@ -254,7 +254,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
     nome: "Faixa do topo (datas do ano)",
     caminho: "/",
     descricao:
-      "A faixa fina no topo de todas as páginas. Ela troca sozinha, todo ano, seguindo o calendário: férias de janeiro, Carnaval, Dia das Mães, Namorados, Pais, Crianças, Natal e Réveillon. As datas são calculadas pelo site (Carnaval e Dia das Mães/Pais mudam de dia a cada ano). Você só edita os textos. Deixe um texto em branco para pular aquela data.",
+      "A faixa fina no topo de todas as páginas. Ela troca sozinha, todo ano, seguindo o calendário: férias de janeiro, Carnaval, Dia das Mães, Namorados, Pais, Crianças, Natal e Réveillon, e na semana da Black Friday ela vira a faixa da promoção. As datas são calculadas pelo site (Carnaval e Dia das Mães/Pais mudam de dia a cada ano). Você só edita os textos. Deixe um texto em branco para pular aquela data.",
     campos: [
       ...FAIXAS_DO_ANO.map(([id, rotulo]): Campo => ({
         id: id === "natal" ? "texto" : `texto_${id}`,
@@ -269,6 +269,13 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
         tipo: "linha",
         max: 160,
         dica: "Aparece entre o último dia para pedir e a data. {evento} vira o nome da data, {dia} a data.",
+      },
+      {
+        id: "textoBlackFriday",
+        rotulo: "Black Friday (semana da Black Friday, com contagem regressiva)",
+        tipo: "linha",
+        max: 160,
+        dica: "{desconto} vira a % e {condicao} o mínimo de cadeiras, os dois de Cupons → Black Friday. A contagem \"Termina em…\" entra sozinha no fim.",
       },
       {
         id: "antecedencia",
@@ -288,6 +295,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
       texto: "Natal chegando: peça até {data} para receber antes do dia 25. [Escolher a minha](/categoria/cadeiras)",
       texto_reveillon: "Réveillon na praia: peça até {data} para receber antes da virada. [Escolher a minha](/categoria/cadeiras)",
       textoVale: "{evento} é {dia}: ainda dá tempo com o vale-presente, que chega na hora. [Dar um vale](/vale-presente)",
+      textoBlackFriday: "Black Friday SentArte: {desconto} de desconto em todas as cadeiras{condicao}, direto no carrinho. [Aproveitar](/categoria/cadeiras)",
       antecedencia: "21",
     },
   },

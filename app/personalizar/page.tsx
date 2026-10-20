@@ -3,6 +3,7 @@ import { pageMetadata } from "@/lib/seo";
 import { BackLink } from "@/components/back-link";
 import { VIDEO_MONTE_SUA_CADEIRA, POSTER_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
 import { ChairBuilder } from "@/components/chair-builder";
+import { AvisoBlackFriday } from "@/components/aviso-black-friday";
 import { getContent } from "@/lib/content-store";
 import { TextoRico, textoSimples } from "@/components/texto-rico";
 import { textosDaPagina } from "@/lib/textos-paginas";
@@ -58,6 +59,7 @@ export default async function PersonalizarPage() {
         </div>
       </section>
       <section className="mx-auto max-w-6xl px-6 py-14">
+        <AvisoBlackFriday />
         <ChairBuilder whatsappNumero={content.site.whatsappNumero} />
       </section>
     </>

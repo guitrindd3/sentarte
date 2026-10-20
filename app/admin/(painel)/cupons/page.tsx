@@ -1,7 +1,8 @@
 import { rotuloDesconto, type Cupom } from "@/lib/cupom";
-import { listarCupons, motivoInvalido, type CupomComUsos } from "@/lib/cupons-store";
+import { configBlackFriday, listarCupons, motivoInvalido, usosDoCupom, type CupomComUsos } from "@/lib/cupons-store";
+import { CODIGO_BLACK_FRIDAY, hojeBR, naBlackFriday, semanaDaBlackFriday, type ConfigBlackFriday } from "@/lib/black-friday";
 import { redisAtivo } from "@/lib/redis";
-import { alternarCupomAction, excluirCupomAction, salvarCupomAction } from "../../actions";
+import { alternarCupomAction, excluirCupomAction, salvarBlackFridayAction, salvarCupomAction } from "../../actions";
 import { AdminForm, BotaoExcluir, Card, Field, SaveButton, btnSecondary, inputClass } from "../../_ui";
 import { CopiarTexto } from "./copiar";
 
@@ -69,13 +70,63 @@ function FormCupom({ c }: { c?: CupomComUsos }) {
   );
 }
 
+/** Black Friday week: on/off, %, minimum — the dates come by themselves every year. */
+function BlackFriday({ c, usos }: { c: ConfigBlackFriday; usos: number }) {
+  const hoje = hojeBR();
+  const agora = naBlackFriday(hoje);
+  let s = semanaDaBlackFriday(Number(hoje.slice(0, 4)));
+  if (s.fim < hoje) s = semanaDaBlackFriday(Number(hoje.slice(0, 4)) + 1);
+  const quando = c.minCadeiras > 1 ? ` levando ${c.minCadeiras} cadeiras ou mais` : " em todas as cadeiras";
+  const divulgar = `Black Friday SentArte: ${c.percentual.toLocaleString("pt-BR")}% de desconto${quando}, de ${dataBR(s.inicio)} a ${dataBR(s.fim)}. O desconto já entra sozinho no carrinho! sentarte.com.br`;
+  return (
+    <Card titulo="Black Friday">
+      <p className="text-sm text-ink-soft">
+        Entra sozinha todo ano, da segunda ao domingo da semana da Black Friday. {agora ? "Está valendo agora" : "Próxima"}:{" "}
+        <strong className="text-ink">
+          {dataBR(s.inicio)} a {dataBR(s.fim)}
+        </strong>
+        . Nessa semana o site mostra uma faixa com contagem regressiva no topo, o preço normal riscado nas cadeiras e o desconto já entra no carrinho
+        (cupom {CODIGO_BLACK_FRIDAY}). Se tiver outro cupom maior, vale o maior. Os 2% do Pix continuam por cima. O texto da faixa fica em Páginas → Faixa do topo.
+      </p>
+      <AdminForm action={salvarBlackFridayAction} className="mt-4 space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Desconto (%)">
+            <input name="percentual" required inputMode="decimal" defaultValue={c.percentual} className={inputClass} />
+          </Field>
+          <Field label="Mínimo de cadeiras" dica="1 = vale para qualquer pedido.">
+            <input name="minCadeiras" type="number" min={1} max={10} defaultValue={c.minCadeiras} className={inputClass} />
+          </Field>
+        </div>
+        <label className="flex items-start gap-3 rounded-xl bg-canvas px-4 py-3 text-sm">
+          <input type="checkbox" name="ligado" defaultChecked={c.ligado} className="mt-0.5 h-4 w-4 accent-[var(--wood)]" />
+          <span>
+            <span className="font-semibold text-ink">Fazer Black Friday</span>
+            <span className="block text-ink-soft">Desmarque para o site não fazer nada nessa semana.</span>
+          </span>
+        </label>
+        <div className="flex flex-wrap items-center gap-3">
+          <SaveButton>Salvar Black Friday</SaveButton>
+          <CopiarTexto texto={divulgar} rotulo="Copiar texto para divulgar" />
+          {usos ? <span className="text-sm text-ink-soft">{usos} {usos === 1 ? "compra paga" : "compras pagas"} com a Black Friday</span> : null}
+        </div>
+      </AdminForm>
+      <p className="mt-3 text-xs text-ink-soft">
+        Dica: uns dias antes, mande o texto acima para quem está na lista de Novidades (Clientes → copiar os números) e no Instagram.
+      </p>
+    </Card>
+  );
+}
+
 export default async function Cupons() {
   if (!redisAtivo()) {
     return <Card titulo="Cupons"><p className="text-sm text-ink-soft">O banco do painel não está ligado.</p></Card>;
   }
   let cupons: CupomComUsos[] = [];
+  const bf = await configBlackFriday();
+  let usosBf = 0;
   try {
     cupons = await listarCupons();
+    usosBf = await usosDoCupom(CODIGO_BLACK_FRIDAY);
   } catch (err) {
     console.error("cupons", err);
   }
@@ -89,6 +140,8 @@ export default async function Cupons() {
           pedido: se tiver mais de um, entra o que dá mais desconto. Os 2% do Pix continuam valendo por cima.
         </p>
       </div>
+
+      <BlackFriday c={bf} usos={usosBf} />
 
       <details className="rounded-2xl border-2 border-dashed border-rattan/60 bg-paper open:border-solid open:border-line/70" open={cupons.length === 0}>
         <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-4 font-semibold text-wood-dark sm:px-7">
