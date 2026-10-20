@@ -128,6 +128,9 @@ export function CompartilharCadeira({ slug, className = "", ...dados }: Dados & 
   const compartilhar = async () => {
     rastrear({ t: "c", l: `Compartilhar: ${dados.nome}` });
     setAviso("");
+    // Instagram drops the text of a shared picture — keep the message on the
+    // clipboard so it can be pasted in the post/story (started inside the tap)
+    navigator.clipboard?.writeText(`${texto()} ${link()}`).catch(() => {});
     const arquivo = await montarImagem(dados);
     try {
       if (arquivo && navigator.canShare?.({ files: [arquivo] })) {
