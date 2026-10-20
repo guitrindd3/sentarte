@@ -17,7 +17,7 @@ export function FaixaNatal({
   faixas: { inicio: string; ate: string; conteudo: ReactNode }[];
   hojeServidor: string;
   /** null when Black Friday is turned off in the admin */
-  blackFriday: ReactNode | null;
+  blackFriday: { conteudo: ReactNode; inicioAntecipado?: string } | null;
 }) {
   const [hoje, setHoje] = useState(hojeServidor);
   const [agora, setAgora] = useState<number | null>(null);
@@ -31,11 +31,11 @@ export function FaixaNatal({
     return () => clearInterval(t);
   }, []);
 
-  const semana = blackFriday ? naBlackFriday(hoje) : null;
-  if (semana) {
+  const semana = blackFriday ? naBlackFriday(hoje, blackFriday.inicioAntecipado) : null;
+  if (semana && blackFriday) {
     return (
       <div className="relative z-50 bg-ink px-4 py-2 text-center text-xs text-canvas sm:text-sm [&_a]:font-semibold [&_a]:!text-canvas [&_a]:underline [&_a]:underline-offset-2">
-        {blackFriday}
+        {blackFriday.conteudo}
         {agora !== null && semana.fimMs > agora ? (
           <span className="ml-2 inline-block rounded-full border border-canvas/40 px-2 py-0.5 text-[0.7rem] font-semibold tabular-nums sm:text-xs">
             Termina em {faltam(semana.fimMs - agora)}

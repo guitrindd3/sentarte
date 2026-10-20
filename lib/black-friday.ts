@@ -10,8 +10,15 @@ import type { CupomPublico } from "./cupom";
 
 export const CODIGO_BLACK_FRIDAY = "BLACKFRIDAY";
 
-export type ConfigBlackFriday = { ligado: boolean; percentual: number; minCadeiras: number };
-export const BLACK_FRIDAY_PADRAO: ConfigBlackFriday = { ligado: true, percentual: 12, minCadeiras: 1 };
+export type ConfigBlackFriday = {
+  ligado: boolean;
+  percentual: number;
+  minCadeiras: number;
+  /** YYYY-MM-DD: start earlier than that year's Monday (user 2026-10-20: "pode subir, já está perto"). */
+  inicioAntecipado?: string;
+};
+// 15%, alone: during the week no other coupon applies (user 2026-10-20).
+export const BLACK_FRIDAY_PADRAO: ConfigBlackFriday = { ligado: true, percentual: 15, minCadeiras: 1 };
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -35,10 +42,14 @@ export function semanaDaBlackFriday(ano: number) {
   };
 }
 
-/** The week if `hoje` (YYYY-MM-DD, Brasília) is inside it. */
-export function naBlackFriday(hoje: string) {
+/**
+ * The week if `hoje` (YYYY-MM-DD, Brasília) is inside it — from
+ * `inicioAntecipado` when that's earlier and in the same year.
+ */
+export function naBlackFriday(hoje: string, inicioAntecipado?: string) {
   const s = semanaDaBlackFriday(Number(hoje.slice(0, 4)));
-  return hoje >= s.inicio && hoje <= s.fim ? s : null;
+  const inicio = inicioAntecipado && inicioAntecipado.slice(0, 4) === s.inicio.slice(0, 4) && inicioAntecipado < s.inicio ? inicioAntecipado : s.inicio;
+  return hoje >= inicio && hoje <= s.fim ? { ...s, inicio } : null;
 }
 
 export function cupomBlackFriday(c: ConfigBlackFriday): CupomPublico {

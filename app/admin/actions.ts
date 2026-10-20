@@ -573,7 +573,14 @@ export async function salvarBlackFridayAction(_p: Resultado, formData: FormData)
     const percentual = Number(String(formData.get("percentual") ?? "").replace(",", "."));
     if (!(percentual > 0) || percentual > 50) throw new Aviso("O desconto da Black Friday vai de 1% a 50%.");
     const minCadeiras = Math.min(10, Math.max(1, Math.floor(Number(formData.get("minCadeiras")) || 1)));
-    await salvarConfigBlackFriday({ ligado: formData.get("ligado") === "on", percentual: Math.round(percentual * 10) / 10, minCadeiras });
+    const inicio = String(formData.get("inicioAntecipado") ?? "").trim();
+    if (inicio && !/^\d{4}-\d{2}-\d{2}$/.test(inicio)) throw new Aviso("Data de começo inválida.");
+    await salvarConfigBlackFriday({
+      ligado: formData.get("ligado") === "on",
+      percentual: Math.round(percentual * 10) / 10,
+      minCadeiras,
+      inicioAntecipado: inicio || undefined,
+    });
     revalidatePath("/admin/cupons");
     updateTag("cupons");
     revalidateSite();

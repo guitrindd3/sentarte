@@ -73,8 +73,8 @@ function FormCupom({ c }: { c?: CupomComUsos }) {
 /** Black Friday week: on/off, %, minimum — the dates come by themselves every year. */
 function BlackFriday({ c, usos }: { c: ConfigBlackFriday; usos: number }) {
   const hoje = hojeBR();
-  const agora = naBlackFriday(hoje);
-  let s = semanaDaBlackFriday(Number(hoje.slice(0, 4)));
+  const agora = naBlackFriday(hoje, c.inicioAntecipado);
+  let s = agora ?? semanaDaBlackFriday(Number(hoje.slice(0, 4)));
   if (s.fim < hoje) s = semanaDaBlackFriday(Number(hoje.slice(0, 4)) + 1);
   const quando = c.minCadeiras > 1 ? ` levando ${c.minCadeiras} cadeiras ou mais` : " em todas as cadeiras";
   const divulgar = `Black Friday SentArte: ${c.percentual.toLocaleString("pt-BR")}% de desconto${quando}, de ${dataBR(s.inicio)} a ${dataBR(s.fim)}. O desconto já entra sozinho no carrinho! sentarte.com.br`;
@@ -86,7 +86,7 @@ function BlackFriday({ c, usos }: { c: ConfigBlackFriday; usos: number }) {
           {dataBR(s.inicio)} a {dataBR(s.fim)}
         </strong>
         . Nessa semana o site mostra uma faixa com contagem regressiva no topo, o preço normal riscado nas cadeiras e o desconto já entra no carrinho
-        (cupom {CODIGO_BLACK_FRIDAY}). Se tiver outro cupom maior, vale o maior. Os 2% do Pix continuam por cima. O texto da faixa fica em Páginas → Faixa do topo.
+        (cupom {CODIGO_BLACK_FRIDAY}). Enquanto ela vale, nenhum outro cupom entra (nem os automáticos, nem os digitados); só o vale-presente continua funcionando. Os 2% do Pix continuam por cima. O texto da faixa fica em Páginas → Faixa do topo.
       </p>
       <AdminForm action={salvarBlackFridayAction} className="mt-4 space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -97,6 +97,9 @@ function BlackFriday({ c, usos }: { c: ConfigBlackFriday; usos: number }) {
             <input name="minCadeiras" type="number" min={1} max={10} defaultValue={c.minCadeiras} className={inputClass} />
           </Field>
         </div>
+        <Field label="Começar antes (opcional)" dica="Para adiantar a Black Friday deste ano. Ela termina sempre no domingo da semana da Black Friday.">
+          <input name="inicioAntecipado" type="date" defaultValue={c.inicioAntecipado} className={inputClass} />
+        </Field>
         <label className="flex items-start gap-3 rounded-xl bg-canvas px-4 py-3 text-sm">
           <input type="checkbox" name="ligado" defaultChecked={c.ligado} className="mt-0.5 h-4 w-4 accent-[var(--wood)]" />
           <span>

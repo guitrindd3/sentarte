@@ -40,7 +40,7 @@ export const configBlackFridayDaVitrine = unstable_cache(configBlackFriday, ["bl
 /** The BLACKFRIDAY coupon when it's on and today is in Black Friday week. */
 async function cupomBlackFridayDeHoje(): Promise<CupomPublico | null> {
   const c = await configBlackFriday();
-  return c.ligado && naBlackFriday(diaBR()) ? cupomBlackFriday(c) : null;
+  return c.ligado && naBlackFriday(diaBR(), c.inicioAntecipado) ? cupomBlackFriday(c) : null;
 }
 
 export type CupomComUsos = Cupom & { usos: number };
@@ -92,8 +92,9 @@ export async function cuponsAutomaticos(): Promise<CupomPublico[]> {
   if (!redisAtivo()) return [CUPOM_PADRAO];
   try {
     const lista = (await listarCupons()).filter((c) => c.automatico && !motivoInvalido(c)).map(publico);
+    // Black Friday week: its discount alone, no other automatic coupon (user 2026-10-20)
     const bf = await cupomBlackFridayDeHoje();
-    return bf ? [...lista.filter((c) => c.codigo !== CODIGO_BLACK_FRIDAY), bf] : lista;
+    return bf ? [bf] : lista;
   } catch (err) {
     console.error("cuponsAutomaticos", err);
     return [];
@@ -117,6 +118,8 @@ export async function buscarCupom(codigo: string): Promise<{ cupom?: CupomPublic
     if (bf) return { cupom: bf };
   }
   const c = (await listarCupons()).find((x) => x.codigo === cod);
+  // Black Friday week: typed coupons are off too — only a vale-presente (it's a payment, not a discount)
+  if (c && !c.vale && (await cupomBlackFridayDeHoje())) return { erro: "Na Black Friday vale só o desconto da Black Friday, que já entra sozinho." };
   if (!c) return { erro: cod === CODIGO_BLACK_FRIDAY ? "A Black Friday não está valendo agora." : "Cupom não encontrado." };
   const motivo = motivoInvalido(c);
   if (motivo === "vencido") return { erro: "Esse cupom já venceu." };

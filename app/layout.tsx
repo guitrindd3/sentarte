@@ -106,7 +106,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             {faixas.length || textoBf ? (
               <FaixaNatal
                 hojeServidor={hojeBR}
-                blackFriday={textoBf ? <TextoRico texto={textoBf} whatsappNumero={site.whatsappNumero} inline /> : null}
+                blackFriday={textoBf ? { conteudo: <TextoRico texto={textoBf} whatsappNumero={site.whatsappNumero} inline />, inicioAntecipado: bf.inicioAntecipado } : null}
                 faixas={faixas.map((f) => ({
                   inicio: f.inicio,
                   ate: f.ate,
