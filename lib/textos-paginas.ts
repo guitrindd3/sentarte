@@ -370,7 +370,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
         {
           titulo: "Defeito de fabricação",
           texto:
-            "Se a peça tiver defeito de fabricação — na trama, na estrutura ou na personalização combinada — entre em contato em até 90 dias após o recebimento (é a garantia, veja [Garantia e cuidados](/garantia-e-cuidados)). Vamos avaliar o caso e resolver com reparo, troca ou reembolso.",
+            "Confira a peça assim que receber e, se notar algo errado, avise em até 7 dias. Defeito de fabricação — na trama, na estrutura ou na personalização combinada — tem garantia de 90 dias após o recebimento, como manda a lei ([veja o que cobre](/garantia-e-cuidados)). O caso passa por análise do ateliê (fotos, vídeo e, se precisar, a peça volta para a gente) e, sendo defeito, resolvemos com reparo, troca ou reembolso. Estragos de uso não são cobertos.",
         },
         {
           titulo: "Arrependimento",
@@ -405,17 +405,17 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
         {
           titulo: "Garantia de 90 dias",
           texto:
-            "Toda cadeira tem garantia de 90 dias contra defeito de fabricação, contados a partir do dia em que você recebe, como manda o Código de Defesa do Consumidor. Vale para a trama (fio que solta ou trançado que afrouxa por falha nossa), para a estrutura que veio com defeito e para a personalização que não ficou como combinado.",
+            "Toda cadeira tem garantia de 90 dias contra defeito de fabricação, contados a partir do dia em que você recebe, como manda o Código de Defesa do Consumidor. Vale para a trama (fio que solta ou trançado que afrouxa por falha nossa), para a estrutura que veio com defeito e para a personalização que não ficou como combinado.\n\nConfira a cadeira assim que ela chegar: abra, feche e olhe a trama. Se notar qualquer coisa errada, avise a gente em até 7 dias. Assim a gente resolve mais rápido.",
         },
         {
           titulo: "O que a garantia não cobre",
           texto:
-            "Desgaste natural do uso, cores que desbotam com o sol ao longo do tempo, cortes, rasgos ou queimaduras, uso com peso acima do indicado para o modelo (veja as medidas de cada cadeira) e consertos feitos por outras pessoas.",
+            "Estragos de uso não são defeito de fabricação: quedas, pancadas, cortes, rasgos ou queimaduras, uso com peso acima do indicado para o modelo (veja as medidas de cada cadeira), ficar em pé ou sentar no encosto, deixar a cadeira guardada molhada ou com sal, produtos de limpeza fortes e consertos feitos por outras pessoas. Também não entram o desgaste natural e as cores que desbotam com o sol ao longo do tempo.",
         },
         {
           titulo: "Como acionar a garantia",
           texto:
-            "[Fale com a gente pelo WhatsApp](whatsapp) com o número do pedido e fotos do problema. A gente avalia e resolve com conserto, troca ou devolução do valor.",
+            "[Fale com a gente pelo WhatsApp](whatsapp) com o número do pedido, fotos e um vídeo curto do problema. Todo pedido de garantia passa por análise do ateliê e, se precisar, a peça volta para a gente olhar de perto. Sendo defeito de fabricação, a gente resolve com conserto, troca ou devolução do valor. Sendo estrago de uso, a gente avisa e, se você quiser, combina o conserto.",
         },
         {
           titulo: "Depois da praia ou da piscina",
