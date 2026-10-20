@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { BotaoFavorito } from "@/components/botao-favorito";
+import { CompartilharCadeira } from "@/components/compartilhar-cadeira";
 import { VagasSemana } from "@/components/vagas-semana";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
@@ -147,7 +148,19 @@ export function ProdutoCompra({
         <p className="text-sm text-ink-soft">{categoria}</p>
         <div className="mt-1 flex items-start justify-between gap-4">
           <h1 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{modelo.nome}</h1>
-          <BotaoFavorito slug={slug} nome={modelo.nome} className="shrink-0" />
+          <div className="flex shrink-0 gap-2">
+            {e.fotoAtiva ? (
+              <CompartilharCadeira
+                slug={slug}
+                foto={e.fotoAtiva}
+                nome={e.ativo.nome}
+                preco={precoBf ?? e.preco}
+                precoAntes={precoBf ? e.preco : undefined}
+                blackFriday={Boolean(bf)}
+              />
+            ) : null}
+            <BotaoFavorito slug={slug} nome={modelo.nome} />
+          </div>
         </div>
         <p className="mt-3 max-w-[55ch] leading-relaxed text-ink-soft">{e.ativo.descricao}</p>
 
