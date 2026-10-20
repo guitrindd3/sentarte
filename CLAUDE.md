@@ -730,6 +730,7 @@ User: "quero poder compartilhar... para mandar via wpp ou instagram". `component
 ## Phone pass (2026-10-20)
 
 User: "deixa as páginas no celular melhor para ser vista". Audit script (scratchpad `mob.mjs`: iPhone 13 + 360px Android against the live site — overflow, text < 11.5px, tap targets < 32px) found no horizontal overflow; fixed: the floating WhatsApp button now also hides until the visitor scrolls 280px (it covered the homepage hero's "Falar no WhatsApp"); ModeloCard on phones hides the description (the product page has it) and puts "Comprar" + an icon-only cart button side by side (`AddToCartButton curtoNoCelular`); taller Sem nome/Personalizado toggle; no 0.7rem text in customer UI (use text-xs); strip links get py-1; the builder shows 24 shapes per tab on phones + "Ver todas as N formas desta aba" (the selected one always shows; search shows all) — "Próximo" was ~100 shapes down; offer strip says "já entra sozinho no carrinho" for automatic coupons instead of "com o cupom X".
+- **Never let anything widen the page**: the icon-only cart button's `max-sm:sr-only` label (absolute) escaped the homepage's sliding row and made the page 19,278px wide on phones, so iOS let the user zoom out to a tiny page (user screenshot). Fixed with `relative` on the button, and `html, body { overflow-x: clip }` in globals.css as a guard (clip, not hidden, so the sticky header still works). When checking phones, measure `document.documentElement.scrollWidth` after `networkidle`.
 
 ## Google Shopping feed + Garantia page (2026-10-20)
 

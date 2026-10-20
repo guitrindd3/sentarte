@@ -45,12 +45,17 @@
   border-color: var(--line);
 }
 
+/* overflow-x: clip — nothing may make the page wider than the screen (on
+   phones Safari then lets you zoom out; 2026-10-20 an sr-only label did it).
+   clip, not hidden: hidden would break the sticky header. */
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
   position: relative;
+  overflow-x: clip;
   background: var(--canvas);
   color: var(--ink);
 }
