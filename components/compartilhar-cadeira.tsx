@@ -12,7 +12,7 @@ import { rastrear } from "@/lib/rastro";
 // shared (most computers): a small menu with WhatsApp, copy link, download.
 
 const W = 1080;
-const FOTO_H = 1080;
+const FOTO_H = 1030;
 const H = 1350;
 
 function carregar(src: string) {
@@ -56,9 +56,9 @@ async function montarImagem({ foto, nome, preco, precoAntes, blackFriday }: Dado
     }
     g.fillStyle = "#1c1a17";
     g.font = `500 68px ${serif}`;
-    g.fillText(nome, 64, FOTO_H + 100, W - 128);
+    g.fillText(nome, 64, FOTO_H + 95, W - 128);
     let x = 64;
-    const y = FOTO_H + 185;
+    const y = FOTO_H + 175;
     if (precoAntes) {
       g.font = `400 40px ${sans}`;
       g.fillStyle = "#6b645c";
@@ -75,6 +75,12 @@ async function montarImagem({ foto, nome, preco, precoAntes, blackFriday }: Dado
     g.fillStyle = "#6b645c";
     g.textAlign = "right";
     g.fillText("sentarte.com.br", W - 64, y);
+    if (blackFriday) {
+      g.textAlign = "left";
+      g.font = `600 34px ${sans}`;
+      g.fillStyle = "#1c1a17";
+      g.fillText(`Black Friday: ${blackFriday.percentual.toLocaleString("pt-BR")}% de desconto, só até ${ultimoDia(blackFriday.fimMs)}. Não perca!`, 64, y + 78, W - 128);
+    }
     const blob = await new Promise<Blob | null>((ok) => c.toBlob(ok, "image/jpeg", 0.9));
     return blob ? new File([blob], `${nome.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-sentarte.jpg`, { type: "image/jpeg" }) : null;
   } catch {
@@ -82,15 +88,35 @@ async function montarImagem({ foto, nome, preco, precoAntes, blackFriday }: Dado
   }
 }
 
-type Dados = { foto: string; nome: string; preco: number; precoAntes?: number; blackFriday: boolean };
+type Dados = {
+  foto: string;
+  nome: string;
+  preco: number;
+  precoAntes?: number;
+  /** while Black Friday is on: its percent and when it ends */
+  blackFriday: { percentual: number; fimMs: number } | null;
+};
+
+/** "29/11" — the last day (fimMs is the last second of it). */
+const ultimoDia = (fimMs: number) =>
+  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit" }).format(new Date(fimMs - 1000));
 
 export function CompartilharCadeira({ slug, className = "", ...dados }: Dados & { slug: string; className?: string }) {
   const [menu, setMenu] = useState(false);
   const [aviso, setAviso] = useState("");
   const caixa = useRef<HTMLDivElement>(null);
   const link = () => `${window.location.origin}/cadeira/${slug}`;
-  const texto = () =>
-    `${dados.nome}: ${formatBRL(dados.preco)}${dados.blackFriday ? " na Black Friday" : ""}. Cadeira de praia feita à mão pela SentArte.`;
+  // Black Friday (user 2026-10-20): the message has to sell it — the %, the deadline, "não perca"
+  const texto = () => {
+    const bf = dados.blackFriday;
+    if (!bf) return `${dados.nome}: ${formatBRL(dados.preco)}. Cadeira de praia feita à mão pela SentArte.`;
+    const pct = `${bf.percentual.toLocaleString("pt-BR")}%`;
+    return (
+      `🔥 É Black Friday na SentArte! Estamos com ${pct} de desconto em todas as cadeiras de praia feitas à mão. ` +
+      `A ${dados.nome} sai de ${formatBRL(dados.precoAntes ?? dados.preco)} por ${formatBRL(dados.preco)}. ` +
+      `É só até ${ultimoDia(bf.fimMs)}, não perca!`
+    );
+  };
 
   useEffect(() => {
     if (!menu) return;

@@ -156,7 +156,7 @@ export function ProdutoCompra({
                 nome={e.ativo.nome}
                 preco={precoBf ?? e.preco}
                 precoAntes={precoBf ? e.preco : undefined}
-                blackFriday={Boolean(bf)}
+                blackFriday={bf ? { percentual: bf.cupom.valor, fimMs: bf.fimMs } : null}
               />
             ) : null}
             <BotaoFavorito slug={slug} nome={modelo.nome} />
