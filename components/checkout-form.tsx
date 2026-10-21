@@ -97,6 +97,8 @@ export function CheckoutForm({
       nomePersonalizado: i.nomePersonalizado,
       variante: i.variante,
       tipoCadeira: i.tipoCadeira,
+      // Monte a sua trama: the design itself (its picture is /api/cadeira?<trama>), so the order keeps it
+      trama: i.imagemUrl?.startsWith("/api/cadeira?") ? i.imagemUrl.slice("/api/cadeira?".length) : undefined,
     }));
 
   const pagar = async (forma: "pix" | "cartao", naPaginaDoMercadoPago = false) => {
@@ -122,6 +124,8 @@ export function CheckoutForm({
       nomePersonalizado: i.nomePersonalizado,
       variante: i.variante,
       tipoCadeira: i.tipoCadeira,
+      // Monte a sua trama: the design itself (its picture is /api/cadeira?<trama>), so the order keeps it
+      trama: i.imagemUrl?.startsWith("/api/cadeira?") ? i.imagemUrl.slice("/api/cadeira?".length) : undefined,
     }));
     try {
       window.localStorage.setItem(ENTREGA_KEY, JSON.stringify({ ...d, cpf: undefined, presente: undefined, recado: undefined }));

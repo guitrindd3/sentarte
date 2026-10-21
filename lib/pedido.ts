@@ -11,6 +11,8 @@ import { valorDoVale } from "./vale";
 export type ItemDoPedido = Pick<CartItem, "categoriaSlug" | "modeloNome" | "quantidade" | "nomePersonalizado" | "tipoCadeira" | "personalizada"> & {
   variante?: string;
   categoriaTitulo?: string;
+  /** Monte a sua trama design (chair-link query string); see registrarPedido. */
+  trama?: string;
 };
 
 const arred = (v: number) => Math.round(v * 100) / 100;

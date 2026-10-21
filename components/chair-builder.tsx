@@ -21,6 +21,7 @@ import { codificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
 import { rastrear } from "@/lib/rastro";
 import { whatsappUrl } from "@/lib/urls";
+import { FotoTrama } from "@/components/foto-trama";
 
 // Step-by-step "Monte a sua trama" builder (2026-09-29). Instead of a drawn
 // illustration it starts from the real empty chair frame of the user's
@@ -170,12 +171,18 @@ function desenhar(
   ctx.putImageData(saida, -(corte.x0 ?? 0), -corte.y0);
 }
 
+/** Shape name for labels and the order ("foto" isn't in the shape list). */
+const rotuloDaForma = (f: Forma) => (f === "foto" ? "Sua foto" : (FORMAS.find((x) => x.valor === f)?.rotulo ?? "Lisa"));
+
 export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumero: string; /** /admin/montar: step 4 publishes the chair instead of ordering it. */ painel?: boolean }) {
   // Opens straight on step 1 with the woven chair (user 2026-10-06: no empty
   // frame / "Começar a montar" any more).
   const [passo, setPasso] = useState(1);
   const [foto, setFoto] = useState<ImageData | null>(null);
   const [forma, setForma] = useState<Forma>("lisa");
+  // "Sua foto vira trama" (2026-10-21): the photo's 29x29 grid, used while forma is "foto"
+  const [fotoGrade, setFotoGrade] = useState("");
+  const fotoDaForma = forma === "foto" && fotoGrade ? fotoGrade : undefined;
   // Chair type (user 2026-10-05): only chosen here, in the builder. The picture
   // stays the normal chair; the type changes the price, the order and the shipping.
   const [tipo, setTipo] = useState<TipoCadeira>("normal");
@@ -257,12 +264,12 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
 
   const nomeEncosto = nomeNoAssento ? "" : nome;
   const nomeAssento = nomeNoAssento ? nome : "";
-  const opcoes = { tipo: tipo === "normal" ? undefined : tipo, forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma };
+  const opcoes = { tipo: tipo === "normal" ? undefined : tipo, forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma }, {
+    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
@@ -272,7 +279,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
       ctx?.clearRect(0, 0, mini.width, mini.height);
       ctx?.drawImage(canvasRef.current, 0, 0, mini.width, mini.height);
     }
-  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma]);
+  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, fotoDaForma]);
 
   // Shape thumbnails: flat and straight (just the figure), in the chosen
   // colors — the photo's perspective made them look slanted.
@@ -384,7 +391,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
   const temNome = Boolean(nomeLimpo);
   const preco = precoCadeira(temNome, tipo);
   const tipoRotulo = TIPOS_CADEIRA[tipo].rotulo;
-  const formaRotulo = FORMAS.find((f) => f.valor === forma)?.rotulo ?? "Lisa";
+  const formaRotulo = rotuloDaForma(forma);
   const tamanhoRotulo = tamanhoNome <= 0.45 ? "Pequeno" : tamanhoNome <= 0.75 ? "Médio" : "Grande";
   const posicaoRotulo = posicao.y < 0.34 ? "Em cima" : posicao.y > 0.66 ? "Embaixo" : "No meio";
 
@@ -658,7 +665,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                   >
                     <span className="block font-semibold">{pt === "encosto" ? "Encosto" : "Assento"}</span>
                     <span className={`block text-xs ${parte === pt ? "text-canvas/80" : "text-ink-soft"}`}>
-                      {(pt === "encosto" ? FORMAS.find((f) => f.valor === forma) : FORMAS.find((f) => f.valor === formaAssento))?.rotulo}
+                      {rotuloDaForma(pt === "encosto" ? forma : formaAssento)}
                     </span>
                   </button>
                 ))}
@@ -671,9 +678,20 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
               <p className="mt-1 text-sm text-ink" aria-live="polite">
                 Escolhido:{" "}
                 <strong className="font-semibold text-verde-escuro">
-                  {FORMAS.find((f) => f.valor === formaAtiva)?.rotulo}
+                  {rotuloDaForma(formaAtiva)}
                 </strong>
               </p>
+              {parte === "encosto" ? (
+                <FotoTrama
+                  ativo={forma === "foto"}
+                  corA={fioA.cor}
+                  corB={fioB.cor}
+                  onUsar={(g) => {
+                    setFotoGrade(g);
+                    setForma("foto");
+                  }}
+                />
+              ) : null}
               <label className="mt-4 block">
                 <span className="sr-only">Buscar trançado</span>
                 <input

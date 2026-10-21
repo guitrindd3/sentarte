@@ -1,4 +1,5 @@
 import type { Forma, Opcoes } from "./chair-render";
+import { decodificarGrade } from "./trama-foto";
 
 // A Monte a sua trama design packed into a short query string, so the
 // WhatsApp message can carry a link whose preview IS the chair: /c?… is a
@@ -17,6 +18,8 @@ export function codificarCadeira(op: Opcoes): string {
   const p = new URLSearchParams();
   if (op.tipo) p.set("tc", op.tipo);
   p.set("f", op.forma);
+  // the customer's photo grid (lib/trama-foto.ts)
+  if (op.forma === "foto" && op.foto) p.set("fd", op.foto);
   p.set("a", op.corA.replace("#", ""));
   p.set("b", op.corB.replace("#", ""));
   if (op.corC) p.set("c", op.corC.replace("#", ""));
@@ -43,7 +46,9 @@ export function decodificarCadeira(q: URLSearchParams): Opcoes {
     const v = q.get(k) ?? "";
     return HEX.test(v) ? `#${v}` : padrao;
   };
-  const forma = q.get("f") ?? "lisa";
+  const fd = q.get("fd");
+  const temFoto = decodificarGrade(fd) !== null;
+  const forma = q.get("f") === "foto" && !temFoto ? "lisa" : (q.get("f") ?? "lisa");
   const formaAssento = q.get("fa") ?? "lisa";
   const tc = q.get("tc");
   return {
@@ -61,5 +66,6 @@ export function decodificarCadeira(q: URLSearchParams): Opcoes {
     tamanhoNome: num(q.get("t"), 0.3, 1, 1),
     escalaForma: num(q.get("e"), 0.35, 1, 1),
     posForma: { x: num(q.get("fx"), 0, 1, 0.5), y: num(q.get("fy"), 0, 1, 0.5) },
+    ...(forma === "foto" && fd ? { foto: fd } : {}),
   };
 }

@@ -79,9 +79,23 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
       <div className="grid gap-6 lg:grid-cols-2">
         <Card titulo="O que foi pedido">
           <ul className="space-y-1 text-ink">
-            {p.itens.map((i, k) => (
-              <li key={k}>{i}</li>
-            ))}
+            {p.itens.map((i, k) => {
+              // Monte a sua trama orders carry "— desenho: <site>/c?<design>" (2026-10-21): show the chair
+              const [texto, link] = i.split(" — desenho: ");
+              const q = link?.split("/c?")[1];
+              return (
+                <li key={k}>
+                  {texto}
+                  {q ? (
+                    <a href={`/c?${q}`} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-3 text-sm text-ink underline underline-offset-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`/api/cadeira?${q}`} alt="Desenho da cadeira" className="h-28 w-auto border border-line bg-canvas" />
+                      Ver o desenho grande
+                    </a>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
           {p.codigosVale?.length ? (
             <p className="mt-3 rounded-xl bg-canvas px-3 py-2 text-sm text-ink">

@@ -5,6 +5,8 @@ import { anotarNoCaminho, vidValido } from "./estatisticas";
 import { calcularFrete } from "./frete-servidor";
 import { tipoValido } from "./offer";
 import { valorDoVale } from "./vale";
+import { codificarCadeira, decodificarCadeira } from "./chair-link";
+import { SITE_URL } from "./nav";
 import { getContent } from "./content-store";
 import { nomesDesenho } from "./grupos";
 import { calcularPedido, descricaoItem, entregaCompleta, type DadosEntrega, type ItemDoPedido } from "./pedido";
@@ -31,6 +33,8 @@ export async function prepararPedido(corpo: CorpoPedido) {
     nomePersonalizado: i.nomePersonalizado ? String(i.nomePersonalizado).slice(0, 40) : undefined,
     tipoCadeira: tipoValido(i.tipoCadeira),
     variante: i.variante ? String(i.variante).slice(0, 40) : undefined,
+    // re-encoded from the parsed choices: only valid design params survive
+    trama: typeof i.trama === "string" && i.trama ? codificarCadeira(decodificarCadeira(new URLSearchParams(i.trama.slice(0, 800)))) : undefined,
   }));
 
   // Coupons are looked up again here (the browser only sends the typed code).
@@ -65,7 +69,8 @@ export async function registrarPedido(p: Pronto, vid?: string) {
     whatsapp: normalizarWhatsapp(p.telefone) ?? p.telefone,
     cidade: p.entrega.cidade.trim() ? `${p.entrega.cidade.trim()}/${p.entrega.uf.trim()}`.slice(0, 60) : "Vale-presente (sem envio)",
     forma: p.forma,
-    itens: p.itens.map(descricaoItem),
+    // builder chairs carry their design link (its preview is the chair picture)
+    itens: p.itens.map((i) => descricaoItem(i) + (i.trama ? ` — desenho: ${SITE_URL}/c?${i.trama}` : "")),
     valor: p.valor,
     vid: vidValido(vid) ? vid : undefined,
     cupom: p.conta.cupom?.codigo,

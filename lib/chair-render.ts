@@ -21,9 +21,12 @@ import { FORMAS_EXTRAS_5 } from "./formas-extras-5";
 import { FORMAS_BOHO_TRIBAL } from "./formas-boho-tribal";
 import { FORMAS_BOHO_CULTURAS } from "./formas-boho-culturas";
 import { GLYPH_H, GLYPH_W, glyphPixel, normalizarTexto } from "./pixel-font";
+import { decodificarGrade, FOTO_COLS, FOTO_ROWS } from "./trama-foto";
 
 export type Forma =
   | "lisa"
+  // the customer's photo, as a 29x29 grid in Opcoes.foto (lib/trama-foto.ts)
+  | "foto"
   | "diamante"
   | "ziguezague"
   | "espiral"
@@ -224,6 +227,8 @@ export type Opcoes = {
   /** Seat figure size, 0.4-2 of the seat panel (1 = fits it), centered;
    * never drawn outside the panel. */
   escalaAssento?: number;
+  /** forma "foto": the backrest grid made from the customer's photo (lib/trama-foto.ts). */
+  foto?: string;
 };
 
 function hexRgb(hex: string): [number, number, number] {
@@ -1167,6 +1172,9 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   const cols = Math.ceil(wIn / CELULA);
   const rows = Math.ceil((h - MARGEM_TOPO - MARGEM_BASE) / CELULA);
   const nome = rasterizarNome(op.nome, op.posicao, op.tamanhoNome ?? 1);
+  const grade = op.forma === "foto" ? decodificarGrade(op.foto) : null;
+  const celula = (ci: number, cj: number) =>
+    grade ? ci < FOTO_COLS && cj < FOTO_ROWS && grade[cj * FOTO_COLS + ci] === 1 : celulaDaForma(op.forma, ci, cj, cols, rows);
   // The shape is drawn as a scaled-down copy inside a box of the name area.
   const escala = Math.max(0.35, Math.min(1, op.escalaForma ?? 1));
   const areaH = h - MARGEM_TOPO - MARGEM_BASE;
@@ -1193,7 +1201,7 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
           ? lx >= w / 2
           : !naMargem &&
             naCaixa &&
-            celulaDaForma(op.forma, Math.floor(u / CELULA), Math.floor(v / CELULA), cols, rows);
+            celula(Math.floor(u / CELULA), Math.floor(v / CELULA));
       if (nome) {
         const k = ly * w + lx;
         // Full-size shapes get a plain band behind the name; a reduced shape
