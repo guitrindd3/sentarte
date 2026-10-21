@@ -238,7 +238,7 @@ export type Opcoes = {
 // inside are repainted, so the pool and the floor tiles stay.
 const BRACOS: [number, number][][] = [
   [[46, 345], [92, 362], [31, 520], [-12, 505]],
-  [[354, 365], [404, 345], [463, 500], [424, 524]],
+  [[368, 360], [404, 345], [463, 500], [424, 524]],
 ];
 const MADEIRA: [number, number, number] = [150, 92, 52];
 
@@ -1247,7 +1247,9 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
           const i = (y * IMG_W + x) * 4;
           if (saturacao(i) > 45) continue;
           const l = brilho(i);
-          if (l < 30 || l > 250) continue;
+          if (l < 30) continue;
+          // the arm's light highlights are painted too, but not the white strap right next to it
+          if (l > 200 && LATERAIS.some((r) => x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1)) continue;
           const across = (x - ax) * -uy + (y - ay) * ux;
           const veio = 1 + 0.07 * Math.sin(across * 1.9 + Math.sin(((x - ax) * ux + (y - ay) * uy) * 0.12) * 2.2);
           pinta(i, MADEIRA, (0.55 + (l / 160) * 0.55) * veio);
