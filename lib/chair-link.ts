@@ -17,6 +17,7 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 export function codificarCadeira(op: Opcoes): string {
   const p = new URLSearchParams();
   if (op.tipo) p.set("tc", op.tipo);
+  if (op.bracoMadeira) p.set("bm", "1");
   p.set("f", op.forma);
   // the customer's photo grid (lib/trama-foto.ts)
   if (op.forma === "foto" && op.foto) p.set("fd", op.foto);
@@ -53,6 +54,7 @@ export function decodificarCadeira(q: URLSearchParams): Opcoes {
   const tc = q.get("tc");
   return {
     tipo: tc === "infantil" || tc === "reclinavel" ? tc : undefined,
+    bracoMadeira: q.get("bm") === "1" || undefined,
     forma: (/^[a-z-]{2,24}$/.test(forma) ? forma : "lisa") as Forma,
     corA: cor("a", "#1C1C1E"),
     corB: cor("b", "#F3F1EC"),

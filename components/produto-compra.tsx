@@ -6,10 +6,11 @@ import { AddToCartButton } from "@/components/add-to-cart-button";
 import { BotaoFavorito } from "@/components/botao-favorito";
 import { CompartilharCadeira } from "@/components/compartilhar-cadeira";
 import { PreviaNome } from "@/components/previa-nome";
+import { OpcaoBraco } from "@/components/opcao-braco";
 import { VagasSemana } from "@/components/vagas-semana";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
-import { formatBRL, PARCELAS_MAX, precoPix, PRECO_CADEIRA_COM_NOME, PRAZO_PRODUCAO_DIAS_UTEIS } from "@/lib/offer";
+import { formatBRL, precoCadeira, PARCELAS_MAX, precoPix, PRAZO_PRODUCAO_DIAS_UTEIS } from "@/lib/offer";
 import { useCart } from "@/lib/cart-context";
 import { useEscolhaModelo } from "@/lib/use-escolha-modelo";
 import { cepGuardado, guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
@@ -177,7 +178,7 @@ export function ProdutoCompra({
               <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
             </p>
             {!e.wantsNome && e.podePersonalizar ? (
-              <p className="mt-1 text-xs text-ink-soft">Com o seu nome trançado: {formatBRL(precoBlackFriday(PRECO_CADEIRA_COM_NOME, bf) ?? PRECO_CADEIRA_COM_NOME)}</p>
+              <p className="mt-1 text-xs text-ink-soft">Com o seu nome trançado: {formatBRL(precoBlackFriday(precoCadeira(true, "normal", e.madeira), bf) ?? precoCadeira(true, "normal", e.madeira))}</p>
             ) : null}
           </div>
         ) : null}
@@ -217,6 +218,9 @@ export function ProdutoCompra({
                 />
               </label>
             ) : null}
+            <div className="mt-5">
+              <OpcaoBraco madeira={e.madeira} onChange={e.setMadeira} />
+            </div>
             {e.wantsNome ? <PreviaNome nome={e.nomeTexto} corA={e.ativo.corA} corB={e.ativo.corB} trama={modelo.trama} /> : null}
           </div>
         ) : null}

@@ -31,14 +31,19 @@ export const TIPOS_CADEIRA: Record<TipoCadeira, { rotulo: string; curto: string;
 };
 export const tipoValido = (t: unknown): TipoCadeira | undefined => (t === "infantil" || t === "reclinavel" ? t : undefined);
 
-export function precoCadeira(comNome: boolean, tipo: TipoCadeira = "normal") {
+/** Wooden armrests instead of the plastic ones (user 2026-10-21), extra per chair type. */
+export const BRACO_MADEIRA: Record<TipoCadeira, number> = { infantil: 100, normal: 120, reclinavel: 160 };
+/** Example photo: the Diamante verde chair has wooden armrests. */
+export const FOTO_BRACO_MADEIRA = "/catalogo/diamante-verde.jpg";
+
+export function precoCadeira(comNome: boolean, tipo: TipoCadeira = "normal", madeira = false) {
   const t = TIPOS_CADEIRA[tipo] ?? TIPOS_CADEIRA.normal;
-  return comNome ? t.precoComNome : t.preco;
+  return Math.round(((comNome ? t.precoComNome : t.preco) + (madeira ? BRACO_MADEIRA[tipo] ?? BRACO_MADEIRA.normal : 0)) * 100) / 100;
 }
 
-/** Price of one cart line: personalized if it has a name or is a desenho design. */
-export function precoItemCadeira(item: { nomePersonalizado?: string; personalizada?: boolean; tipoCadeira?: TipoCadeira }) {
-  return precoCadeira(Boolean(item.nomePersonalizado) || Boolean(item.personalizada), item.tipoCadeira);
+/** Price of one cart line: personalized if it has a name or is a desenho design; + wooden armrests. */
+export function precoItemCadeira(item: { nomePersonalizado?: string; personalizada?: boolean; tipoCadeira?: TipoCadeira; bracoMadeira?: boolean }) {
+  return precoCadeira(Boolean(item.nomePersonalizado) || Boolean(item.personalizada), item.tipoCadeira, Boolean(item.bracoMadeira));
 }
 
 export function precoPix(valor: number) {

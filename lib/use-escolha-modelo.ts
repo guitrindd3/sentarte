@@ -25,6 +25,8 @@ export function useEscolhaModelo({
   const [wantsNome, setWantsNome] = useState(false);
   const [varianteIndex, setVarianteIndex] = useState(0);
   const [nomeTexto, setNomeTexto] = useState("");
+  // wooden armrests (user 2026-10-21), on every chair with a price
+  const [madeira, setMadeira] = useState(false);
 
   const ativo = wantsNome && personalizado ? personalizado : modelo;
   // Color options (a real choice, sent with the order) come first, then
@@ -50,14 +52,14 @@ export function useEscolhaModelo({
   // personalized price, and no name on top (user 2026-09-29).
   const ehDesenho = grupoDoModelo(modelo) === "desenhos";
   const podePersonalizar = !ehDesenho && (temPreco || Boolean(personalizado));
-  const preco = precoCadeira(wantsNome || ehDesenho);
+  const preco = precoCadeira(wantsNome || ehDesenho, "normal", madeira);
   const faltaNome = wantsNome && !nomeFinal;
   const mensagemWhatsapp = `Oi! Quero pedir uma peça de ${categoria}, modelo "${ativo.nome}"${
     temPreco ? ` (${formatBRL(preco)})` : ""
-  }.${varianteLabel ? ` Cor: ${varianteLabel}.` : ""}${nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""}`;
+  }.${varianteLabel ? ` Cor: ${varianteLabel}.` : ""}${madeira ? " Com braço de madeira." : ""}${nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""}`;
 
   const itemDoCarrinho: Omit<CartItem, "quantidade"> = {
-    id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}${varianteLabel ? `:${varianteLabel}` : ""}`,
+    id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}${varianteLabel ? `:${varianteLabel}` : ""}${madeira ? ":madeira" : ""}`,
     categoriaSlug,
     categoriaTitulo: categoria,
     modeloId: ativo.id,
@@ -68,6 +70,7 @@ export function useEscolhaModelo({
     nomePersonalizado: nomeFinal || undefined,
     personalizada: ehDesenho || undefined,
     variante: varianteLabel || undefined,
+    bracoMadeira: madeira || undefined,
   };
 
   return {
@@ -93,5 +96,7 @@ export function useEscolhaModelo({
     faltaNome,
     mensagemWhatsapp,
     itemDoCarrinho,
+    madeira,
+    setMadeira,
   };
 }

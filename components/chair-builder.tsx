@@ -21,7 +21,7 @@ import { codificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
 import { rastrear } from "@/lib/rastro";
 import { whatsappUrl } from "@/lib/urls";
-import { FotoTrama } from "@/components/foto-trama";
+import { OpcaoBraco } from "@/components/opcao-braco";
 
 // Step-by-step "Monte a sua trama" builder (2026-09-29). Instead of a drawn
 // illustration it starts from the real empty chair frame of the user's
@@ -180,12 +180,13 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
   const [passo, setPasso] = useState(1);
   const [foto, setFoto] = useState<ImageData | null>(null);
   const [forma, setForma] = useState<Forma>("lisa");
-  // "Sua foto vira trama" (2026-10-21): the photo's 29x29 grid, used while forma is "foto"
-  const [fotoGrade, setFotoGrade] = useState("");
-  const fotoDaForma = forma === "foto" && fotoGrade ? fotoGrade : undefined;
+  // "Sua foto vira trama" was taken out the same day (user); the renderer still
+  // reads `foto` so links made in the meantime keep their picture.
+  const fotoDaForma: string | undefined = undefined;
   // Chair type (user 2026-10-05): only chosen here, in the builder. The picture
   // stays the normal chair; the type changes the price, the order and the shipping.
   const [tipo, setTipo] = useState<TipoCadeira>("normal");
+  const [bracoMadeira, setBracoMadeira] = useState(false);
   /** Shape search: while it has text, the grid shows matches from every tab. */
   const [busca, setBusca] = useState("");
   // Count what people look for in the shape search, once they stop typing.
@@ -264,12 +265,12 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
 
   const nomeEncosto = nomeNoAssento ? "" : nome;
   const nomeAssento = nomeNoAssento ? nome : "";
-  const opcoes = { tipo: tipo === "normal" ? undefined : tipo, forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma };
+  const opcoes = { tipo: tipo === "normal" ? undefined : tipo, forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira: bracoMadeira || undefined };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma }, {
+    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
@@ -279,7 +280,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
       ctx?.clearRect(0, 0, mini.width, mini.height);
       ctx?.drawImage(canvasRef.current, 0, 0, mini.width, mini.height);
     }
-  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, fotoDaForma]);
+  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, fotoDaForma, bracoMadeira]);
 
   // Shape thumbnails: flat and straight (just the figure), in the chosen
   // colors — the photo's perspective made them look slanted.
@@ -389,7 +390,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
 
   const nomeLimpo = nome.trim().toUpperCase();
   const temNome = Boolean(nomeLimpo);
-  const preco = precoCadeira(temNome, tipo);
+  const preco = precoCadeira(temNome, tipo, bracoMadeira);
   const tipoRotulo = TIPOS_CADEIRA[tipo].rotulo;
   const formaRotulo = rotuloDaForma(forma);
   const tamanhoRotulo = tamanhoNome <= 0.45 ? "Pequeno" : tamanhoNome <= 0.75 ? "Médio" : "Grande";
@@ -402,7 +403,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
     "Oi! Montei a minha cadeira no site e quero pedir:",
     linkCadeira,
     "",
-    `Tipo: ${tipoRotulo}`,
+    `Tipo: ${tipoRotulo}${bracoMadeira ? ", com braço de madeira" : ""}`,
     `Encosto: ${formaRotulo}${escalaForma < 0.97 ? ` (tamanho ${Math.round(escalaForma * 100)}%)` : ""}`,
     tresCores ? `Cor principal: ${fioA.nome} (metade esquerda) e ${fioC.nome} (metade direita)` : `Cor principal: ${fioA.nome}`,
     `Cor dos detalhes: ${fioB.nome}`,
@@ -499,6 +500,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
       corB: fioB.cor,
       nomePersonalizado: nomeLimpo ? nomeLimpo.replace(/\n/g, " / ") : undefined,
       tipoCadeira: tipo === "normal" ? undefined : tipo,
+      bracoMadeira: bracoMadeira || undefined,
     });
     setAdicionado(true);
     openCart();
@@ -622,6 +624,9 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
               </p>
             );
           })()}
+          <div className="mt-4">
+            <OpcaoBraco madeira={bracoMadeira} onChange={setBracoMadeira} tipo={tipo} />
+          </div>
         </fieldset>
         <ol className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2" aria-label="Passos">
           {PASSOS.map((rotulo, i) => {
@@ -681,17 +686,6 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                   {rotuloDaForma(formaAtiva)}
                 </strong>
               </p>
-              {parte === "encosto" ? (
-                <FotoTrama
-                  ativo={forma === "foto"}
-                  corA={fioA.cor}
-                  corB={fioB.cor}
-                  onUsar={(g) => {
-                    setFotoGrade(g);
-                    setForma("foto");
-                  }}
-                />
-              ) : null}
               <label className="mt-4 block">
                 <span className="sr-only">Buscar trançado</span>
                 <input

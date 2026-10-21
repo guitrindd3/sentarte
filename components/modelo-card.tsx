@@ -7,11 +7,12 @@ import { AddToCartButton } from "@/components/add-to-cart-button";
 import { BotaoFavorito } from "@/components/botao-favorito";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
-import { formatBRL, PARCELAS_MAX, precoPix, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
+import { formatBRL, precoCadeira, PARCELAS_MAX, precoPix } from "@/lib/offer";
 import { caminhoDoModelo } from "@/lib/produtos";
 import { useEscolhaModelo } from "@/lib/use-escolha-modelo";
 import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
 import { LogoBlackFriday } from "@/components/logo-black-friday";
+import { OpcaoBraco } from "@/components/opcao-braco";
 import { SeloBlackFriday } from "@/components/selo-black-friday";
 import { whatsappUrl } from "@/lib/urls";
 import type { Modelo } from "@/lib/content-schema";
@@ -49,6 +50,8 @@ export function ModeloCard({
     preco,
     faltaNome,
     mensagemWhatsapp,
+    madeira,
+    setMadeira,
     itemDoCarrinho,
   } = useEscolhaModelo({ modelo, personalizado, categoria, categoriaSlug });
   const bf = useBlackFriday();
@@ -163,7 +166,7 @@ export function ModeloCard({
             <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
             <span className="block text-xs text-ink-soft">
               {formatBRL(precoPix(precoBf ?? preco))} no Pix
-              {wantsNome || !podePersonalizar ? null : <>. Com nome: {formatBRL(precoBlackFriday(PRECO_CADEIRA_COM_NOME, bf) ?? PRECO_CADEIRA_COM_NOME)}</>}
+              {wantsNome || !podePersonalizar ? null : <>. Com nome: {formatBRL(precoBlackFriday(precoCadeira(true, "normal", madeira), bf) ?? precoCadeira(true, "normal", madeira))}</>}
             </span>
           </p>
         ) : null}
@@ -193,6 +196,8 @@ export function ModeloCard({
           </div>
         ) : null}
 
+
+        {temPreco ? <OpcaoBraco madeira={madeira} onChange={setMadeira} compacto /> : null}
 
         {wantsNome ? (
           <label className="mt-2 block">

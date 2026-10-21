@@ -8,7 +8,7 @@ import { valorDoVale } from "./vale";
 // amount actually charged). The server recomputes everything from here —
 // it never trusts a price sent by the browser.
 
-export type ItemDoPedido = Pick<CartItem, "categoriaSlug" | "modeloNome" | "quantidade" | "nomePersonalizado" | "tipoCadeira" | "personalizada"> & {
+export type ItemDoPedido = Pick<CartItem, "categoriaSlug" | "modeloNome" | "quantidade" | "nomePersonalizado" | "tipoCadeira" | "personalizada" | "bracoMadeira"> & {
   variante?: string;
   categoriaTitulo?: string;
   /** Monte a sua trama design (chair-link query string); see registrarPedido. */
@@ -24,7 +24,7 @@ const arred = (v: number) => Math.round(v * 100) / 100;
  */
 function precoUnitario(item: ItemDoPedido, desenhos?: Set<string>) {
   const desenho = desenhos ? desenhos.has(item.modeloNome) : DESENHO_TEMAS.includes(item.modeloNome) || Boolean(item.personalizada);
-  return precoCadeira(Boolean(item.nomePersonalizado?.trim()) || desenho, item.tipoCadeira);
+  return precoCadeira(Boolean(item.nomePersonalizado?.trim()) || desenho, item.tipoCadeira, Boolean(item.bracoMadeira));
 }
 
 /**
@@ -163,6 +163,7 @@ export function descricaoItem(i: ItemDoPedido) {
   return (
     `${i.modeloNome} (x${i.quantidade})` +
     (i.variante ? ` — cor: ${i.variante}` : "") +
+    (i.bracoMadeira ? " — braço de madeira" : "") +
     (i.nomePersonalizado ? (vale ? ` — para: ${i.nomePersonalizado}` : ` — nome: "${i.nomePersonalizado}"`) : "")
   );
 }

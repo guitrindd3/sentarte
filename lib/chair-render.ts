@@ -229,7 +229,27 @@ export type Opcoes = {
   escalaAssento?: number;
   /** forma "foto": the backrest grid made from the customer's photo (lib/trama-foto.ts). */
   foto?: string;
+  /** Wooden armrests (2026-10-21): the photo's grey plastic arms are repainted as wood. */
+  bracoMadeira?: boolean;
 };
+
+// The two plastic armrests of the base photo (measured 2026-10-21 on a 4x
+// zoom): slanted strips, each a quadrilateral. Only grey, unsaturated pixels
+// inside are repainted, so the pool and the floor tiles stay.
+const BRACOS: [number, number][][] = [
+  [[50, 350], [86, 365], [27, 516], [-8, 502]],
+  [[360, 366], [400, 349], [457, 500], [420, 518]],
+];
+const MADEIRA: [number, number, number] = [150, 92, 52];
+
+function noPoligono(p: [number, number][], x: number, y: number) {
+  let dentro = false;
+  for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
+    const [xi, yi] = p[i], [xj, yj] = p[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) dentro = !dentro;
+  }
+  return dentro;
+}
 
 function hexRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.replace("#", ""), 16);
@@ -1211,6 +1231,28 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
         else if (nome.contorno[k]) detalhe = false;
       }
       pinta(i, detalhe ? B : lx >= w / 2 ? C : A, sombraEscuro(brilho(i)));
+    }
+  }
+
+  if (op.bracoMadeira) {
+    for (const p of BRACOS) {
+      const xs = p.map((q) => q[0]), ys = p.map((q) => q[1]);
+      // grain runs along the arm
+      const [ax, ay] = p[0], [bx, by] = p[3];
+      const len = Math.hypot(bx - ax, by - ay);
+      const ux = (bx - ax) / len, uy = (by - ay) / len;
+      for (let y = Math.max(0, Math.min(...ys)); y < Math.min(IMG_H, Math.max(...ys)); y++) {
+        for (let x = Math.max(0, Math.min(...xs)); x < Math.min(IMG_W, Math.max(...xs)); x++) {
+          if (!noPoligono(p, x + 0.5, y + 0.5)) continue;
+          const i = (y * IMG_W + x) * 4;
+          if (saturacao(i) > 34) continue;
+          const l = brilho(i);
+          if (l < 55 || l > 240) continue;
+          const across = (x - ax) * -uy + (y - ay) * ux;
+          const veio = 1 + 0.07 * Math.sin(across * 1.9 + Math.sin(((x - ax) * ux + (y - ay) * uy) * 0.12) * 2.2);
+          pinta(i, MADEIRA, (0.55 + (l / 160) * 0.55) * veio);
+        }
+      }
     }
   }
 

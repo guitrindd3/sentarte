@@ -22,6 +22,8 @@ export type CartItem = {
   variante?: string;
   /** Chair type chosen in Monte a sua trama (missing = normal). */
   tipoCadeira?: TipoCadeira;
+  /** Wooden armrests (lib/offer.ts BRACO_MADEIRA). */
+  bracoMadeira?: boolean;
 };
 
 type CartContextValue = {
