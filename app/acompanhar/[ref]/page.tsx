@@ -8,6 +8,7 @@ import { getContent } from "@/lib/content-store";
 import { formatBRL, PRAZO_PRODUCAO_DIAS_UTEIS } from "@/lib/offer";
 import { codigoDoPedido } from "@/lib/pedido";
 import { linkRastreio } from "@/lib/rastreio";
+import { fotosDaProducao } from "@/lib/fotos-producao";
 import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
 
@@ -79,11 +80,13 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
   const lista = passos(p);
   const soVale = Boolean(p.vales?.length) && (!p.porTipo || p.porTipo.normal + p.porTipo.infantil + p.porTipo.reclinavel === 0);
   const primeiroNome = p.nome.trim().split(/\s+/)[0];
+  // photos the atelier takes while weaving it (lib/fotos-producao.ts)
+  const fotos = soVale ? [] : await fotosDaProducao(p.ref).catch(() => []);
 
   return (
     <>
       <PageHeader titulo={`Pedido ${codigoDoPedido(p.ref)}`} resumo={`Olá, ${primeiroNome}! Aqui você acompanha o seu pedido${soVale ? "" : ` para ${p.cidade}`}.`} voltarPara="/acompanhar" />
-      <section className="mx-auto grid max-w-6xl gap-8 px-6 py-14 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+      <section className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] gap-8 px-6 py-14 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         {soVale ? (
           <div className="max-w-xl text-sm leading-relaxed text-ink-soft">
             <p className="font-serif text-lg font-medium tracking-tight text-ink">Pedido de vale-presente</p>
@@ -122,6 +125,25 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
           ))}
         </ol>
         )}
+
+        {fotos.length ? (
+          <div className="min-w-0 md:col-span-2 md:row-start-2">
+            <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">A sua cadeira sendo feita</h2>
+            <p className="mt-1 text-sm text-ink-soft">Fotos tiradas no ateliê, enquanto a gente trança a sua.</p>
+            <ul className="mt-5 grid grid-cols-[repeat(2,minmax(0,1fr))] gap-4 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
+              {fotos.map((f) => (
+                <li key={f.id}>
+                  <a href={`/api/producao/${p.ref}/${f.id}`} target="_blank" rel="noreferrer" className="block">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/api/producao/${p.ref}/${f.id}`} alt={f.legenda} className="aspect-square w-full border border-line object-cover" />
+                  </a>
+                  <p className="mt-2 text-sm text-ink">{f.legenda}</p>
+                  <p className="text-xs text-ink-soft">{quando(f.em)}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <aside className="h-fit border border-line bg-paper p-5 text-sm">
           <p className="font-serif text-lg font-medium tracking-tight text-ink">Resumo</p>

@@ -13,6 +13,8 @@ import { definirEtapaAction, salvarRastreioAction } from "../../../actions";
 import { AdminForm, btnSecondary, Card, Field, inputClass, SaveButton } from "../../../_ui";
 import { CopiarNumeros } from "../copiar";
 import { Etiqueta } from "./etiqueta";
+import { FotosProducao } from "./fotos-producao";
+import { fotosDaProducao, MAX_FOTOS_PRODUCAO } from "@/lib/fotos-producao";
 
 // One order (2026-10-06): delivery data, the steps the customer sees on
 // /acompanhar, and the Melhor Envio label.
@@ -58,6 +60,9 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
   const pago = p.status === "pago";
   const etapa = p.etapa ?? (pago ? "producao" : undefined);
   const e = p.entrega;
+  const fotos = await fotosDaProducao(p.ref).catch(() => []);
+  const primeiroNome = p.nome.trim().split(/\s+/)[0];
+  const avisoFoto = `Oi, ${primeiroNome}! Aqui é do Ateliê SentArte. Sua cadeira já está sendo trançada 😍 Olha como ela está ficando: ${SITE_URL}/acompanhar/${p.ref}`;
 
   return (
     <div className="space-y-6">
@@ -160,6 +165,17 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
           </a>
         </Card>
       </div>
+
+      {pago ? (
+        <Card titulo="Fotos da produção" descricao="Aparecem na página Acompanhar pedido do cliente, na hora. Até 6 por pedido.">
+          <FotosProducao
+            pedidoRef={p.ref}
+            fotos={fotos.map((f) => ({ id: f.id, legenda: f.legenda, quando: quando(f.em) }))}
+            max={MAX_FOTOS_PRODUCAO}
+            linkWhatsapp={whatsappUrl(p.whatsapp, avisoFoto)}
+          />
+        </Card>
+      ) : null}
 
       <Card
         titulo="Andamento"

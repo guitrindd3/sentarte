@@ -28,7 +28,8 @@ import {
   type Remetente,
 } from "@/lib/melhor-envio";
 import { cpfValido } from "@/lib/pedido";
-import { avaliacoesPendentes, fotoDaAvaliacao, tirarAvaliacao } from "@/lib/avaliacoes";
+import { avaliacoesPendentes, fotoDaAvaliacao, fotoValida, tirarAvaliacao } from "@/lib/avaliacoes";
+import { adicionarFotoProducao, MAX_FOTOS_PRODUCAO, tirarFotoProducao } from "@/lib/fotos-producao";
 import { normalizarCodigo } from "@/lib/cupom";
 import { paginaEditavel, type Bloco, type ValorCampo } from "@/lib/textos-paginas";
 import { excluirCupom, listarCupons, salvarConfigBlackFriday, salvarCupom } from "@/lib/cupons-store";
@@ -738,6 +739,31 @@ export async function definirEtapaAction(ref: string, etapa: EtapaPedido) {
     await gravarPedido(p);
     revalidatePath(`/admin/clientes/${ref}`);
     return etapa === "producao" ? "Marcado como em produção." : etapa === "enviado" ? "Marcado como enviado." : "Marcado como entregue.";
+  });
+}
+
+/** A photo of the chair being made, shown on the customer's order page (lib/fotos-producao.ts). */
+export async function adicionarFotoProducaoAction(ref: string, legenda: string, dataUrl: string) {
+  return executar(async () => {
+    await pedidoOuAviso(ref);
+    const foto = fotoValida(dataUrl);
+    if (!foto) throw new Aviso("Não deu para usar essa foto. Tente outra (JPG ou PNG).");
+    try {
+      await adicionarFotoProducao(ref, String(legenda ?? "").replace(/\s+/g, " ").trim().slice(0, 80) || "Sua cadeira sendo feita", foto);
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith("no máximo")) throw new Aviso(`Cada pedido aceita até ${MAX_FOTOS_PRODUCAO} fotos. Apague uma para pôr outra.`);
+      throw err;
+    }
+    revalidatePath(`/admin/clientes/${ref}`);
+    return "Foto adicionada. O cliente já vê na página do pedido.";
+  });
+}
+
+export async function tirarFotoProducaoAction(ref: string, id: string) {
+  return executar(async () => {
+    await tirarFotoProducao(ref, id);
+    revalidatePath(`/admin/clientes/${ref}`);
+    return "Foto apagada.";
   });
 }
 
