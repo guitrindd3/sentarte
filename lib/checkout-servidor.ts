@@ -86,6 +86,9 @@ export async function registrarPedido(p: Pronto, vid?: string) {
       bairro: (p.entrega.bairro ?? "").trim().slice(0, 60),
       cidade: p.entrega.cidade.trim().slice(0, 60),
       uf: p.entrega.uf.trim().toUpperCase().slice(0, 2),
+      ...(p.entrega.presente === true
+        ? { presente: true, recado: String(p.entrega.recado ?? "").replace(/\s+/g, " ").trim().slice(0, 200) || undefined }
+        : {}),
     },
     porTipo: p.conta.porTipo,
     frete: { valor: p.frete.valor, servico: p.frete.servico },

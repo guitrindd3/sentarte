@@ -5,6 +5,7 @@ import Image from "next/image";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { BotaoFavorito } from "@/components/botao-favorito";
 import { CompartilharCadeira } from "@/components/compartilhar-cadeira";
+import { PreviaNome } from "@/components/previa-nome";
 import { VagasSemana } from "@/components/vagas-semana";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
@@ -216,6 +217,7 @@ export function ProdutoCompra({
                 />
               </label>
             ) : null}
+            {e.wantsNome ? <PreviaNome nome={e.nomeTexto} corA={e.ativo.corA} corB={e.ativo.corB} trama={modelo.trama} /> : null}
           </div>
         ) : null}
 

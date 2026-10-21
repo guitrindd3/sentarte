@@ -91,7 +91,17 @@ export type DadosEntrega = {
   email?: string;
   /** Required since 2026-10-06: carriers ask for it on the shipping label. Not kept in localStorage. */
   cpf?: string;
+  /** "É para presente?" (2026-10-21): the atelier sends the note on a card with the chair. */
+  presente?: boolean;
+  recado?: string;
 };
+
+/** "🎁 Presente — recado: …" line for the order texts, or "". */
+export function linhaPresente(d: Pick<DadosEntrega, "presente" | "recado">) {
+  if (!d.presente) return "";
+  const r = (d.recado ?? "").trim();
+  return r ? `🎁 É presente. Recado para o cartão: "${r}"` : "🎁 É presente (sem recado)";
+}
 
 /** Brazilian CPF check digits. */
 export function cpfValido(cpf: string | undefined) {
@@ -139,7 +149,10 @@ export function entregaEmTexto(d: DadosEntrega) {
     `${d.nome} · ${d.telefone}`,
     `${d.endereco}, ${d.numero}${d.complemento ? ` (${d.complemento})` : ""}`,
     `${d.bairro ? `${d.bairro}, ` : ""}${d.cidade}/${d.uf} · CEP ${d.cep}`,
-  ].join("\n");
+    linhaPresente(d),
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 /** One line per cart item, as it goes to WhatsApp and to Mercado Pago. */

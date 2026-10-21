@@ -1,4 +1,5 @@
 import "server-only";
+import { linhaPresente } from "./pedido";
 import { randomBytes } from "crypto";
 import nodemailer from "nodemailer";
 import type { PedidoCliente } from "./clientes";
@@ -91,6 +92,7 @@ function textoCompleto(p: PedidoCliente) {
     e
       ? `Entrega: ${e.endereco}, ${e.numero}${e.complemento ? ` (${e.complemento})` : ""} - ${e.bairro ? `${e.bairro}, ` : ""}${e.cidade}/${e.uf}, CEP ${e.cep}`
       : `Cidade: ${p.cidade}`,
+    e ? linhaPresente(e) : "",
     "",
     `Abrir o pedido no painel: ${SITE_URL}/admin/clientes/${p.ref}`,
   ]

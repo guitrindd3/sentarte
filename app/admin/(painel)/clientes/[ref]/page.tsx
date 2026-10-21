@@ -124,6 +124,12 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
                 {e.email ? `, ${e.email}` : ""}
                 {e.cpf ? `, CPF ${cpfFmt(e.cpf)}` : ""}
               </p>
+              {e.presente ? (
+                <p className="mt-2 border border-line bg-canvas px-3 py-2 text-sm text-ink">
+                  <strong className="font-semibold">🎁 É presente.</strong>{" "}
+                  {e.recado ? <>Recado para o cartão: &ldquo;{e.recado}&rdquo;</> : "Sem recado."}
+                </p>
+              ) : null}
             </div>
           ) : (
             <p className="text-sm text-ink-soft">

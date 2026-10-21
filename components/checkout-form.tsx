@@ -25,7 +25,7 @@ const ENTREGA_KEY = "sentarte-entrega";
 function carregarEntrega(): DadosEntrega {
   try {
     const raw = window.localStorage.getItem(ENTREGA_KEY);
-    return raw ? { ...ENTREGA_VAZIA, ...(JSON.parse(raw) as Partial<DadosEntrega>), cpf: "" } : ENTREGA_VAZIA;
+    return raw ? { ...ENTREGA_VAZIA, ...(JSON.parse(raw) as Partial<DadosEntrega>), cpf: "", presente: false, recado: "" } : ENTREGA_VAZIA;
   } catch {
     return ENTREGA_VAZIA;
   }
@@ -105,7 +105,7 @@ export function CheckoutForm({
       // Card form opens right here; the order summary is kept for /pedido.
       const referencia = crypto.randomUUID();
       try {
-        window.localStorage.setItem(ENTREGA_KEY, JSON.stringify({ ...d, cpf: undefined }));
+        window.localStorage.setItem(ENTREGA_KEY, JSON.stringify({ ...d, cpf: undefined, presente: undefined, recado: undefined }));
         const salvo: PedidoSalvo = { referencia, forma, itens: itensDoPedido(), entrega: { ...d, cpf: undefined }, total: conta.total + (valorFrete ?? 0) };
         window.localStorage.setItem(PEDIDO_STORAGE_KEY, JSON.stringify(salvo));
       } catch {}
@@ -124,7 +124,7 @@ export function CheckoutForm({
       tipoCadeira: i.tipoCadeira,
     }));
     try {
-      window.localStorage.setItem(ENTREGA_KEY, JSON.stringify({ ...d, cpf: undefined }));
+      window.localStorage.setItem(ENTREGA_KEY, JSON.stringify({ ...d, cpf: undefined, presente: undefined, recado: undefined }));
       if (forma === "pix") {
         // Pix is paid right here (QR code / copia e cola), no Mercado Pago page.
         const r = await fetch("/api/pix", {
@@ -269,6 +269,37 @@ export function CheckoutForm({
             <span className="text-ink-soft">UF</span>
             <input value={d.uf} onChange={set("uf")} maxLength={2} autoComplete="address-level1" className={`${campo} uppercase`} />
           </label>
+          {/* 2026-10-21: gift option — the note goes on a card with the chair */}
+          <div className="col-span-2 border border-line bg-canvas px-3 py-3">
+            <label className="flex items-start gap-2.5">
+              <input
+                type="checkbox"
+                id="presente"
+                checked={Boolean(d.presente)}
+                onChange={(e) => setD((v) => ({ ...v, presente: e.target.checked }))}
+                className="mt-0.5 h-4 w-4 accent-[var(--ink)]"
+              />
+              <span>
+                <span className="font-medium text-ink">É para presente?</span>
+                <span className="block text-xs text-ink-soft">A gente manda um cartãozinho com o seu recado junto com a cadeira.</span>
+              </span>
+            </label>
+            {d.presente ? (
+              <label className="mt-3 block">
+                <span className="text-ink-soft">Recado para o cartão (opcional)</span>
+                <textarea
+                  id="recado"
+                  value={d.recado ?? ""}
+                  onChange={(e) => setD((v) => ({ ...v, recado: e.target.value.slice(0, 200) }))}
+                  rows={3}
+                  maxLength={200}
+                  placeholder="Ex: Feliz aniversário, mãe! Para os seus verões na praia."
+                  className={`${campo} resize-none`}
+                />
+                <span className="mt-1 block text-right text-xs text-ink-soft tabular-nums">{(d.recado ?? "").length}/200</span>
+              </label>
+            ) : null}
+          </div>
             </>
           )}
         </div>
