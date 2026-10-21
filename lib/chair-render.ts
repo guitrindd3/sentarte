@@ -233,14 +233,23 @@ export type Opcoes = {
   bracoMadeira?: boolean;
 };
 
-// The two plastic armrests of the base photo (measured 2026-10-21 on a 4x
-// zoom): slanted strips, each a quadrilateral. Only grey, unsaturated pixels
-// inside are repainted, so the pool and the floor tiles stay.
-const BRACOS: [number, number][][] = [
-  [[46, 345], [92, 362], [31, 520], [-12, 505]],
-  [[368, 360], [404, 345], [463, 500], [424, 524]],
+// Wooden armrests (2026-10-21). Repainting the plastic pixel by pixel looked
+// cut out (user: "ficou ruim"), so a wooden bar is DRAWN over each plastic
+// arm instead: the arm's outline (convex hull of its pixels, measured on the
+// base photo), anti-aliased, in the real wood color of the Diamante verde
+// chair, with a lit top face, a shaded side face and a faint grain.
+// `lado`: which long edge is the side face (-1 left, +1 right on screen).
+const BRACOS: { contorno: [number, number][]; lado: 1 | -1 }[] = [
+  {
+    contorno: [[0, 470], [20, 421], [40, 387], [59, 362], [78, 357], [90, 366], [82, 389], [32, 518], [25, 518], [0, 505]],
+    lado: -1,
+  },
+  {
+    contorno: [[373, 370], [376, 359], [392, 360], [414, 374], [422, 391], [447, 463], [453, 483], [453, 494], [448, 509], [423, 514], [419, 510], [388, 420]],
+    lado: 1,
+  },
 ];
-const MADEIRA: [number, number, number] = [150, 92, 52];
+const MADEIRA: [number, number, number] = [142, 78, 46];
 
 function noPoligono(p: [number, number][], x: number, y: number) {
   let dentro = false;
@@ -1234,30 +1243,6 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
     }
   }
 
-  if (op.bracoMadeira) {
-    for (const p of BRACOS) {
-      const xs = p.map((q) => q[0]), ys = p.map((q) => q[1]);
-      // grain runs along the arm
-      const [ax, ay] = p[0], [bx, by] = p[3];
-      const len = Math.hypot(bx - ax, by - ay);
-      const ux = (bx - ax) / len, uy = (by - ay) / len;
-      for (let y = Math.max(0, Math.min(...ys)); y < Math.min(IMG_H, Math.max(...ys)); y++) {
-        for (let x = Math.max(0, Math.min(...xs)); x < Math.min(IMG_W, Math.max(...xs)); x++) {
-          if (!noPoligono(p, x + 0.5, y + 0.5)) continue;
-          const i = (y * IMG_W + x) * 4;
-          if (saturacao(i) > 45) continue;
-          const l = brilho(i);
-          if (l < 30) continue;
-          // the arm's light highlights are painted too, but not the white strap right next to it
-          if (l > 200 && LATERAIS.some((r) => x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1)) continue;
-          const across = (x - ax) * -uy + (y - ay) * ux;
-          const veio = 1 + 0.07 * Math.sin(across * 1.9 + Math.sin(((x - ax) * ux + (y - ay) * uy) * 0.12) * 2.2);
-          pinta(i, MADEIRA, (0.55 + (l / 160) * 0.55) * veio);
-        }
-      }
-    }
-  }
-
   // Side straps: only the white strap pixels (not the pool showing through).
   for (const r of LATERAIS) {
     for (let y = r.y0; y < r.y1; y++) {
@@ -1314,6 +1299,39 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
         }
       }
       pinta(i, detalhe ? B : P, sombraEscuro(l));
+    }
+  }
+  // last, so nothing painted after it (the straps touch the arms' tips) covers the wood
+  if (op.bracoMadeira) {
+    const veio = (a: number, b: number) =>
+      Math.sin(a * 0.9 + Math.sin(b * 0.031) * 3.1) * 0.6 + Math.sin(a * 2.3 + b * 0.013) * 0.25 + Math.sin(a * 0.37 - b * 0.05) * 0.15;
+    for (const { contorno, lado } of BRACOS) {
+      const topo = contorno.reduce((m, q) => (q[1] < m[1] ? q : m));
+      const fim = contorno.reduce((m, q) => (q[1] > m[1] ? q : m));
+      const len = Math.hypot(fim[0] - topo[0], fim[1] - topo[1]);
+      const ux = (fim[0] - topo[0]) / len, uy = (fim[1] - topo[1]) / len;
+      const atravessa = (x: number, y: number) => (x - topo[0]) * -uy + (y - topo[1]) * ux;
+      const ao = (x: number, y: number) => (x - topo[0]) * ux + (y - topo[1]) * uy;
+      const acs = contorno.map(([x, y]) => atravessa(x, y)), als = contorno.map(([x, y]) => ao(x, y));
+      const a0 = Math.min(...acs), a1 = Math.max(...acs), l0 = Math.min(...als), l1 = Math.max(...als);
+      const xs = contorno.map((q) => q[0]), ys = contorno.map((q) => q[1]);
+      for (let y = Math.max(0, Math.min(...ys) - 1); y < Math.min(IMG_H, Math.max(...ys) + 2); y++) {
+        for (let x = Math.max(0, Math.min(...xs) - 1); x < Math.min(IMG_W, Math.max(...xs) + 2); x++) {
+          // 4x4 samples per pixel: smooth edges
+          let dentro = 0;
+          for (let sy = 0; sy < 4; sy++) for (let sx = 0; sx < 4; sx++) if (noPoligono(contorno, x + (sx + 0.5) / 4, y + (sy + 0.5) / 4)) dentro++;
+          if (!dentro) continue;
+          const cobre = dentro / 16;
+          const ac = atravessa(x + 0.5, y + 0.5), al = ao(x + 0.5, y + 0.5);
+          const t = (ac - a0) / (a1 - a0);
+          const ts = lado > 0 ? t : 1 - t; // 1 = the side-face edge
+          let luz = ts > 0.74 ? 0.62 - (0.12 * (ts - 0.74)) / 0.26 : ts > 0.68 ? 0.62 + ((0.74 - ts) / 0.06) * 0.36 : 1 + 0.12 * (1 - ts / 0.68);
+          luz *= 1 - 0.1 * ((al - l0) / (l1 - l0));
+          luz *= 1 + 0.05 * veio(ac, al);
+          const i = (y * IMG_W + x) * 4;
+          for (let c = 0; c < 3; c++) out[i + c] = Math.round(out[i + c] * (1 - cobre) + Math.min(255, MADEIRA[c] * luz) * cobre);
+        }
+      }
     }
   }
 }
