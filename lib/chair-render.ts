@@ -237,8 +237,8 @@ export type Opcoes = {
 // zoom): slanted strips, each a quadrilateral. Only grey, unsaturated pixels
 // inside are repainted, so the pool and the floor tiles stay.
 const BRACOS: [number, number][][] = [
-  [[50, 350], [86, 365], [27, 516], [-8, 502]],
-  [[360, 366], [400, 349], [457, 500], [420, 518]],
+  [[46, 345], [92, 362], [31, 520], [-12, 505]],
+  [[354, 365], [404, 345], [463, 500], [424, 524]],
 ];
 const MADEIRA: [number, number, number] = [150, 92, 52];
 
@@ -1245,9 +1245,9 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
         for (let x = Math.max(0, Math.min(...xs)); x < Math.min(IMG_W, Math.max(...xs)); x++) {
           if (!noPoligono(p, x + 0.5, y + 0.5)) continue;
           const i = (y * IMG_W + x) * 4;
-          if (saturacao(i) > 34) continue;
+          if (saturacao(i) > 45) continue;
           const l = brilho(i);
-          if (l < 55 || l > 240) continue;
+          if (l < 30 || l > 250) continue;
           const across = (x - ax) * -uy + (y - ay) * ux;
           const veio = 1 + 0.07 * Math.sin(across * 1.9 + Math.sin(((x - ax) * ux + (y - ay) * uy) * 0.12) * 2.2);
           pinta(i, MADEIRA, (0.55 + (l / 160) * 0.55) * veio);
