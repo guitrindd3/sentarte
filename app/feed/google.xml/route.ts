@@ -14,6 +14,13 @@ import { GRUPOS, produtosDaLoja } from "@/lib/produtos";
 // Google fetches it on its own schedule; cached here for an hour.
 export const revalidate = 3600;
 
+// Merchant Center treats unlicensed team crests and characters as counterfeit,
+// which can suspend the whole account (user 2026-10-22: only chairs without
+// third-party brands). Team chairs never go in; of the desenhos only these
+// generic ones do, so a character chair added later stays out by default.
+// The chairs stay on the site either way.
+const DESENHOS_SEM_MARCA = new Set(["borboleta", "coracao-leve", "gato", "sereia-arco-iris", "jv-trindade"]);
+
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 const abs = (u: string) => (/^https?:\/\//.test(u) ? u : `${SITE_URL}${u.startsWith("/") ? "" : "/"}${u}`);
@@ -30,6 +37,7 @@ export async function GET() {
   const itens = produtosDaLoja(content).flatMap((p) => {
     const m = p.base;
     if (!m.imagemUrl) return [];
+    if (p.grupo === "times" || (p.grupo === "desenhos" && !DESENHOS_SEM_MARCA.has(p.slug))) return [];
     const desenho = grupoDoModelo(m) === "desenhos";
     const preco = precoCadeira(desenho);
     const fotos = [...(m.variantes ?? []), ...(m.fotosExtras ?? [])].filter(Boolean).slice(0, 10);
