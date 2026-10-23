@@ -13,7 +13,7 @@ import { TIME_DO_CORACAO_NOME } from "./team-models";
 
 const CAPAS = new Set([TIME_DO_CORACAO_NOME, BOHO_NOME, DESENHO_NOME, "Monte a sua trama"]);
 
-export type Grupo = "times" | "boho" | "desenhos" | "outros";
+export type Grupo = "times" | "boho" | "desenhos" | "casamento" | "outros";
 
 export type Produto = {
   slug: string;
@@ -45,6 +45,7 @@ export const GRUPOS: Record<Grupo, { titulo: string; href: string }> = {
   times: { titulo: "Times", href: "/times" },
   boho: { titulo: "Boho", href: "/boho" },
   desenhos: { titulo: "Animes e desenhos", href: "/desenhos" },
+  casamento: { titulo: "Casamento", href: "/casamento" },
   outros: { titulo: "Cadeiras de praia", href: "/categoria/cadeiras" },
 };
 

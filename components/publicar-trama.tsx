@@ -7,6 +7,7 @@ const COLECOES = [
   { valor: "times", rotulo: "Times", texto: "Aparece em /times" },
   { valor: "boho", rotulo: "Boho", texto: "Aparece em /boho" },
   { valor: "desenhos", rotulo: "Desenhos", texto: "Aparece em /desenhos (preço de personalizada)" },
+  { valor: "casamento", rotulo: "Casamento", texto: "Aparece em /casamento" },
   { valor: "cadeiras", rotulo: "Cadeiras", texto: "Aparece na página Cadeiras" },
 ] as const;
 

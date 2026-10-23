@@ -17,7 +17,7 @@ import { ROTULOS_EXTRAS_4 } from "@/lib/formas-extras-4";
 import { ROTULOS_EXTRAS_5 } from "@/lib/formas-extras-5";
 import { ROTULOS_BOHO_TRIBAL } from "@/lib/formas-boho-tribal";
 import { ROTULOS_BOHO_CULTURAS } from "@/lib/formas-boho-culturas";
-import { codificarCadeira } from "@/lib/chair-link";
+import { codificarCadeira, decodificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
 import { rastrear } from "@/lib/rastro";
 import { whatsappUrl } from "@/lib/urls";
@@ -222,6 +222,43 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
   const [escalaForma, setEscalaForma] = useState(1);
   const [posForma, setPosForma] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
   const [adicionado, setAdicionado] = useState(false);
+
+  // /personalizar?<chair-link> opens on that design (2026-10-23: the wedding
+  // page's "Começar com este"). Read once on mount — the page is cached, so
+  // the query can't come from the server.
+  useEffect(() => {
+    if (painel) return;
+    const q = new URLSearchParams(window.location.search);
+    if (!q.get("f")) return;
+    const op = decodificarCadeira(q);
+    const fio = (cor: string): Fio =>
+      FIOS.find((f) => f.cor.toLowerCase() === cor.toLowerCase()) ?? { nome: `Cor personalizada (${cor.toUpperCase()})`, cor };
+    /* eslint-disable react-hooks/set-state-in-effect -- one-time restore from the URL */
+    if (op.forma !== "foto") setForma(op.forma);
+    const f = FORMAS.find((x) => x.valor === op.forma);
+    if (f) setGrupo(categoriaDa(f.valor, f.grupo));
+    setFormaAssento(op.formaAssento ?? "lisa");
+    setEscalaAssento(op.escalaAssento ?? 1);
+    setFioA(fio(op.corA));
+    setFioB(fio(op.corB));
+    if (op.corC) {
+      setTresCores(true);
+      setFioC(fio(op.corC));
+    }
+    setNome(op.nome);
+    setPosicao(op.posicao);
+    setTamanhoNome(op.tamanhoNome ?? 1);
+    if (op.nomeAssento) {
+      setNomeNoAssento(true);
+      setNome(op.nomeAssento);
+      setTamanhoNomeAssento(op.tamanhoNomeAssento ?? 1);
+    }
+    setEscalaForma(op.escalaForma ?? 1);
+    setPosForma(op.posForma ?? { x: 0.5, y: 0.5 });
+    if (op.tipo) setTipo(op.tipo);
+    if (op.bracoMadeira) setBracoMadeira(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [painel]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const passosRef = useRef<HTMLDivElement>(null);

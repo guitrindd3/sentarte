@@ -57,12 +57,13 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
             <span className="font-serif text-2xl font-medium tracking-tight text-ink">{siteName}</span>
           </Link>
 
-          <nav className="hidden items-center gap-6 lg:flex">
+          {/* 8 links since Casamento (2026-10-23): nowrap + tighter at lg, where the WhatsApp button steps aside */}
+          <nav className="hidden items-center gap-4 lg:flex xl:gap-6">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-[0.95rem] tracking-wide text-ink-soft transition-colors hover:text-ink"
+                className="whitespace-nowrap text-sm tracking-wide text-ink-soft transition-colors hover:text-ink xl:text-[0.95rem]"
               >
                 {link.label}
               </Link>
@@ -74,7 +75,7 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
               href={contactMsg}
               target="_blank"
               rel="noreferrer"
-              className="hidden items-center gap-2 border border-ink px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-canvas sm:inline-flex"
+              className="hidden items-center gap-2 border border-ink px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-canvas sm:inline-flex lg:hidden xl:inline-flex"
             >
               <WhatsAppIcon className="h-4 w-4" />
               WhatsApp

@@ -3,14 +3,15 @@ import type { Categoria, Modelo } from "./content-schema";
 import { DESENHO_TEMAS } from "./desenho-model";
 import { TIMES } from "./team-models";
 
-// Which collection page (/times, /boho, /desenhos) a chair belongs to. The
+// Which collection page (/times, /boho, /desenhos, /casamento) a chair belongs to. The
 // original chairs are curated by EXACT name in code; chairs published from
 // the admin (Monte a sua trama → "Publicar no site", 2026-10-19) carry
 // `Modelo.grupo` instead. Every page and the pricing ask here.
 
-export type GrupoColecao = "times" | "boho" | "desenhos";
+export type GrupoColecao = "times" | "boho" | "desenhos" | "casamento";
 
-const LISTAS: Record<GrupoColecao, string[]> = { times: TIMES, boho: BOHO_PADROES, desenhos: DESENHO_TEMAS };
+// casamento (2026-10-23) has no curated chairs: only ones published from the admin.
+const LISTAS: Record<GrupoColecao, string[]> = { times: TIMES, boho: BOHO_PADROES, desenhos: DESENHO_TEMAS, casamento: [] };
 
 export function grupoDoModelo(m: Pick<Modelo, "nome" | "grupo">): GrupoColecao | null {
   const base = m.nome.replace(/ personalizado$/, "");
