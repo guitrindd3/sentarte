@@ -99,6 +99,8 @@ export function CheckoutForm({
       tipoCadeira: i.tipoCadeira,
       bracoMadeira: i.bracoMadeira,
       tassel: i.tassel,
+      tasselQtd: i.tasselQtd,
+      tasselLado: i.tasselLado,
       // Monte a sua trama: the design itself (its picture is /api/cadeira?<trama>), so the order keeps it
       trama: i.imagemUrl?.startsWith("/api/cadeira?") ? i.imagemUrl.slice("/api/cadeira?".length) : undefined,
     }));
@@ -128,6 +130,8 @@ export function CheckoutForm({
       tipoCadeira: i.tipoCadeira,
       bracoMadeira: i.bracoMadeira,
       tassel: i.tassel,
+      tasselQtd: i.tasselQtd,
+      tasselLado: i.tasselLado,
       // Monte a sua trama: the design itself (its picture is /api/cadeira?<trama>), so the order keeps it
       trama: i.imagemUrl?.startsWith("/api/cadeira?") ? i.imagemUrl.slice("/api/cadeira?".length) : undefined,
     }));

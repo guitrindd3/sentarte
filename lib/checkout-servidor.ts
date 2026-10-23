@@ -35,6 +35,8 @@ export async function prepararPedido(corpo: CorpoPedido) {
     variante: i.variante ? String(i.variante).slice(0, 40) : undefined,
     bracoMadeira: i.bracoMadeira === true || undefined,
     tassel: typeof i.tassel === "string" && i.tassel.trim() ? i.tassel.trim().slice(0, 40) : undefined,
+    tasselQtd: i.tasselQtd === 1 ? (1 as const) : undefined,
+    tasselLado: i.tasselQtd === 1 && i.tasselLado === "esq" ? ("esq" as const) : i.tasselQtd === 1 ? ("dir" as const) : undefined,
     // re-encoded from the parsed choices: only valid design params survive
     trama: typeof i.trama === "string" && i.trama ? codificarCadeira(decodificarCadeira(new URLSearchParams(i.trama.slice(0, 800)))) : undefined,
   }));

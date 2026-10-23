@@ -1,14 +1,14 @@
 import type { CartItem } from "./cart-context";
 import { DESENHO_TEMAS } from "./desenho-model";
 import { melhorCupom, type CupomPublico } from "./cupom";
-import { CATEGORIA_COM_PRECO, PIX_DESCONTO, precoCadeira } from "./offer";
+import { CATEGORIA_COM_PRECO, PIX_DESCONTO, precoCadeira, quantosTasseis, rotuloTassel } from "./offer";
 import { valorDoVale } from "./vale";
 
 // Order math shared by the cart drawer (display) and /api/checkout (the
 // amount actually charged). The server recomputes everything from here —
 // it never trusts a price sent by the browser.
 
-export type ItemDoPedido = Pick<CartItem, "categoriaSlug" | "modeloNome" | "quantidade" | "nomePersonalizado" | "tipoCadeira" | "personalizada" | "bracoMadeira" | "tassel"> & {
+export type ItemDoPedido = Pick<CartItem, "categoriaSlug" | "modeloNome" | "quantidade" | "nomePersonalizado" | "tipoCadeira" | "personalizada" | "bracoMadeira" | "tassel" | "tasselQtd" | "tasselLado"> & {
   variante?: string;
   categoriaTitulo?: string;
   /** Monte a sua trama design (chair-link query string); see registrarPedido. */
@@ -24,7 +24,7 @@ const arred = (v: number) => Math.round(v * 100) / 100;
  */
 function precoUnitario(item: ItemDoPedido, desenhos?: Set<string>) {
   const desenho = desenhos ? desenhos.has(item.modeloNome) : DESENHO_TEMAS.includes(item.modeloNome) || Boolean(item.personalizada);
-  return precoCadeira(Boolean(item.nomePersonalizado?.trim()) || desenho, item.tipoCadeira, Boolean(item.bracoMadeira), Boolean(item.tassel));
+  return precoCadeira(Boolean(item.nomePersonalizado?.trim()) || desenho, item.tipoCadeira, Boolean(item.bracoMadeira), quantosTasseis(item));
 }
 
 /**
@@ -164,7 +164,7 @@ export function descricaoItem(i: ItemDoPedido) {
     `${i.modeloNome} (x${i.quantidade})` +
     (i.variante ? ` — cor: ${i.variante}` : "") +
     (i.bracoMadeira ? " — braço de madeira" : "") +
-    (i.tassel ? ` — tassel ${i.tassel.toLowerCase()}` : "") +
+    (i.tassel ? ` — ${rotuloTassel(i)}` : "") +
     (i.nomePersonalizado ? (vale ? ` — para: ${i.nomePersonalizado}` : ` — nome: "${i.nomePersonalizado}"`) : "")
   );
 }

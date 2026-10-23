@@ -72,7 +72,7 @@ export default async function CasamentoPage() {
         </div>
         <p className="mt-10 text-sm text-ink-soft">
           Cada cadeira com nome sai por {formatBRL(precoCadeira(true))}; a infantil com nome, por{" "}
-          {formatBRL(precoCadeira(true, "infantil"))}. O tassel dos exemplos é opcional (+{formatBRL(TASSEL_PRECO)}). Para o
+          {formatBRL(precoCadeira(true, "infantil"))}. O tassel dos exemplos é opcional: +{formatBRL(TASSEL_PRECO)} cada um, e dá para pôr 1 ou 2. Para o
           casamento inteiro, peça o orçamento no fim da página.
         </p>
       </section>

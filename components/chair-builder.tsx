@@ -5,7 +5,7 @@ import { CheckIcon, CompartilharIcon, WhatsAppIcon } from "@/components/icons";
 import { useCart } from "@/lib/cart-context";
 import { PublicarTrama } from "@/components/publicar-trama";
 import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
-import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix, TASSEL_PRECO, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
+import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix, rotuloTassel, TASSEL_PRECO, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
 import { MEDIDAS_CADEIRAS } from "@/lib/medidas";
 import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
 import { ROTULOS_EXTRAS } from "@/lib/formas-extras";
@@ -187,9 +187,11 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
   // stays the normal chair; the type changes the price, the order and the shipping.
   const [tipo, setTipo] = useState<TipoCadeira>("normal");
   const [bracoMadeira, setBracoMadeira] = useState(false);
-  // Tassels (2026-10-23): one on each upright, in one of the chair's colors
-  // (main / third / detail) — never a color the chair doesn't have.
+  // Tassels (2026-10-23): one or two (one per upright), in one of the chair's
+  // colors (main / third / detail) — never a color the chair doesn't have.
   const [tassel, setTassel] = useState<"a" | "b" | "c" | null>(null);
+  const [tasselQtd, setTasselQtd] = useState<1 | 2>(2);
+  const [tasselLado, setTasselLado] = useState<"esq" | "dir">("dir");
   /** Shape search: while it has text, the grid shows matches from every tab. */
   const [busca, setBusca] = useState("");
   // Count what people look for in the shape search, once they stop typing.
@@ -216,6 +218,10 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
   const [fioC, setFioC] = useState<Fio>(FIOS.find((f) => f.nome === "Mostarda") ?? FIOS[2]);
   const corC = tresCores ? fioC.cor : undefined;
   const tasselCor = tassel === "c" && !tresCores ? "a" : tassel;
+  const tasselOpcoes = tasselCor
+    ? { tassel: tasselCor, ...(tasselQtd === 1 ? { tasselQtd: 1 as const, tasselLado } : {}) }
+    : {};
+  const nTasseis = tasselCor ? tasselQtd : 0;
   const [nome, setNome] = useState("");
   const [posicao, setPosicao] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
   const [arrastando, setArrastando] = useState(false);
@@ -259,6 +265,8 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
       setTipo(op.tipo ?? "normal");
       setBracoMadeira(Boolean(op.bracoMadeira));
       setTassel(op.tassel ?? null);
+      setTasselQtd(op.tasselQtd ?? 2);
+      setTasselLado(op.tasselLado ?? "dir");
       setPasso(1);
     };
     const q = new URLSearchParams(window.location.search);
@@ -310,12 +318,12 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
 
   const nomeEncosto = nomeNoAssento ? "" : nome;
   const nomeAssento = nomeNoAssento ? nome : "";
-  const opcoes = { tipo: tipo === "normal" ? undefined : tipo, forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira: bracoMadeira || undefined, tassel: tasselCor ?? undefined };
+  const opcoes = { tipo: tipo === "normal" ? undefined : tipo, forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira: bracoMadeira || undefined, ...tasselOpcoes };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira, tassel: tasselCor ?? undefined }, {
+    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira, tassel: tasselCor ?? undefined, tasselQtd, tasselLado }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
@@ -325,7 +333,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
       ctx?.clearRect(0, 0, mini.width, mini.height);
       ctx?.drawImage(canvasRef.current, 0, 0, mini.width, mini.height);
     }
-  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, fotoDaForma, bracoMadeira, tasselCor]);
+  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, fotoDaForma, bracoMadeira, tasselCor, tasselQtd, tasselLado]);
 
   // Shape thumbnails: flat and straight (just the figure), in the chosen
   // colors — the photo's perspective made them look slanted.
@@ -435,8 +443,9 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
 
   const nomeLimpo = nome.trim().toUpperCase();
   const temNome = Boolean(nomeLimpo);
-  const preco = precoCadeira(temNome, tipo, bracoMadeira, Boolean(tasselCor));
+  const preco = precoCadeira(temNome, tipo, bracoMadeira, nTasseis);
   const fioDoTassel = tasselCor === "b" ? fioB : tasselCor === "c" ? fioC : fioA;
+  const tasselTexto = tasselCor ? rotuloTassel({ tassel: fioDoTassel.nome, tasselQtd, tasselLado }) : "";
   const tipoRotulo = TIPOS_CADEIRA[tipo].rotulo;
   const formaRotulo = rotuloDaForma(forma);
   const tamanhoRotulo = tamanhoNome <= 0.45 ? "Pequeno" : tamanhoNome <= 0.75 ? "Médio" : "Grande";
@@ -450,7 +459,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
     linkCadeira,
     "",
     `Tipo: ${tipoRotulo}${bracoMadeira ? ", com braço de madeira" : ""}`,
-    ...(tasselCor ? [`Enfeite: tassel ${fioDoTassel.nome.toLowerCase()} nas laterais do encosto`] : []),
+    ...(tasselCor ? [`Enfeite: ${tasselTexto} no encosto`] : []),
     `Encosto: ${formaRotulo}${escalaForma < 0.97 ? ` (tamanho ${Math.round(escalaForma * 100)}%)` : ""}`,
     tresCores ? `Cor principal: ${fioA.nome} (metade esquerda) e ${fioC.nome} (metade direita)` : `Cor principal: ${fioA.nome}`,
     `Cor dos detalhes: ${fioB.nome}`,
@@ -549,6 +558,8 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
       tipoCadeira: tipo === "normal" ? undefined : tipo,
       bracoMadeira: bracoMadeira || undefined,
       tassel: tasselCor ? fioDoTassel.nome : undefined,
+      tasselQtd: tasselCor && tasselQtd === 1 ? 1 : undefined,
+      tasselLado: tasselCor && tasselQtd === 1 ? tasselLado : undefined,
     });
     setAdicionado(true);
     openCart();
@@ -676,24 +687,35 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
             <OpcaoBraco madeira={bracoMadeira} onChange={setBracoMadeira} tipo={tipo} />
           </div>
           <div className="mt-4">
-            <p className="text-sm text-ink">Enfeite</p>
-            <div className="mt-2 border border-line px-3 py-2.5">
-              <label className="flex cursor-pointer items-center justify-between gap-3">
-                <span>
-                  <span className="block text-sm font-medium text-ink">
-                    Tassel nas laterais <span className="font-normal text-ink-soft">(+{formatBRL(TASSEL_PRECO)})</span>
-                  </span>
-                  <span className="block text-xs text-ink-soft">Um em cada lado do encosto, com conta de madeira. Fica lindo em casamento e presente.</span>
-                </span>
-                <input
-                  type="checkbox"
-                  checked={Boolean(tasselCor)}
-                  onChange={(e) => setTassel(e.target.checked ? "b" : null)}
-                  className="h-5 w-5 shrink-0 accent-verde"
-                />
-              </label>
-              {tasselCor ? (
-                <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-line pt-2.5" role="radiogroup" aria-label="Cor do tassel">
+            <p className="text-sm text-ink">Enfeite: tassel</p>
+            <p className="text-xs text-ink-soft">Pendurado no encosto, com conta de madeira. Fica lindo em casamento e presente.</p>
+            <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tassel">
+              {([0, 1, 2] as const).map((n) => {
+                const on = nTasseis === n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    onClick={() => {
+                      if (n === 0) return setTassel(null);
+                      setTasselQtd(n);
+                      if (!tasselCor) setTassel("b");
+                    }}
+                    className={`flex flex-col items-center justify-center gap-0.5 border px-1.5 py-2 text-center transition-colors ${
+                      on ? "border-ink bg-ink text-canvas" : "border-line text-ink hover:border-ink"
+                    }`}
+                  >
+                    <span className="text-[0.8rem] font-medium leading-tight sm:text-sm">{n === 0 ? "Sem tassel" : n === 1 ? "1 tassel" : "2 tassels"}</span>
+                    <span className={`text-xs ${on ? "text-canvas/75" : "text-ink-soft"}`}>{n === 0 ? "Incluso" : `+${formatBRL(n * TASSEL_PRECO)}`}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {tasselCor ? (
+              <div className="mt-2.5 space-y-2.5 border border-line px-3 py-2.5">
+                <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Cor do tassel">
                   <span className="text-xs text-ink-soft">Na cor:</span>
                   {([
                     ["a", fioA],
@@ -715,8 +737,27 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                     </button>
                   ))}
                 </div>
-              ) : null}
-            </div>
+                {tasselQtd === 1 ? (
+                  <div className="flex flex-wrap items-center gap-2 border-t border-line pt-2.5" role="radiogroup" aria-label="Lado do tassel">
+                    <span className="text-xs text-ink-soft">Do lado:</span>
+                    {(["esq", "dir"] as const).map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        role="radio"
+                        aria-checked={tasselLado === l}
+                        onClick={() => setTasselLado(l)}
+                        className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                          tasselLado === l ? "border-ink bg-ink text-canvas" : "border-line text-ink-soft hover:border-ink"
+                        }`}
+                      >
+                        {l === "esq" ? "Esquerdo" : "Direito"}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </fieldset>
         <ol className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2" aria-label="Passos">
@@ -1028,7 +1069,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                   ],
                   ["Nome", temNome ? nomeLimpo.replace(/\n/g, " / ") : "Sem nome"],
                   ...(bracoMadeira ? [["Braço", "De madeira"]] : []),
-                  ...(tasselCor ? [["Enfeite", `Tassel ${fioDoTassel.nome.toLowerCase()}`]] : []),
+                  ...(tasselCor ? [["Enfeite", tasselTexto.replace(/^./, (c) => c.toUpperCase())]] : []),
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-4 py-2">
                     <dt className="text-ink-soft">{k}</dt>

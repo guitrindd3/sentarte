@@ -36,17 +36,29 @@ export const BRACO_MADEIRA: Record<TipoCadeira, number> = { infantil: 100, norma
 /** Example photo: the Diamante verde chair has wooden armrests. */
 export const FOTO_BRACO_MADEIRA = "/catalogo/diamante-verde.jpg";
 
-/** Tassels on the backrest (2026-10-23, user: "acrescenta 10 real"): the pair, any chair type. Only in Monte a sua trama. */
+/** Tassels on the backrest (2026-10-23): R$ 10 EACH — one or two (user: "a de 1 sobe mais 10 reais, dois já está com 20"). Only in Monte a sua trama. */
 export const TASSEL_PRECO = 10;
 
-export function precoCadeira(comNome: boolean, tipo: TipoCadeira = "normal", madeira = false, tassel = false) {
+export function precoCadeira(comNome: boolean, tipo: TipoCadeira = "normal", madeira = false, tasseis = 0) {
   const t = TIPOS_CADEIRA[tipo] ?? TIPOS_CADEIRA.normal;
-  return Math.round(((comNome ? t.precoComNome : t.preco) + (madeira ? BRACO_MADEIRA[tipo] ?? BRACO_MADEIRA.normal : 0) + (tassel ? TASSEL_PRECO : 0)) * 100) / 100;
+  return Math.round(((comNome ? t.precoComNome : t.preco) + (madeira ? BRACO_MADEIRA[tipo] ?? BRACO_MADEIRA.normal : 0) + tasseis * TASSEL_PRECO) * 100) / 100;
 }
 
 /** Price of one cart line: personalized if it has a name or is a desenho design; + wooden armrests, + tassels. */
-export function precoItemCadeira(item: { nomePersonalizado?: string; personalizada?: boolean; tipoCadeira?: TipoCadeira; bracoMadeira?: boolean; tassel?: string }) {
-  return precoCadeira(Boolean(item.nomePersonalizado) || Boolean(item.personalizada), item.tipoCadeira, Boolean(item.bracoMadeira), Boolean(item.tassel));
+export function precoItemCadeira(item: { nomePersonalizado?: string; personalizada?: boolean; tipoCadeira?: TipoCadeira; bracoMadeira?: boolean; tassel?: string; tasselQtd?: 1 | 2 }) {
+  return precoCadeira(Boolean(item.nomePersonalizado) || Boolean(item.personalizada), item.tipoCadeira, Boolean(item.bracoMadeira), quantosTasseis(item));
+}
+
+/** How many tassels a cart line has (an item from before 1/2 existed had the pair). */
+export function quantosTasseis(item: { tassel?: string; tasselQtd?: 1 | 2 }) {
+  return item.tassel ? (item.tasselQtd === 1 ? 1 : 2) : 0;
+}
+
+/** "1 tassel vinho (lado direito)" / "2 tassels vinho" for the cart and the messages. */
+export function rotuloTassel(item: { tassel?: string; tasselQtd?: 1 | 2; tasselLado?: "esq" | "dir" }) {
+  if (!item.tassel) return "";
+  const cor = item.tassel.toLowerCase();
+  return item.tasselQtd === 1 ? `1 tassel ${cor} (lado ${item.tasselLado === "esq" ? "esquerdo" : "direito"})` : `2 tassels ${cor}`;
 }
 
 export function precoPix(valor: number) {

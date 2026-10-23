@@ -26,6 +26,9 @@ export type CartItem = {
   bracoMadeira?: boolean;
   /** Tassels (lib/offer.ts TASSEL_PRECO): the thread color they are made in, by name. */
   tassel?: string;
+  /** 1 or 2 tassels (missing = 2, the first version); with 1, which side as seen from the front. */
+  tasselQtd?: 1 | 2;
+  tasselLado?: "esq" | "dir";
 };
 
 type CartContextValue = {

@@ -234,6 +234,9 @@ export type Opcoes = {
   /** Tassels (2026-10-23): one on each backrest upright, in one of the chair's
    * own colors — "a" main, "b" detail, "c" third (falls back to the main one). */
   tassel?: "a" | "b" | "c";
+  /** 1 or 2 tassels (missing = 2); with 1, the side as seen from the front. */
+  tasselQtd?: 1 | 2;
+  tasselLado?: "esq" | "dir";
 };
 
 // Tassels (2026-10-23, user's reference photos: a twisted-rope loop, one
@@ -320,10 +323,10 @@ function tasselEm(t: (typeof TASSEIS)[number], px: number, py: number): [[number
   return null;
 }
 
-function pintarTasseis(out: Uint8ClampedArray, cor: [number, number, number]) {
+function pintarTasseis(out: Uint8ClampedArray, cor: [number, number, number], quais: typeof TASSEIS) {
   // dark threads get some added light, or the shading wouldn't show at all
   const tom = (c: number, luz: number) => Math.max(0, Math.min(255, c * luz + Math.max(0, luz - 0.85) * 70));
-  for (const t of TASSEIS) {
+  for (const t of quais) {
     const x0 = Math.max(0, Math.min(t.tubo[0], t.x - 17) - 2);
     const x1 = Math.min(IMG_W, Math.max(t.tubo[1], t.x + 17) + 4);
     const y0 = TASSEL_NO - 5;
@@ -1473,5 +1476,8 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
     }
   }
   // tassels hang in front of everything
-  if (op.tassel) pintarTasseis(out, op.tassel === "b" ? B : op.tassel === "c" && op.corC ? C : A);
+  if (op.tassel) {
+    const quais = op.tasselQtd === 1 ? [TASSEIS[op.tasselLado === "esq" ? 0 : 1]] : TASSEIS;
+    pintarTasseis(out, op.tassel === "b" ? B : op.tassel === "c" && op.corC ? C : A, quais);
+  }
 }
