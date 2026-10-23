@@ -18,6 +18,7 @@ export function codificarCadeira(op: Opcoes): string {
   const p = new URLSearchParams();
   if (op.tipo) p.set("tc", op.tipo);
   if (op.bracoMadeira) p.set("bm", "1");
+  if (op.tassel) p.set("ts", op.tassel);
   p.set("f", op.forma);
   // the customer's photo grid (lib/trama-foto.ts)
   if (op.forma === "foto" && op.foto) p.set("fd", op.foto);
@@ -55,6 +56,7 @@ export function decodificarCadeira(q: URLSearchParams): Opcoes {
   return {
     tipo: tc === "infantil" || tc === "reclinavel" ? tc : undefined,
     bracoMadeira: q.get("bm") === "1" || undefined,
+    tassel: q.get("ts") === "a" || q.get("ts") === "b" || q.get("ts") === "c" ? (q.get("ts") as "a" | "b" | "c") : undefined,
     forma: (/^[a-z-]{2,24}$/.test(forma) ? forma : "lisa") as Forma,
     corA: cor("a", "#1C1C1E"),
     corB: cor("b", "#F3F1EC"),

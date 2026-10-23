@@ -24,6 +24,8 @@ export type CartItem = {
   tipoCadeira?: TipoCadeira;
   /** Wooden armrests (lib/offer.ts BRACO_MADEIRA). */
   bracoMadeira?: boolean;
+  /** Tassels (lib/offer.ts TASSEL_PRECO): the thread color they are made in, by name. */
+  tassel?: string;
 };
 
 type CartContextValue = {

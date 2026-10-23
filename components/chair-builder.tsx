@@ -5,7 +5,7 @@ import { CheckIcon, CompartilharIcon, WhatsAppIcon } from "@/components/icons";
 import { useCart } from "@/lib/cart-context";
 import { PublicarTrama } from "@/components/publicar-trama";
 import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type Forma, type NomePosicao } from "@/lib/chair-render";
-import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
+import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix, TASSEL_PRECO, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
 import { MEDIDAS_CADEIRAS } from "@/lib/medidas";
 import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
 import { ROTULOS_EXTRAS } from "@/lib/formas-extras";
@@ -187,6 +187,9 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
   // stays the normal chair; the type changes the price, the order and the shipping.
   const [tipo, setTipo] = useState<TipoCadeira>("normal");
   const [bracoMadeira, setBracoMadeira] = useState(false);
+  // Tassels (2026-10-23): one on each upright, in one of the chair's colors
+  // (main / third / detail) — never a color the chair doesn't have.
+  const [tassel, setTassel] = useState<"a" | "b" | "c" | null>(null);
   /** Shape search: while it has text, the grid shows matches from every tab. */
   const [busca, setBusca] = useState("");
   // Count what people look for in the shape search, once they stop typing.
@@ -212,6 +215,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
   const [tresCores, setTresCores] = useState(false);
   const [fioC, setFioC] = useState<Fio>(FIOS.find((f) => f.nome === "Mostarda") ?? FIOS[2]);
   const corC = tresCores ? fioC.cor : undefined;
+  const tasselCor = tassel === "c" && !tresCores ? "a" : tassel;
   const [nome, setNome] = useState("");
   const [posicao, setPosicao] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
   const [arrastando, setArrastando] = useState(false);
@@ -223,41 +227,45 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
   const [posForma, setPosForma] = useState<NomePosicao>({ x: 0.5, y: 0.5 });
   const [adicionado, setAdicionado] = useState(false);
 
-  // /personalizar?<chair-link> opens on that design (2026-10-23: the wedding
-  // page's "Começar com este"). Read once on mount — the page is cached, so
-  // the query can't come from the server.
+  // /personalizar?<chair-link> opens on that design, read once on mount (the
+  // page is cached, so the query can't come from the server); on /casamento,
+  // whose builder sits on the same page, "Começar com este" sends the design
+  // as a "sentarte:trama" event instead (2026-10-23).
   useEffect(() => {
     if (painel) return;
+    const aplicar = (q: URLSearchParams) => {
+      const op = decodificarCadeira(q);
+      const fio = (cor: string): Fio =>
+        FIOS.find((f) => f.cor.toLowerCase() === cor.toLowerCase()) ?? { nome: `Cor personalizada (${cor.toUpperCase()})`, cor };
+      setForma(op.forma === "foto" ? "lisa" : op.forma);
+      const f = FORMAS.find((x) => x.valor === op.forma);
+      if (f) setGrupo(categoriaDa(f.valor, f.grupo));
+      setFormaAssento(op.formaAssento ?? "lisa");
+      setEscalaAssento(op.escalaAssento ?? 1);
+      setFioA(fio(op.corA));
+      setFioB(fio(op.corB));
+      setTresCores(Boolean(op.corC));
+      if (op.corC) setFioC(fio(op.corC));
+      setNome(op.nome);
+      setPosicao(op.posicao);
+      setTamanhoNome(op.tamanhoNome ?? 1);
+      setNomeNoAssento(Boolean(op.nomeAssento));
+      if (op.nomeAssento) {
+        setNome(op.nomeAssento);
+        setTamanhoNomeAssento(op.tamanhoNomeAssento ?? 1);
+      }
+      setEscalaForma(op.escalaForma ?? 1);
+      setPosForma(op.posForma ?? { x: 0.5, y: 0.5 });
+      setTipo(op.tipo ?? "normal");
+      setBracoMadeira(Boolean(op.bracoMadeira));
+      setTassel(op.tassel ?? null);
+      setPasso(1);
+    };
     const q = new URLSearchParams(window.location.search);
-    if (!q.get("f")) return;
-    const op = decodificarCadeira(q);
-    const fio = (cor: string): Fio =>
-      FIOS.find((f) => f.cor.toLowerCase() === cor.toLowerCase()) ?? { nome: `Cor personalizada (${cor.toUpperCase()})`, cor };
-    /* eslint-disable react-hooks/set-state-in-effect -- one-time restore from the URL */
-    if (op.forma !== "foto") setForma(op.forma);
-    const f = FORMAS.find((x) => x.valor === op.forma);
-    if (f) setGrupo(categoriaDa(f.valor, f.grupo));
-    setFormaAssento(op.formaAssento ?? "lisa");
-    setEscalaAssento(op.escalaAssento ?? 1);
-    setFioA(fio(op.corA));
-    setFioB(fio(op.corB));
-    if (op.corC) {
-      setTresCores(true);
-      setFioC(fio(op.corC));
-    }
-    setNome(op.nome);
-    setPosicao(op.posicao);
-    setTamanhoNome(op.tamanhoNome ?? 1);
-    if (op.nomeAssento) {
-      setNomeNoAssento(true);
-      setNome(op.nomeAssento);
-      setTamanhoNomeAssento(op.tamanhoNomeAssento ?? 1);
-    }
-    setEscalaForma(op.escalaForma ?? 1);
-    setPosForma(op.posForma ?? { x: 0.5, y: 0.5 });
-    if (op.tipo) setTipo(op.tipo);
-    if (op.bracoMadeira) setBracoMadeira(true);
-    /* eslint-enable react-hooks/set-state-in-effect */
+    if (q.get("f")) aplicar(q);
+    const aoPedir = (e: Event) => aplicar(new URLSearchParams((e as CustomEvent<string>).detail));
+    window.addEventListener("sentarte:trama", aoPedir);
+    return () => window.removeEventListener("sentarte:trama", aoPedir);
   }, [painel]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -302,12 +310,12 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
 
   const nomeEncosto = nomeNoAssento ? "" : nome;
   const nomeAssento = nomeNoAssento ? nome : "";
-  const opcoes = { tipo: tipo === "normal" ? undefined : tipo, forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira: bracoMadeira || undefined };
+  const opcoes = { tipo: tipo === "normal" ? undefined : tipo, forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira: bracoMadeira || undefined, tassel: tasselCor ?? undefined };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira }, {
+    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira, tassel: tasselCor ?? undefined }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
@@ -317,7 +325,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
       ctx?.clearRect(0, 0, mini.width, mini.height);
       ctx?.drawImage(canvasRef.current, 0, 0, mini.width, mini.height);
     }
-  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, fotoDaForma, bracoMadeira]);
+  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, fotoDaForma, bracoMadeira, tasselCor]);
 
   // Shape thumbnails: flat and straight (just the figure), in the chosen
   // colors — the photo's perspective made them look slanted.
@@ -427,7 +435,8 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
 
   const nomeLimpo = nome.trim().toUpperCase();
   const temNome = Boolean(nomeLimpo);
-  const preco = precoCadeira(temNome, tipo, bracoMadeira);
+  const preco = precoCadeira(temNome, tipo, bracoMadeira, Boolean(tasselCor));
+  const fioDoTassel = tasselCor === "b" ? fioB : tasselCor === "c" ? fioC : fioA;
   const tipoRotulo = TIPOS_CADEIRA[tipo].rotulo;
   const formaRotulo = rotuloDaForma(forma);
   const tamanhoRotulo = tamanhoNome <= 0.45 ? "Pequeno" : tamanhoNome <= 0.75 ? "Médio" : "Grande";
@@ -441,6 +450,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
     linkCadeira,
     "",
     `Tipo: ${tipoRotulo}${bracoMadeira ? ", com braço de madeira" : ""}`,
+    ...(tasselCor ? [`Enfeite: tassel ${fioDoTassel.nome.toLowerCase()} nas laterais do encosto`] : []),
     `Encosto: ${formaRotulo}${escalaForma < 0.97 ? ` (tamanho ${Math.round(escalaForma * 100)}%)` : ""}`,
     tresCores ? `Cor principal: ${fioA.nome} (metade esquerda) e ${fioC.nome} (metade direita)` : `Cor principal: ${fioA.nome}`,
     `Cor dos detalhes: ${fioB.nome}`,
@@ -538,6 +548,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
       nomePersonalizado: nomeLimpo ? nomeLimpo.replace(/\n/g, " / ") : undefined,
       tipoCadeira: tipo === "normal" ? undefined : tipo,
       bracoMadeira: bracoMadeira || undefined,
+      tassel: tasselCor ? fioDoTassel.nome : undefined,
     });
     setAdicionado(true);
     openCart();
@@ -663,6 +674,49 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
           })()}
           <div className="mt-4">
             <OpcaoBraco madeira={bracoMadeira} onChange={setBracoMadeira} tipo={tipo} />
+          </div>
+          <div className="mt-4">
+            <p className="text-sm text-ink">Enfeite</p>
+            <div className="mt-2 border border-line px-3 py-2.5">
+              <label className="flex cursor-pointer items-center justify-between gap-3">
+                <span>
+                  <span className="block text-sm font-medium text-ink">
+                    Tassel nas laterais <span className="font-normal text-ink-soft">(+{formatBRL(TASSEL_PRECO)})</span>
+                  </span>
+                  <span className="block text-xs text-ink-soft">Um em cada lado do encosto, com conta de madeira. Fica lindo em casamento e presente.</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={Boolean(tasselCor)}
+                  onChange={(e) => setTassel(e.target.checked ? "b" : null)}
+                  className="h-5 w-5 shrink-0 accent-verde"
+                />
+              </label>
+              {tasselCor ? (
+                <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-line pt-2.5" role="radiogroup" aria-label="Cor do tassel">
+                  <span className="text-xs text-ink-soft">Na cor:</span>
+                  {([
+                    ["a", fioA],
+                    ...(tresCores ? [["c", fioC] as const] : []),
+                    ["b", fioB],
+                  ] as const).map(([k, f]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      role="radio"
+                      aria-checked={tasselCor === k}
+                      onClick={() => setTassel(k)}
+                      className={`flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-xs transition-colors ${
+                        tasselCor === k ? "border-ink text-ink" : "border-line text-ink-soft hover:border-ink"
+                      }`}
+                    >
+                      <span className="h-5 w-5 rounded-full ring-1 ring-line" style={{ background: f.cor }} />
+                      {f.nome}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
         </fieldset>
         <ol className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2" aria-label="Passos">
@@ -973,6 +1027,8 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                         : FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? "",
                   ],
                   ["Nome", temNome ? nomeLimpo.replace(/\n/g, " / ") : "Sem nome"],
+                  ...(bracoMadeira ? [["Braço", "De madeira"]] : []),
+                  ...(tasselCor ? [["Enfeite", `Tassel ${fioDoTassel.nome.toLowerCase()}`]] : []),
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-4 py-2">
                     <dt className="text-ink-soft">{k}</dt>

@@ -254,7 +254,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
     id: "casamento",
     nome: "Casamento",
     caminho: "/casamento",
-    descricao: "A página de cadeiras para casamento: topo, as três ideias e o texto do pedido.",
+    descricao: "A página de cadeiras para casamento: topo, as três ideias, o Monte a sua trama e o texto do pedido.",
     campos: [
       ...camposTituloResumo,
       {
@@ -264,6 +264,8 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
         rotulos: ["Título", "Texto"],
         fixo: true,
       },
+      { id: "monteTitulo", rotulo: "Título do Monte a sua trama", tipo: "linha", max: 80 },
+      { id: "monteTexto", rotulo: "Texto do Monte a sua trama", tipo: "texto", max: 300 },
       { id: "pedidoTitulo", rotulo: "Título do pedido de orçamento", tipo: "linha", max: 80 },
       { id: "pedidoTexto", rotulo: "Texto do pedido de orçamento", tipo: "texto", max: 600 },
     ],
@@ -286,6 +288,9 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
           texto: "A cadeira infantil, do tamanho deles, com o nome trançado. Vira lembrança da festa e companhia de praia.",
         },
       ],
+      monteTitulo: "Monte a cadeira do seu casamento",
+      monteTexto:
+        "Escolha um dos exemplos acima ou comece do zero: troque os nomes, as cores da festa e o desenho, e coloque o tassel se quiser.",
       pedidoTitulo: "Peça o orçamento do seu casamento",
       pedidoTexto:
         "Conte a data, os nomes e quantas cadeiras vocês querem. Cada cadeira é trançada à mão e fica pronta em até {prazo} dias úteis depois do pedido — para várias cadeiras, a gente combina o prazo com folga antes da data.\n\nAs cores podem seguir a paleta da festa. Se não achar a cor no Monte a sua trama, é só falar.",

@@ -231,7 +231,145 @@ export type Opcoes = {
   foto?: string;
   /** Wooden armrests (2026-10-21): the photo's grey plastic arms are repainted as wood. */
   bracoMadeira?: boolean;
+  /** Tassels (2026-10-23): one on each backrest upright, in one of the chair's
+   * own colors — "a" main, "b" detail, "c" third (falls back to the main one). */
+  tassel?: "a" | "b" | "c";
 };
+
+// Tassels (2026-10-23, user's reference photos: a twisted-rope loop, one
+// wooden bead, a wrapped neck and a fringe of thick twisted cords). The loop
+// goes around the bare tube just under the backrest's top bend (measured on
+// the base photo: left tube x 65–80, right 369–386, bare from y 200 to the
+// straps at 238) and the tassel hangs just outside it. Drawn, not
+// photographed: supersampled and shaded like the wooden arms.
+const TASSEIS: { tubo: [number, number]; x: number }[] = [
+  { tubo: [65, 80], x: 53 },
+  { tubo: [369, 386], x: 398 },
+];
+const TASSEL_NO = 212; // where the loop goes around the tube
+const CONTA: [number, number, number] = [214, 184, 146]; // pale natural wood bead
+const CONTA_Y = 244;
+const CONTA_R = 8.5;
+const PESCOCO_Y0 = 252; // wrapped neck
+const PESCOCO_Y1 = 269;
+const FRANJA_Y1 = 350;
+const CORDOES = 7; // thick twisted cords in the fringe
+
+/** Hash 0..1 of an integer: per-cord variation that never changes. */
+const sorteio = (n: number) => {
+  const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+/** Light on a twisted rope: round across it, with diagonal ply lines. */
+const corda = (atravessa: number, ao: number) =>
+  0.72 + 0.3 * Math.cos((atravessa * Math.PI) / 2) + 0.1 * Math.sin((ao + atravessa * 2.2) * 1.5);
+
+/** The tassel at one sample point, or null where it isn't: [rgb or null = thread color, light]. */
+function tasselEm(t: (typeof TASSEIS)[number], px: number, py: number): [[number, number, number] | null, number] | null {
+  const cx = t.x;
+  const [t0, t1] = t.tubo;
+  // fringe: thick cords fanning out a little, each ending at its own length, frayed tips
+  if (py >= PESCOCO_Y1 - 1 && py < FRANJA_Y1 + 3) {
+    const k = (py - PESCOCO_Y1) / (FRANJA_Y1 - PESCOCO_Y1);
+    const meia = 8.5 + 6.5 * Math.min(1, k * 1.4);
+    const u = (px - cx) / meia;
+    if (Math.abs(u) < 1) {
+      const f = Math.min(CORDOES - 1, Math.floor(((u + 1) / 2) * CORDOES));
+      const dentro = ((u + 1) / 2) * CORDOES - f; // 0..1 across this cord
+      const fim = FRANJA_Y1 - 5 * sorteio(f + cx);
+      if (py < fim) {
+        const fiapo = py > fim - 6;
+        if (fiapo && sorteio(Math.floor(px * 3) + Math.floor(py) * 13) < 0.35) return null;
+        const luz = corda(dentro * 2 - 1, py - f * 3) * (0.9 + 0.1 * Math.cos((u * Math.PI) / 2)) * (fiapo ? 1.08 : 1);
+        return [null, luz];
+      }
+    }
+  }
+  // neck: rope wrapped around several times
+  if (py >= PESCOCO_Y0 && py < PESCOCO_Y1) {
+    const meia = 9.5;
+    const u = (px - cx) / meia;
+    if (Math.abs(u) < 1) {
+      const volta = ((py - PESCOCO_Y0) % 3.4) / 3.4; // 0..1 across one turn
+      const luz = (0.7 + 0.35 * Math.sqrt(1 - u * u)) * (0.78 + 0.28 * Math.sin(volta * Math.PI)) - 0.08 * u;
+      return [null, luz];
+    }
+  }
+  // wooden bead
+  const d = Math.hypot(px - cx, py - CONTA_Y);
+  if (d < CONTA_R) {
+    const nx = (px - cx) / CONTA_R, ny = (py - CONTA_Y) / CONTA_R;
+    const nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
+    return [CONTA, 0.55 + 0.55 * (-0.45 * nx - 0.55 * ny + 0.7 * nz)];
+  }
+  // the loop: two twisted cords from around the tube down into the bead
+  if (py >= TASSEL_NO && py < CONTA_Y) {
+    const s = (py - TASSEL_NO) / (CONTA_Y - TASSEL_NO);
+    for (const [de, para] of [[t0 + 2, cx - 3], [t1 - 2, cx + 3]]) {
+      const lx = de + (para - de) * s;
+      const a = (px - lx) / 2.3;
+      if (Math.abs(a) < 1) return [null, corda(a, py * 1.3)];
+    }
+  }
+  // the loop's top, in front of the tube
+  if (px >= t0 && px < t1 && py >= TASSEL_NO - 3.5 && py < TASSEL_NO + 1) {
+    const a = ((py - (TASSEL_NO - 1.25)) / 2.25);
+    return [null, corda(a, px * 1.3)];
+  }
+  return null;
+}
+
+function pintarTasseis(out: Uint8ClampedArray, cor: [number, number, number]) {
+  // dark threads get some added light, or the shading wouldn't show at all
+  const tom = (c: number, luz: number) => Math.max(0, Math.min(255, c * luz + Math.max(0, luz - 0.85) * 70));
+  for (const t of TASSEIS) {
+    const x0 = Math.max(0, Math.min(t.tubo[0], t.x - 17) - 2);
+    const x1 = Math.min(IMG_W, Math.max(t.tubo[1], t.x + 17) + 4);
+    const y0 = TASSEL_NO - 5;
+    const y1 = FRANJA_Y1 + 6;
+    const w = x1 - x0;
+    // first pass: coverage and color of every pixel (4x4 samples)
+    const cobre = new Float32Array(w * (y1 - y0));
+    const cores = new Float32Array(w * (y1 - y0) * 3);
+    for (let y = y0; y < y1; y++) {
+      for (let x = x0; x < x1; x++) {
+        const soma = [0, 0, 0];
+        let n = 0;
+        for (let sy = 0; sy < 4; sy++) {
+          for (let sx = 0; sx < 4; sx++) {
+            const a = tasselEm(t, x + (sx + 0.5) / 4, y + (sy + 0.5) / 4);
+            if (!a) continue;
+            const base = a[0] ?? cor;
+            for (let c = 0; c < 3; c++) soma[c] += tom(base[c], a[1]);
+            n++;
+          }
+        }
+        if (!n) continue;
+        const k = (y - y0) * w + (x - x0);
+        cobre[k] = n / 16;
+        for (let c = 0; c < 3; c++) cores[k * 3 + c] = soma[c] / n;
+      }
+    }
+    // second pass: a soft shadow down-right (so it reads against straps of the
+    // same color), then the tassel itself
+    for (let y = y0; y < y1; y++) {
+      for (let x = x0; x < x1; x++) {
+        const k = (y - y0) * w + (x - x0);
+        const ks = y - 2 >= y0 && x - 2 >= x0 ? (y - 2 - y0) * w + (x - 2 - x0) : -1;
+        const sombra = ks >= 0 ? cobre[ks] * 0.38 : 0;
+        const c0 = cobre[k];
+        if (!c0 && !sombra) continue;
+        const i = (y * IMG_W + x) * 4;
+        for (let c = 0; c < 3; c++) {
+          const fundo = out[i + c] * (1 - sombra);
+          out[i + c] = Math.round(fundo * (1 - c0) + cores[k * 3 + c] * c0);
+        }
+      }
+    }
+  }
+}
+
 
 // Wooden armrests (2026-10-21). Repainting the plastic pixel by pixel looked
 // cut out (user: "ficou ruim"), so a wooden bar is DRAWN over each plastic
@@ -1334,4 +1472,6 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
       }
     }
   }
+  // tassels hang in front of everything
+  if (op.tassel) pintarTasseis(out, op.tassel === "b" ? B : op.tassel === "c" && op.corC ? C : A);
 }

@@ -36,14 +36,17 @@ export const BRACO_MADEIRA: Record<TipoCadeira, number> = { infantil: 100, norma
 /** Example photo: the Diamante verde chair has wooden armrests. */
 export const FOTO_BRACO_MADEIRA = "/catalogo/diamante-verde.jpg";
 
-export function precoCadeira(comNome: boolean, tipo: TipoCadeira = "normal", madeira = false) {
+/** Tassels on the backrest (2026-10-23, user: "acrescenta 10 real"): the pair, any chair type. Only in Monte a sua trama. */
+export const TASSEL_PRECO = 10;
+
+export function precoCadeira(comNome: boolean, tipo: TipoCadeira = "normal", madeira = false, tassel = false) {
   const t = TIPOS_CADEIRA[tipo] ?? TIPOS_CADEIRA.normal;
-  return Math.round(((comNome ? t.precoComNome : t.preco) + (madeira ? BRACO_MADEIRA[tipo] ?? BRACO_MADEIRA.normal : 0)) * 100) / 100;
+  return Math.round(((comNome ? t.precoComNome : t.preco) + (madeira ? BRACO_MADEIRA[tipo] ?? BRACO_MADEIRA.normal : 0) + (tassel ? TASSEL_PRECO : 0)) * 100) / 100;
 }
 
-/** Price of one cart line: personalized if it has a name or is a desenho design; + wooden armrests. */
-export function precoItemCadeira(item: { nomePersonalizado?: string; personalizada?: boolean; tipoCadeira?: TipoCadeira; bracoMadeira?: boolean }) {
-  return precoCadeira(Boolean(item.nomePersonalizado) || Boolean(item.personalizada), item.tipoCadeira, Boolean(item.bracoMadeira));
+/** Price of one cart line: personalized if it has a name or is a desenho design; + wooden armrests, + tassels. */
+export function precoItemCadeira(item: { nomePersonalizado?: string; personalizada?: boolean; tipoCadeira?: TipoCadeira; bracoMadeira?: boolean; tassel?: string }) {
+  return precoCadeira(Boolean(item.nomePersonalizado) || Boolean(item.personalizada), item.tipoCadeira, Boolean(item.bracoMadeira), Boolean(item.tassel));
 }
 
 export function precoPix(valor: number) {
