@@ -25,6 +25,10 @@ const CSP = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // the wedding page grew into events & companies (2026-10-24)
+  async redirects() {
+    return [{ source: "/casamento", destination: "/eventos", permanent: true }];
+  },
   async headers() {
     return [
       {

@@ -20,7 +20,7 @@ export type Modelo = {
    * Monte a sua trama). The original ones are matched by name instead
    * (TIMES / BOHO_PADROES / DESENHO_TEMAS) — see lib/grupos.ts.
    */
-  grupo?: "times" | "boho" | "desenhos" | "casamento";
+  grupo?: "times" | "boho" | "desenhos" | "eventos";
   /** The Monte a sua trama design it was made from (chair-link query string). */
   trama?: string;
 };

@@ -5,7 +5,7 @@ export const NAV_LINKS = [
   { label: "Times", href: "/times" },
   { label: "Boho", href: "/boho" },
   { label: "Desenhos", href: "/desenhos" },
-  { label: "Casamento", href: "/casamento" },
+  { label: "Eventos", href: "/eventos" },
   { label: "Monte a sua", href: "/personalizar" },
   { label: "Vale-presente", href: "/vale-presente" },
   { label: "Sobre", href: "/sobre" },

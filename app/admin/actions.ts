@@ -958,7 +958,7 @@ export async function publicarTramaAction(_p: Resultado, formData: FormData) {
     };
     if (!nome) throw new Aviso("Dê um nome para a cadeira.");
     if (!descricao) throw new Aviso("Escreva uma descrição curta.");
-    if (!["times", "boho", "desenhos", "casamento", "cadeiras"].includes(colecao)) throw new Aviso("Escolha a coleção.");
+    if (!["times", "boho", "desenhos", "eventos", "cadeiras"].includes(colecao)) throw new Aviso("Escolha a coleção.");
     if (/ personalizado$/i.test(nome)) throw new Aviso('O nome não pode terminar com "personalizado".');
     const foto = await imagemValida(formData.get("foto"));
     if (!foto) throw new Aviso("Não deu para gerar a foto da cadeira. Volte um passo e tente de novo.");
@@ -979,7 +979,7 @@ export async function publicarTramaAction(_p: Resultado, formData: FormData) {
       corB: cor("corB", "#e8dccb"),
       imagemUrl: preparada.url,
       trama: trama || undefined,
-      ...(colecao === "cadeiras" ? {} : { grupo: colecao as "times" | "boho" | "desenhos" | "casamento" }),
+      ...(colecao === "cadeiras" ? {} : { grupo: colecao as "times" | "boho" | "desenhos" | "eventos" }),
     };
     cat.modelos.push(novo);
     await saveContent(content, `publica a trama "${nome}" em ${colecao}`, [preparada.arquivo]);

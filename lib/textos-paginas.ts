@@ -249,17 +249,18 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
     ),
   },
   {
-    // 2026-10-23 (user picked "cadeira de casamento" from the growth ideas).
-    // The three ideas pair, in order, with the example chairs in app/casamento.
-    id: "casamento",
-    nome: "Casamento",
-    caminho: "/casamento",
-    descricao: "A página de cadeiras para casamento: topo, as três ideias, o Monte a sua trama e o texto do pedido.",
+    // 2026-10-23 as "casamento"; 2026-10-24 the user widened it to orders in
+    // quantity — weddings, companies, parties ("vender em lote para empresas,
+    // festas"). The four ideas pair, in order, with the example chairs in app/eventos.
+    id: "eventos",
+    nome: "Eventos e empresas",
+    caminho: "/eventos",
+    descricao: "A página de pedidos em quantidade (casamento, empresas, festas): topo, as quatro ideias, o Monte a sua trama e o texto do orçamento.",
     campos: [
       ...camposTituloResumo,
       {
         id: "ideias",
-        rotulo: "As três ideias (cada uma ao lado de uma cadeira de exemplo)",
+        rotulo: "As quatro ideias (cada uma ao lado de uma cadeira de exemplo)",
         tipo: "blocos",
         rotulos: ["Título", "Texto"],
         fixo: true,
@@ -271,29 +272,33 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
     ],
     padrao: {
       ...tituloResumo(
-        "Cadeiras para casamento",
-        "A cadeira dos noivos, dos padrinhos e da daminha, com nomes trançados à mão. Ela sai da festa e vai para a praia com vocês, para sempre."
+        "Cadeiras para eventos e empresas",
+        "Casamento, brinde de empresa, festa de aniversário: cadeiras trançadas à mão em quantidade, com nomes, cores e a cara do seu evento."
       ),
       ideias: [
         {
-          titulo: "Cadeira dos noivos",
+          titulo: "Casamento",
           texto: "O nome do casal trançado no encosto, nas cores da festa. Linda na cerimônia na praia, no ensaio de fotos e depois na casa nova.",
         },
         {
           titulo: "Padrinhos e madrinhas",
-          texto: "Uma cadeira para cada um, com o nome ou com \"Madrinha\" e \"Padrinho\". Um convite para apadrinhar que ninguém esquece.",
+          texto: "Uma cadeira para cada um, com o nome ou com \"Madrinha\" e \"Padrinho\". Para as crianças, a versão infantil com o nome delas.",
         },
         {
-          titulo: "Daminhas e pajens",
-          texto: "A cadeira infantil, do tamanho deles, com o nome trançado. Vira lembrança da festa e companhia de praia.",
+          titulo: "Empresas e brindes",
+          texto: "O nome da empresa trançado nas cores da marca. Brinde para clientes e equipe, ou cadeiras para pousadas, quiosques e beach clubs.",
+        },
+        {
+          titulo: "Festas e aniversários",
+          texto: "15 anos, aniversário, chá de bebê, formatura: a cadeira da pessoa homenageada ou lembranças para os convidados.",
         },
       ],
-      monteTitulo: "Monte a cadeira do seu casamento",
+      monteTitulo: "Monte a cadeira do seu evento",
       monteTexto:
-        "Escolha um dos exemplos acima ou comece do zero: troque os nomes, as cores da festa e o desenho, e coloque o tassel se quiser.",
-      pedidoTitulo: "Peça o orçamento do seu casamento",
+        "Escolha um dos exemplos acima ou comece do zero: troque o nome, as cores e o desenho, e coloque o tassel se quiser. Depois é só pedir o orçamento com a quantidade.",
+      pedidoTitulo: "Peça o orçamento",
       pedidoTexto:
-        "Conte a data, os nomes e quantas cadeiras vocês querem. Cada cadeira é trançada à mão e fica pronta em até {prazo} dias úteis depois do pedido — para várias cadeiras, a gente combina o prazo com folga antes da data.\n\nAs cores podem seguir a paleta da festa. Se não achar a cor no Monte a sua trama, é só falar.",
+        "Conte o que é o evento, a data e quantas cadeiras você quer. Cada cadeira é trançada à mão e fica pronta em até {prazo} dias úteis depois do pedido; para pedidos maiores, a gente combina o prazo com folga antes da data.\n\nAs cores podem seguir a paleta da festa ou da marca. Se não achar a cor no Monte a sua trama, é só falar.",
     },
   },
   {

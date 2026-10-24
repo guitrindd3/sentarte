@@ -234,7 +234,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
   const [adicionado, setAdicionado] = useState(false);
 
   // /personalizar?<chair-link> opens on that design, read once on mount (the
-  // page is cached, so the query can't come from the server); on /casamento,
+  // page is cached, so the query can't come from the server); on /eventos,
   // whose builder sits on the same page, "Começar com este" sends the design
   // as a "sentarte:trama" event instead (2026-10-23).
   useEffect(() => {
@@ -688,7 +688,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
           </div>
           <div className="mt-4">
             <p className="text-sm text-ink">Enfeite: tassel</p>
-            <p className="text-xs text-ink-soft">Pendurado no encosto, com conta de madeira. Fica lindo em casamento e presente.</p>
+            <p className="text-xs text-ink-soft">Pendurado no encosto, com conta de madeira. Fica lindo em casamento, festa e presente.</p>
             <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tassel">
               {([0, 1, 2] as const).map((n) => {
                 const on = nTasseis === n;

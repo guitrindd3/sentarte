@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * /casamento (2026-10-23): loads an example design into the builder further
+ * /eventos (2026-10-23, first /casamento): loads an example design into the builder further
  * down the same page (ChairBuilder listens for "sentarte:trama") and scrolls
  * to it. Without JS the link still opens /personalizar on that design.
  */

@@ -26,6 +26,6 @@ export function ondeAparece(nome: string, categoriaSlug: string, grupo?: Modelo[
   if (grupo === "times") return { href: "/times", grupo: "Times" };
   if (grupo === "boho") return { href: "/boho", grupo: "Boho" };
   if (grupo === "desenhos") return { href: "/desenhos", grupo: "Desenhos" };
-  if (grupo === "casamento") return { href: "/casamento", grupo: "Casamento" };
+  if (grupo === "eventos") return { href: "/eventos", grupo: "Eventos" };
   return { href: `/categoria/${categoriaSlug}` };
 }
