@@ -5,7 +5,7 @@ import { getAdminContent } from "@/lib/content-store";
 import { lerRemetente, remetenteCompleto } from "@/lib/melhor-envio";
 import { SITE_URL } from "@/lib/nav";
 import { formatBRL } from "@/lib/offer";
-import { codigoDoPedido } from "@/lib/pedido";
+import { codigoDoPedido, noPagamento } from "@/lib/pedido";
 import { linkRastreio } from "@/lib/rastreio";
 import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
@@ -15,6 +15,7 @@ import { CopiarNumeros } from "../copiar";
 import { Etiqueta } from "./etiqueta";
 import { FotosProducao } from "./fotos-producao";
 import { fotosDaProducao, MAX_FOTOS_PRODUCAO } from "@/lib/fotos-producao";
+import { lerOrcamento } from "@/lib/orcamentos";
 
 // One order (2026-10-06): delivery data, the steps the customer sees on
 // /acompanhar, and the Melhor Envio label.
@@ -61,6 +62,7 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
   const etapa = p.etapa ?? (pago ? "producao" : undefined);
   const e = p.entrega;
   const fotos = await fotosDaProducao(p.ref).catch(() => []);
+  const orc = p.orcamento ? await lerOrcamento(p.orcamento).catch(() => null) : null;
   const primeiroNome = p.nome.trim().split(/\s+/)[0];
   const avisoFoto = `Oi, ${primeiroNome}! Aqui é do Ateliê SentArte. Sua cadeira já está sendo trançada 😍 Olha como ela está ficando: ${SITE_URL}/acompanhar/${p.ref}`;
 
@@ -76,7 +78,7 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
         <p className="mt-1 text-ink-soft">
           {p.nome}, {quando(p.em)}.{" "}
           <strong className={pago ? "text-verde-escuro" : "text-clay-dark"}>
-            {pago ? `Pago em ${quando(p.pagoEm)}` : p.status === "recusado" ? "Pagamento recusado" : p.status === "pendente" ? "Pagamento pendente" : "Não pago"}
+            {pago ? `${p.origem === "painel" ? "Lançada no painel em" : "Pago em"} ${quando(p.pagoEm)}` : p.status === "recusado" ? "Pagamento recusado" : p.status === "pendente" ? "Pagamento pendente" : "Não pago"}
           </strong>
         </p>
       </div>
@@ -109,11 +111,31 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
             </p>
           ) : null}
           {p.valeUsado ? <p className="mt-2 text-sm text-ink-soft">Pagou parte com o vale-presente {p.valeUsado}.</p> : null}
+          {p.obs ? <p className="mt-3 whitespace-pre-line rounded-xl bg-canvas px-3 py-2 text-sm text-ink">{p.obs}</p> : null}
+          {orc?.fotos ? (
+            <div className="mt-3">
+              <p className="text-sm text-ink-soft">
+                Imagens que o cliente mandou no{" "}
+                <Link href="/admin/orcamentos" className="font-medium text-wood-dark underline">
+                  orçamento {orc.codigo}
+                </Link>
+                :
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {Array.from({ length: orc.fotos }, (_, n) => (
+                  <a key={n} href={`/admin/orcamento-foto/${orc.id}/${n}`} target="_blank" rel="noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- private picture served by an admin route */}
+                    <img src={`/admin/orcamento-foto/${orc.id}/${n}`} alt={`Imagem ${n + 1}`} className="h-24 w-24 rounded-lg border border-line bg-white object-contain" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null}
           <dl className="mt-4 space-y-1 border-t border-line/70 pt-4 text-sm">
             <div className="flex justify-between gap-3">
-              <dt className="text-ink-soft">Total pago</dt>
+              <dt className="text-ink-soft">{p.origem === "painel" ? "Total" : "Total pago"}</dt>
               <dd className="font-semibold text-ink">
-                {formatBRL(p.valor)} no {p.forma === "pix" ? "Pix" : "cartão"}
+                {formatBRL(p.valor)} {noPagamento(p.forma)}
               </dd>
             </div>
             {p.frete ? (
@@ -244,7 +266,11 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
               .
             </p>
           ) : !e?.cpf ? (
-            <p className="text-sm text-ink-soft">Esse pedido não tem CPF e endereço completo guardados (é de antes de 06/10). Faça a etiqueta direto no site do Melhor Envio.</p>
+            <p className="text-sm text-ink-soft">
+              {p.origem === "painel"
+                ? "Essa venda foi lançada sem CPF e endereço completo. Faça a etiqueta direto no site do Melhor Envio."
+                : "Esse pedido não tem CPF e endereço completo guardados (é de antes de 06/10). Faça a etiqueta direto no site do Melhor Envio."}
+            </p>
           ) : (
             <Etiqueta refPedido={p.ref} envios={p.envios ?? []} etiquetaUrl={p.etiquetaUrl} freteCobrado={p.frete?.valor} />
           )}

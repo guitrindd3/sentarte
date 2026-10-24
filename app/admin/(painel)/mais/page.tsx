@@ -3,6 +3,7 @@ import { logoutAction } from "../../actions";
 
 // Phone-only overflow menu (the bottom bar has room for 5 tabs).
 const ITENS = [
+  { href: "/admin/orcamentos", titulo: "Orçamentos", texto: "Pedidos da página Eventos, com a logo ou as imagens do cliente. Gere a venda depois de pago." },
   { href: "/admin/avisos", titulo: "Avisos e envio", texto: "Aviso de venda no celular/e-mail e o remetente das etiquetas." },
   { href: "/admin/montar", titulo: "Montar e publicar", texto: "Monte uma trama e publique em Times, Boho, Desenhos ou Cadeiras." },
   { href: "/admin/vagas", titulo: "Vagas da semana", texto: "Quantas cadeiras dá para fazer por semana (aparece no site)." },

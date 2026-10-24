@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { avaliacoesPendentes } from "@/lib/avaliacoes";
 import { listarInteressados, pedidosRecentes, type Interessado, type PedidoCliente } from "@/lib/clientes";
+import { orcamentosRecentes } from "@/lib/orcamentos";
 import { getAdminContent } from "@/lib/content-store";
 import { githubConfigurado, ultimosCommits, type CommitResumo } from "@/lib/github-store";
 import { ondeAparece } from "@/lib/admin-grupos";
@@ -47,6 +48,7 @@ export default async function VisaoGeral() {
   let abandonados: PedidoCliente[] = [];
   let paraEnviar: PedidoCliente[] = [];
   let avaliacoesEsperando = 0;
+  let orcamentosNovos = 0;
   let novosNaLista: Interessado[] = [];
   if (redisAtivo()) {
     try {
@@ -55,6 +57,7 @@ export default async function VisaoGeral() {
       // Paid orders the atelier still has to weave/ship.
       paraEnviar = recentes.filter((p) => p.status === "pago" && (p.etapa ?? "producao") === "producao");
       avaliacoesEsperando = (await avaliacoesPendentes()).length;
+      orcamentosNovos = (await orcamentosRecentes(50)).filter((o) => o.status === "novo").length;
       novosNaLista = novosInteressados(await listarInteressados());
     } catch {}
   }
@@ -105,6 +108,18 @@ export default async function VisaoGeral() {
             <span className="block text-sm text-ink">{paraEnviar.slice(0, 3).map((p) => p.nome.split(" ")[0]).join(", ")}. Abra o pedido para ver o endereço e gerar a etiqueta.</span>
           </span>
           <span className="rounded-full bg-verde px-4 py-2 text-sm font-semibold text-paper">Ver {paraEnviar.length === 1 ? "pedido" : "pedidos"}</span>
+        </Link>
+      ) : null}
+
+      {orcamentosNovos ? (
+        <Link
+          href="/admin/orcamentos"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-clay/50 bg-clay/10 px-5 py-4 transition hover:border-clay"
+        >
+          <span className="font-semibold text-clay-dark">
+            {orcamentosNovos} {orcamentosNovos === 1 ? "pedido de orçamento novo" : "pedidos de orçamento novos"} (página Eventos)
+          </span>
+          <span className="rounded-full bg-clay px-4 py-2 text-sm font-semibold text-paper">Ver orçamentos</span>
         </Link>
       ) : null}
 

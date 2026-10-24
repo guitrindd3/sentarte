@@ -13,7 +13,9 @@ import {
   verifyPassword,
   verifySession,
 } from "@/lib/auth";
-import { editarInteressado, excluirInteressado, excluirPedido, normalizarWhatsapp, gravarPedido, lerPedido, type EtapaPedido } from "@/lib/clientes";
+import { editarInteressado, excluirInteressado, excluirPedido, normalizarWhatsapp, gravarPedido, lerPedido, registrarVendaDoPainel, type EtapaPedido } from "@/lib/clientes";
+import { excluirOrcamento, gravarOrcamento, lerOrcamento, type StatusOrcamento } from "@/lib/orcamentos";
+import { formatBRL } from "@/lib/offer";
 import { desligarGmail, desligarNtfy, estadoAvisos, ligarNtfy, salvarGmail, testarAvisos } from "@/lib/avisos";
 import {
   atualizarEnvios,
@@ -27,7 +29,7 @@ import {
   type OpcaoEnvio,
   type Remetente,
 } from "@/lib/melhor-envio";
-import { cpfValido } from "@/lib/pedido";
+import { codigoDoPedido, cpfValido, type FormaPagamento } from "@/lib/pedido";
 import { avaliacoesPendentes, fotoDaAvaliacao, fotoValida, tirarAvaliacao } from "@/lib/avaliacoes";
 import { adicionarFotoProducao, MAX_FOTOS_PRODUCAO, tirarFotoProducao } from "@/lib/fotos-producao";
 import { normalizarCodigo } from "@/lib/cupom";
@@ -985,5 +987,129 @@ export async function publicarTramaAction(_p: Resultado, formData: FormData) {
     await saveContent(content, `publica a trama "${nome}" em ${colecao}`, [preparada.arquivo]);
     const onde = colecao === "cadeiras" ? "/categoria/cadeiras" : `/${colecao}`;
     return `Publicada! "${nome}" aparece em ${onde} e em /cadeira/${slug} em 1 a 2 minutos. Para trocar a foto ou o texto, abra Cadeiras.`;
+  });
+}
+
+// --- Orçamentos de /eventos + vendas lançadas no painel (2026-10-24) -------------------
+
+/** "1.234,56", "449,90" or "449.90" → 449.9; NaN when it isn't a price. */
+function reais(v: FormDataEntryValue | unknown) {
+  const s = String(v ?? "").replace(/[R$\s]/g, "");
+  if (!s) return 0;
+  const n = Number(/,\d{1,2}$/.test(s) ? s.replace(/\./g, "").replace(",", ".") : s.replace(/,/g, ""));
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : NaN;
+}
+
+const FORMAS: FormaPagamento[] = ["pix", "cartao", "dinheiro", "transferencia", "outro"];
+
+/**
+ * A sale closed on WhatsApp (user: "no wpp ela me pagava... eu como sou adm
+ * ia gerar uma venda no site"). Saved already paid — see registrarVendaDoPainel.
+ */
+export async function lancarVendaAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    if (!redisAtivo()) throw new Aviso("O banco do painel não está ligado.");
+    const t = (k: string, max: number) => String(formData.get(k) ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+    const nome = t("nome", 80);
+    if (!nome) throw new Aviso("Escreva o nome do cliente.");
+    const whatsapp = normalizarWhatsapp(t("whatsapp", 20));
+    if (!whatsapp) throw new Aviso("WhatsApp do cliente inválido. Use o DDD + número, ex.: (27) 99999-9999.");
+
+    let brutos: unknown;
+    try {
+      brutos = JSON.parse(String(formData.get("itens") ?? "[]"));
+    } catch {
+      brutos = [];
+    }
+    const itens = (Array.isArray(brutos) ? brutos : []).slice(0, 30).flatMap((b) => {
+      const i = (b ?? {}) as Record<string, unknown>;
+      const descricao = String(i.descricao ?? "").replace(/\s+/g, " ").trim().slice(0, 160);
+      const qtd = Math.floor(Number(i.qtd));
+      const preco = reais(i.preco);
+      const tipo = ["normal", "infantil", "reclinavel"].includes(String(i.tipo)) ? (String(i.tipo) as "normal" | "infantil" | "reclinavel") : null;
+      if (!descricao && !preco) return [];
+      if (!descricao) throw new Aviso("Escreva o que foi vendido em cada linha.");
+      if (!(qtd >= 1 && qtd <= 999)) throw new Aviso(`Quantidade inválida em "${descricao}".`);
+      if (Number.isNaN(preco)) throw new Aviso(`O valor de "${descricao}" não está certo. Ex.: 489,90`);
+      return [{ descricao, qtd, preco, tipo }];
+    });
+    if (!itens.length) throw new Aviso("Coloque pelo menos um item vendido.");
+
+    const freteValor = reais(formData.get("frete"));
+    const desconto = reais(formData.get("desconto"));
+    if (Number.isNaN(freteValor)) throw new Aviso("O valor do frete não está certo. Ex.: 45,00");
+    if (Number.isNaN(desconto)) throw new Aviso("O valor do desconto não está certo.");
+    const forma = String(formData.get("forma") ?? "") as FormaPagamento;
+    if (!FORMAS.includes(forma)) throw new Aviso("Escolha como o cliente pagou.");
+    const produtos = itens.reduce((s, i) => s + i.qtd * i.preco, 0);
+    const valor = Math.round((produtos + freteValor - desconto) * 100) / 100;
+    if (valor < 0) throw new Aviso("O desconto é maior que o valor da venda.");
+
+    // Delivery address: optional (pickup / hand delivery), but complete if started — labels need all of it.
+    const entrega = {
+      nome,
+      telefone: whatsapp.slice(2),
+      cep: t("cep", 9).replace(/\D/g, ""),
+      endereco: t("endereco", 120),
+      numero: t("numero", 20),
+      complemento: t("complemento", 60),
+      bairro: t("bairro", 60),
+      cidade: t("cidade", 60),
+      uf: t("uf", 2).toUpperCase(),
+      cpf: t("cpf", 14).replace(/\D/g, "") || undefined,
+    };
+    const temEndereco = Boolean(entrega.cep || entrega.endereco || entrega.numero);
+    if (temEndereco && !(entrega.cep.length === 8 && entrega.endereco && entrega.numero && entrega.cidade && /^[A-Z]{2}$/.test(entrega.uf))) {
+      throw new Aviso("Endereço incompleto: preencha CEP, rua, número, cidade e UF (ou deixe tudo em branco).");
+    }
+    if (entrega.cpf && !cpfValido(entrega.cpf)) throw new Aviso("CPF inválido (ou deixe em branco).");
+    if (!entrega.cidade) throw new Aviso("Escreva a cidade do cliente.");
+
+    const porTipo = { normal: 0, infantil: 0, reclinavel: 0 };
+    for (const i of itens) if (i.tipo) porTipo[i.tipo] += i.qtd;
+    const orcamentoId = String(formData.get("orcamento") ?? "");
+    const orc = orcamentoId ? await lerOrcamento(orcamentoId) : null;
+
+    const ref = crypto.randomUUID();
+    await registrarVendaDoPainel({
+      ref,
+      nome,
+      whatsapp,
+      cidade: entrega.uf ? `${entrega.cidade}/${entrega.uf}` : entrega.cidade,
+      forma,
+      itens: itens.map((i) => `${i.descricao} (x${i.qtd}) — ${formatBRL(i.preco)} cada`),
+      valor,
+      entrega: temEndereco ? entrega : undefined,
+      porTipo,
+      frete: freteValor || formData.get("freteServico") ? { valor: freteValor, servico: t("freteServico", 40) || undefined } : undefined,
+      obs: String(formData.get("obs") ?? "").replace(/\r\n/g, "\n").trim().slice(0, 1000) || undefined,
+      orcamento: orc?.id,
+    });
+    if (orc) {
+      orc.status = "vendido";
+      orc.pedido = ref;
+      await gravarOrcamento(orc);
+    }
+    revalidatePath("/admin/clientes");
+    return { msg: `Venda lançada! Pedido ${codigoDoPedido(ref)}, ${formatBRL(valor)}.`, ir: `/admin/clientes/${ref}` };
+  });
+}
+
+export async function statusOrcamentoAction(id: string, status: StatusOrcamento) {
+  return executar(async () => {
+    const o = await lerOrcamento(id);
+    if (!o) throw new Aviso(SUMIU);
+    o.status = status;
+    await gravarOrcamento(o);
+    revalidatePath("/admin/orcamentos");
+    return status === "respondido" ? "Marcado como respondido." : status === "novo" ? "Marcado como novo." : "Marcado como vendido.";
+  });
+}
+
+export async function excluirOrcamentoAction(id: string) {
+  return executar(async () => {
+    await excluirOrcamento(id);
+    revalidatePath("/admin/orcamentos");
+    return "Orçamento apagado (com as imagens).";
   });
 }

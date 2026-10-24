@@ -187,6 +187,14 @@ export type PedidoSalvo = {
   total: number;
 };
 
+/** How an order was paid: the site takes Pix and card; sales typed in the admin (2026-10-24) can be anything. */
+export type FormaPagamento = "pix" | "cartao" | "dinheiro" | "transferencia" | "outro";
+
+/** "no Pix", "no cartão", "em dinheiro"… for order texts. */
+export function noPagamento(forma: FormaPagamento) {
+  return { pix: "no Pix", cartao: "no cartão", dinheiro: "em dinheiro", transferencia: "por transferência", outro: "" }[forma] ?? "";
+}
+
 export const PEDIDO_STORAGE_KEY = "sentarte-pedido";
 
 /** Short public order number shown to the customer (e.g. "7K3D9Q2A"); /acompanhar finds the order by it. */

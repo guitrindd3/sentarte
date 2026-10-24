@@ -3,7 +3,7 @@ import { avisarVenda } from "./avisos";
 import { contarUsoDoCupom, criarCuponsDeVale } from "./cupons-store";
 import { anotarNoCaminho, diaBR } from "./estatisticas";
 import { novoCodigoVale, VALIDADE_VALE_DIAS } from "./vale";
-import { codigoDoPedido, type DadosEntrega } from "./pedido";
+import { codigoDoPedido, type DadosEntrega, type FormaPagamento } from "./pedido";
 import { redis, redisAtivo, type Cmd } from "./redis";
 import { usarVagas } from "./vagas";
 
@@ -29,7 +29,7 @@ export type PedidoCliente = {
   nome: string;
   whatsapp: string;
   cidade: string;
-  forma: "pix" | "cartao";
+  forma: FormaPagamento;
   itens: string[];
   valor: number;
   status: StatusPedido;
@@ -54,6 +54,12 @@ export type PedidoCliente = {
   transportadora?: string;
   envios?: EnvioME[];
   etiquetaUrl?: string;
+  /** "painel" = a sale closed on WhatsApp and typed in the admin (2026-10-24); missing = paid on the site. */
+  origem?: "painel";
+  /** Details the atelier wrote about a sale typed in the admin. */
+  obs?: string;
+  /** The /eventos quote it came from (lib/orcamentos.ts), to show the customer's logo/pictures. */
+  orcamento?: string;
 };
 
 const kcod = (cod: string) => `pedido:cod:${cod}`;
@@ -72,6 +78,27 @@ export async function salvarPedidoIniciado(p: Omit<PedidoCliente, "em" | "status
   } catch (err) {
     console.error("salvarPedidoIniciado", err);
   }
+}
+
+/**
+ * A sale closed on WhatsApp, typed in the admin ("Lançar venda"): saved
+ * already paid, in production, so it shows in Clientes, gets /acompanhar,
+ * production photos and labels like a site order. Uses this week's
+ * production slots; no sale alert (the atelier typed it herself).
+ */
+export async function registrarVendaDoPainel(p: Omit<PedidoCliente, "em" | "status" | "pagoEm" | "etapa" | "etapaEm" | "origem">) {
+  const em = Date.now();
+  const dados: PedidoCliente = { ...p, em, status: "pago", pagoEm: em, etapa: "producao", etapaEm: { producao: em }, origem: "painel" };
+  await redis([
+    ["SET", kp(p.ref), JSON.stringify(dados), "EX", PEDIDO_S],
+    ["SET", kcod(codigoDoPedido(p.ref)), p.ref, "EX", PEDIDO_S],
+    ["SET", `${kp(p.ref)}:pago`, 1, "EX", PEDIDO_S],
+    ["ZADD", "pedidos", em, p.ref],
+    ["ZREMRANGEBYRANK", "pedidos", 0, -501],
+  ]);
+  const cadeiras = p.porTipo ? p.porTipo.normal + p.porTipo.infantil + p.porTipo.reclinavel : 0;
+  await usarVagas(cadeiras);
+  return dados;
 }
 
 /** Updates an order's status; returns the order (for the visit journey), or null. */

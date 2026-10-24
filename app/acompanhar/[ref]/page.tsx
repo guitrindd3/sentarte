@@ -6,7 +6,7 @@ import { CheckIcon } from "@/components/icons";
 import { lerPedido, type PedidoCliente } from "@/lib/clientes";
 import { getContent } from "@/lib/content-store";
 import { formatBRL, PRAZO_PRODUCAO_DIAS_UTEIS } from "@/lib/offer";
-import { codigoDoPedido } from "@/lib/pedido";
+import { codigoDoPedido, noPagamento } from "@/lib/pedido";
 import { linkRastreio } from "@/lib/rastreio";
 import { fotosDaProducao } from "@/lib/fotos-producao";
 import { redisAtivo } from "@/lib/redis";
@@ -167,7 +167,7 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
             </div>
           ) : null}
           <p className="mt-3 border-t border-line pt-3 text-ink-soft">
-            Total: <strong className="text-ink">{formatBRL(p.valor)}</strong> no {p.forma === "pix" ? "Pix" : "cartão"}
+            Total: <strong className="text-ink">{formatBRL(p.valor)}</strong> {noPagamento(p.forma)}
           </p>
           <a
             href={whatsappUrl(site.whatsappNumero, `Oi! Quero falar sobre o meu pedido ${codigoDoPedido(p.ref)}.`)}

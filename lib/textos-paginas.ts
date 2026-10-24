@@ -298,7 +298,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
         "Escolha um dos exemplos acima ou comece do zero: troque o nome, as cores e o desenho, e coloque o tassel se quiser. Depois é só pedir o orçamento com a quantidade.",
       pedidoTitulo: "Peça o orçamento",
       pedidoTexto:
-        "Conte o que é o evento, a data e quantas cadeiras você quer. Cada cadeira é trançada à mão e fica pronta em até {prazo} dias úteis depois do pedido; para pedidos maiores, a gente combina o prazo com folga antes da data.\n\nAs cores podem seguir a paleta da festa ou da marca. Se não achar a cor no Monte a sua trama, é só falar.",
+        "Conte o que é o evento, a data e quantas cadeiras você quer. Cada cadeira é trançada à mão e fica pronta em até {prazo} dias úteis depois do pedido; para pedidos maiores, a gente combina o prazo com folga antes da data.\n\nAs cores podem seguir a paleta da festa ou da marca. Se não achar a cor no Monte a sua trama, é só falar.\n\nTem uma logo ou uma ideia? Mande a imagem no formulário: o ateliê faz um esboço da cadeira e te manda pelo WhatsApp, junto com o valor.",
     },
   },
   {
@@ -534,6 +534,11 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
           titulo: "Pedidos pagos pelo site",
           texto:
             "Quando você clica em pagar, guardamos seu nome, WhatsApp, e-mail, CPF, endereço de entrega e os itens do pedido por até 6 meses, para confirmar o pagamento, falar com você sobre ele (inclusive se o pagamento não for concluído) e mostrar o andamento em Acompanhar pedido. O nome, o endereço, o telefone e o CPF vão para a transportadora pelo Melhor Envio, só para gerar a etiqueta e a declaração de conteúdo do envio. A página Acompanhar pedido mostra só o primeiro nome, a cidade, os itens e as etapas — nunca o endereço, o telefone ou o CPF.",
+        },
+        {
+          titulo: "Pedidos de orçamento",
+          texto:
+            "Se você pedir um orçamento na página Eventos, guardamos seu nome, o WhatsApp (se informar), os dados do evento e as imagens que mandar (logo, foto ou ideia) por até 6 meses, só para fazer o esboço da sua cadeira e falar com você sobre ele. As imagens não aparecem no site. Para apagar, é só pedir pelo WhatsApp.",
         },
         {
           titulo: "Lista de novidades",

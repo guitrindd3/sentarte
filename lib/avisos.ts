@@ -1,5 +1,5 @@
 import "server-only";
-import { linhaPresente } from "./pedido";
+import { linhaPresente, noPagamento } from "./pedido";
 import { randomBytes } from "crypto";
 import nodemailer from "nodemailer";
 import type { PedidoCliente } from "./clientes";
@@ -80,7 +80,7 @@ async function mandarEmail(cfg: ConfigGmail, assunto: string, texto: string) {
 function textoCompleto(p: PedidoCliente) {
   const e = p.entrega;
   return [
-    `Venda nova no site! ${formatBRL(p.valor)} no ${p.forma === "pix" ? "Pix" : "cartão"}.`,
+    `Venda nova no site! ${formatBRL(p.valor)} ${noPagamento(p.forma)}.`,
     "",
     "Itens:",
     ...p.itens.map((i) => `- ${i}`),
@@ -100,13 +100,26 @@ function textoCompleto(p: PedidoCliente) {
     .join("\n");
 }
 
+/** A new /eventos quote request (lib/orcamentos.ts) — same channels as a sale. */
+export async function avisarOrcamento(o: { codigo: string; tipo: string; contato: string; cidade?: string; fotos: number; total: number }) {
+  if (!redisAtivo()) return;
+  const [topico, gmail] = await Promise.all([redis([["GET", K.ntfy]]).then((r) => r[0] as string | null), lerGmail()]);
+  const titulo = `Pedido de orçamento ${o.codigo}`;
+  const texto = `${o.contato}: ${o.total} ${o.total === 1 ? "cadeira" : "cadeiras"} para ${o.tipo}${o.cidade ? `, ${o.cidade}` : ""}${o.fotos ? `, mandou ${o.fotos} ${o.fotos === 1 ? "imagem" : "imagens"}` : ""}.`;
+  const link = `${SITE_URL}/admin/orcamentos`;
+  await Promise.all([
+    topico ? mandarNtfy(topico, titulo, texto, link).catch((e) => console.error("aviso ntfy", e)) : null,
+    gmail ? mandarEmail(gmail, titulo, `${texto}\n\nVer no painel: ${link}`).catch((e) => console.error("aviso email", e)) : null,
+  ]);
+}
+
 /** Sends the alert on every configured channel; errors are logged, never thrown. */
 export async function avisarVenda(p: PedidoCliente) {
   if (!redisAtivo()) return;
   const [topico, gmail] = await Promise.all([redis([["GET", K.ntfy]]).then((r) => r[0] as string | null), lerGmail()]);
   const qtd = p.itens.length;
   const titulo = `Venda nova: ${formatBRL(p.valor)}`;
-  const curto = `${qtd} ${qtd === 1 ? "item" : "itens"} no ${p.forma === "pix" ? "Pix" : "cartão"}, para ${p.cidade}. Toque para abrir o painel.`;
+  const curto = `${qtd} ${qtd === 1 ? "item" : "itens"} ${noPagamento(p.forma)}, para ${p.cidade}. Toque para abrir o painel.`;
   const link = `${SITE_URL}/admin/clientes/${p.ref}`;
   await Promise.all([
     topico ? mandarNtfy(topico, titulo, curto, link).catch((e) => console.error("aviso ntfy", e)) : null,

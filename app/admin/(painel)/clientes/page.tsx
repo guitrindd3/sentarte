@@ -2,6 +2,7 @@ import Link from "next/link";
 import { atualizarComMercadoPago, listarInteressados, pedidosRecentes, type Interessado, type PedidoCliente } from "@/lib/clientes";
 import { getAdminContent } from "@/lib/content-store";
 import { formatBRL } from "@/lib/offer";
+import { noPagamento } from "@/lib/pedido";
 import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
 import { editarInteressadoAction, excluirInteressadoAction, excluirPedidoAction } from "../../actions";
@@ -71,12 +72,20 @@ export default async function Clientes() {
       <div>
         <h1 className="font-serif text-3xl font-medium tracking-tight text-ink sm:text-4xl">Clientes</h1>
         <p className="mt-2 max-w-prose text-ink-soft">
-          Quem se identificou no site: pedidos começados no &ldquo;Pagar agora&rdquo; e quem pediu para receber novidades.
+          Quem se identificou no site: pedidos começados no &ldquo;Pagar agora&rdquo;, vendas lançadas por você e quem pediu para receber novidades.
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="/admin/vendas/nova" className="inline-flex items-center gap-2 rounded-full bg-wood px-4 py-2 text-sm font-semibold text-paper hover:bg-wood-dark">
+            + Lançar venda (fechada no WhatsApp)
+          </Link>
+          <Link href="/admin/orcamentos" className="inline-flex items-center gap-2 rounded-full border border-line bg-paper px-4 py-2 text-sm font-medium text-ink hover:border-wood">
+            Ver orçamentos
+          </Link>
+        </div>
       </div>
 
       <Card
-        titulo="Pedidos começados no site"
+        titulo="Pedidos"
         descricao={
           naoTerminou
             ? `${naoTerminou} ${naoTerminou === 1 ? "pessoa foi pagar e não terminou" : "pessoas foram pagar e não terminaram"}. Vale chamar no WhatsApp!`
@@ -98,6 +107,7 @@ export default async function Clientes() {
                       </Link>
                       <p className="text-sm text-ink-soft">
                         {telefone(p.whatsapp)}, {quando(p.em)}
+                        {p.origem === "painel" ? ", lançada por você" : ""}
                       </p>
                     </div>
                     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${s.c}`}>{s.t}</span>
@@ -108,7 +118,7 @@ export default async function Clientes() {
                     ))}
                   </ul>
                   <p className="mt-2 text-sm text-ink-soft">
-                    {formatBRL(p.valor)} no {p.forma === "pix" ? "Pix" : "cartão"}
+                    {formatBRL(p.valor)} {noPagamento(p.forma)}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {p.status === "pago" ? (
