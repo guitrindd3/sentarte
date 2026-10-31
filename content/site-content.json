@@ -313,6 +313,18 @@
           ]
         },
         {
+          "id": "mod-tracada-listrada",
+          "nome": "Traçada listrada",
+          "descricao": "Listras coloridas de cima a baixo — laranja, azul, amarelo e vermelho sobre o fio areia.",
+          "corA": "#EDE3D0",
+          "corB": "#E8641B",
+          "imagemUrl": "/catalogo/tracada-listrada.jpg",
+          "fotosExtras": [
+            "/catalogo/tracada-listrada-foto2.jpg",
+            "/catalogo/tracada-listrada-foto3.jpg"
+          ]
+        },
+        {
           "id": "3e945c49-ee4e-404f-9e2e-06facde16cf4",
           "nome": "Brasil",
           "descricao": "Cadeira personalizada do Brasil ",
@@ -326,18 +338,6 @@
           "fotosExtras": [
             "/catalogo/b6854180-331e-406b-8d70-29090bf26764.jpg",
             "/catalogo/ac821e4f-767a-46a7-81ee-fd26f0e9017f.jpg"
-          ]
-        },
-        {
-          "id": "mod-tracada-listrada",
-          "nome": "Traçada listrada",
-          "descricao": "Listras coloridas de cima a baixo — laranja, azul, amarelo e vermelho sobre o fio areia.",
-          "corA": "#EDE3D0",
-          "corB": "#E8641B",
-          "imagemUrl": "/catalogo/tracada-listrada.jpg",
-          "fotosExtras": [
-            "/catalogo/tracada-listrada-foto2.jpg",
-            "/catalogo/tracada-listrada-foto3.jpg"
           ]
         }
       ]
