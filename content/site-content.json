@@ -313,6 +313,13 @@
           ]
         },
         {
+          "id": "3e945c49-ee4e-404f-9e2e-06facde16cf4",
+          "nome": "Brasil",
+          "descricao": "",
+          "corA": "#15564C",
+          "corB": "#BD502E"
+        },
+        {
           "id": "mod-tracada-listrada",
           "nome": "Traçada listrada",
           "descricao": "Listras coloridas de cima a baixo — laranja, azul, amarelo e vermelho sobre o fio areia.",
@@ -323,13 +330,6 @@
             "/catalogo/tracada-listrada-foto2.jpg",
             "/catalogo/tracada-listrada-foto3.jpg"
           ]
-        },
-        {
-          "id": "3e945c49-ee4e-404f-9e2e-06facde16cf4",
-          "nome": "Brasil",
-          "descricao": "",
-          "corA": "#15564C",
-          "corB": "#BD502E"
         }
       ]
     },
