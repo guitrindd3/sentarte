@@ -33,10 +33,10 @@ export function codificarCadeira(op: Opcoes): string {
   if (op.corC) p.set("c", op.corC.replace("#", ""));
   if (op.formaAssento && op.formaAssento !== "lisa") p.set("fa", op.formaAssento);
   if ((op.escalaAssento ?? 1) !== 1) p.set("ea", String(r2(op.escalaAssento ?? 1)));
-  if (op.nomeAssento?.trim()) p.set("na", op.nomeAssento.trim().slice(0, 30));
+  if (op.nomeAssento?.trim()) p.set("na", op.nomeAssento.trim().slice(0, 48));
   if ((op.tamanhoNomeAssento ?? 1) !== 1) p.set("tna", String(r2(op.tamanhoNomeAssento ?? 1)));
   if (op.nome.trim()) {
-    p.set("n", op.nome.trim().slice(0, 40));
+    p.set("n", op.nome.trim().slice(0, 64));
     p.set("nx", String(r2(op.posicao.x)));
     p.set("ny", String(r2(op.posicao.y)));
     if ((op.tamanhoNome ?? 1) < 1) p.set("t", String(r2(op.tamanhoNome ?? 1)));
@@ -70,8 +70,8 @@ export function decodificarCadeira(q: URLSearchParams): Opcoes {
     corB: cor("b", "#F3F1EC"),
     corC: q.get("c") && HEX.test(q.get("c")!) ? `#${q.get("c")}` : undefined,
     formaAssento: (/^[a-z-]{2,24}$/.test(formaAssento) ? formaAssento : "lisa") as Forma,
-    nome: (q.get("n") ?? "").slice(0, 40),
-    nomeAssento: (q.get("na") ?? "").slice(0, 30),
+    nome: (q.get("n") ?? "").slice(0, 64),
+    nomeAssento: (q.get("na") ?? "").slice(0, 48),
     tamanhoNomeAssento: num(q.get("tna"), 0.4, 2, 1),
     escalaAssento: num(q.get("ea"), 0.4, 2, 1),
     posicao: { x: num(q.get("nx"), 0, 1, 0.5), y: num(q.get("ny"), 0, 1, 0.5) },

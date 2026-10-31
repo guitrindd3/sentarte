@@ -30,7 +30,7 @@ export async function prepararPedido(corpo: CorpoPedido) {
     categoriaSlug: String(i.categoriaSlug ?? ""),
     modeloNome: String(i.modeloNome ?? "").slice(0, 120),
     quantidade: Math.max(1, Math.min(20, Math.floor(Number(i.quantidade) || 1))),
-    nomePersonalizado: i.nomePersonalizado ? String(i.nomePersonalizado).slice(0, 40) : undefined,
+    nomePersonalizado: i.nomePersonalizado ? String(i.nomePersonalizado).slice(0, 64) : undefined,
     tipoCadeira: tipoValido(i.tipoCadeira),
     variante: i.variante ? String(i.variante).slice(0, 40) : undefined,
     bracoMadeira: i.bracoMadeira === true || undefined,

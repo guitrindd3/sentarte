@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     categoriaSlug: String(i.categoriaSlug ?? ""),
     modeloNome: String(i.modeloNome ?? "").slice(0, 120),
     quantidade: Math.max(1, Math.min(20, Math.floor(Number(i.quantidade) || 1))),
-    nomePersonalizado: i.nomePersonalizado ? String(i.nomePersonalizado).slice(0, 40) : undefined,
+    nomePersonalizado: i.nomePersonalizado ? String(i.nomePersonalizado).slice(0, 64) : undefined,
     tipoCadeira: tipoValido(i.tipoCadeira),
   }));
   const conta = calcularPedido(itens);

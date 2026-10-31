@@ -137,7 +137,9 @@ const ROTULOS_BUSCA = FORMAS_VISIVEIS.map((f) => semAcento(f.rotulo));
 
 
 const PASSOS = ["Trançado", "Cores", "Nome", "Pronto"] as const;
-const MAX_LINHAS = 2;
+const MAX_LINHAS = 4;
+// the seat grid has room for 3 lines of letters (lib/chair-render.ts)
+const MAX_LINHAS_ASSENTO = 3;
 const MAX_CHARS = 14;
 
 function carregarFoto(src: string) {
@@ -435,7 +437,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
     setNome(
       valor
         .split("\n")
-        .slice(0, MAX_LINHAS)
+        .slice(0, nomeNoAssento ? MAX_LINHAS_ASSENTO : MAX_LINHAS)
         .map((l) => l.slice(0, MAX_CHARS))
         .join("\n")
     );
@@ -997,7 +999,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
               <div>
                 <p className="font-serif text-2xl font-medium tracking-tight text-ink">Quer um nome?</p>
                 <p className="mt-1 text-sm text-ink-soft">
-                  Opcional. Até {MAX_LINHAS} linhas com {MAX_CHARS} letras cada. Com nome, a cadeira sai por{" "}
+                  Opcional. Até {MAX_LINHAS} linhas no encosto ou {MAX_LINHAS_ASSENTO} no assento, com {MAX_CHARS} letras cada. Com nome, a cadeira sai por{" "}
                   {formatBRL(precoCadeira(true, tipo))}.
                 </p>
               </div>
@@ -1006,7 +1008,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                 <textarea
                   value={nome}
                   onChange={(e) => handleNome(e.target.value)}
-                  rows={2}
+                  rows={nomeNoAssento ? MAX_LINHAS_ASSENTO : MAX_LINHAS}
                   placeholder={"Ex: JU\nTRINDADE"}
                   className="mt-2 w-full resize-none border border-line bg-canvas px-3 py-2 text-base uppercase tracking-wide text-ink focus:border-ink focus:outline-none"
                 />
@@ -1036,10 +1038,10 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                   </div>
                   {nomeNoAssento ? (
                     <p className="mt-2 text-xs text-ink-soft">
-                      O nome fica centralizado no meio do assento (pule linha com Enter para escrever em 2 linhas)
+                      O nome fica centralizado no meio do assento (pule linha com Enter para escrever em até {MAX_LINHAS_ASSENTO} linhas)
                       {formaAssento !== "lisa" ? " — e entra no lugar do desenho do assento" : ""}.
                       {nome.split("\n").some((l) => l.trim().length > 10)
-                        ? " No assento cabem até 10 letras por linha sem apertar — se puder, divida em 2 linhas."
+                        ? " No assento cabem até 10 letras por linha sem apertar — se puder, divida em mais linhas."
                         : ""}
                     </p>
                   ) : null}

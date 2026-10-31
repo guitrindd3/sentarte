@@ -1150,7 +1150,7 @@ function rasterizarNome(nome: string, posicao: NomePosicao, tamanho = 1): Nome {
     .split("\n")
     .map((l) => normalizarTexto(l).trim())
     .filter(Boolean)
-    .slice(0, 3);
+    .slice(0, 4);
   if (linhas.length === 0) return null;
 
   const w = ENCOSTO.x1 - ENCOSTO.x0;
@@ -1231,13 +1231,13 @@ export function posicaoNoEncosto(sx: number, sy: number): NomePosicao {
 }
 
 /** Name laid out on the seat grid (cells), centered, as big as fits — up
- * to 2 lines (one per line typed), each line centered, same letter size. */
+ * to 3 lines (one per line typed), each line centered, same letter size. */
 function mascaraNomeAssento(texto: string, tamanho = 1) {
   const linhas = texto
     .split("\n")
     .map((l) => normalizarTexto(l).trim())
     .filter(Boolean)
-    .slice(0, 2);
+    .slice(0, 3);
   if (linhas.length === 0) return null;
   const larguras = linhas.map((l) => l.length * (GLYPH_W + 1) - 1);
   const fator = Math.max(0.4, Math.min(2, tamanho));
@@ -1249,7 +1249,7 @@ function mascaraNomeAssento(texto: string, tamanho = 1) {
     const maximo = Math.min((ASSENTO_COLS - 2) / larguras[0], (ASSENTO_ROWS - 2) / GLYPH_H);
     escs = [Math.max(0.6, Math.min(maximo, caber * fator))];
   } else {
-    // Two lines barely fit the 27-row grid, and fractional sizes there break
+    // Several lines barely fit the 27-row grid, and fractional sizes there break
     // the letters apart — so each line gets a whole-cell size of its own
     // (a short line over a long one reads big-over-small, like the real
     // chairs), shrunk until the block fits. Only a line too long for size 1
@@ -1259,7 +1259,7 @@ function mascaraNomeAssento(texto: string, tamanho = 1) {
         ? (ASSENTO_COLS - 2) / w
         : Math.max(1, Math.min(Math.floor((ASSENTO_COLS - 2) / w), Math.round(Math.min(3, (ASSENTO_COLS - 4) / w) * fator)))
     );
-    const altura = () => escs.reduce((t, e) => t + Math.round(GLYPH_H * e), 0) + 2;
+    const altura = () => escs.reduce((t, e) => t + Math.round(GLYPH_H * e), 0) + 2 * (linhas.length - 1);
     while (altura() > ASSENTO_ROWS - 2 && Math.max(...escs) > 1) {
       const i = escs.indexOf(Math.max(...escs));
       escs[i] = Math.max(1, Math.floor(escs[i]) - 1);
