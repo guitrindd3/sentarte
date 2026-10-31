@@ -315,9 +315,18 @@
         {
           "id": "3e945c49-ee4e-404f-9e2e-06facde16cf4",
           "nome": "Brasil",
-          "descricao": "",
-          "corA": "#15564C",
-          "corB": "#BD502E"
+          "descricao": "Cadeira personalizada do Brasil ",
+          "corA": "#15564c",
+          "corB": "#bd502e",
+          "imagemUrl": "/catalogo/41de87bf-bace-4473-bade-02c14c0b329e.jpg",
+          "variantes": [
+            "/catalogo/4aa930a2-478d-457f-858a-8227e817962e.jpg",
+            "/catalogo/35f213d4-353a-4bfc-857c-d05c18db5b49.jpg"
+          ],
+          "fotosExtras": [
+            "/catalogo/b6854180-331e-406b-8d70-29090bf26764.jpg",
+            "/catalogo/ac821e4f-767a-46a7-81ee-fd26f0e9017f.jpg"
+          ]
         },
         {
           "id": "mod-tracada-listrada",
