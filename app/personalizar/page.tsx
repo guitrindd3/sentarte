@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { VideoAoVer } from "@/components/video-ao-ver";
 import { pageMetadata } from "@/lib/seo";
 import { BackLink } from "@/components/back-link";
 import { VIDEO_MONTE_SUA_CADEIRA, POSTER_MONTE_SUA_CADEIRA } from "@/components/cover-link-card";
@@ -42,16 +43,11 @@ export default async function PersonalizarPage() {
             <MedidasCadeiras embutido whatsappNumero={content.site.whatsappNumero} />
           </div>
           <div className="mx-auto hidden w-full max-w-[17rem] border border-line bg-paper p-2 shadow-[6px_6px_0_0_var(--line)] md:block">
-            <video
+            <VideoAoVer
               src={VIDEO_MONTE_SUA_CADEIRA}
               poster={POSTER_MONTE_SUA_CADEIRA}
               width={480}
               height={848}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
               aria-label="Vídeo de uma cadeira sendo trançada"
               className="block aspect-[480/848] h-auto w-full bg-canvas object-cover"
             />

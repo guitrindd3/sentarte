@@ -24,12 +24,15 @@ export function ModeloCard({
   categoria,
   categoriaSlug,
   whatsappNumero,
+  fotoSizes = "(min-width: 1024px) 360px, (min-width: 640px) 45vw, 100vw",
 }: {
   modelo: Modelo;
   personalizado?: Modelo;
   categoria: string;
   categoriaSlug: string;
   whatsappNumero: string;
+  /** `sizes` of the main photo — the homepage row's cards are narrower than the grids'. */
+  fotoSizes?: string;
 }) {
   const nomeRef = useRef<HTMLInputElement>(null);
   const { addItem, comprarAgora } = useCart();
@@ -74,7 +77,7 @@ export function ModeloCard({
             alt={ativo.nome}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(min-width: 1024px) 360px, (min-width: 640px) 45vw, 100vw"
+            sizes={fotoSizes}
           />
         ) : (
           <WeavePattern colorA={ativo.corA} colorB={ativo.corB} cell={30} band={20} className="h-full w-full" />
@@ -139,7 +142,7 @@ export function ModeloCard({
                       varianteIndex === i ? "border-canvas" : "border-canvas/40 opacity-75 hover:opacity-100"
                     }`}
                   >
-                    <Image src={foto} alt="" fill className="object-cover" sizes="44px" />
+                    <Image src={foto} alt="" width={44} height={44} className="h-full w-full object-cover" />
                   </button>
                 ))}
               </div>

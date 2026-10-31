@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { VideoAoVer } from "@/components/video-ao-ver";
 import Link from "next/link";
 import { WeavePattern, type WeaveShape } from "@/components/weave-pattern";
 import type { Modelo } from "@/lib/content-schema";
@@ -31,14 +32,9 @@ export function CoverLinkCard({
     >
       <div className="relative aspect-square overflow-hidden border-b border-line">
         {videoUrl ? (
-          <video
+          <VideoAoVer
             src={videoUrl}
             poster={POSTER_MONTE_SUA_CADEIRA}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
             aria-hidden="true"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />

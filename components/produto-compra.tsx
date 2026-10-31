@@ -138,7 +138,7 @@ export function ProdutoCompra({
                   e.varianteIndex === i ? "border-ink" : "border-line opacity-70 hover:opacity-100"
                 }`}
               >
-                <Image src={foto} alt="" fill className="object-cover" sizes="80px" />
+                <Image src={foto} alt="" width={80} height={80} className="h-full w-full object-cover" />
               </button>
             ))}
           </div>

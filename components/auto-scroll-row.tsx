@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { Children, cloneElement, isValidElement, useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 
 /** Pixels per second the row drifts sideways. */
 const VELOCIDADE = 32;
@@ -13,8 +13,26 @@ const PAUSA_MS = 3500;
 // `data-loop-start` — when the scroll reaches that copy it jumps back by
 // exactly one set, so the loop has no visible seam. Only drifts while the
 // row actually overflows (phones); on wider screens it's a plain grid.
-export function AutoScrollRow({ className, children }: { className: string; children: ReactNode }) {
+export function AutoScrollRow({
+  className,
+  children,
+  copiaNoNavegador = false,
+}: {
+  className: string;
+  children: ReactNode;
+  /** Make the loop's second copy here, once the page is up, instead of
+   * shipping it in the HTML — the children are then just the one set. */
+  copiaNoNavegador?: boolean;
+}) {
   const ref = useRef<HTMLDivElement>(null);
+  const [comCopia, setComCopia] = useState(false);
+
+  useEffect(() => {
+    if (!copiaNoNavegador) return;
+    const cedo = typeof window.requestIdleCallback === "function";
+    const id = cedo ? window.requestIdleCallback(() => setComCopia(true), { timeout: 2500 }) : window.setTimeout(() => setComCopia(true), 1200);
+    return () => (cedo ? window.cancelIdleCallback(id) : window.clearTimeout(id));
+  }, [copiaNoNavegador]);
 
   useEffect(() => {
     const el = ref.current;
@@ -68,6 +86,18 @@ export function AutoScrollRow({ className, children }: { className: string; chil
   return (
     <div ref={ref} className={className}>
       {children}
+      {comCopia
+        ? Children.toArray(children)
+            .filter(isValidElement)
+            .map((el, i) =>
+              cloneElement(el as ReactElement<Record<string, unknown>>, {
+                key: `copia-${el.key ?? i}`,
+                inert: true,
+                "aria-hidden": "true",
+                "data-loop-start": i === 0 ? "" : undefined,
+              })
+            )
+        : null}
     </div>
   );
 }

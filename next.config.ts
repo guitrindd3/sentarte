@@ -25,6 +25,12 @@ const CSP = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Shorter srcset lists (speed pass 2026-10-31): every <Image> listed ~16
+  // widths, and the homepage has ~100 of them. Phones top out near 1080 px.
+  images: {
+    deviceSizes: [640, 828, 1080, 1200, 1920],
+    imageSizes: [96, 256, 384],
+  },
   // the wedding page grew into events & companies (2026-10-24)
   async redirects() {
     return [{ source: "/casamento", destination: "/eventos", permanent: true }];

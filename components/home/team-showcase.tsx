@@ -46,6 +46,7 @@ export function TeamShowcase({
       categoria={cadeiras.titulo}
       categoriaSlug={cadeiras.slug}
       whatsappNumero={whatsappNumero}
+      fotoSizes="(min-width: 1024px) 260px, (min-width: 640px) 34vw, 76vw"
     />
   );
 
@@ -64,15 +65,14 @@ export function TeamShowcase({
       {/* Full screen width (user 2026-10-05: chairs should slide in and out at the
           screen edges, not vanish at the content edge). The first card still lines
           up with the text column. Cards made smaller 2026-10-05 ("muito grande"). */}
-      <AutoScrollRow className="mt-8 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:gap-6 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] [&::-webkit-scrollbar]:hidden [&>*]:flex [&>*>*]:w-full [&>*]:w-[calc((100vw-3rem)*0.76)] [&>*]:shrink-0 sm:[&>*]:w-[calc((100vw-3rem)*0.34)] lg:[&>*]:w-[calc((min(100vw,72rem)-3rem)*0.235)]">
+      <AutoScrollRow
+        copiaNoNavegador
+        className="mt-8 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:gap-6 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] [&::-webkit-scrollbar]:hidden [&>*]:flex [&>*>*]:w-full [&>*]:w-[calc((100vw-3rem)*0.76)] [&>*]:shrink-0 sm:[&>*]:w-[calc((100vw-3rem)*0.34)] lg:[&>*]:w-[calc((min(100vw,72rem)-3rem)*0.235)]">
+          {/* The second copy for the seamless loop is added by AutoScrollRow in
+              the browser (speed pass 2026-10-31: 35 full cards twice made the
+              homepage HTML ~765 KB). */}
           {itens.map((it) => (
             <div key={it.chave}>{cartao(it)}</div>
-          ))}
-          {/* Second copy for the seamless loop — not focusable. */}
-          {itens.map((it, i) => (
-            <div key={`copia-${it.chave}`} inert aria-hidden="true" data-loop-start={i === 0 ? "" : undefined}>
-              {cartao(it)}
-            </div>
           ))}
       </AutoScrollRow>
     </section>
