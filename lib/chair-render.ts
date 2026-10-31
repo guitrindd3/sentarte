@@ -1230,31 +1230,62 @@ export function posicaoNoEncosto(sx: number, sy: number): NomePosicao {
   };
 }
 
-/** Name laid out on the seat grid (cells), centered, as big as fits. */
+/** Name laid out on the seat grid (cells), centered, as big as fits — up
+ * to 2 lines (one per line typed), each line centered, same letter size. */
 function mascaraNomeAssento(texto: string, tamanho = 1) {
-  const linha = normalizarTexto(texto.replace(/\n/g, " ")).trim();
-  if (!linha) return null;
-  const larguraCel = linha.length * (GLYPH_W + 1) - 1;
-  // fractional cell size: 1 = largest that fits, then the user's factor
-  const caber = Math.min(3.4, (ASSENTO_COLS - 4) / larguraCel, (ASSENTO_ROWS - 6) / GLYPH_H);
-  // grows past 100% only while the whole name still fits the panel
-  const maximo = Math.min((ASSENTO_COLS - 2) / larguraCel, (ASSENTO_ROWS - 2) / GLYPH_H);
-  const esc = Math.max(0.6, Math.min(maximo, caber * Math.max(0.4, Math.min(2, tamanho))));
-  const w = Math.round(larguraCel * esc);
-  const h = Math.round(GLYPH_H * esc);
-  const x0 = Math.floor((ASSENTO_COLS - w) / 2);
-  const y0 = Math.floor((ASSENTO_ROWS - h) / 2);
-  const letra = new Uint8Array(ASSENTO_COLS * ASSENTO_ROWS);
-  for (let j = 0; j < h; j++) {
-    for (let i = 0; i < w; i++) {
-      const gx = Math.floor(i / esc);
-      const ci = Math.floor(gx / (GLYPH_W + 1));
-      const xx = x0 + i;
-      const yy = y0 + j;
-      if (xx < 0 || yy < 0 || xx >= ASSENTO_COLS || yy >= ASSENTO_ROWS) continue;
-      if (glyphPixel(linha[ci], gx % (GLYPH_W + 1), Math.floor(j / esc))) letra[yy * ASSENTO_COLS + xx] = 1;
+  const linhas = texto
+    .split("\n")
+    .map((l) => normalizarTexto(l).trim())
+    .filter(Boolean)
+    .slice(0, 2);
+  if (linhas.length === 0) return null;
+  const larguras = linhas.map((l) => l.length * (GLYPH_W + 1) - 1);
+  const fator = Math.max(0.4, Math.min(2, tamanho));
+  let escs: number[];
+  if (linhas.length === 1) {
+    // fractional cell size: 1 = largest that fits, then the user's factor
+    const caber = Math.min(3.4, (ASSENTO_COLS - 4) / larguras[0], (ASSENTO_ROWS - 6) / GLYPH_H);
+    // grows past 100% only while the whole name still fits the panel
+    const maximo = Math.min((ASSENTO_COLS - 2) / larguras[0], (ASSENTO_ROWS - 2) / GLYPH_H);
+    escs = [Math.max(0.6, Math.min(maximo, caber * fator))];
+  } else {
+    // Two lines barely fit the 27-row grid, and fractional sizes there break
+    // the letters apart — so each line gets a whole-cell size of its own
+    // (a short line over a long one reads big-over-small, like the real
+    // chairs), shrunk until the block fits. Only a line too long for size 1
+    // goes fractional.
+    escs = larguras.map((w) =>
+      w > ASSENTO_COLS - 2
+        ? (ASSENTO_COLS - 2) / w
+        : Math.max(1, Math.min(Math.floor((ASSENTO_COLS - 2) / w), Math.round(Math.min(3, (ASSENTO_COLS - 4) / w) * fator)))
+    );
+    const altura = () => escs.reduce((t, e) => t + Math.round(GLYPH_H * e), 0) + 2;
+    while (altura() > ASSENTO_ROWS - 2 && Math.max(...escs) > 1) {
+      const i = escs.indexOf(Math.max(...escs));
+      escs[i] = Math.max(1, Math.floor(escs[i]) - 1);
     }
   }
+  const alturas = escs.map((e) => Math.round(GLYPH_H * e));
+  const h = alturas.reduce((t, a) => t + a, 0) + 2 * (linhas.length - 1);
+  let yl = Math.floor((ASSENTO_ROWS - h) / 2);
+  const letra = new Uint8Array(ASSENTO_COLS * ASSENTO_ROWS);
+  linhas.forEach((linha, li) => {
+    const esc = escs[li];
+    const w = Math.round(larguras[li] * esc);
+    const x0 = Math.floor((ASSENTO_COLS - w) / 2);
+    const hl = alturas[li];
+    for (let j = 0; j < hl; j++) {
+      for (let i = 0; i < w; i++) {
+        const gx = Math.floor(i / esc);
+        const ci = Math.floor(gx / (GLYPH_W + 1));
+        const xx = x0 + i;
+        const yy = yl + j;
+        if (xx < 0 || yy < 0 || xx >= ASSENTO_COLS || yy >= ASSENTO_ROWS) continue;
+        if (glyphPixel(linha[ci], gx % (GLYPH_W + 1), Math.min(GLYPH_H - 1, Math.floor(j / esc)))) letra[yy * ASSENTO_COLS + xx] = 1;
+      }
+    }
+    yl += hl + 2;
+  });
   const contorno = new Uint8Array(ASSENTO_COLS * ASSENTO_ROWS);
   for (let j = 0; j < ASSENTO_ROWS; j++) {
     for (let i = 0; i < ASSENTO_COLS; i++) {

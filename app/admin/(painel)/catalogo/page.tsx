@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ondeAparece } from "@/lib/admin-grupos";
+import { ondeAparece, OPCOES_COLECAO } from "@/lib/admin-grupos";
 import { getAdminContent } from "@/lib/content-store";
 import { addCategoriaAction, addModeloAction, deleteCategoriaAction, updateCategoriaAction } from "../../actions";
 import { AdminForm, BotaoExcluir, Card, CampoTexto, Field, SaveButton, inputClass } from "../../_ui";
@@ -64,6 +64,19 @@ export default async function Catalogo({ searchParams }: PageProps<"/admin/catal
                     <input name="nome" required maxLength={80} placeholder="Ex.: Diamante azul" className={inputClass} autoFocus={novo === "1"} />
                   </Field>
                 </div>
+                {cat.slug === "cadeiras" ? (
+                  <div className="min-w-[14rem] flex-1">
+                    <Field label="Coleção" dica="Escolha onde ela entra no site — ex.: Cadeiras de time vai para a página de times.">
+                      <select name="colecao" defaultValue="" className={inputClass}>
+                        {OPCOES_COLECAO.map((o) => (
+                          <option key={o.valor} value={o.valor}>
+                            {o.rotulo}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
+                ) : null}
                 <SaveButton>Criar e continuar</SaveButton>
               </AdminForm>
             </details>

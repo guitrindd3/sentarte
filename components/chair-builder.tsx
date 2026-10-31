@@ -472,7 +472,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
     }`,
     temNome
       ? nomeNoAssento
-        ? `Nome: "${nomeLimpo.replace(/\n/g, " ")}" (no meio do assento)`
+        ? `Nome: "${nomeLimpo.replace(/\n/g, " / ")}" (no meio do assento)`
         : `Nome: "${nomeLimpo.replace(/\n/g, " / ")}" (no encosto, ${posicaoRotulo.toLowerCase()}, tamanho ${tamanhoRotulo.toLowerCase()})`
       : "Sem nome",
     `Valor: ${formatBRL(preco)}`,
@@ -1036,8 +1036,11 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                   </div>
                   {nomeNoAssento ? (
                     <p className="mt-2 text-xs text-ink-soft">
-                      O nome fica centralizado no meio do assento, numa linha só
+                      O nome fica centralizado no meio do assento (pule linha com Enter para escrever em 2 linhas)
                       {formaAssento !== "lisa" ? " — e entra no lugar do desenho do assento" : ""}.
+                      {nome.split("\n").some((l) => l.trim().length > 10)
+                        ? " No assento cabem até 10 letras por linha sem apertar — se puder, divida em 2 linhas."
+                        : ""}
                     </p>
                   ) : null}
                 </fieldset>

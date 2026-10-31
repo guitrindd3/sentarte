@@ -38,6 +38,7 @@ import { excluirCupom, listarCupons, salvarConfigBlackFriday, salvarCupom } from
 import { redisAtivo } from "@/lib/redis";
 import { salvarVagas } from "@/lib/vagas";
 import { slugDoModelo } from "@/lib/produtos";
+import { colecaoDoForm } from "@/lib/admin-grupos";
 import {
   confirmarDoisFatores,
   conferirSegundoFator,
@@ -307,6 +308,8 @@ export async function addModeloAction(categoriaId: string, _p: Resultado, formDa
       corA: "#15564C",
       corB: "#BD502E",
     };
+    const colecao = colecaoDoForm(formData);
+    if (colecao) novo.grupo = colecao;
     cat.modelos.push(novo);
     await saveContent(content, `cria o modelo "${novo.nome}"`);
     return {
@@ -336,6 +339,11 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
     modelo.descricao = txt(formData, "descricao", modelo.descricao);
     modelo.corA = txt(formData, "corA", modelo.corA);
     modelo.corB = txt(formData, "corB", modelo.corB);
+    const colecao = colecaoDoForm(formData);
+    if (colecao !== null) {
+      if (colecao) modelo.grupo = colecao;
+      else delete modelo.grupo;
+    }
 
     const foto = await imagemValida(formData.get("foto"));
     if (foto) modelo.imagemUrl = await guardar(foto);

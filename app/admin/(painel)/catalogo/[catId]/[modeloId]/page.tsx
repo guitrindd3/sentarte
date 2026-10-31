@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ondeAparece } from "@/lib/admin-grupos";
+import { ondeAparece, OPCOES_COLECAO } from "@/lib/admin-grupos";
+import { grupoDoModelo } from "@/lib/grupos";
 import { getAdminContent } from "@/lib/content-store";
 import { deleteModeloAction, moverModeloAction, updateModeloAction } from "../../../../actions";
-import { AdminForm, BarraSalvar, BotaoExcluir, Card, CampoTexto, Field, FotoSlot, GaleriaFotos, SaveButton, btnSecondary } from "../../../../_ui";
+import { AdminForm, BarraSalvar, BotaoExcluir, Card, CampoTexto, Field, FotoSlot, GaleriaFotos, SaveButton, btnSecondary, inputClass } from "../../../../_ui";
 
 export default async function EditarModelo({ params }: PageProps<"/admin/catalogo/[catId]/[modeloId]">) {
   const { catId, modeloId } = await params;
@@ -15,6 +16,8 @@ export default async function EditarModelo({ params }: PageProps<"/admin/catalog
   const onde = ondeAparece(m.nome, cat.slug, m.grupo);
   const anterior = cat.modelos[i - 1];
   const proximo = cat.modelos[i + 1];
+  // the original chairs are tied to their collection by name, not by this field
+  const presaPeloNome = Boolean(grupoDoModelo({ nome: m.nome }));
 
   return (
     <div className="space-y-6">
@@ -64,6 +67,24 @@ export default async function EditarModelo({ params }: PageProps<"/admin/catalog
                 >
                   <CampoTexto name="nome" defaultValue={m.nome} max={80} required />
                 </Field>
+                {cat.slug === "cadeiras" && !onde.capa ? (
+                  <Field
+                    label="Coleção"
+                    dica={
+                      presaPeloNome
+                        ? `Esta cadeira já está em ${onde.grupo} pelo nome dela.`
+                        : "Onde ela aparece no site. Ex.: Cadeiras de time = entra na página de times."
+                    }
+                  >
+                    <select name="colecao" defaultValue={m.grupo ?? ""} disabled={presaPeloNome} className={inputClass}>
+                      {OPCOES_COLECAO.map((o) => (
+                        <option key={o.valor} value={o.valor}>
+                          {o.rotulo}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                ) : null}
                 <Field label="Descrição" dica="Conte do que é feita, as cores, para quem combina. Aparece embaixo da foto no site.">
                   <CampoTexto name="descricao" defaultValue={m.descricao} max={500} linhas={5} />
                 </Field>
