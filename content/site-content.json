@@ -358,10 +358,14 @@
         {
           "id": "860930ac-16ca-4a54-8a76-bd3329f17f0b",
           "nome": "Vinheta vinho",
-          "descricao": "",
-          "corA": "#15564C",
-          "corB": "#BD502E",
-          "grupo": "boho"
+          "descricao": "Cadeira Vinheta vinho.",
+          "corA": "#15564c",
+          "corB": "#bd502e",
+          "grupo": "boho",
+          "imagemUrl": "/catalogo/c3985318-5ecf-4a4f-99b7-d520d6062afc.jpg",
+          "variantes": [
+            "/catalogo/cb672088-f3b2-4d4b-b24f-9065a943ccd3.jpg"
+          ]
         }
       ]
     },
