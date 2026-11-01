@@ -323,6 +323,14 @@
             "/catalogo/tracada-listrada-foto2.jpg",
             "/catalogo/tracada-listrada-foto3.jpg"
           ]
+        },
+        {
+          "id": "cf49e9a0-7fe2-4c9d-b050-1754a6e095db",
+          "nome": "Brasil",
+          "descricao": "",
+          "corA": "#15564C",
+          "corB": "#BD502E",
+          "grupo": "times"
         }
       ]
     },
