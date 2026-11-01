@@ -342,6 +342,14 @@
             "/catalogo/b5d743f5-8a15-433e-9d15-ba319e6fd8a7.jpg",
             "/catalogo/ad81c5d3-2bd8-48ca-a2c8-8d0b7af3d859.jpg"
           ]
+        },
+        {
+          "id": "5be5d974-765a-4c2b-8876-3e89c61cfd66",
+          "nome": "Corrente",
+          "descricao": "",
+          "corA": "#15564C",
+          "corB": "#BD502E",
+          "grupo": "boho"
         }
       ]
     },
