@@ -327,10 +327,21 @@
         {
           "id": "cf49e9a0-7fe2-4c9d-b050-1754a6e095db",
           "nome": "Brasil",
-          "descricao": "",
-          "corA": "#15564C",
-          "corB": "#BD502E",
-          "grupo": "times"
+          "descricao": "Cadeira de praia Brasil",
+          "corA": "#15564c",
+          "corB": "#bd502e",
+          "grupo": "times",
+          "imagemUrl": "/catalogo/f024144b-6af3-4558-a180-71ef78cfd584.jpg",
+          "variantes": [
+            "/catalogo/154a1af1-2c43-46ba-a88c-aef9d812ea62.jpg",
+            "/catalogo/ba515469-bd4e-4565-b7f9-eb2ecb05b76a.jpg",
+            "/catalogo/deefb758-b4a8-4e7a-912a-c5559406000c.jpg",
+            "/catalogo/3dd19fa3-5501-4c91-bdc9-66d140f37ba3.jpg"
+          ],
+          "fotosExtras": [
+            "/catalogo/b5d743f5-8a15-433e-9d15-ba319e6fd8a7.jpg",
+            "/catalogo/ad81c5d3-2bd8-48ca-a2c8-8d0b7af3d859.jpg"
+          ]
         }
       ]
     },
