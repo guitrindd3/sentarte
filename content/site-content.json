@@ -346,10 +346,14 @@
         {
           "id": "5be5d974-765a-4c2b-8876-3e89c61cfd66",
           "nome": "Corrente",
-          "descricao": "",
-          "corA": "#15564C",
-          "corB": "#BD502E",
-          "grupo": "boho"
+          "descricao": "Cadeira corrente ",
+          "corA": "#15564c",
+          "corB": "#bd502e",
+          "grupo": "boho",
+          "imagemUrl": "/catalogo/6172bc6b-0521-494e-9d30-e4832d0b3056.jpg",
+          "variantes": [
+            "/catalogo/542cf852-0216-4c94-800b-ed6328f9b041.jpg"
+          ]
         }
       ]
     },
