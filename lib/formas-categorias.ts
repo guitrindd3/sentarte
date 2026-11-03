@@ -15,7 +15,8 @@ export type Categoria =
   | "bichos"
   | "mar"
   | "comidas"
-  | "divertidos";
+  | "divertidos"
+  | "animes";
 
 /** `curto` is what phones show (rows of tabs). */
 export const CATEGORIAS: { valor: Categoria; rotulo: string; curto: string }[] = [
@@ -29,6 +30,7 @@ export const CATEGORIAS: { valor: Categoria; rotulo: string; curto: string }[] =
   { valor: "mar", rotulo: "Praia e mar", curto: "Praia e mar" },
   { valor: "comidas", rotulo: "Comidas", curto: "Comidas" },
   { valor: "divertidos", rotulo: "Divertidos", curto: "Divertidos" },
+  { valor: "animes", rotulo: "Animes e desenhos", curto: "Animes" },
 ];
 
 const para = (c: Categoria, valores: string) => valores.split(/\s+/).filter(Boolean).map((v) => [v, c] as const);
