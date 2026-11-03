@@ -25,7 +25,7 @@ export type FormatoFoto = "original" | "quadrada" | "empe" | "deitada" | "larga"
 // ---------------------------------------------------------------------------
 
 export const inputClass =
-  "w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-[0.95rem] text-ink shadow-[inset_0_1px_2px_rgba(36,31,26,0.04)] outline-none transition placeholder:text-ink-soft/60 focus:border-wood focus:ring-4 focus:ring-rattan/20";
+  "w-full rounded-xl border border-line bg-paper px-3.5 py-3 text-base sm:py-2.5 sm:text-[0.95rem] text-ink shadow-[inset_0_1px_2px_rgba(36,31,26,0.04)] outline-none transition placeholder:text-ink-soft/60 focus:border-wood focus:ring-4 focus:ring-rattan/20";
 
 export const btnPrimary =
   "inline-flex items-center justify-center gap-2 rounded-full bg-wood px-5 py-2.5 text-sm font-semibold text-paper shadow-sm transition hover:bg-wood-dark focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rattan/40 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap";
@@ -57,7 +57,7 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section className={`rounded-2xl border border-line/70 bg-paper p-5 shadow-[0_1px_3px_rgba(36,31,26,0.06)] sm:p-7 ${className}`}>
+    <section className={`rounded-3xl border border-line/70 bg-paper p-5 shadow-[0_1px_2px_rgba(36,31,26,0.05),0_12px_32px_-24px_rgba(36,28,20,0.35)] sm:p-7 ${className}`}>
       {titulo || acao ? (
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -373,7 +373,8 @@ export function BarraSalvar({
   );
   if (flutuante) {
     return (
-      <div className="pointer-events-none sticky bottom-[calc(4.4rem+env(safe-area-inset-bottom))] z-30 mt-2 flex justify-center lg:bottom-5">
+      // phones: only shows once something changed (saves screen space)
+      <div className={`pointer-events-none sticky bottom-[calc(5.3rem+env(safe-area-inset-bottom))] z-30 mt-2 flex justify-center lg:bottom-5 ${mudou || pendente ? "" : "max-sm:hidden"}`}>
         <div
           className={`pointer-events-auto flex w-full max-w-2xl items-center justify-between gap-3 rounded-full py-2 pl-5 pr-2 shadow-[0_18px_40px_-18px_rgba(20,14,8,0.55)] ring-1 backdrop-blur-md transition-colors duration-300 ${
             mudou ? "bg-espresso/95 text-paper ring-white/10" : "bg-paper/90 text-ink-soft ring-line/70"
@@ -392,7 +393,7 @@ export function BarraSalvar({
     );
   }
   return (
-    <div className="sticky bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-20 -mx-5 mt-8 lg:bottom-0 border-t border-line/70 bg-paper/95 px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:-mx-7 sm:px-7">
+    <div className="sticky bottom-[calc(5.3rem+env(safe-area-inset-bottom))] z-20 -mx-5 mt-8 lg:bottom-0 border-t border-line/70 bg-paper/95 px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:-mx-7 sm:px-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className={`text-sm ${mudou ? "font-semibold text-wood-dark" : "text-ink-soft"}`}>{status}</p>
         {botao}

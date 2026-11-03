@@ -138,8 +138,8 @@ export function NavLateral() {
 export function NavInferior() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-      <div className="grid grid-cols-5">
+    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.6rem+env(safe-area-inset-bottom))] lg:hidden">
+      <div className="pointer-events-auto mx-auto grid max-w-md grid-cols-5 gap-1 rounded-[1.75rem] bg-espresso/95 p-1.5 shadow-[0_18px_40px_-14px_rgba(20,14,8,0.7)] ring-1 ring-white/10 backdrop-blur-md">
         {[...ITENS.filter((i) => ["/admin", "/admin/acessos", "/admin/clientes", "/admin/catalogo"].includes(i.href)), MAIS].map((i) => {
           const on = ativo(pathname, i.href);
           return (
@@ -147,9 +147,13 @@ export function NavInferior() {
               key={i.href}
               href={i.href}
               aria-current={on ? "page" : undefined}
-              className={`flex flex-col items-center gap-0.5 py-2 text-[0.7rem] font-medium ${on ? "text-wood-dark" : "text-ink-soft"}`}
+              className={`flex flex-col items-center gap-0.5 rounded-[1.35rem] py-2 text-xs font-medium transition-colors ${
+                on ? "bg-paper text-espresso shadow-sm" : "text-paper/65 active:bg-white/10"
+              }`}
             >
-              <Icone>{i.icone}</Icone>
+              <span className={on ? "text-wood" : ""}>
+                <Icone>{i.icone}</Icone>
+              </span>
               {i.rotulo}
             </Link>
           );

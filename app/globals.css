@@ -132,3 +132,21 @@ body::before {
   background-size: 28px 28px;
   animation: admin-listras 0.9s linear infinite;
 }
+
+/* Phones/tablets: iOS zooms into any field under 16px when it's tapped (and
+   stays zoomed). Unlayered, so it wins over Tailwind's text-sm on inputs. */
+@media (max-width: 1023px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+/* no double-tap zoom in the admin */
+.admin {
+  touch-action: manipulation;
+}

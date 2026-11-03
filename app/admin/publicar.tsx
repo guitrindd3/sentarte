@@ -279,7 +279,7 @@ export function PainelPublicacao() {
     <div
       role="status"
       aria-live="polite"
-      className="admin-sobe fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-[85] sm:inset-x-auto sm:right-5 sm:w-[23rem] lg:bottom-5"
+      className="admin-sobe fixed inset-x-3 bottom-[calc(5.6rem+env(safe-area-inset-bottom))] z-[85] sm:inset-x-auto sm:right-5 sm:w-[23rem] lg:bottom-5"
     >
       <div className="overflow-hidden rounded-3xl bg-espresso text-paper shadow-[0_24px_60px_-20px_rgba(20,14,8,0.65)] ring-1 ring-white/10">
         <div className="flex items-start justify-between gap-3 px-5 pt-4">
