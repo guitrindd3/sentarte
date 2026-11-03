@@ -8,16 +8,9 @@ import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type 
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix, rotuloTassel, TASSEL_PRECO, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
 import { MEDIDAS_CADEIRAS } from "@/lib/medidas";
 import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
-import { ROTULOS_EXTRAS } from "@/lib/formas-extras";
-import { ROTULOS_EXTRAS_2 } from "@/lib/formas-extras-2";
-import { FORMAS_OCULTAS, ROTULOS_EXTRAS_3 } from "@/lib/formas-extras-3";
-import { ROTULOS_GATOS } from "@/lib/formas-gatos";
 import { CATEGORIAS, categoriaDa, type Categoria } from "@/lib/formas-categorias";
-import { ROTULOS_EXTRAS_4 } from "@/lib/formas-extras-4";
-import { ROTULOS_EXTRAS_5 } from "@/lib/formas-extras-5";
-import { ROTULOS_BOHO_TRIBAL } from "@/lib/formas-boho-tribal";
-import { ROTULOS_BOHO_CULTURAS } from "@/lib/formas-boho-culturas";
-import { ROTULOS_ANIMES } from "@/lib/formas-animes";
+import { FORMAS, FORMAS_VISIVEIS, ROTULOS_BUSCA, SUBGRUPO_DA_FORMA, semAcento } from "@/lib/formas-lista";
+import { SUBGRUPOS } from "@/lib/formas-subgrupos";
 import { codificarCadeira, decodificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
 import { rastrear } from "@/lib/rastro";
@@ -40,102 +33,6 @@ type Grupo = Categoria;
 // Ten tabs since 2026-10-09 (lib/formas-categorias.ts decides which tab each shape is in).
 const GRUPOS = CATEGORIAS;
 
-const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
-  { valor: "lisa", rotulo: "Lisa", grupo: "basicos" },
-  { valor: "listras", rotulo: "Listras", grupo: "basicos" },
-  { valor: "faixas", rotulo: "Faixas", grupo: "basicos" },
-  { valor: "xadrez", rotulo: "Xadrez", grupo: "basicos" },
-  { valor: "bolinhas", rotulo: "Bolinhas", grupo: "basicos" },
-  { valor: "moldura", rotulo: "Moldura", grupo: "basicos" },
-  { valor: "diagonais", rotulo: "Diagonais", grupo: "basicos" },
-  { valor: "quadriculado", rotulo: "Quadriculado", grupo: "basicos" },
-  { valor: "pontilhado", rotulo: "Pontilhado", grupo: "basicos" },
-  { valor: "faixas-duplas", rotulo: "Faixas duplas", grupo: "basicos" },
-  { valor: "listras-finas", rotulo: "Listras finas", grupo: "basicos" },
-  { valor: "faixas-largas", rotulo: "Faixas largas", grupo: "basicos" },
-  { valor: "xadrez-grande", rotulo: "Xadrez grande", grupo: "basicos" },
-  { valor: "xadrez-miudo", rotulo: "Xadrez miúdo", grupo: "basicos" },
-  { valor: "bolinhas-grandes", rotulo: "Bolinhas grandes", grupo: "basicos" },
-  { valor: "moldura-dupla", rotulo: "Moldura dupla", grupo: "basicos" },
-  { valor: "grade-diagonal", rotulo: "Grade diagonal", grupo: "basicos" },
-  { valor: "degraus", rotulo: "Degraus", grupo: "basicos" },
-  { valor: "cantos", rotulo: "Cantos", grupo: "basicos" },
-  { valor: "duas-colunas", rotulo: "Duas colunas", grupo: "basicos" },
-  { valor: "meio-a-meio", rotulo: "Meio a meio", grupo: "time" },
-  { valor: "faixa-diagonal", rotulo: "Faixa diagonal", grupo: "time" },
-  { valor: "faixa-central", rotulo: "Faixa no meio", grupo: "time" },
-  { valor: "listras-largas", rotulo: "Listras largas", grupo: "time" },
-  { valor: "escudo", rotulo: "Escudo", grupo: "time" },
-  { valor: "duas-faixas", rotulo: "Duas faixas", grupo: "time" },
-  { valor: "faixa-vertical", rotulo: "Faixa em pé", grupo: "time" },
-  { valor: "cruz", rotulo: "Cruz", grupo: "time" },
-  { valor: "coroa", rotulo: "Coroa", grupo: "time" },
-  { valor: "estrelas", rotulo: "Estrelas", grupo: "time" },
-  { valor: "tricolor-vertical", rotulo: "Tricolor em pé", grupo: "time" },
-  { valor: "tricolor-horizontal", rotulo: "Tricolor deitado", grupo: "time" },
-  { valor: "aros", rotulo: "Aros", grupo: "time" },
-  { valor: "faixa-v", rotulo: "Faixa em V", grupo: "time" },
-  { valor: "diagonal-invertida", rotulo: "Diagonal invertida", grupo: "time" },
-  { valor: "quadrantes", rotulo: "Quadrantes", grupo: "time" },
-  { valor: "numero-10", rotulo: "Número 10", grupo: "time" },
-  { valor: "bola", rotulo: "Bola", grupo: "time" },
-  { valor: "trofeu", rotulo: "Troféu", grupo: "time" },
-  { valor: "escudo-estrela", rotulo: "Escudo com estrela", grupo: "time" },
-  { valor: "diamante", rotulo: "Diamante", grupo: "boho" },
-  { valor: "ziguezague", rotulo: "Ziguezague", grupo: "boho" },
-  { valor: "espiral", rotulo: "Caracol", grupo: "boho" },
-  { valor: "sol", rotulo: "Sol", grupo: "boho" },
-  { valor: "losangos", rotulo: "Losangos", grupo: "boho" },
-  { valor: "setas", rotulo: "Setas", grupo: "boho" },
-  { valor: "ondas", rotulo: "Ondas", grupo: "boho" },
-  { valor: "triangulos", rotulo: "Triângulos", grupo: "boho" },
-  { valor: "totem", rotulo: "Totem", grupo: "boho" },
-  { valor: "mandala", rotulo: "Mandala", grupo: "boho" },
-  { valor: "escamas", rotulo: "Escamas", grupo: "boho" },
-  { valor: "flechas", rotulo: "Flechas", grupo: "boho" },
-  { valor: "bandeirinhas", rotulo: "Bandeirinhas", grupo: "boho" },
-  { valor: "triangulo-grande", rotulo: "Triângulo grande", grupo: "boho" },
-  { valor: "arco-iris", rotulo: "Arco-íris", grupo: "boho" },
-  { valor: "kilim", rotulo: "Kilim", grupo: "boho" },
-  { valor: "ziguezague-duplo", rotulo: "Ziguezague duplo", grupo: "boho" },
-  { valor: "espinha-de-peixe", rotulo: "Espinha de peixe", grupo: "boho" },
-  { valor: "sol-nascente", rotulo: "Sol nascente", grupo: "boho" },
-  { valor: "penas", rotulo: "Penas", grupo: "boho" },
-  { valor: "coracao", rotulo: "Coração", grupo: "divertidos" },
-  { valor: "estrela", rotulo: "Estrela", grupo: "divertidos" },
-  { valor: "ancora", rotulo: "Âncora", grupo: "divertidos" },
-  { valor: "flor", rotulo: "Flor", grupo: "divertidos" },
-  { valor: "lua", rotulo: "Lua", grupo: "divertidos" },
-  { valor: "sorriso", rotulo: "Sorriso", grupo: "divertidos" },
-  { valor: "peixe", rotulo: "Peixe", grupo: "divertidos" },
-  { valor: "oculos", rotulo: "Óculos", grupo: "divertidos" },
-  { valor: "borboleta", rotulo: "Borboleta", grupo: "divertidos" },
-  { valor: "coqueiro", rotulo: "Coqueiro", grupo: "divertidos" },
-  { valor: "abacaxi", rotulo: "Abacaxi", grupo: "divertidos" },
-  { valor: "sorvete", rotulo: "Sorvete", grupo: "divertidos" },
-  { valor: "pata", rotulo: "Patinha", grupo: "divertidos" },
-  { valor: "nota", rotulo: "Nota musical", grupo: "divertidos" },
-  { valor: "raio", rotulo: "Raio", grupo: "divertidos" },
-  { valor: "guarda-sol", rotulo: "Guarda-sol", grupo: "divertidos" },
-  { valor: "concha", rotulo: "Concha", grupo: "divertidos" },
-  { valor: "melancia", rotulo: "Melancia", grupo: "divertidos" },
-  { valor: "gatinho", rotulo: "Gatinho", grupo: "divertidos" },
-  ...ROTULOS_GATOS,
-  { valor: "cacto", rotulo: "Cacto", grupo: "divertidos" },
-  ...ROTULOS_EXTRAS,
-  ...ROTULOS_EXTRAS_2,
-  ...ROTULOS_EXTRAS_3,
-  ...ROTULOS_EXTRAS_4,
-  ...ROTULOS_EXTRAS_5,
-  ...ROTULOS_BOHO_TRIBAL,
-  ...ROTULOS_BOHO_CULTURAS,
-  ...ROTULOS_ANIMES,
-];
-/** What the shape grid shows: near-duplicates stay out (they still render for old links). */
-const FORMAS_VISIVEIS = FORMAS.filter((f) => !FORMAS_OCULTAS.has(f.valor)).map((f) => ({ ...f, grupo: categoriaDa(f.valor, f.grupo) }));
-/** Lowercase, no accents — so "coracao" finds "Coração". */
-const semAcento = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
-const ROTULOS_BUSCA = FORMAS_VISIVEIS.map((f) => semAcento(f.rotulo));
 
 
 const PASSOS = ["Trançado", "Cores", "Nome", "Pronto"] as const;
@@ -206,6 +103,8 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
     return () => clearTimeout(t);
   }, [busca]);
   const [grupo, setGrupo] = useState<Grupo>("basicos");
+  // Sub-group inside the open tab ("" = all of it) — user 2026-11-03: Bichos → Gatos, Cachorros…
+  const [sub, setSub] = useState("");
   // Phones show the first shapes of a tab and a "Ver todas" button — with
   // ~100 per tab, "Próximo" sat thousands of pixels down (2026-10-20).
   const [todasFormas, setTodasFormas] = useState(false);
@@ -249,7 +148,10 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
         FIOS.find((f) => f.cor.toLowerCase() === cor.toLowerCase()) ?? { nome: `Cor personalizada (${cor.toUpperCase()})`, cor };
       setForma(op.forma === "foto" ? "lisa" : op.forma);
       const f = FORMAS.find((x) => x.valor === op.forma);
-      if (f) setGrupo(categoriaDa(f.valor, f.grupo));
+      if (f) {
+        setGrupo(categoriaDa(f.valor, f.grupo));
+        setSub("");
+      }
       setFormaAssento(op.formaAssento ?? "lisa");
       setEscalaAssento(op.escalaAssento ?? 1);
       setFioA(fio(op.corA));
@@ -346,13 +248,26 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
     const termo = semAcento(busca);
     FORMAS_VISIVEIS.forEach((f, i) => {
       const c = miniaturasRef.current[i];
-      const visivel = termo ? ROTULOS_BUSCA[i].includes(termo) : f.grupo === grupo;
+      const visivel = termo ? ROTULOS_BUSCA[i].includes(termo) : f.grupo === grupo && (!sub || SUBGRUPO_DA_FORMA[i] === sub);
       const ctx = visivel ? c?.getContext("2d") : null;
       if (c && ctx) desenharMiniatura(ctx, c.width, c.height, f.valor, fioA.cor, fioB.cor, parte);
     });
-  }, [passo, fioA, fioB, grupo, parte, busca]);
+  }, [passo, fioA, fioB, grupo, sub, parte, busca]);
   const termoBusca = semAcento(busca);
-  const mostrarForma = (i: number) => (termoBusca ? ROTULOS_BUSCA[i].includes(termoBusca) : FORMAS_VISIVEIS[i].grupo === grupo);
+  const mostrarForma = (i: number) =>
+    termoBusca ? ROTULOS_BUSCA[i].includes(termoBusca) : FORMAS_VISIVEIS[i].grupo === grupo && (!sub || SUBGRUPO_DA_FORMA[i] === sub);
+  // Sub-group chips of the open tab, with how many shapes each one has.
+  const subsDaAba = (() => {
+    const lista = SUBGRUPOS[grupo];
+    if (!lista || termoBusca) return [];
+    const conta = new Map<string, number>();
+    FORMAS_VISIVEIS.forEach((f, i) => {
+      if (f.grupo === grupo) conta.set(SUBGRUPO_DA_FORMA[i], (conta.get(SUBGRUPO_DA_FORMA[i]) ?? 0) + 1);
+    });
+    return [...lista, { valor: "outros", rotulo: "Outros" }]
+      .map((s) => ({ valor: s.valor, rotulo: s.rotulo, n: conta.get(s.valor) ?? 0 }))
+      .filter((s) => s.n > 0);
+  })();
   const achadas = termoBusca ? ROTULOS_BUSCA.filter((r) => r.includes(termoBusca)).length : -1;
   const NO_CELULAR = 24;
   const formasDaAba = FORMAS_VISIVEIS.flatMap((f, i) => (mostrarForma(i) ? [i] : []));
@@ -858,6 +773,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                       aria-selected={aberto && !termoBusca}
                       onClick={() => {
                         setGrupo(g.valor);
+                        setSub("");
                         setBusca("");
                         setTodasFormas(false);
                       }}
@@ -877,6 +793,32 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                   );
                 })}
               </div>
+              {subsDaAba.length > 1 ? (
+                <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Tipo de desenho">
+                  {[{ valor: "", rotulo: "Todos", n: 0 }, ...subsDaAba].map((s) => {
+                    const ativo = sub === s.valor;
+                    const temEscolhido = s.valor !== "" && FORMAS_VISIVEIS.some((f, i) => f.grupo === grupo && SUBGRUPO_DA_FORMA[i] === s.valor && f.valor === formaAtiva);
+                    return (
+                      <button
+                        key={s.valor || "todos"}
+                        type="button"
+                        aria-pressed={ativo}
+                        onClick={() => {
+                          setSub(s.valor);
+                          setTodasFormas(false);
+                        }}
+                        className={`relative whitespace-nowrap rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                          ativo ? "border-ink bg-ink font-medium text-canvas" : "border-line bg-paper text-ink-soft hover:border-ink hover:text-ink"
+                        }`}
+                      >
+                        {s.rotulo}
+                        {s.valor ? <span className={ativo ? "ml-1 text-canvas/70" : "ml-1 text-ink-soft/70"}>{s.n}</span> : null}
+                        {temEscolhido && !ativo ? <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-verde" aria-label="(tem o trançado escolhido)" /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
               <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
                 {FORMAS_VISIVEIS.map((f, i) => !mostrarForma(i) ? null : (
                   <button
