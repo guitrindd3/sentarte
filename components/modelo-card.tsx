@@ -7,7 +7,7 @@ import { AddToCartButton } from "@/components/add-to-cart-button";
 import { BotaoFavorito } from "@/components/botao-favorito";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
-import { formatBRL, precoCadeira, PARCELAS_MAX, precoPix } from "@/lib/offer";
+import { formatBRL, PARCELAS_MAX, precoPix, rotulosInclui } from "@/lib/offer";
 import { caminhoDoModelo } from "@/lib/produtos";
 import { useEscolhaModelo } from "@/lib/use-escolha-modelo";
 import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
@@ -51,11 +51,15 @@ export function ModeloCard({
     temPreco,
     podePersonalizar,
     preco,
+    precoComNome,
     faltaNome,
     mensagemWhatsapp,
     madeira,
     setMadeira,
     itemDoCarrinho,
+    inclui,
+    nomeIncluso,
+    madeiraInclusa,
   } = useEscolhaModelo({ modelo, personalizado, categoria, categoriaSlug });
   const bf = useBlackFriday();
   const precoBf = precoBlackFriday(preco, bf);
@@ -169,12 +173,19 @@ export function ModeloCard({
             <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
             <span className="block text-xs text-ink-soft">
               {formatBRL(precoPix(precoBf ?? preco))} no Pix
-              {wantsNome || !podePersonalizar ? null : <>. Com nome: {formatBRL(precoBlackFriday(precoCadeira(true, "normal", madeira), bf) ?? precoCadeira(true, "normal", madeira))}</>}
+              {wantsNome || !podePersonalizar ? null : <>. Com nome: {formatBRL(precoBlackFriday(precoComNome, bf) ?? precoComNome)}</>}
             </span>
           </p>
         ) : null}
 
-        {podePersonalizar ? (
+        {rotulosInclui(inclui).length ? (
+          <p className="mt-1.5 text-xs text-ink">
+            <span className="text-ink-soft">Vem com: </span>
+            {rotulosInclui(inclui).join(", ")}
+          </p>
+        ) : null}
+
+        {podePersonalizar && !nomeIncluso ? (
           <div className="mt-2 inline-flex w-fit border border-line text-xs" role="group" aria-label="Personalização">
             <button
               type="button"
@@ -200,7 +211,7 @@ export function ModeloCard({
         ) : null}
 
 
-        {temPreco ? <OpcaoBraco madeira={madeira} onChange={setMadeira} compacto /> : null}
+        {temPreco && !madeiraInclusa ? <OpcaoBraco madeira={madeira} onChange={setMadeira} compacto /> : null}
 
         {wantsNome ? (
           <label className="mt-2 block">

@@ -1,4 +1,9 @@
 import "server-only";
+import { AsyncLocalStorage } from "node:async_hooks";
+
+/** Set by executar() in app/admin/actions.ts: records whether an admin action
+ * made a commit (so the panel knows to show "publishing" progress). */
+export const commitDaAcao = new AsyncLocalStorage<{ sha?: string }>();
 
 // Tiny GitHub "Contents API" client used as the site's free storage
 // (2026-10-02): content/site-content.json and public/catalogo/* live in the
@@ -115,6 +120,8 @@ export async function gravarCommit(
     method: "PATCH",
     body: JSON.stringify({ sha: commit.sha, force: false }),
   });
+  const registro = commitDaAcao.getStore();
+  if (registro) registro.sha = commit.sha;
   return commit.sha;
 }
 

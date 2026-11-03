@@ -4,6 +4,7 @@ import { verifySession } from "@/lib/auth";
 import { githubConfigurado } from "@/lib/github-store";
 import { logoutAction, logoutTodosAction } from "../actions";
 import { StatusPublicacao, Toaster } from "../_ui";
+import { PainelPublicacao } from "../publicar";
 import { NavInferior, NavLateral } from "./nav";
 
 export const dynamic = "force-dynamic";
@@ -84,6 +85,7 @@ export default async function PainelLayout({ children }: { children: React.React
 
       <NavInferior />
       <Toaster />
+      <PainelPublicacao />
     </div>
   );
 }

@@ -13,7 +13,7 @@ import { ProdutoCompra } from "@/components/produto-compra";
 import { WeavePattern } from "@/components/weave-pattern";
 import { getContent } from "@/lib/content-store";
 import { SITE_URL } from "@/lib/nav";
-import { formatBRL, precoCadeira, precoPix, PRECO_CADEIRA, PRECO_CADEIRA_COM_NOME } from "@/lib/offer";
+import { formatBRL, precoDoModelo, precoPix } from "@/lib/offer";
 import { acharProduto, GRUPOS, produtosDaLoja, relacionados, type Produto } from "@/lib/produtos";
 import { pageMetadata } from "@/lib/seo";
 import { TextoRico, textoSimples } from "@/components/texto-rico";
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: PageProps<"/cadeira/[slug]">)
   const { slug } = await params;
   const p = acharProduto(await getContent(), slug);
   if (!p) return {};
-  const preco = precoCadeira(ehDesenho(p));
+  const preco = precoDoModelo(p.base, ehDesenho(p));
   return pageMetadata({
     title: titulo(p),
     description: `${p.base.descricao} Trançada à mão em corda náutica e alumínio${
@@ -86,9 +86,9 @@ export default async function CadeiraPage({ params }: PageProps<"/cadeira/[slug]
           url,
           offers: {
             "@type": "AggregateOffer",
-            lowPrice: precoLd(comNome ? PRECO_CADEIRA_COM_NOME : PRECO_CADEIRA),
-            highPrice: precoLd(PRECO_CADEIRA_COM_NOME),
-            offerCount: comNome ? 1 : 2,
+            lowPrice: precoLd(precoDoModelo(p.base, comNome)),
+            highPrice: precoLd(precoDoModelo(p.base, true)),
+            offerCount: comNome || p.base.inclui?.nome ? 1 : 2,
             priceCurrency: "BRL",
             // made to order, but orderable now — same as the feed's in_stock
             availability: "https://schema.org/InStock",
@@ -177,7 +177,7 @@ export default async function CadeiraPage({ params }: PageProps<"/cadeira/[slug]
             </h2>
             <ul className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
               {parecidas.map((q) => {
-                const preco = precoCadeira(ehDesenho(q));
+                const preco = precoDoModelo(q.base, ehDesenho(q));
                 return (
                   <li key={q.slug}>
                     <Link

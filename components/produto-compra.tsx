@@ -10,7 +10,7 @@ import { OpcaoBraco } from "@/components/opcao-braco";
 import { VagasSemana } from "@/components/vagas-semana";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
-import { formatBRL, precoCadeira, PARCELAS_MAX, precoPix, PRAZO_PRODUCAO_DIAS_UTEIS } from "@/lib/offer";
+import { formatBRL, PARCELAS_MAX, rotulosInclui, precoPix, PRAZO_PRODUCAO_DIAS_UTEIS } from "@/lib/offer";
 import { useCart } from "@/lib/cart-context";
 import { useEscolhaModelo } from "@/lib/use-escolha-modelo";
 import { cepGuardado, guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
@@ -177,8 +177,14 @@ export function ProdutoCompra({
               <strong className="font-semibold">{formatBRL(precoPix(precoBf ?? e.preco))} no Pix</strong>
               <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
             </p>
+            {rotulosInclui(e.inclui).length ? (
+              <p className="mt-2 text-sm text-ink">
+                <span className="text-ink-soft">Já vem com: </span>
+                {rotulosInclui(e.inclui).join(", ")}
+              </p>
+            ) : null}
             {!e.wantsNome && e.podePersonalizar ? (
-              <p className="mt-1 text-xs text-ink-soft">Com o seu nome trançado: {formatBRL(precoBlackFriday(precoCadeira(true, "normal", e.madeira), bf) ?? precoCadeira(true, "normal", e.madeira))}</p>
+              <p className="mt-1 text-xs text-ink-soft">Com o seu nome trançado: {formatBRL(precoBlackFriday(e.precoComNome, bf) ?? e.precoComNome)}</p>
             ) : null}
           </div>
         ) : null}
@@ -186,6 +192,7 @@ export function ProdutoCompra({
         {e.podePersonalizar ? (
           <div className="mt-6">
             <p className="text-sm font-medium text-ink">Personalização</p>
+            {e.nomeIncluso ? null : (
             <div className="mt-2 inline-flex border border-line text-sm" role="group" aria-label="Personalização">
               <button
                 type="button"
@@ -204,6 +211,7 @@ export function ProdutoCompra({
                 Personalizado
               </button>
             </div>
+            )}
             {e.wantsNome ? (
               <label className="mt-3 block max-w-sm">
                 <span className="text-sm text-ink-soft">Nome ou apelido para trançar</span>
@@ -213,14 +221,16 @@ export function ProdutoCompra({
                   onChange={(ev) => e.setNomeTexto(ev.target.value)}
                   placeholder="Ex: João"
                   maxLength={24}
-                  autoFocus
+                  autoFocus={!e.nomeIncluso}
                   className="mt-1 w-full border border-line bg-paper px-3 py-2 text-ink focus:border-ink focus:outline-none"
                 />
               </label>
             ) : null}
-            <div className="mt-5">
-              <OpcaoBraco madeira={e.madeira} onChange={e.setMadeira} />
-            </div>
+            {e.madeiraInclusa ? null : (
+              <div className="mt-5">
+                <OpcaoBraco madeira={e.madeira} onChange={e.setMadeira} />
+              </div>
+            )}
             {e.wantsNome ? <PreviaNome nome={e.nomeTexto} corA={e.ativo.corA} corB={e.ativo.corB} trama={modelo.trama} /> : null}
           </div>
         ) : null}

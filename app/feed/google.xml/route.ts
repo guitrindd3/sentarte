@@ -3,7 +3,7 @@ import { configBlackFridayDaVitrine } from "@/lib/cupons-store";
 import { hojeBR, naBlackFriday } from "@/lib/black-friday";
 import { grupoDoModelo } from "@/lib/grupos";
 import { SITE_URL } from "@/lib/nav";
-import { precoCadeira } from "@/lib/offer";
+import { precoDoModelo } from "@/lib/offer";
 import { GRUPOS, produtosDaLoja } from "@/lib/produtos";
 
 // Product feed for Google Merchant Center free listings (user 2026-10-20,
@@ -39,7 +39,7 @@ export async function GET() {
     if (!m.imagemUrl) return [];
     if (p.grupo === "times" || (p.grupo === "desenhos" && !DESENHOS_SEM_MARCA.has(p.slug))) return [];
     const desenho = grupoDoModelo(m) === "desenhos";
-    const preco = precoCadeira(desenho);
+    const preco = precoDoModelo(m, desenho);
     const fotos = [...(m.variantes ?? []), ...(m.fotosExtras ?? [])].filter(Boolean).slice(0, 10);
     const descricao =
       (m.descricao?.trim() || `Cadeira de praia ${m.nome}, trançada à mão em corda náutica sobre estrutura de alumínio.`) +

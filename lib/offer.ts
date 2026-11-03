@@ -61,6 +61,23 @@ export function rotuloTassel(item: { tassel?: string; tasselQtd?: 1 | 2; tasselL
   return item.tasselQtd === 1 ? `1 tassel ${cor} (lado ${item.tasselLado === "esq" ? "esquerdo" : "direito"})` : `2 tassels ${cor}`;
 }
 
+/** Fixed price of a catalog chair, counting what it comes with (Modelo.inclui). */
+export function precoDoModelo(m: { inclui?: { nome?: boolean; tasseis?: 1 | 2; bracoMadeira?: boolean } }, desenho = false) {
+  const i = m.inclui;
+  return precoCadeira(desenho || Boolean(i?.nome), "normal", Boolean(i?.bracoMadeira), i?.tasseis ?? 0);
+}
+
+/** "2 tassels vinho · braço de madeira · nome do cliente" — what a catalog chair comes with. */
+export function rotulosInclui(i?: { nome?: boolean; tasseis?: 1 | 2; tasselCor?: string; tasselLado?: "esq" | "dir"; bracoMadeira?: boolean }) {
+  if (!i) return [];
+  const cor = i.tasselCor?.trim().toLowerCase();
+  return [
+    ...(i.nome ? ["Nome trançado"] : []),
+    ...(i.tasseis ? [`${i.tasseis} tassel${i.tasseis > 1 ? "s" : ""}${cor ? ` ${cor}` : ""}`] : []),
+    ...(i.bracoMadeira ? ["Braço de madeira"] : []),
+  ];
+}
+
 export function precoPix(valor: number) {
   return Math.round(valor * (1 - PIX_DESCONTO) * 100) / 100;
 }

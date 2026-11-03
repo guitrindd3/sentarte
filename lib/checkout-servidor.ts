@@ -3,7 +3,7 @@ import { normalizarWhatsapp, salvarPedidoIniciado } from "./clientes";
 import { cuponsDoPedido } from "./cupons-store";
 import { anotarNoCaminho, vidValido } from "./estatisticas";
 import { calcularFrete } from "./frete-servidor";
-import { tipoValido } from "./offer";
+import { CATEGORIA_COM_PRECO, quantosTasseis, tipoValido } from "./offer";
 import { valorDoVale } from "./vale";
 import { codificarCadeira, decodificarCadeira } from "./chair-link";
 import { SITE_URL } from "./nav";
@@ -48,7 +48,24 @@ export async function prepararPedido(corpo: CorpoPedido) {
   } catch (err) {
     console.error("checkout cupons", err);
   }
-  const conta = calcularPedido(itens, cupons, nomesDesenho((await getContent()).categorias));
+  // Catalog chairs that come with extras (Modelo.inclui): priced with them no
+  // matter what the browser sent.
+  const content = await getContent();
+  const comNome = nomesDesenho(content.categorias);
+  const cadeirasDoSite = content.categorias.find((c) => c.slug === CATEGORIA_COM_PRECO)?.modelos ?? [];
+  for (const item of itens) {
+    if (item.categoriaSlug !== CATEGORIA_COM_PRECO || item.trama) continue;
+    const inc = cadeirasDoSite.find((m) => m.nome === item.modeloNome)?.inclui;
+    if (!inc) continue;
+    if (inc.nome) comNome.add(item.modeloNome);
+    if (inc.bracoMadeira) item.bracoMadeira = true;
+    if (inc.tasseis && quantosTasseis(item) < inc.tasseis) {
+      item.tassel = item.tassel ?? (inc.tasselCor?.trim() || "igual ao da foto");
+      item.tasselQtd = inc.tasseis === 1 ? 1 : undefined;
+      item.tasselLado = inc.tasseis === 1 ? (inc.tasselLado === "esq" ? "esq" : "dir") : undefined;
+    }
+  }
+  const conta = calcularPedido(itens, cupons, comNome);
   if (!conta.pagavel || conta.total <= 0) return { ok: false, erro: "Esse carrinho só pode ser fechado pelo WhatsApp." } as const;
   if (forma !== "pix" && forma !== "cartao") return { ok: false, erro: "Forma de pagamento inválida." } as const;
   if (!entrega || !entregaCompleta(entrega, conta.soVale)) return { ok: false, erro: "Preencha os dados de entrega." } as const;

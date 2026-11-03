@@ -23,6 +23,23 @@ export type Modelo = {
   grupo?: "times" | "boho" | "desenhos" | "eventos";
   /** The Monte a sua trama design it was made from (chair-link query string). */
   trama?: string;
+  /**
+   * What the chair in the photo comes with (admin "O que vem nesta cadeira",
+   * user 2026-11-03). Always included in the price on the site: `nome` = the
+   * customer must type the name to weave (named price), `tasseis` = R$ 10 each,
+   * `bracoMadeira` = wooden armrests. See precoDoModelo in lib/offer.ts.
+   */
+  inclui?: ModeloInclui;
+};
+
+export type ModeloInclui = {
+  nome?: boolean;
+  tasseis?: 1 | 2;
+  /** Tassel color as shown to the customer, e.g. "vinho" (empty = like the photo). */
+  tasselCor?: string;
+  /** With one tassel: the side, as seen from the front. */
+  tasselLado?: "esq" | "dir";
+  bracoMadeira?: boolean;
 };
 
 export type Categoria = {

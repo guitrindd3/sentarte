@@ -53,7 +53,7 @@ export default async function EditarPagina({ params }: PageProps<"/admin/paginas
         </ul>
       </details>
 
-      <AdminForm action={salvarPaginaAction.bind(null, pg.id)} className="block">
+      <AdminForm action={salvarPaginaAction.bind(null, pg.id)} confirmar verNoSite={pg.caminho} className="block">
         <Card>
           <div className="space-y-6">
             {pg.campos.map((c) =>

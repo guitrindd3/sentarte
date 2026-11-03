@@ -14,6 +14,7 @@ import {
 } from "react";
 import type { Resultado } from "./actions";
 import { AjustarFoto } from "./ajustar-foto";
+import { estadoDoForm, mudancasDoForm, ResumoSalvar, type DetalheSalvou, type Mudanca } from "./publicar";
 
 export type FormatoFoto = "original" | "quadrada" | "empe" | "deitada" | "larga";
 
@@ -134,9 +135,6 @@ export function StatusPublicacao() {
         const r = await fetch("/api/admin/status", { cache: "no-store" });
         const j = (await r.json()) as { estado?: typeof estado };
         if (!parar && j.estado) {
-          if (anterior.current === "publicando" && j.estado === "no-ar") {
-            avisar("ok", "Pronto! Suas alterações já estão no site.");
-          }
           anterior.current = j.estado;
           setEstado(j.estado);
         }
@@ -200,14 +198,24 @@ export function AdminForm({
   children,
   className,
   aoSalvar,
+  confirmar = false,
+  verNoSite,
 }: {
   action: Acao;
   children: ReactNode | ((s: { sujo: boolean; pendente: boolean }) => ReactNode);
   className?: string;
   /** Called after a successful save (e.g. to close an inline editor). */
   aoSalvar?: () => void;
+  /** Long forms: list the changes and ask before saving (ResumoSalvar). */
+  confirmar?: boolean;
+  /** Where "Ver no site" goes once the change is live. */
+  verNoSite?: string;
 }) {
   const [sujo, setSujo] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const inicial = useRef(new Map<string, string[]>());
+  const [revisando, setRevisando] = useState<Mudanca[] | null>(null);
+  const [nMudancas, setNMudancas] = useState(0);
   const [versao, setVersao] = useState(0);
   const router = useRouter();
   const sujoRef = useRef(false);
@@ -219,13 +227,21 @@ export function AdminForm({
   };
   useEffect(() => () => marcarSujo(false, sujoRef.current), []);
 
+  // what the fields held when they (re)mounted: the "before" of the summary
+  useEffect(() => {
+    if (formRef.current) inicial.current = estadoDoForm(formRef.current);
+  }, [versao]);
+
   const [, despachar, pendente] = useActionState(async (prev: Resultado, fd: FormData) => {
     const r = await action(prev, fd);
     if (r?.ok) {
-      avisar("ok", r.msg);
-      window.dispatchEvent(new Event("admin-salvou"));
+      // a commit → the progress card (PainelPublicacao) takes over from the toast
+      if (!r.commit) avisar("ok", r.msg);
+      const detalhe: DetalheSalvou = { msg: r.msg, commit: r.commit, verNoSite };
+      window.dispatchEvent(new CustomEvent("admin-salvou", { detail: detalhe }));
       definirSujo(false);
       setVersao((v) => v + 1);
+      setNMudancas(0);
       if (r.ir) router.push(r.ir);
       aoSalvar?.();
     } else if (r) {
@@ -234,18 +250,48 @@ export function AdminForm({
     return r;
   }, undefined);
 
+  const enviar = (form: HTMLFormElement) => {
+    const fd = new FormData(form);
+    startTransition(() => despachar(fd));
+  };
+  const contar = (form: HTMLFormElement) => {
+    // next tick: photo buttons flip their hidden inputs after firing the event
+    if (confirmar) setTimeout(() => setNMudancas(mudancasDoForm(form, inicial.current, false).length), 0);
+  };
+
   return (
     <form
+      ref={formRef}
       className={className}
-      onInput={() => !sujoRef.current && definirSujo(true)}
-      onChange={() => !sujoRef.current && definirSujo(true)}
+      onInput={(e) => {
+        if (!sujoRef.current) definirSujo(true);
+        contar(e.currentTarget);
+      }}
+      onChange={(e) => {
+        if (!sujoRef.current) definirSujo(true);
+        contar(e.currentTarget);
+      }}
       onSubmit={(e) => {
         e.preventDefault();
-        const fd = new FormData(e.currentTarget);
-        startTransition(() => despachar(fd));
+        const form = e.currentTarget;
+        if (!confirmar) return enviar(form);
+        const lista = mudancasDoForm(form, inicial.current);
+        if (!lista.length) return avisar("info", "Você ainda não mudou nada nesta página.");
+        setRevisando(lista);
       }}
     >
+      {revisando ? (
+        <ResumoSalvar
+          mudancas={revisando}
+          onVoltar={() => setRevisando(null)}
+          onConfirmar={() => {
+            setRevisando(null);
+            if (formRef.current) enviar(formRef.current);
+          }}
+        />
+      ) : null}
       <PendenteCtx value={pendente}>
+      <ConfirmaCtx value={confirmar ? nMudancas : -1}>
       <SujoCtx value={sujo}>
         <fieldset disabled={pendente} className="contents">
           <div key={versao} className="contents">
@@ -253,6 +299,7 @@ export function AdminForm({
           </div>
         </fieldset>
       </SujoCtx>
+      </ConfirmaCtx>
       </PendenteCtx>
     </form>
   );
@@ -266,6 +313,8 @@ function Spinner() {
 // auto-reset), which useFormStatus doesn't see — the pending flag comes from here.
 const PendenteCtx = createContext(false);
 const SujoCtx = createContext(false);
+/** Number of changes in a `confirmar` form (-1 = the form doesn't count them). */
+const ConfirmaCtx = createContext(-1);
 
 export function SaveButton({ children = "Salvar alterações", className = btnPrimary }: { children?: ReactNode; className?: string }) {
   const pending = useContext(PendenteCtx);
@@ -283,16 +332,70 @@ export function SaveButton({ children = "Salvar alterações", className = btnPr
 }
 
 /** Sticky bottom bar for long forms: appears highlighted once something changed. */
-export function BarraSalvar({ texto = "Salvar alterações" }: { texto?: string }) {
+export function BarraSalvar({
+  texto = "Salvar alterações",
+  flutuante = false,
+}: {
+  texto?: string;
+  /** floating pill at the bottom of the screen (editor pages) instead of a card footer */
+  flutuante?: boolean;
+}) {
   const sujo = useContext(SujoCtx);
   const pendente = useContext(PendenteCtx);
+  const n = useContext(ConfirmaCtx);
+  const conta = n >= 0;
+  const mudou = conta ? n > 0 : sujo;
+  const status = pendente
+    ? "Enviando… pode levar alguns segundos se tiver foto."
+    : mudou
+      ? conta
+        ? `${n === 1 ? "1 alteração ainda não publicada" : `${n} alterações ainda não publicadas`}`
+        : "Você tem alterações não salvas"
+      : conta
+        ? "Nada para publicar: está igual ao site"
+        : "Tudo salvo";
+  const botao = conta ? (
+    <button
+      type="submit"
+      disabled={pendente || !mudou}
+      className={`${btnPrimary} ${mudou ? "!bg-verde shadow-[0_6px_20px_-6px_rgb(31_157_85/0.7)] hover:!bg-verde-escuro" : ""}`}
+    >
+      {pendente ? (
+        <>
+          <Spinner /> Salvando…
+        </>
+      ) : (
+        "Revisar e publicar"
+      )}
+    </button>
+  ) : (
+    <SaveButton>{texto}</SaveButton>
+  );
+  if (flutuante) {
+    return (
+      <div className="pointer-events-none sticky bottom-[calc(4.4rem+env(safe-area-inset-bottom))] z-30 mt-2 flex justify-center lg:bottom-5">
+        <div
+          className={`pointer-events-auto flex w-full max-w-2xl items-center justify-between gap-3 rounded-full py-2 pl-5 pr-2 shadow-[0_18px_40px_-18px_rgba(20,14,8,0.55)] ring-1 backdrop-blur-md transition-colors duration-300 ${
+            mudou ? "bg-espresso/95 text-paper ring-white/10" : "bg-paper/90 text-ink-soft ring-line/70"
+          }`}
+        >
+          <p className="flex min-w-0 items-center gap-2 text-sm">
+            <span className={`h-2 w-2 shrink-0 rounded-full ${pendente ? "animate-pulse bg-rattan" : mudou ? "bg-rattan" : "bg-verde"}`} />
+            <span className="truncate max-sm:hidden">{status}</span>
+            <span className="truncate sm:hidden">
+              {pendente ? "Enviando…" : mudou && conta ? (n === 1 ? "1 alteração" : `${n} alterações`) : mudou ? "Não salvo" : "Igual ao site"}
+            </span>
+          </p>
+          {botao}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="sticky bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-20 -mx-5 mt-8 lg:bottom-0 border-t border-line/70 bg-paper/95 px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:-mx-7 sm:px-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className={`text-sm ${sujo ? "font-semibold text-wood-dark" : "text-ink-soft"}`}>
-          {pendente ? "Enviando… pode levar alguns segundos se tiver foto." : sujo ? "● Você tem alterações não salvas" : "Tudo salvo"}
-        </p>
-        <SaveButton>{texto}</SaveButton>
+        <p className={`text-sm ${mudou ? "font-semibold text-wood-dark" : "text-ink-soft"}`}>{status}</p>
+        {botao}
       </div>
     </div>
   );
@@ -459,7 +562,7 @@ export function FotoSlot({
   const mostrar = nova ?? (remover ? null : atual);
 
   return (
-    <div className="min-w-0">
+    <div className="min-w-0" data-rotulo={rotulo ?? vazio}>
       {rotulo ? <p className="mb-1.5 text-sm font-semibold text-ink">{rotulo}</p> : null}
       <div
         {...props}
@@ -560,11 +663,14 @@ export function GaleriaFotos({
   max,
   name,
   removerName,
+  rotulo = "Mais fotos",
 }: {
   existentes: string[];
   max: number;
   name: string;
   removerName: string;
+  /** name shown in the "before saving" summary */
+  rotulo?: string;
 }) {
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
@@ -589,7 +695,7 @@ export function GaleriaFotos({
   const { sobre, props } = useSoltar(adicionar);
 
   return (
-    <div {...props} className={`rounded-xl p-1 transition ${sobre ? "bg-rattan/10 ring-2 ring-wood" : ""}`}>
+    <div {...props} data-rotulo={rotulo} className={`rounded-xl p-1 transition ${sobre ? "bg-rattan/10 ring-2 ring-wood" : ""}`}>
       {ajustando ? (
         <AjustarFoto
           src={ajustando.src}

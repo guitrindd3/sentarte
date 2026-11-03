@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CATEGORIA_COM_PRECO, formatBRL, precoCadeira } from "./offer";
+import { CATEGORIA_COM_PRECO, formatBRL, precoCadeira, rotuloTassel } from "./offer";
 import { grupoDoModelo } from "./grupos";
 import type { Modelo } from "./content-schema";
 import type { CartItem } from "./cart-context";
@@ -22,11 +22,19 @@ export function useEscolhaModelo({
   categoria: string;
   categoriaSlug: string;
 }) {
-  const [wantsNome, setWantsNome] = useState(false);
+  // What the chair in the photo comes with (admin, 2026-11-03): always in the price.
+  const inclui = categoriaSlug === CATEGORIA_COM_PRECO ? modelo.inclui : undefined;
+  const nomeIncluso = Boolean(inclui?.nome);
+  const madeiraInclusa = Boolean(inclui?.bracoMadeira);
+  const tasseis = inclui?.tasseis ?? 0;
+  const [wantsNomeEscolha, setWantsNome] = useState(nomeIncluso);
+  const wantsNome = wantsNomeEscolha || nomeIncluso;
   const [varianteIndex, setVarianteIndex] = useState(0);
   const [nomeTexto, setNomeTexto] = useState("");
   // wooden armrests (user 2026-10-21), on every chair with a price
-  const [madeira, setMadeira] = useState(false);
+  const [madeiraEscolha, setMadeiraEscolha] = useState(false);
+  const madeira = madeiraEscolha || madeiraInclusa;
+  const setMadeira = (m: boolean) => setMadeiraEscolha(m);
 
   const ativo = wantsNome && personalizado ? personalizado : modelo;
   // Color options (a real choice, sent with the order) come first, then
@@ -52,14 +60,21 @@ export function useEscolhaModelo({
   // personalized price, and no name on top (user 2026-09-29).
   const ehDesenho = grupoDoModelo(modelo) === "desenhos";
   const podePersonalizar = !ehDesenho && (temPreco || Boolean(personalizado));
-  const preco = precoCadeira(wantsNome || ehDesenho, "normal", madeira);
+  const preco = precoCadeira(wantsNome || ehDesenho, "normal", madeira, tasseis);
+  const precoComNome = precoCadeira(true, "normal", madeira, tasseis);
+  const tassel = tasseis
+    ? {
+        tassel: inclui?.tasselCor?.trim() || "igual ao da foto",
+        ...(tasseis === 1 ? { tasselQtd: 1 as const, tasselLado: inclui?.tasselLado === "esq" ? ("esq" as const) : ("dir" as const) } : {}),
+      }
+    : null;
   const faltaNome = wantsNome && !nomeFinal;
   const mensagemWhatsapp = `Oi! Quero pedir uma peça de ${categoria}, modelo "${ativo.nome}"${
     temPreco ? ` (${formatBRL(preco)})` : ""
-  }.${varianteLabel ? ` Cor: ${varianteLabel}.` : ""}${madeira ? " Com braço de madeira." : ""}${nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""}`;
+  }.${varianteLabel ? ` Cor: ${varianteLabel}.` : ""}${tassel ? ` Com ${rotuloTassel(tassel)}.` : ""}${madeira ? " Com braço de madeira." : ""}${nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""}`;
 
   const itemDoCarrinho: Omit<CartItem, "quantidade"> = {
-    id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}${varianteLabel ? `:${varianteLabel}` : ""}${madeira ? ":madeira" : ""}`,
+    id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}${varianteLabel ? `:${varianteLabel}` : ""}${madeira ? ":madeira" : ""}${tassel ? ":tassel" : ""}`,
     categoriaSlug,
     categoriaTitulo: categoria,
     modeloId: ativo.id,
@@ -71,6 +86,7 @@ export function useEscolhaModelo({
     personalizada: ehDesenho || undefined,
     variante: varianteLabel || undefined,
     bracoMadeira: madeira || undefined,
+    ...(tassel ?? {}),
   };
 
   return {
@@ -84,7 +100,7 @@ export function useEscolhaModelo({
     wantsNome,
     /** Switches between "Sem nome" and "Personalizado" (back to the first photo). */
     escolherNome: (sim: boolean) => {
-      setWantsNome(sim);
+      setWantsNome(sim || nomeIncluso);
       setVarianteIndex(0);
     },
     nomeTexto,
@@ -93,7 +109,12 @@ export function useEscolhaModelo({
     ehDesenho,
     podePersonalizar,
     preco,
+    precoComNome,
     faltaNome,
+    /** what the chair comes with (fixed, already in `preco`) */
+    inclui,
+    nomeIncluso,
+    madeiraInclusa,
     mensagemWhatsapp,
     itemDoCarrinho,
     madeira,

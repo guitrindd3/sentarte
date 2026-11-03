@@ -54,6 +54,7 @@ import {
 } from "@/lib/seguranca";
 import { getContentForWrite, prepararFoto, saveContent } from "@/lib/content-store";
 import type { ArquivoNovo } from "@/lib/github-store";
+import { commitDaAcao } from "@/lib/github-store";
 import type { Categoria, Depoimento, Modelo } from "@/lib/content-schema";
 
 export type LoginState = { error?: string; etapa?: "senha" | "codigo" } | undefined;
@@ -191,16 +192,19 @@ class Aviso extends Error {}
 
 /** What every admin form gets back: shown as a toast, never a crash page. */
 export type Resultado =
-  | { ok: true; msg: string; ir?: string; em: number }
+  /** `commit`: the action committed to GitHub (that sha), so the site redeploys (1-2 min). */
+  | { ok: true; msg: string; ir?: string; em: number; commit?: string }
   | { ok: false; erro: string; em: number }
   | undefined;
 
 async function executar(fn: () => Promise<{ msg: string; ir?: string } | string>): Promise<Resultado> {
   await requireAdmin();
   try {
-    const r = await fn();
+    const registro: { sha?: string } = {};
+    const r = await commitDaAcao.run(registro, fn);
     revalidateSite();
-    return typeof r === "string" ? { ok: true, msg: r, em: Date.now() } : { ok: true, ...r, em: Date.now() };
+    const commit = registro.sha;
+    return typeof r === "string" ? { ok: true, msg: r, em: Date.now(), commit } : { ok: true, ...r, em: Date.now(), commit };
   } catch (err) {
     unstable_rethrow(err);
     console.error("admin action failed", err);
@@ -343,6 +347,22 @@ export async function updateModeloAction(categoriaId: string, modeloId: string, 
     if (colecao !== null) {
       if (colecao) modelo.grupo = colecao;
       else delete modelo.grupo;
+    }
+
+    if (formData.has("incluiCampos")) {
+      // "O que vem nesta cadeira" (2026-11-03): extras always in the price
+      const t = Number(formData.get("incluiTasseis"));
+      const tasseis = t === 1 || t === 2 ? (t as 1 | 2) : undefined;
+      const cor = txt(formData, "incluiTasselCor", "").trim().slice(0, 30);
+      const inclui = {
+        ...(formData.get("incluiNome") === "on" ? { nome: true } : {}),
+        ...(tasseis ? { tasseis } : {}),
+        ...(tasseis && cor ? { tasselCor: cor } : {}),
+        ...(tasseis === 1 ? { tasselLado: formData.get("incluiTasselLado") === "esq" ? ("esq" as const) : ("dir" as const) } : {}),
+        ...(formData.get("incluiMadeira") === "on" ? { bracoMadeira: true } : {}),
+      };
+      if (Object.keys(inclui).length) modelo.inclui = inclui;
+      else delete modelo.inclui;
     }
 
     const foto = await imagemValida(formData.get("foto"));
