@@ -91,7 +91,6 @@ export const SUBGRUPOS: Partial<Record<Categoria, Sub[]>> = {
     { valor: "tecidos", rotulo: "Tecidos e franjas", re: /franja|tranca|macrame|contas|tear|ponto cruz|shibori|ondas|bandeirinhas|leque|vaso|coracao/ },
   ],
   animes: [
-    { valor: "personagens", rotulo: "Personagens", re: /^pa-/ },
     { valor: "herois", rotulo: "Heróis e quadrinhos", re: /heroi|teia|aranha|pow|bum|zap|balao|explosao|emblema|raio/ },
     { valor: "japao", rotulo: "Ninja e Japão", re: /ninja|shuriken|kunai|katana|samurai|torii|cerejeira|koi|raposa|dragao oriental|lanterna|leque|fuji|daruma|oni|bento|onigiri|lamen|sushi|dango|gato da sorte|pergaminho/ },
     { valor: "padroes", rotulo: "Padrões japoneses", re: /ichimatsu|asanoha|seigaiha|yagasuri|kagome|chuva de sakura/ },

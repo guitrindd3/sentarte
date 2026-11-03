@@ -9,7 +9,6 @@ import { ROTULOS_EXTRAS_5 } from "./formas-extras-5";
 import { ROTULOS_BOHO_TRIBAL } from "./formas-boho-tribal";
 import { ROTULOS_BOHO_CULTURAS } from "./formas-boho-culturas";
 import { ROTULOS_ANIMES } from "./formas-animes";
-import { ROTULOS_PERSONAGENS } from "./formas-personagens";
 import { subgrupoDa } from "./formas-subgrupos";
 
 // Every shape of the Monte a sua trama grid (moved out of chair-builder.tsx
@@ -106,7 +105,6 @@ export const FORMAS: { valor: Forma; rotulo: string; grupo: Grupo }[] = [
   ...ROTULOS_EXTRAS_5,
   ...ROTULOS_BOHO_TRIBAL,
   ...ROTULOS_BOHO_CULTURAS,
-  ...ROTULOS_PERSONAGENS,
   ...ROTULOS_ANIMES,
 ];
 /** What the shape grid shows: near-duplicates stay out (they still render for old links). */
