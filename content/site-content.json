@@ -366,6 +366,14 @@
           "variantes": [
             "/catalogo/cb672088-f3b2-4d4b-b24f-9065a943ccd3.jpg"
           ]
+        },
+        {
+          "id": "f50d06c6-43d3-4514-9ef0-ea0691e3a8a8",
+          "nome": "Polvo blu",
+          "descricao": "",
+          "corA": "#15564C",
+          "corB": "#BD502E",
+          "grupo": "desenhos"
         }
       ]
     },
