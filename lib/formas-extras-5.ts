@@ -370,6 +370,57 @@ const DE_LADO_VOLTA = DE_LADO.map((l) => [...l].reverse().join(""));
 const MINI = ["..X..", "XXXXX", ".X.X.", "XXXXX", "..X.."];
 const ESTRELINHA = ["...X...", "...X...", "XXXXXXX", ".XXXXX.", "..XXX..", ".XX.XX.", "XX...XX"];
 const COM_BOLHAS = ["...X.....X", "X.XXX.X...", ".XX.XX....", ".X.X.X..X.", ".XX.XX....", "X.XXX.X...", "...X......"];
+// Big top-view sea turtle filling the panel, after a photo the user sent of
+// a woven seat (2026-11-04): oval shell with cream lines between the plates,
+// wing-like front flippers, small back flippers and a pointy tail. Drawn as
+// geometry in units of half the panel's short side, so it fits both the
+// square backrest and the wide seat. `ang` tilts it (radians); a tilted try looked jagged, so none ships tilted.
+type EstiloCasco = "placas" | "liso" | "contorno" | "invertida";
+const naElipse = (x: number, y: number, cx: number, cy: number, a: number, b: number, ang = 0) => {
+  const dx = x - cx, dy = y - cy, c = Math.cos(ang), s = Math.sin(ang);
+  const p = dx * c + dy * s, q = -dx * s + dy * c;
+  return (p / a) ** 2 + (q / b) ** 2;
+};
+const CASCO = { cy: 0.02, a: 0.42, b: 0.5 };
+const silhueta = (x: number, y: number) => {
+  const ax = Math.abs(x);
+  return naElipse(x, y, 0, CASCO.cy, CASCO.a, CASCO.b) <= 1
+    || naElipse(x, y, 0, -0.66, 0.13, 0.17) <= 1 // head
+    || (ax < 0.09 && y > -0.54 && y < -0.4) // neck
+    || naElipse(ax, y, 0.55, -0.14, 0.38, 0.14, 0.7) <= 1 // front flippers
+    || naElipse(ax, y, 0.33, 0.56, 0.18, 0.1, 0.85) <= 1 // back flippers
+    || (y > 0.45 && y < 0.78 && ax < 0.07 * (0.78 - y) / 0.33 + 0.005); // tail
+};
+const tartarugaGrande = (estilo: EstiloCasco, ang = 0): Teste => {
+  if (estilo === "invertida") { const t = tartarugaGrande("placas", ang); return (i, j, cols, rows) => !t(i, j, cols, rows); }
+  return (i, j, cols, rows) => {
+  const esc = (Math.min(cols, rows) / 2) * 1.07;
+  const c = Math.cos(ang), sn = Math.sin(ang);
+  const ponto = (di: number, dj: number) => {
+    const u = (i + 0.5 + di - cols / 2) / esc, v = (j + 0.5 + dj - rows / 2) / esc + 0.03;
+    return [u * c + v * sn, -u * sn + v * c] as const;
+  };
+  const [x, y] = ponto(0, 0);
+  if (!silhueta(x, y)) return false;
+  if (estilo === "contorno") {
+    const borda = (dx: number, dy: number) => !silhueta(...ponto(dx, dy));
+    if (borda(1, 0) || borda(-1, 0) || borda(0, 1) || borda(0, -1)) return true;
+    const casco = (dx: number, dy: number) => naElipse(...ponto(dx, dy), 0, CASCO.cy, CASCO.a, CASCO.b) <= 1;
+    const dentro = casco(0, 0);
+    return dentro !== casco(1, 0) || dentro !== casco(-1, 0) || dentro !== casco(0, 1) || dentro !== casco(0, -1);
+  }
+  const e = Math.sqrt(naElipse(x, y, 0, CASCO.cy, CASCO.a, CASCO.b));
+  if (e > 1) return true;
+  const linha = (d: number) => Math.abs(d) * esc < 0.5; // ~1 cell wide cream line
+  if (linha((e - 0.78) * CASCO.a)) return false; // ring around the inner plates
+  if (estilo === "liso" || e > 0.78) return true;
+  const yy = y - CASCO.cy, ax = Math.abs(x);
+  if (linha(ax - 0.14)) return false;
+  const cortes = ax < 0.14 ? [-0.14, 0.14] : [0];
+  return !cortes.some((k) => linha(yy - k));
+  };
+};
+
 const TARTARUGUINHAS: [string, string, Teste][] = [
   ["mar-tartarugas-cardume", "Tartaruguinhas", repetir(TARTARUGUINHA, 10, 8, 5)],
   ["mar-tartarugas-fila", "Tartaruguinhas em fila", repetir(TARTARUGUINHA, 9, 9, 0)],
@@ -378,6 +429,10 @@ const TARTARUGUINHAS: [string, string, Teste][] = [
   ["mar-tartarugas-mini", "Tartaruguinhas mini", repetir(MINI, 7, 6, 3)],
   ["mar-tartarugas-estrelas", "Tartaruguinhas e estrelas", repetir(TARTARUGUINHA, 10, 8, 5, ESTRELINHA)],
   ["mar-tartarugas-escada", "Tartaruguinhas na escada", repetir(TARTARUGUINHA, 12, 8, 4)],
+  ["mar-tartaruga-grande", "Tartaruga grande", tartarugaGrande("placas")],
+  ["mar-tartaruga-casco-liso", "Tartaruga de casco liso", tartarugaGrande("liso")],
+  ["mar-tartaruga-invertida", "Tartaruga invertida", tartarugaGrande("invertida")],
+  ["mar-tartaruga-contorno", "Tartaruga só contorno", tartarugaGrande("contorno")],
   ["mar-tartarugas-bolhas", "Tartaruguinhas e bolhas", repetir(COM_BOLHAS, 12, 9, 6)],
 ];
 
