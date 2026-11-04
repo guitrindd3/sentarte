@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "conferir": "node scripts/conferir-publicacao.mjs"
   },
   "dependencies": {
     "jose": "^6.2.12",
