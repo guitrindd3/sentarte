@@ -78,6 +78,11 @@ const DESENHADAS: [Categoria, string, string, string[]][] = [
   ["mar", "mar-barco-de-papel", "Barquinho de papel", ["......X......", ".....XXX.....", "....XXXXX....", "...XXXXXXX...", "XXXXXXXXXXXXX", ".XXXXXXXXXXX.", "..XXXXXXXXX.."]],
   ["mar", "mar-farol-listrado", "Farol listrado", [".....X.....", "....XXX....", "XX.X...X.XX", "....XXX....", "....XXX....", "...X...X...", "...XXXXX...", "...X...X...", "..XXXXXXX..", "..X.....X..", "..XXXXXXX..", "XXXXXXXXXXX"]],
   ["mar", "mar-tartaruga-bebe", "Tartaruguinha", ["....XXXXX....", "..XX.X.X.XX..", ".XX.X.X.X.XXX", "XXXXXXXXXXXXX", ".X.........X.", "X...........X"]],
+  // Five more turtles (2026-11-04, user: "coloque tramas de tartaruga... coloca 5").
+  ["mar", "mar-tartaruga-marinha", "Tartaruga-marinha", ["........XXX........", ".......XXXXX.......", "........XXX........", ".XX...XXXXXXX...XX.", "XXXXXXXX.X.XXXXXXXX", ".XXXXX.XXXXX.XXXXX.", "...XX.XX...XX.XX...", "...XXXX.....XXXX...", "...XX.XX...XX.XX...", "...XXX.XXXXX.XXX...", ".XXXXXX.X.X.XXXXXX.", "XXXX..XXXXXXX..XXXX", ".XX.....XXX.....XX.", ".........X........."]],
+  ["mar", "mar-jabuti", "Jabuti", ["........XXXXXXX......", "......XXX.X.X.XXX....", ".....XX.XXXXXXX.XX...", "....XXXXX.X.X.XXXXX..", "XXX.XX.X.XXXXX.X.XX..", "X.XXXXXXXXXXXXXXXXXX.", "XXXXXXXXXXXXXXXXXXXXX", "......XXX.....XXX....", "......XXX.....XXX...."]],
+  ["mar", "mar-tartaruga-nadando", "Tartaruga nadando", ["..........XXXXXX......", "........XXX.X..XXX....", "......XXX.X..X...XX...", ".XXX.XX.X..X..X.X.XX..", "XX.XXXXXXXXXXXXXXXXXXX", "XXXX..XXXXXXXXXXXXXX.X", "......XXXXX.....XXX...", ".......XXXXX.....XX...", "........XXXXX.........", ".........XXXX.........", "..........XX.........."]],
+  ["mar", "mar-tartaruga-filhote", "Mamãe e filhote", ["......XXXXX.............", "....XXX.X.XXX...........", "...XX.XXXXX.XX..........", "..XXXXX.X.XXXXX.........", "XXXX.XXXXXXX.XXX...XXXX.", "X.XXXXXXXXXXXXXX..XX.X.X", "XXXXXXXXXXXXXXXX.XXXXXXX", "....XX......XX....X...X."]],
   ["mar", "mar-sardinhas", "Lata de sardinha", ["XXXXXXXXXXXXXXX", "X.............X", "X.XXXX..XXXX..X", "XXX.XXXXX.XXXXX", "X.XXXX..XXXX..X", "X.............X", "XXXXXXXXXXXXXXX"]],
   ["comidas", "comida-limao", "Limão", [".....XX.....", "...XXXXXX...", ".XXXXXXXXXX.", "XXXXXXXXXXXX", "XXXXXXXXXXXX", ".XXXXXXXXXX.", "...XXXXXX...", ".....XX....."]],
   ["comidas", "comida-kiwi", "Kiwi", ["...XXXXX...", ".XXXXXXXXX.", ".XX.X.X.XX.", "XX.X...X.XX", "XX..XXX..XX", "XX.X...X.XX", ".XX.X.X.XX.", ".XXXXXXXXX.", "...XXXXX..."]],
@@ -347,6 +352,22 @@ const PHOSPHOR: [Categoria, string, string, string[]][] = [
   ["time", "ph-megaphone-simple", "Megafone simples", [".XX............", "XXXXXX.........", "XXXXXXXXX......", "XXXXXXXXXXXX...", "XXXXXXXXX..XXXX", "XXXXXXXXX.....X", "XXXXXXXXX.....X", "XXXXXXXXX.....X", "XXXXXXXXX..XXXX", "XXXXXXXXXXXX...", "XXXXXXXXX..X...", "XXXXX...XXXX...", ".X......XXX...."]],
 ];
 
+// A repeat of little turtles filling the whole panel (brick layout), tiled
+// from the panel's centre.
+const TARTARUGUINHA = ["...X...", "X.XXX.X", ".XX.XX.", ".X.X.X.", ".XX.XX.", "X.XXX.X", "...X..."];
+const cardumeTartarugas: Teste = (i, j, cols, rows) => {
+  const W = 10, H = 8;
+  const x = (((i - (cols >> 1) + 3) % W) + W) % W, y = (((j - (rows >> 1) + 3) % (H * 2)) + H * 2) % (H * 2);
+  const desl = y >= H ? 5 : 0, yy = y % H, xx = (x - desl + W) % W;
+  return yy < 7 && xx < 7 && TARTARUGUINHA[yy][xx] === "X";
+};
+
 const lista = [...DESENHADAS, ...PHOSPHOR];
-export const FORMAS_EXTRAS_5: Record<string, Teste> = Object.fromEntries(lista.map(([, valor, , d]) => [valor, figura(d)]));
-export const ROTULOS_EXTRAS_5 = lista.map(([grupo, valor, rotulo]) => ({ valor, rotulo, grupo }));
+export const FORMAS_EXTRAS_5: Record<string, Teste> = {
+  ...Object.fromEntries(lista.map(([, valor, , d]) => [valor, figura(d)])),
+  "mar-tartarugas-cardume": cardumeTartarugas,
+};
+export const ROTULOS_EXTRAS_5 = [
+  ...lista.map(([grupo, valor, rotulo]) => ({ valor, rotulo, grupo })),
+  { valor: "mar-tartarugas-cardume", rotulo: "Tartaruguinhas", grupo: "mar" as Categoria },
+];

@@ -21,6 +21,7 @@ export const SUBGRUPOS: Partial<Record<Categoria, Sub[]>> = {
   ],
   mar: [
     { valor: "peixes", rotulo: "Peixes", re: /peix|tubarao|moreia|baiacu|arraia|sardinha|ph-fish|anzol|vara de pescar/ },
+    { valor: "tartarugas", rotulo: "Tartarugas", re: /tartaruga|jabuti/ },
     { valor: "bichos-mar", rotulo: "Bichos do mar", re: /polvo|lula|agua-viva|caranguejo|siri|lagosta|camara|estrela-do-mar|ourico|coral|anemona|alga|tartaruga|cavalo-marinho|baleia|golfinho|orca|foca|gaivota|pelicano|flamingo/ },
     { valor: "conchas", rotulo: "Conchas", re: /concha|vieira|buzio|nautilo|ostra/ },
     { valor: "barcos", rotulo: "Barcos", re: /barco|navio|caravela|veleiro|bote|caiaque|submarino|jet ski|stand-up|remo|leme|ancora/ },
