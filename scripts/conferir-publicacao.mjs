@@ -41,11 +41,11 @@ async function aguardar(alvo, minutos) {
 sh("git fetch -q origin main");
 let alvo = sh("git rev-parse origin/main");
 console.log(`Conferindo publicação de ${alvo.slice(0, 7)}...`);
-if (await aguardar(alvo, 6)) {
+if (await aguardar(alvo, 4)) {
   console.log("✓ No ar.");
   process.exit(0);
 }
-console.log("Vercel não publicou em 6 min — reenviando (commit vazio)...");
+console.log("Vercel não publicou em 4 min — reenviando (commit vazio)...");
 const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date()).replace(",", "");
 sh(`git commit -q --allow-empty -m "[${hora}] Redeploy: Vercel não publicou o envio anterior" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"`);
 sh("git push -q origin HEAD:main");
