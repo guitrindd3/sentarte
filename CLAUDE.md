@@ -797,3 +797,4 @@ User: "na aba de monte sua trama crie um também de animes e desenhos… exemplo
 
 ## Turtles (2026-11-04)
 - User asked for 5 turtle shapes: `mar-tartaruga-marinha`, `mar-jabuti`, `mar-tartaruga-nadando`, `mar-tartaruga-filhote` (grids in `lib/formas-extras-5.ts`) and the full-panel repeat `mar-tartarugas-cardume` (`cardumeTartarugas`). The Praia e mar tab now has a "Tartarugas" sub-group (7 shapes, matched before "Bichos do mar").
+- Same day, "umas tartaruguinha pequena": 7 more full-panel repeats via `repetir(d, W, H, desl, alterna?)` in `lib/formas-extras-5.ts` (`mar-tartarugas-*`: fila, de-lado, vai-volta, mini, estrelas, escada, bolhas). The "Tartarugas" sub-group now has 14 shapes. A transposed top-view turtle looked identical to the plain one, so it was dropped.

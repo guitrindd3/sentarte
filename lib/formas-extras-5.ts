@@ -352,22 +352,41 @@ const PHOSPHOR: [Categoria, string, string, string[]][] = [
   ["time", "ph-megaphone-simple", "Megafone simples", [".XX............", "XXXXXX.........", "XXXXXXXXX......", "XXXXXXXXXXXX...", "XXXXXXXXX..XXXX", "XXXXXXXXX.....X", "XXXXXXXXX.....X", "XXXXXXXXX.....X", "XXXXXXXXX..XXXX", "XXXXXXXXXXXX...", "XXXXXXXXX..X...", "XXXXX...XXXX...", ".X......XXX...."]],
 ];
 
-// A repeat of little turtles filling the whole panel (brick layout), tiled
-// from the panel's centre.
-const TARTARUGUINHA = ["...X...", "X.XXX.X", ".XX.XX.", ".X.X.X.", ".XX.XX.", "X.XXX.X", "...X..."];
-const cardumeTartarugas: Teste = (i, j, cols, rows) => {
-  const W = 10, H = 8;
-  const x = (((i - (cols >> 1) + 3) % W) + W) % W, y = (((j - (rows >> 1) + 3) % (H * 2)) + H * 2) % (H * 2);
-  const desl = y >= H ? 5 : 0, yy = y % H, xx = (x - desl + W) % W;
-  return yy < 7 && xx < 7 && TARTARUGUINHA[yy][xx] === "X";
+// Repeats of little turtles filling the whole panel, tiled from the panel's
+// centre (2026-11-04, user: "umas tartaruguinha pequena sei que fica legal").
+// `repetir` places `d` in a W x H tile; every odd tile row shifts by `desl`
+// columns (brick layout), and `alterna` swaps in a second drawing there.
+const md = (a: number, b: number) => ((a % b) + b) % b;
+const repetir = (d: string[], W: number, H: number, desl: number, alterna?: string[]): Teste => (i, j, cols, rows) => {
+  const x = i - (cols >> 1) + (d[0].length >> 1), y = j - (rows >> 1) + (d.length >> 1);
+  const linha = Math.floor(y / H), yy = md(y, H);
+  const xx = md(x - linha * desl, W);
+  const fig = alterna && md(linha, 2) === 1 ? alterna : d;
+  return yy < fig.length && xx < fig[0].length && fig[yy][xx] === "X";
 };
+const TARTARUGUINHA = ["...X...", "X.XXX.X", ".XX.XX.", ".X.X.X.", ".XX.XX.", "X.XXX.X", "...X..."];
+const DE_LADO = ["..XXX...", ".X.X.XXX", "XXXXXXX.", ".X...X.."];
+const DE_LADO_VOLTA = DE_LADO.map((l) => [...l].reverse().join(""));
+const MINI = ["..X..", "XXXXX", ".X.X.", "XXXXX", "..X.."];
+const ESTRELINHA = ["...X...", "...X...", "XXXXXXX", ".XXXXX.", "..XXX..", ".XX.XX.", "XX...XX"];
+const COM_BOLHAS = ["...X.....X", "X.XXX.X...", ".XX.XX....", ".X.X.X..X.", ".XX.XX....", "X.XXX.X...", "...X......"];
+const TARTARUGUINHAS: [string, string, Teste][] = [
+  ["mar-tartarugas-cardume", "Tartaruguinhas", repetir(TARTARUGUINHA, 10, 8, 5)],
+  ["mar-tartarugas-fila", "Tartaruguinhas em fila", repetir(TARTARUGUINHA, 9, 9, 0)],
+  ["mar-tartarugas-de-lado", "Tartaruguinhas de lado", repetir(DE_LADO, 11, 6, 5)],
+  ["mar-tartarugas-vai-volta", "Tartaruguinhas vai e vem", repetir(DE_LADO, 11, 6, 5, DE_LADO_VOLTA)],
+  ["mar-tartarugas-mini", "Tartaruguinhas mini", repetir(MINI, 7, 6, 3)],
+  ["mar-tartarugas-estrelas", "Tartaruguinhas e estrelas", repetir(TARTARUGUINHA, 10, 8, 5, ESTRELINHA)],
+  ["mar-tartarugas-escada", "Tartaruguinhas na escada", repetir(TARTARUGUINHA, 12, 8, 4)],
+  ["mar-tartarugas-bolhas", "Tartaruguinhas e bolhas", repetir(COM_BOLHAS, 12, 9, 6)],
+];
 
 const lista = [...DESENHADAS, ...PHOSPHOR];
 export const FORMAS_EXTRAS_5: Record<string, Teste> = {
   ...Object.fromEntries(lista.map(([, valor, , d]) => [valor, figura(d)])),
-  "mar-tartarugas-cardume": cardumeTartarugas,
+  ...Object.fromEntries(TARTARUGUINHAS.map(([valor, , t]) => [valor, t])),
 };
 export const ROTULOS_EXTRAS_5 = [
   ...lista.map(([grupo, valor, rotulo]) => ({ valor, rotulo, grupo })),
-  { valor: "mar-tartarugas-cardume", rotulo: "Tartaruguinhas", grupo: "mar" as Categoria },
+  ...TARTARUGUINHAS.map(([valor, rotulo]) => ({ valor, rotulo, grupo: "mar" as Categoria })),
 ];
