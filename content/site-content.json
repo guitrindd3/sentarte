@@ -386,10 +386,19 @@
         {
           "id": "b212bc64-dc43-4979-af91-1d0627fc2d9b",
           "nome": "Sol e Lua",
-          "descricao": "",
-          "corA": "#15564C",
-          "corB": "#BD502E",
-          "grupo": "boho"
+          "descricao": "Cadeira sol e lua…\r\nCom nome(opcional)",
+          "corA": "#15564c",
+          "corB": "#bd502e",
+          "grupo": "boho",
+          "inclui": {
+            "nome": true,
+            "tasseis": 1,
+            "tasselLado": "esq"
+          },
+          "imagemUrl": "/catalogo/a90b9160-2c60-4f5f-8fde-f2cb6796a576.jpg",
+          "fotosExtras": [
+            "/catalogo/d177f6c7-c1fe-4825-895c-c0056e5c419a.jpg"
+          ]
         }
       ]
     },
