@@ -1185,9 +1185,11 @@ export async function salvarBoasVindasAction(_p: Resultado, formData: FormData) 
     const dias = Math.floor(Number(formData.get("dias")));
     if (!(percentual >= 1 && percentual <= 50)) throw new Aviso("O desconto tem que ser de 1% a 50%.");
     if (!(dias >= 3 && dias <= 365)) throw new Aviso("A validade tem que ser de 3 a 365 dias.");
-    await salvarConfigBoasVindas({ ligado: formData.get("ligado") === "on", percentual, dias });
+    const cupom = normalizarCodigo(String(formData.get("cupom") ?? "")) || undefined;
+    if (cupom && !(await listarCupons()).some((c) => c.codigo === cupom && !c.vale)) throw new Aviso("Esse cupom não existe mais. Recarregue a página.");
+    await salvarConfigBoasVindas({ ligado: formData.get("ligado") === "on", percentual, dias, cupom });
     revalidatePath("/admin/campanhas");
-    return "Cupom de boas-vindas salvo.";
+    return cupom ? `Salvo: a janela vai dar o cupom ${cupom}.` : "Salvo: a janela vai dar um código novo para cada pessoa.";
   });
 }
 

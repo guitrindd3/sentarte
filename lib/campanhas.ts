@@ -1,9 +1,8 @@
 import "server-only";
 import { abrirCorreio } from "./avisos";
-import type { Cupom } from "./cupom";
 import { diaBR } from "./estatisticas";
 import { montar } from "./lembretes";
-import { linkSair, listarAssinantes, type Assinante } from "./lista-email";
+import { linkSair, listarAssinantes, type Assinante, type CupomDaJanela } from "./lista-email";
 import { SITE_URL } from "./nav";
 import { redis, redisAtivo } from "./redis";
 
@@ -77,21 +76,21 @@ export function emailDaCampanha(c: Pick<Campanha, "assunto" | "texto" | "botaoTe
 }
 
 /** The e-mail with the welcome coupon (app/api/boas-vindas). */
-export function emailBoasVindas(nome: string, email: string, cupom: Cupom) {
+export function emailBoasVindas(nome: string, email: string, cupom: Pick<CupomDaJanela, "codigo" | "rotulo" | "condicao" | "validoAte">) {
   const n = primeiroNome(nome);
   const ate = cupom.validoAte ? cupom.validoAte.split("-").reverse().join("/") : "";
   return montar(
-    `${n ? `${n}, seu` : "Seu"} cupom de ${cupom.valor.toLocaleString("pt-BR")}% está aqui`,
+    `${n ? `${n}, seu` : "Seu"} cupom de ${cupom.rotulo} está aqui`,
     [
       `Oi${n ? `, ${n}` : ""}! Que bom ter você por aqui. Este é o seu cupom para a primeira compra no Ateliê SentArte:`,
     ],
-    [`Cupom ${cupom.codigo}: ${cupom.valor.toLocaleString("pt-BR")}% de desconto${ate ? `, até ${ate}` : ""}`],
+    [`Cupom ${cupom.codigo}: ${cupom.rotulo} de desconto ${cupom.condicao}${ate ? `, até ${ate}` : ""}`],
     { texto: "Escolher a minha cadeira", link: SITE_URL },
     [
       "No navegador onde você se cadastrou, o cupom já está no carrinho. Em outro celular ou computador, é só digitar o código no carrinho, em \"Tem cupom de desconto?\".",
       "Cada cadeira é trançada à mão aqui no ateliê. Se quiser ajuda para escolher modelo ou cores, é só responder este e-mail.",
     ],
-    "Vale para um pedido pago no site.",
+    "Vale para pedidos pagos no site.",
     undefined,
     linkSair(email)
   );

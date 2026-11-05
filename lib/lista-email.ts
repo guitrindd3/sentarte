@@ -1,8 +1,8 @@
 import "server-only";
 import { createHmac, randomInt, timingSafeEqual } from "crypto";
 import { naBlackFriday } from "./black-friday";
-import { configBlackFriday } from "./cupons-store";
-import type { Cupom } from "./cupom";
+import { configBlackFriday, listarCupons, motivoInvalido, type CupomComUsos } from "./cupons-store";
+import { rotuloDesconto, type Cupom } from "./cupom";
 import { diaBR } from "./estatisticas";
 import { SITE_URL } from "./nav";
 import { redis } from "./redis";
@@ -88,8 +88,11 @@ export function emailDoLinkSair(e: unknown, t: unknown): string | null {
 }
 
 // --- welcome coupon ----------------------------------------------------------------
+// The window gives either one of the atelier's own coupons (`cupom`, picked in
+// /admin/campanhas — user 2026-11-05: "já tem alguns cupons, quero que use
+// eles") or, with none picked, a fresh one-use code of `percentual` % per person.
 
-export type ConfigBoasVindas = { ligado: boolean; percentual: number; dias: number };
+export type ConfigBoasVindas = { ligado: boolean; percentual: number; dias: number; cupom?: string };
 const PADRAO: ConfigBoasVindas = { ligado: true, percentual: 5, dias: 30 };
 
 export async function lerConfigBoasVindas(): Promise<ConfigBoasVindas> {
@@ -104,13 +107,44 @@ export async function salvarConfigBoasVindas(c: ConfigBoasVindas) {
   await redis([["SET", K.config, JSON.stringify(c)]]);
 }
 
-/** Whether the window may show now: on, and not Black Friday week (typed coupons don't work then). */
-export async function janelaValendo(): Promise<ConfigBoasVindas | null> {
-  const c = await lerConfigBoasVindas();
-  if (!c.ligado || c.percentual <= 0) return null;
+const dataBR = (iso: string) => iso.split("-").reverse().join("/");
+const condicaoDe = (minCadeiras: number) => (minCadeiras > 1 ? `levando ${minCadeiras} cadeiras ou mais` : "em qualquer cadeira do site");
+
+/** What the window offers right now, in words for the customer. */
+export type Oferta = {
+  /** "10%" or "R$ 50,00" */
+  rotulo: string;
+  condicao: string;
+  /** "Vale por 30 dias." / "Vale até 31/12." / "" */
+  validade: string;
+  /** The atelier's own coupon, when one is picked. */
+  existente?: CupomComUsos;
+};
+
+export type SituacaoJanela = { cfg: ConfigBoasVindas; oferta: Oferta | null; motivo: null | "desligado" | "blackfriday" | "cupom" };
+
+/** Whether the window may show now and with what (admin page explains `motivo`). */
+export async function situacaoJanela(): Promise<SituacaoJanela> {
+  const cfg = await lerConfigBoasVindas();
+  if (!cfg.ligado) return { cfg, oferta: null, motivo: "desligado" };
+  // Black Friday week: only its discount works, typed coupons are refused
   const bf = await configBlackFriday();
-  if (bf.ligado && naBlackFriday(diaBR(), bf.inicioAntecipado)) return null;
-  return c;
+  if (bf.ligado && naBlackFriday(diaBR(), bf.inicioAntecipado)) return { cfg, oferta: null, motivo: "blackfriday" };
+  if (cfg.cupom) {
+    const c = (await listarCupons()).find((x) => x.codigo === cfg.cupom);
+    if (!c || c.vale || motivoInvalido(c)) return { cfg, oferta: null, motivo: "cupom" };
+    return {
+      cfg,
+      oferta: { rotulo: rotuloDesconto(c), condicao: condicaoDe(c.minCadeiras), validade: c.validoAte ? `Vale até ${dataBR(c.validoAte)}.` : "", existente: c },
+      motivo: null,
+    };
+  }
+  if (cfg.percentual <= 0) return { cfg, oferta: null, motivo: "desligado" };
+  return {
+    cfg,
+    oferta: { rotulo: `${cfg.percentual.toLocaleString("pt-BR")}%`, condicao: condicaoDe(1), validade: `Vale por ${cfg.dias} dias.` },
+    motivo: null,
+  };
 }
 
 const LETRAS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O, 1/I/L
@@ -122,17 +156,25 @@ function somarDias(dia: string, n: number) {
   return d.toISOString().slice(0, 10);
 }
 
+export type CupomDaJanela = { codigo: string; rotulo: string; condicao: string; validoAte?: string; novo: boolean };
+
 /**
- * The welcome coupon for this e-mail: one use, first order. The same address
- * gets the same code back (no new coupon per signup). Kept apart from the
- * admin's coupons (`boasvindas:cupons`) so the Cupons page doesn't fill up;
- * lib/cupons-store.ts `buscarCupom` looks here too.
+ * The coupon this e-mail gets. The same address gets the same code back (no
+ * new one per signup, no second welcome e-mail). A fresh one-use code is kept
+ * apart from the admin's coupons (`boasvindas:cupons`) so the Cupons page
+ * doesn't fill up; lib/cupons-store.ts `buscarCupom` looks there too.
  */
-export async function cupomDeBoasVindas(email: string, cfg: ConfigBoasVindas): Promise<Cupom & { novo: boolean }> {
+export async function cupomDaJanela(email: string, s: SituacaoJanela & { oferta: Oferta }): Promise<CupomDaJanela> {
+  const { cfg, oferta } = s;
   const [ja] = (await redis([["HGET", K.porEmail, email]])) as (string | null)[];
-  if (ja) {
+  if (ja && ja === oferta.existente?.codigo) return { codigo: ja, rotulo: oferta.rotulo, condicao: oferta.condicao, validoAte: oferta.existente.validoAte, novo: false };
+  if (ja && !oferta.existente) {
     const c = await lerCupomDeBoasVindas(ja);
-    if (c) return { ...c, novo: false };
+    if (c) return { codigo: c.codigo, rotulo: rotuloDesconto(c), condicao: condicaoDe(c.minCadeiras), validoAte: c.validoAte, novo: false };
+  }
+  if (oferta.existente) {
+    await redis([["HSET", K.porEmail, email, oferta.existente.codigo]]);
+    return { codigo: oferta.existente.codigo, rotulo: oferta.rotulo, condicao: oferta.condicao, validoAte: oferta.existente.validoAte, novo: true };
   }
   for (let tentativa = 0; tentativa < 5; tentativa++) {
     const codigo = novoCodigo();
@@ -151,10 +193,10 @@ export async function cupomDeBoasVindas(email: string, cfg: ConfigBoasVindas): P
     const [ok] = await redis([["HSETNX", K.cupons, codigo, JSON.stringify(c)]]);
     if (Number(ok) === 1) {
       await redis([["HSET", K.porEmail, email, codigo]]);
-      return { ...c, novo: true };
+      return { codigo, rotulo: rotuloDesconto(c), condicao: condicaoDe(1), validoAte: c.validoAte, novo: true };
     }
   }
-  throw new Error("cupomDeBoasVindas: sem código livre");
+  throw new Error("cupomDaJanela: sem código livre");
 }
 
 export async function lerCupomDeBoasVindas(codigo: string): Promise<Cupom | null> {
@@ -166,10 +208,10 @@ export async function lerCupomDeBoasVindas(codigo: string): Promise<Cupom | null
   }
 }
 
-/** Admin numbers: how many welcome coupons were given and how many became paid orders. */
+/** Admin numbers: people who took the window's coupon, and how many one-use codes became paid orders. */
 export async function numerosBoasVindas() {
-  const [codigos] = (await redis([["HKEYS", K.cupons]])) as string[][];
-  if (!codigos?.length) return { dados: 0, usados: 0 };
+  const [pessoas, codigos] = (await redis([["HLEN", K.porEmail], ["HKEYS", K.cupons]])) as [number, string[]];
+  if (!codigos?.length) return { pessoas: Number(pessoas) || 0, usados: 0 };
   const [usos] = (await redis([["HMGET", K.usos, ...codigos]])) as (string | null)[][];
-  return { dados: codigos.length, usados: (usos ?? []).filter((u) => Number(u) > 0).length };
+  return { pessoas: Number(pessoas) || 0, usados: (usos ?? []).filter((u) => Number(u) > 0).length };
 }

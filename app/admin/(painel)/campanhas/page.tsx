@@ -1,9 +1,10 @@
 import { estadoAvisos } from "@/lib/avisos";
 import { enviadosHoje, LIMITE_DIA, listarCampanhas, type Campanha } from "@/lib/campanhas";
-import { lerConfigBoasVindas, listarAssinantes, numerosBoasVindas, type Assinante } from "@/lib/lista-email";
+import { listarAssinantes, numerosBoasVindas, situacaoJanela, type Assinante } from "@/lib/lista-email";
+import { rotuloDesconto } from "@/lib/cupom";
 import { redisAtivo } from "@/lib/redis";
 import { hojeBR, naBlackFriday } from "@/lib/black-friday";
-import { configBlackFriday } from "@/lib/cupons-store";
+import { configBlackFriday, listarCupons, motivoInvalido } from "@/lib/cupons-store";
 import { mandarCampanhaAction, removerAssinanteAction, salvarBoasVindasAction } from "../../actions";
 import { AdminForm, BotaoExcluir, Card, Field, inputClass, SaveButton } from "../../_ui";
 
@@ -42,15 +43,25 @@ export default async function Campanhas() {
   if (!redisAtivo()) {
     return <Card titulo="Campanhas"><p className="text-sm text-ink-soft">O banco do painel não está ligado.</p></Card>;
   }
-  const [cfg, numeros, lista, campanhas, hoje, avisos, bf] = await Promise.all([
-    lerConfigBoasVindas(),
+  const [situacao, numeros, lista, campanhas, hoje, avisos, bf, todosCupons] = await Promise.all([
+    situacaoJanela(),
     numerosBoasVindas(),
     listarAssinantes(),
     listarCampanhas(),
     enviadosHoje(),
     estadoAvisos(),
     configBlackFriday(),
+    listarCupons(),
   ]);
+  const cfg = situacao.cfg;
+  // the atelier's own coupons the window can give (vales-presente are payments, not offers)
+  const cupons = todosCupons.filter((c) => !c.vale);
+  const escolhido = cupons.find((c) => c.codigo === cfg.cupom);
+  const motivoEscolhido = escolhido ? motivoInvalido(escolhido) : cfg.cupom ? "apagado" : null;
+  // with no coupon picked: an automatic one for any order that is as big makes the window pointless
+  const automaticoMaior = !cfg.cupom
+    ? cupons.find((c) => c.automatico && !motivoInvalido(c) && c.minCadeiras <= 1 && c.tipo === "percentual" && c.valor >= cfg.percentual)
+    : undefined;
   const n = lista.length;
   // Black Friday week: typed coupons don't work, so the window waits (lib/lista-email.ts janelaValendo)
   const semanaBf = bf.ligado ? naBlackFriday(hojeBR(), bf.inicioAntecipado) : null;
@@ -66,10 +77,12 @@ export default async function Campanhas() {
 
       <Card
         titulo="Cupom para quem vai sair do site"
-        descricao="Quando a pessoa vai embora sem comprar, aparece uma janela uma vez só: ela deixa o e-mail e ganha um cupom para a primeira compra, que já entra no carrinho. Cada cupom vale um uso."
+        descricao="Quando a pessoa vai embora sem comprar, aparece uma janela uma vez só: ela deixa o e-mail e ganha o cupom, que já entra no carrinho."
         acao={
-          cfg.ligado && semanaBf ? (
+          situacao.motivo === "blackfriday" ? (
             <span className="rounded-full bg-rattan/20 px-3 py-1 text-xs font-semibold text-wood-dark">Pausado na Black Friday</span>
+          ) : situacao.motivo === "cupom" ? (
+            <span className="rounded-full bg-clay/15 px-3 py-1 text-xs font-semibold text-clay-dark">Pausado: cupom</span>
           ) : cfg.ligado ? (
             <span className="rounded-full bg-verde px-3 py-1 text-xs font-semibold text-paper">Ligado</span>
           ) : (
@@ -77,7 +90,7 @@ export default async function Campanhas() {
           )
         }
       >
-        {cfg.ligado && semanaBf ? (
+        {situacao.motivo === "blackfriday" && semanaBf ? (
           <p className="mb-4 rounded-xl bg-rattan/15 px-4 py-3 text-sm text-wood-dark">
             A Black Friday está valendo até {semanaBf.fim.split("-").reverse().join("/")} e, enquanto ela vale, nenhum outro cupom funciona. Por isso a janela
             fica escondida e volta sozinha no dia seguinte.
@@ -91,21 +104,59 @@ export default async function Campanhas() {
               pessoa volta rápido para o topo ou depois de 1 minuto no site. Não aparece na semana da Black Friday.
             </span>
           </label>
+          <Field label="Qual cupom a janela dá" dica="Um dos seus cupons (de Cupons), ou um código novo, de um uso só, para cada pessoa.">
+            <select name="cupom" defaultValue={cfg.cupom ?? ""} className={inputClass}>
+              <option value="">Um código novo para cada pessoa (desconto abaixo)</option>
+              {cupons.map((c) => {
+                const m = motivoInvalido(c);
+                return (
+                  <option key={c.codigo} value={c.codigo}>
+                    {c.codigo}: {rotuloDesconto(c)}
+                    {c.minCadeiras > 1 ? `, a partir de ${c.minCadeiras} cadeiras` : ""}
+                    {c.automatico ? " (entra sozinho)" : ""}
+                    {m ? ` (${m})` : ""}
+                  </option>
+                );
+              })}
+            </select>
+          </Field>
+          {escolhido?.automatico ? (
+            <p className="rounded-xl bg-rattan/15 px-4 py-3 text-sm text-wood-dark">
+              O {escolhido.codigo} está marcado para <strong>entrar sozinho</strong> no carrinho de todo mundo, então a pessoa ganharia esse desconto mesmo sem deixar o
+              e-mail. Para ele ser um presente só de quem se cadastra, abra Cupons → {escolhido.codigo} → Editar e desmarque &ldquo;Entrar sozinho no carrinho&rdquo;.
+            </p>
+          ) : null}
+          {motivoEscolhido ? (
+            <p className="rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay-dark">
+              O cupom {cfg.cupom} está {motivoEscolhido}. Enquanto isso a janela fica escondida: escolha outro ou arrume ele em Cupons.
+            </p>
+          ) : null}
+          {escolhido?.limiteUsos && !motivoEscolhido ? (
+            <p className="text-sm text-ink-soft">
+              O {escolhido.codigo} vale {escolhido.limiteUsos} usos no total (já foram {escolhido.usos}). Quando acabar, a janela some sozinha.
+            </p>
+          ) : null}
+          {automaticoMaior ? (
+            <p className="rounded-xl bg-rattan/15 px-4 py-3 text-sm text-wood-dark">
+              O cupom {automaticoMaior.codigo} ({rotuloDesconto(automaticoMaior)}) já entra sozinho para todo mundo e é igual ou maior que {cfg.percentual}%, e o carrinho
+              sempre usa o maior desconto. Assim a janela não dá vantagem nenhuma: escolha um cupom maior aqui em cima ou aumente o desconto.
+            </p>
+          ) : null}
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Desconto (%)">
+            <Field label="Desconto do código novo (%)">
               <input name="percentual" inputMode="decimal" required defaultValue={cfg.percentual} className={inputClass} />
             </Field>
-            <Field label="Vale por quantos dias">
+            <Field label="Código novo vale por quantos dias">
               <input name="dias" type="number" min={3} max={365} required defaultValue={cfg.dias} className={inputClass} />
             </Field>
           </div>
           <SaveButton>Salvar</SaveButton>
         </AdminForm>
         <p className="mt-4 text-sm text-ink-soft">
-          {numeros.dados
-            ? `${numeros.dados} ${numeros.dados === 1 ? "cupom dado" : "cupons dados"} até agora, ${numeros.usados} ${numeros.usados === 1 ? "virou compra paga" : "viraram compra paga"}.`
-            : "Nenhum cupom dado ainda."}{" "}
-          Se tiver outro cupom no carrinho (como o de 2 cadeiras), vale o que der mais desconto.
+          {numeros.pessoas
+            ? `${numeros.pessoas} ${numeros.pessoas === 1 ? "pessoa pegou" : "pessoas pegaram"} o cupom da janela até agora.${numeros.usados ? ` ${numeros.usados} ${numeros.usados === 1 ? "código novo virou compra paga" : "códigos novos viraram compra paga"}.` : ""}`
+            : "Ninguém pegou o cupom ainda."}{" "}
+          Se tiver outro cupom no carrinho, vale o que der mais desconto.
         </p>
       </Card>
 
