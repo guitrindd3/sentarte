@@ -109,7 +109,7 @@ export default async function Avisos() {
         titulo="E-mails automáticos para o cliente"
         descricao="Saem sozinhos do mesmo Gmail do aviso de venda. Se o cliente responder, a resposta chega no seu Gmail."
         acao={
-          estado.email && (lembretes.pagar || lembretes.avaliar) ? (
+          estado.email && (lembretes.pagar || lembretes.avaliar || lembretes.etapas) ? (
             <span className="rounded-full bg-verde px-3 py-1 text-xs font-semibold text-paper">Ligado</span>
           ) : (
             <span className="rounded-full bg-canvas-deep px-3 py-1 text-xs font-semibold text-ink">Desligado</span>
@@ -127,6 +127,13 @@ export default async function Avisos() {
             <span className="text-sm text-ink">
               <strong className="font-semibold">Lembrete de pagamento.</strong> Quem preencheu os dados e não pagou recebe um lembrete depois de umas 1 hora e outro depois de
               24 horas, com um botão que coloca a mesma cadeira de volta no carrinho. Se a pessoa pagar, os lembretes param.
+            </span>
+          </label>
+          <label className="flex items-start gap-3">
+            <input name="etapas" type="checkbox" defaultChecked={lembretes.etapas} className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--wood)]" />
+            <span className="text-sm text-ink">
+              <strong className="font-semibold">Etapas do pedido.</strong> O cliente recebe um e-mail quando o pagamento é confirmado, quando você marca
+              &ldquo;Enviado&rdquo; (com o código de rastreio, se já tiver) e quando marca &ldquo;Entregue&rdquo;. Se o código sair depois, ele recebe outro só com o código.
             </span>
           </label>
           <label className="flex items-start gap-3">

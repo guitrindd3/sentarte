@@ -120,12 +120,16 @@ export default async function Clientes() {
                   <p className="mt-2 text-sm text-ink-soft">
                     {formatBRL(p.valor)} {noPagamento(p.forma)}
                   </p>
-                  {p.lembretes && (p.lembretes.pagar1 || p.lembretes.pagar2 || p.lembretes.avaliar) ? (
+                  {p.lembretes && (p.lembretes.pagar1 || p.lembretes.pagar2 || p.lembretes.avaliar || p.lembretes.confirmado || p.lembretes.enviado || p.lembretes.entregue) ? (
                     <p className="mt-1 text-xs text-ink-soft">
                       E-mail automático:{" "}
                       {[
                         p.lembretes.pagar1 ? `lembrete de 1 hora (${quando(p.lembretes.pagar1)})` : "",
                         p.lembretes.pagar2 ? `lembrete de 24 horas (${quando(p.lembretes.pagar2)})` : "",
+                        p.lembretes.confirmado ? `pedido confirmado (${quando(p.lembretes.confirmado)})` : "",
+                        p.lembretes.enviado ? `enviado (${quando(p.lembretes.enviado)})` : "",
+                        p.lembretes.rastreio ? `código de rastreio (${quando(p.lembretes.rastreio)})` : "",
+                        p.lembretes.entregue ? `entregue (${quando(p.lembretes.entregue)})` : "",
                         p.lembretes.avaliar ? `pedido de avaliação (${quando(p.lembretes.avaliar)})` : "",
                       ]
                         .filter(Boolean)

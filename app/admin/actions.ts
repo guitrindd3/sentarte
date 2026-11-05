@@ -17,7 +17,8 @@ import { editarInteressado, excluirInteressado, excluirPedido, normalizarWhatsap
 import { excluirOrcamento, gravarOrcamento, lerOrcamento, type StatusOrcamento } from "@/lib/orcamentos";
 import { formatBRL } from "@/lib/offer";
 import { desligarGmail, desligarNtfy, estadoAvisos, ligarNtfy, mandarEmailAoCliente, salvarGmail, testarAvisos } from "@/lib/avisos";
-import { exemploDeLembrete, salvarConfigLembretes } from "@/lib/lembretes";
+import { after } from "next/server";
+import { avisarEtapaAgora, exemploDeLembrete, salvarConfigLembretes } from "@/lib/lembretes";
 import {
   atualizarEnvios,
   colocarNoCarrinho,
@@ -768,6 +769,7 @@ export async function definirEtapaAction(ref: string, etapa: EtapaPedido) {
     p.etapa = etapa;
     p.etapaEm = { ...p.etapaEm, [etapa]: p.etapaEm?.[etapa] ?? Date.now() };
     await gravarPedido(p);
+    after(() => avisarEtapaAgora(ref));
     revalidatePath(`/admin/clientes/${ref}`);
     return etapa === "producao" ? "Marcado como em produção." : etapa === "enviado" ? "Marcado como enviado." : "Marcado como entregue.";
   });
@@ -808,6 +810,7 @@ export async function salvarRastreioAction(ref: string, _p: Resultado, formData:
       p.etapaEm = { ...p.etapaEm, enviado: Date.now() };
     }
     await gravarPedido(p);
+    after(() => avisarEtapaAgora(ref));
     revalidatePath(`/admin/clientes/${ref}`);
     return p.rastreio ? "Rastreio salvo. O cliente já vê na página do pedido." : "Rastreio apagado.";
   });
@@ -848,6 +851,7 @@ export async function pagarEnvioAction(ref: string) {
     const codigos = p.envios.map((e) => e.rastreio).filter(Boolean);
     if (codigos.length) p.rastreio = codigos.join(", ");
     await gravarPedido(p);
+    after(() => avisarEtapaAgora(ref));
     revalidatePath(`/admin/clientes/${ref}`);
     return "Etiqueta paga e gerada! Imprima e cole no pacote.";
   });
@@ -869,6 +873,7 @@ export async function atualizarEnvioAction(ref: string) {
       p.etapaEm = { ...p.etapaEm, enviado: Date.now() };
     }
     await gravarPedido(p);
+    after(() => avisarEtapaAgora(ref));
     revalidatePath(`/admin/clientes/${ref}`);
     return codigos.length ? "Envio atualizado." : "Atualizado. O código de rastreio ainda não saiu.";
   });
@@ -938,20 +943,20 @@ export async function testarAvisosAction() {
 
 export async function salvarLembretesAction(_p: Resultado, formData: FormData) {
   return executar(async () => {
-    await salvarConfigLembretes({ pagar: formData.get("pagar") === "on", avaliar: formData.get("avaliar") === "on" });
+    await salvarConfigLembretes({ pagar: formData.get("pagar") === "on", avaliar: formData.get("avaliar") === "on", etapas: formData.get("etapas") === "on" });
     revalidatePath("/admin/avisos");
     return "E-mails automáticos salvos.";
   });
 }
 
-/** Sends the three customer e-mails, filled with a made-up order, to the atelier's own Gmail. */
+/** Sends the customer e-mails, filled with a made-up order, to the atelier's own Gmail. */
 export async function exemploLembretesAction() {
   return executar(async () => {
     const { email } = await estadoAvisos();
     if (!email) throw new Aviso("Ligue o aviso por e-mail (Gmail) primeiro: os e-mails saem dele.");
     const { site } = await getContent();
     try {
-      for (const tipo of ["pagar1", "pagar2", "avaliar"] as const) {
+      for (const tipo of ["pagar1", "pagar2", "confirmado", "enviado", "entregue", "avaliar"] as const) {
         const m = exemploDeLembrete(tipo, site);
         await mandarEmailAoCliente(email, `[Exemplo] ${m.assunto}`, m.texto, m.html);
       }
@@ -959,7 +964,7 @@ export async function exemploLembretesAction() {
       console.error("exemplo lembretes", err);
       throw new Aviso("Não deu para mandar pelo Gmail. Confira a senha de app.");
     }
-    return `Mandamos os 3 e-mails de exemplo para ${email}.`;
+    return `Mandamos os 6 e-mails de exemplo para ${email}.`;
   });
 }
 

@@ -65,7 +65,17 @@ export type PedidoCliente = {
   /** The coupon code the customer typed, to put it back too. */
   cupomDigitado?: string;
   /** Automatic e-mails already sent to the customer (lib/lembretes.ts): when. */
-  lembretes?: { pagar1?: number; pagar2?: number; avaliar?: number };
+  lembretes?: {
+    pagar1?: number;
+    pagar2?: number;
+    avaliar?: number;
+    confirmado?: number;
+    enviado?: number;
+    rastreio?: number;
+    entregue?: number;
+    /** The tracking code already mailed (cleaned), so a new one gets its own e-mail. */
+    rastreioAvisado?: string;
+  };
 };
 
 /** A cart line as kept on the order — same shape as lib/cart-context CartItem. */
@@ -154,6 +164,8 @@ export async function marcarPedido(ref: string, status: StatusPedido): Promise<P
         await usarVagas(cadeiras);
         if (p.vid) await anotarNoCaminho(p.vid, { k: "p", x: p.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) });
         await avisarVenda(p).catch((err) => console.error("avisarVenda", err));
+        // "Pedido confirmado" to the customer (lazy import: lib/lembretes.ts imports this file)
+        await import("./lembretes").then((m) => m.avisarEtapaAgora(ref)).catch((err) => console.error("avisarEtapa", err));
       }
     }
     return p;

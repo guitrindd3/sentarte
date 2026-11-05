@@ -1,10 +1,11 @@
 import "server-only";
 import { mandarEmailAoCliente } from "./avisos";
-import { atualizarComMercadoPago, gravarPedido, pedidosRecentes, type PedidoCliente } from "./clientes";
+import { atualizarComMercadoPago, gravarPedido, lerPedido, pedidosRecentes, type PedidoCliente } from "./clientes";
 import { getContent } from "./content-store";
 import { SITE_URL } from "./nav";
-import { formatBRL } from "./offer";
+import { formatBRL, PRAZO_PRODUCAO_DIAS_UTEIS } from "./offer";
 import { noPagamento } from "./pedido";
+import { linkRastreio } from "./rastreio";
 import { redis, redisAtivo } from "./redis";
 import { whatsappUrl } from "./urls";
 
@@ -24,6 +25,14 @@ import { whatsappUrl } from "./urls";
 // a daily Vercel cron and the site's own visits (/api/e, at most every
 // 10 min) call `talvezRodarLembretes()`. So "1 hora" means "the first visit
 // after 1 hour" — fine for a small shop, and no paid scheduler needed.
+//
+// Order-step e-mails (2026-11-05, item 2 of the same list): confirmado (paid →
+// in production), enviado (with the tracking code when there is one), rastreio
+// (the code came out after "enviado" was already mailed) and entregue. These go
+// right away: the admin actions and marcarPedido call `avisarEtapaAgora(ref)`;
+// the timed job above only retries what failed. Only the order's current step
+// is mailed (marking "entregue" straight away skips "enviado"), only within 3
+// days of the step, and never for steps before ETAPAS_DESDE (older orders).
 
 const H = 3600_000;
 const DIA = 24 * H;
@@ -32,16 +41,18 @@ const K_VEZ = "lembretes:vez";
 const K_ULTIMA = "lembretes:ultima";
 const kFeito = (ref: string, tipo: string) => `pedido:${ref}:lembrete:${tipo}`;
 const MAX_POR_RODADA = 10;
+/** Steps before this (the feature's launch) never get an e-mail. */
+const ETAPAS_DESDE = Date.UTC(2026, 10, 5, 14, 0);
 
-export type ConfigLembretes = { pagar: boolean; avaliar: boolean };
+export type ConfigLembretes = { pagar: boolean; avaliar: boolean; etapas: boolean };
 export type UltimaRodada = { em: number; enviados: number };
 
 export async function lerConfigLembretes(): Promise<ConfigLembretes> {
   const [bruto] = (await redis([["GET", K_CONFIG]])) as (string | null)[];
   try {
-    if (bruto) return { pagar: true, avaliar: true, ...(JSON.parse(bruto) as Partial<ConfigLembretes>) };
+    if (bruto) return { pagar: true, avaliar: true, etapas: true, ...(JSON.parse(bruto) as Partial<ConfigLembretes>) };
   } catch {}
-  return { pagar: true, avaliar: true };
+  return { pagar: true, avaliar: true, etapas: true };
 }
 
 export async function salvarConfigLembretes(c: ConfigLembretes) {
@@ -57,7 +68,8 @@ export async function ultimaRodada(): Promise<UltimaRodada | null> {
   }
 }
 
-type Tipo = "pagar1" | "pagar2" | "avaliar";
+export type EtapaEmail = "confirmado" | "enviado" | "rastreio" | "entregue";
+export type Tipo = "pagar1" | "pagar2" | "avaliar" | EtapaEmail;
 
 const cadeirasDo = (p: PedidoCliente) => (p.porTipo ? p.porTipo.normal + p.porTipo.infantil + p.porTipo.reclinavel : 0);
 const emailDo = (p: PedidoCliente) => {
@@ -68,7 +80,10 @@ const primeiroNome = (n: string) => n.trim().split(/\s+/)[0] ?? "";
 
 /** Which reminder (if any) this order is due for now. */
 export function lembreteDevido(p: PedidoCliente, todos: PedidoCliente[], cfg: ConfigLembretes, agora = Date.now()): Tipo | null {
-  if (!emailDo(p) || p.origem === "painel") return null;
+  if (!emailDo(p)) return null;
+  const etapa = cfg.etapas ? etapaDevida(p, agora) : null;
+  if (etapa) return etapa;
+  if (p.origem === "painel") return null;
   const l = p.lembretes ?? {};
   if (p.status !== "pago") {
     if (!cfg.pagar) return null;
@@ -89,6 +104,66 @@ export function lembreteDevido(p: PedidoCliente, todos: PedidoCliente[], cfg: Co
   return null;
 }
 
+const codigoLimpo = (c: string) => c.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 60);
+
+/** The order-step e-mail this order is due for now (only its current step). */
+export function etapaDevida(p: PedidoCliente, agora = Date.now()): EtapaEmail | null {
+  if (p.status !== "pago" || !emailDo(p) || cadeirasDo(p) === 0) return null;
+  const l = p.lembretes ?? {};
+  const recente = (t?: number, dias = 3) => !!t && t >= ETAPAS_DESDE && agora - t < dias * DIA;
+  const etapa = p.etapa ?? "producao";
+  if (etapa === "entregue") return !l.entregue && recente(p.etapaEm?.entregue) ? "entregue" : null;
+  if (etapa === "enviado") {
+    const quando = p.etapaEm?.enviado;
+    if (!l.enviado) return recente(quando) ? "enviado" : null;
+    const novo = !!p.rastreio && codigoLimpo(p.rastreio) !== (l.rastreioAvisado ?? "");
+    return novo && recente(quando, 10) ? "rastreio" : null;
+  }
+  // a sale typed in the admin was agreed on WhatsApp: no "payment received" e-mail
+  return !l.confirmado && p.origem !== "painel" && recente(p.pagoEm) ? "confirmado" : null;
+}
+
+/** Called right after the step changes (payment, admin buttons): mails it now. Never throws. */
+export async function avisarEtapaAgora(ref: string) {
+  if (!redisAtivo()) return;
+  try {
+    const p = await lerPedido(ref);
+    if (!p) return;
+    const cfg = await lerConfigLembretes();
+    const tipo = cfg.etapas ? etapaDevida(p) : null;
+    if (!tipo) return;
+    const { site } = await getContent();
+    await enviar(p, tipo, site);
+  } catch (err) {
+    console.error("avisarEtapaAgora", ref, err);
+  }
+}
+
+/** Sends one e-mail, at most once per order (Redis guard). */
+async function enviar(p: PedidoCliente, tipo: Tipo, site: Site): Promise<"ok" | "ja" | "sem-gmail" | "erro"> {
+  const chave = kFeito(p.ref, tipo === "rastreio" ? `rastreio:${codigoLimpo(p.rastreio ?? "")}` : tipo);
+  const [livre] = await redis([["SET", chave, 1, "NX", "EX", 90 * 24 * 3600]]);
+  if (livre !== "OK") return "ja";
+  try {
+    const m = mensagem(tipo, p, site);
+    if (!(await mandarEmailAoCliente(emailDo(p)!, m.assunto, m.texto, m.html))) {
+      await redis([["DEL", chave]]);
+      return "sem-gmail";
+    }
+    // re-read, so a change made meanwhile in the admin isn't overwritten
+    const atual = (await lerPedido(p.ref)) ?? p;
+    atual.lembretes = { ...atual.lembretes, [tipo]: Date.now() };
+    if ((tipo === "enviado" || tipo === "rastreio") && p.rastreio) atual.lembretes.rastreioAvisado = codigoLimpo(p.rastreio);
+    p.lembretes = atual.lembretes;
+    await gravarPedido(atual);
+    return "ok";
+  } catch (err) {
+    console.error("lembrete", tipo, p.ref, err);
+    await redis([["DEL", chave]]); // try again next round
+    return "erro";
+  }
+}
+
 /** Runs if nobody ran it in the last 10 minutes (cheap to call often). */
 let ultimaTentativa = 0;
 export async function talvezRodarLembretes() {
@@ -106,7 +181,7 @@ export async function talvezRodarLembretes() {
 export async function rodarLembretes(): Promise<number> {
   const cfg = await lerConfigLembretes();
   let enviados = 0;
-  if (cfg.pagar || cfg.avaliar) {
+  if (cfg.pagar || cfg.avaliar || cfg.etapas) {
     const todos = await pedidosRecentes(200);
     let devidos = todos.filter((p) => lembreteDevido(p, todos, cfg));
     // a payment may have gone through without the customer coming back: ask Mercado Pago first
@@ -117,21 +192,9 @@ export async function rodarLembretes(): Promise<number> {
       for (const p of devidos.slice(0, MAX_POR_RODADA)) {
         const tipo = lembreteDevido(p, todos, cfg);
         if (!tipo) continue;
-        const [livre] = await redis([["SET", kFeito(p.ref, tipo), 1, "NX", "EX", 90 * 24 * 3600]]);
-        if (livre !== "OK") continue;
-        try {
-          const m = mensagem(tipo, p, site);
-          if (!(await mandarEmailAoCliente(emailDo(p)!, m.assunto, m.texto, m.html))) {
-            await redis([["DEL", kFeito(p.ref, tipo)]]);
-            break; // no Gmail set up
-          }
-          p.lembretes = { ...p.lembretes, [tipo]: Date.now() };
-          await gravarPedido(p);
-          enviados++;
-        } catch (err) {
-          console.error("lembrete", tipo, p.ref, err);
-          await redis([["DEL", kFeito(p.ref, tipo)]]); // try again next round
-        }
+        const r = await enviar(p, tipo, site);
+        if (r === "sem-gmail") break;
+        if (r === "ok") enviados++;
       }
     }
   }
@@ -147,6 +210,7 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 
 function mensagem(tipo: Tipo, p: PedidoCliente, site: Site) {
   const nome = primeiroNome(p.nome);
+  if (tipo === "confirmado" || tipo === "enviado" || tipo === "rastreio" || tipo === "entregue") return mensagemEtapa(tipo, p, site, nome);
   const zap = whatsappUrl(site.whatsappNumero, tipo === "avaliar" ? "Oi! Recebi a minha cadeira e queria falar com vocês." : "Oi! Comecei um pedido no site e fiquei com uma dúvida.");
   if (tipo === "avaliar") {
     const link = `${SITE_URL}/acompanhar/${p.ref}#avaliar`;
@@ -178,12 +242,62 @@ function mensagem(tipo: Tipo, p: PedidoCliente, site: Site) {
   );
 }
 
+function mensagemEtapa(tipo: EtapaEmail, p: PedidoCliente, site: Site, nome: string) {
+  const acompanhar = `${SITE_URL}/acompanhar/${p.ref}`;
+  const zap = whatsappUrl(site.whatsappNumero, "Oi! Tenho uma dúvida sobre o meu pedido.");
+  const duvida = `Qualquer dúvida, é só responder este e-mail ou chamar a gente no WhatsApp: ${zap}`;
+  const codigo = p.rastreio?.trim();
+  const pela = p.transportadora ? ` pela ${p.transportadora}` : "";
+  if (tipo === "confirmado") {
+    return montar(
+      `Pedido confirmado, ${nome}! Sua cadeira vai começar a ser feita`,
+      [
+        `Oi, ${nome}! Recebemos o seu pagamento. Muito obrigado por escolher a SentArte!`,
+        `Agora a sua cadeira entra na produção do ateliê. Ela é trançada à mão e fica pronta em até ${PRAZO_PRODUCAO_DIAS_UTEIS} dias úteis. Quando sair daqui, você recebe outro e-mail com o código de rastreio.`,
+      ],
+      [...p.itens.map((i) => i.replace(/ — desenho: \S+$/, "")), `Total: ${formatBRL(p.valor)} ${noPagamento(p.forma)}`],
+      { texto: "Acompanhar meu pedido", link: acompanhar },
+      ["Na página do pedido você vê cada etapa e as fotos da sua cadeira sendo feita, quando a gente postar.", duvida],
+      "Um abraço do Ateliê SentArte."
+    );
+  }
+  if (tipo === "enviado" || tipo === "rastreio") {
+    const primeiro = tipo === "enviado";
+    return montar(
+      primeiro ? `Sua cadeira saiu do ateliê, ${nome}!` : `Saiu o código de rastreio da sua cadeira, ${nome}`,
+      primeiro
+        ? [
+            `Oi, ${nome}! A sua cadeira ficou pronta e já foi enviada${pela}.`,
+            codigo
+              ? "Este é o código para acompanhar a entrega:"
+              : "Assim que a transportadora liberar o código de rastreio, a gente te manda por aqui. Ele também aparece na página do pedido.",
+          ]
+        : [`Oi, ${nome}! A transportadora liberou o código para acompanhar a entrega da sua cadeira:`],
+      codigo ? [`Código de rastreio: ${codigo}`] : [],
+      codigo ? { texto: "Ver onde está a minha cadeira", link: linkRastreio(codigo.split(",")[0]) } : { texto: "Acompanhar meu pedido", link: acompanhar },
+      [codigo ? `Também dá para ver tudo na página do pedido: ${acompanhar}` : "", duvida].filter(Boolean),
+      codigo ? "O rastreio pode levar até 1 dia útil para mostrar o primeiro movimento. Um abraço do Ateliê SentArte." : "Um abraço do Ateliê SentArte."
+    );
+  }
+  return montar(
+    `Sua cadeira chegou, ${nome}!`,
+    [
+      `Oi, ${nome}! A sua cadeira foi entregue. Esperamos que você ame cada detalhe, ela foi feita com muito carinho aqui no ateliê.`,
+      "Se alguma coisa não chegou do jeito que você esperava, responda este e-mail que a gente resolve.",
+    ],
+    [],
+    { texto: "Ver meu pedido", link: acompanhar },
+    [duvida],
+    "Obrigado pela confiança. Um abraço do Ateliê SentArte."
+  );
+}
+
 function montar(assunto: string, paragrafos: string[], itens: string[], botao: { texto: string; link: string }, depois: string[], rodape: string, googleUrl?: string) {
   const texto = [...paragrafos, "", ...itens.map((i) => `- ${i}`), "", `${botao.texto}: ${botao.link}`, "", ...depois, "", rodape, "", "Ateliê SentArte", SITE_URL]
     .filter((l, i, a) => l !== "" || a[i - 1] !== "")
     .join("\n");
   const linkar = (s: string) => esc(s).replace(/(https:\/\/[^\s<]+)/g, (u) => {
-    const rotulo = u.includes("wa.me") ? "WhatsApp" : googleUrl && u === esc(googleUrl) ? "avaliar no Google" : u;
+    const rotulo = u.includes("wa.me") ? "WhatsApp" : u.includes("/acompanhar/") ? "abrir a página do pedido" : googleUrl && u === esc(googleUrl) ? "avaliar no Google" : u;
     return `<a href="${u}" style="color:#177a42">${rotulo}</a>`;
   });
   const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#faf7f2;font-family:Georgia,'Times New Roman',serif;color:#241f1a">
@@ -216,6 +330,8 @@ export function exemploDeLembrete(tipo: Tipo, site: Site) {
     itens: ["1x Cadeira Sol e Lua"],
     valor: 389.9,
     status: "aguardando",
+    transportadora: "Jadlog",
+    rastreio: "AB123456789BR",
   };
   return mensagem(tipo, p, site);
 }
