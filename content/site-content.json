@@ -368,22 +368,6 @@
           ]
         },
         {
-          "id": "f50d06c6-43d3-4514-9ef0-ea0691e3a8a8",
-          "nome": "Polvo Azul",
-          "descricao": "Polvo azul - com tarssel ",
-          "corA": "#15564c",
-          "corB": "#bd502e",
-          "grupo": "desenhos",
-          "inclui": {
-            "tasseis": 1,
-            "tasselLado": "dir"
-          },
-          "imagemUrl": "/catalogo/8703e1c9-bf5c-486d-95b1-74ad7e1ff168.jpg",
-          "fotosExtras": [
-            "/catalogo/8cbb334c-206b-4526-af83-9ac6ebac5436.jpg"
-          ]
-        },
-        {
           "id": "b212bc64-dc43-4979-af91-1d0627fc2d9b",
           "nome": "Sol e Lua",
           "descricao": "Cadeira sol e lua…\r\nCom nome(opcional)",
@@ -398,6 +382,22 @@
           "imagemUrl": "/catalogo/a90b9160-2c60-4f5f-8fde-f2cb6796a576.jpg",
           "fotosExtras": [
             "/catalogo/d177f6c7-c1fe-4825-895c-c0056e5c419a.jpg"
+          ]
+        },
+        {
+          "id": "f50d06c6-43d3-4514-9ef0-ea0691e3a8a8",
+          "nome": "Polvo Azul",
+          "descricao": "Polvo azul - com tarssel ",
+          "corA": "#15564c",
+          "corB": "#bd502e",
+          "grupo": "desenhos",
+          "inclui": {
+            "tasseis": 1,
+            "tasselLado": "dir"
+          },
+          "imagemUrl": "/catalogo/8703e1c9-bf5c-486d-95b1-74ad7e1ff168.jpg",
+          "fotosExtras": [
+            "/catalogo/8cbb334c-206b-4526-af83-9ac6ebac5436.jpg"
           ]
         }
       ]
