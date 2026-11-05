@@ -382,6 +382,14 @@
           "fotosExtras": [
             "/catalogo/8cbb334c-206b-4526-af83-9ac6ebac5436.jpg"
           ]
+        },
+        {
+          "id": "b212bc64-dc43-4979-af91-1d0627fc2d9b",
+          "nome": "Sol e Lua",
+          "descricao": "",
+          "corA": "#15564C",
+          "corB": "#BD502E",
+          "grupo": "boho"
         }
       ]
     },
