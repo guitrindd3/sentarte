@@ -89,6 +89,29 @@ export async function mandarEmailAoCliente(para: string, assunto: string, texto:
   return true;
 }
 
+export type CorreioAberto = {
+  email: string;
+  enviar: (para: string, assunto: string, texto: string, html: string, cabecalhos?: Record<string, string>) => Promise<void>;
+  fechar: () => void;
+};
+
+/**
+ * One Gmail connection reused for many e-mails (campaigns, lib/campanhas.ts),
+ * instead of logging in once per e-mail. null when the Gmail isn't set up.
+ */
+export async function abrirCorreio(): Promise<CorreioAberto | null> {
+  const cfg = await lerGmail();
+  if (!cfg) return null;
+  const t = nodemailer.createTransport({ pool: true, maxConnections: 1, host: "smtp.gmail.com", port: 465, secure: true, auth: { user: cfg.email, pass: cfg.senha } });
+  return {
+    email: cfg.email,
+    enviar: async (para, assunto, texto, html, cabecalhos) => {
+      await t.sendMail({ from: `Ateliê SentArte <${cfg.email}>`, to: para, replyTo: cfg.email, subject: assunto, text: texto, html, headers: cabecalhos });
+    },
+    fechar: () => t.close(),
+  };
+}
+
 function textoCompleto(p: PedidoCliente) {
   const e = p.entrega;
   return [

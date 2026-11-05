@@ -173,6 +173,8 @@ export async function talvezRodarLembretes() {
     const [vez] = await redis([["SET", K_VEZ, 1, "NX", "EX", 600]]);
     if (vez !== "OK") return;
     await rodarLembretes();
+    // e-mail campaigns waiting in line (lazy import: lib/campanhas.ts imports this file)
+    await import("./campanhas").then((m) => m.processarCampanhas(40_000));
   } catch (err) {
     console.error("lembretes", err);
   }
@@ -292,8 +294,19 @@ function mensagemEtapa(tipo: EtapaEmail, p: PedidoCliente, site: Site, nome: str
   );
 }
 
-function montar(assunto: string, paragrafos: string[], itens: string[], botao: { texto: string; link: string }, depois: string[], rodape: string, googleUrl?: string) {
-  const texto = [...paragrafos, "", ...itens.map((i) => `- ${i}`), "", `${botao.texto}: ${botao.link}`, "", ...depois, "", rodape, "", "Ateliê SentArte", SITE_URL]
+/** The look shared by every customer e-mail (also lib/campanhas.ts). `sair` = unsubscribe link (list e-mails only). */
+export function montar(
+  assunto: string,
+  paragrafos: string[],
+  itens: string[],
+  botao: { texto: string; link: string },
+  depois: string[],
+  rodape: string,
+  googleUrl?: string,
+  sair?: string
+) {
+  const fimSair = sair ? ["", `Não quer mais receber estes e-mails? ${sair}`] : [];
+  const texto = [...paragrafos, "", ...itens.map((i) => `- ${i}`), "", `${botao.texto}: ${botao.link}`, "", ...depois, "", rodape, "", "Ateliê SentArte", SITE_URL, ...fimSair]
     .filter((l, i, a) => l !== "" || a[i - 1] !== "")
     .join("\n");
   const linkar = (s: string) => esc(s).replace(/(https:\/\/[^\s<]+)/g, (u) => {
@@ -313,7 +326,7 @@ ${itens.length ? `<table role="presentation" width="100%" cellpadding="0" cellsp
 ${depois.map((t) => `<p style="margin:0 0 12px">${linkar(t)}</p>`).join("")}
 <p style="margin:18px 0 0;color:#5c584f;font-size:13px">${esc(rodape)}</p>
 </td></tr>
-<tr><td style="padding:14px 28px;border-top:1px solid #d9c9ac;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#5c584f"><a href="${SITE_URL}" style="color:#5c584f">${SITE_URL.replace(/^https:\/\//, "")}</a></td></tr>
+<tr><td style="padding:14px 28px;border-top:1px solid #d9c9ac;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#5c584f"><a href="${SITE_URL}" style="color:#5c584f">${SITE_URL.replace(/^https:\/\//, "")}</a>${sair ? ` · <a href="${esc(sair)}" style="color:#5c584f">Não quero mais receber estes e-mails</a>` : ""}</td></tr>
 </table></td></tr></table></body></html>`;
   return { assunto, texto, html };
 }

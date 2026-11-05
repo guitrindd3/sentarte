@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import type { CupomPublico } from "./cupom";
 
 const CHAVE = "sentarte-cupom";
+/** window event whose `detail` is a coupon code to put in the cart. */
+export const EVENTO_CUPOM = "sentarte:cupom";
 
 /**
  * Coupons in the cart: the automatic ones (fetched from /api/cupom) plus the
@@ -21,12 +23,8 @@ export function useCupons() {
       .then((r) => r.json())
       .then((j: { automaticos?: CupomPublico[] }) => vivo && setAutomaticos(j.automaticos ?? []))
       .catch(() => {});
-    let guardado = "";
-    try {
-      guardado = localStorage.getItem(CHAVE) ?? "";
-    } catch {}
-    if (guardado) {
-      fetch(`/api/cupom?codigo=${encodeURIComponent(guardado)}`, { cache: "no-store" })
+    const conferir = (codigo: string) =>
+      fetch(`/api/cupom?codigo=${encodeURIComponent(codigo)}`, { cache: "no-store" })
         .then((r) => r.json())
         .then((j: { cupom?: CupomPublico }) => {
           if (!vivo) return;
@@ -38,9 +36,24 @@ export function useCupons() {
           }
         })
         .catch(() => {});
-    }
+    let guardado = "";
+    try {
+      guardado = localStorage.getItem(CHAVE) ?? "";
+    } catch {}
+    if (guardado) conferir(guardado);
+    // the welcome-coupon window (components/janela-cupom.tsx) hands its code over here
+    const ganhou = (e: Event) => {
+      const codigo = (e as CustomEvent<string>).detail;
+      if (!codigo) return;
+      try {
+        localStorage.setItem(CHAVE, codigo);
+      } catch {}
+      conferir(codigo);
+    };
+    window.addEventListener(EVENTO_CUPOM, ganhou);
     return () => {
       vivo = false;
+      window.removeEventListener(EVENTO_CUPOM, ganhou);
     };
   }, []);
 

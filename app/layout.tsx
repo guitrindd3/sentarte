@@ -12,6 +12,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { JsonLd } from "@/components/json-ld";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
+import { JanelaCupom } from "@/components/janela-cupom";
 import { CartProvider } from "@/lib/cart-context";
 import { getContent } from "@/lib/content-store";
 import { SITE_URL } from "@/lib/nav";
@@ -127,6 +128,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             categoriaTitulo={content.categorias.find((c) => c.slug === "cadeiras")?.titulo}
           />
           <WhatsAppFloat whatsappNumero={site.whatsappNumero} />
+          <JanelaCupom />
         </CartProvider>
         <JsonLd
           data={{

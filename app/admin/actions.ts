@@ -19,6 +19,8 @@ import { formatBRL } from "@/lib/offer";
 import { desligarGmail, desligarNtfy, estadoAvisos, ligarNtfy, mandarEmailAoCliente, salvarGmail, testarAvisos } from "@/lib/avisos";
 import { after } from "next/server";
 import { avisarEtapaAgora, exemploDeLembrete, salvarConfigLembretes } from "@/lib/lembretes";
+import { criarCampanha, emailDaCampanha, LIMITE_DIA, processarCampanhas } from "@/lib/campanhas";
+import { removerEmail, salvarConfigBoasVindas } from "@/lib/lista-email";
 import {
   atualizarEnvios,
   colocarNoCarrinho,
@@ -1172,5 +1174,63 @@ export async function excluirOrcamentoAction(id: string) {
     await excluirOrcamento(id);
     revalidatePath("/admin/orcamentos");
     return "Orçamento apagado (com as imagens).";
+  });
+}
+
+// --- Campanhas: welcome-coupon window + e-mails to the list (2026-11-05) ---------------
+
+export async function salvarBoasVindasAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const percentual = Math.round(Number(String(formData.get("percentual") ?? "").replace(",", ".")) * 10) / 10;
+    const dias = Math.floor(Number(formData.get("dias")));
+    if (!(percentual >= 1 && percentual <= 50)) throw new Aviso("O desconto tem que ser de 1% a 50%.");
+    if (!(dias >= 3 && dias <= 365)) throw new Aviso("A validade tem que ser de 3 a 365 dias.");
+    await salvarConfigBoasVindas({ ligado: formData.get("ligado") === "on", percentual, dias });
+    revalidatePath("/admin/campanhas");
+    return "Cupom de boas-vindas salvo.";
+  });
+}
+
+export async function mandarCampanhaAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const assunto = String(formData.get("assunto") ?? "").replace(/\s+/g, " ").trim().slice(0, 120);
+    const texto = String(formData.get("texto") ?? "").replace(/\r\n/g, "\n").trim().slice(0, 5000);
+    const botaoTexto = String(formData.get("botaoTexto") ?? "").replace(/\s+/g, " ").trim().slice(0, 40) || undefined;
+    const botaoLink = String(formData.get("botaoLink") ?? "").trim().slice(0, 300) || undefined;
+    if (!assunto) throw new Aviso("Escreva o assunto do e-mail.");
+    if (texto.length < 10) throw new Aviso("Escreva o texto do e-mail.");
+    const { email: gmail } = await estadoAvisos();
+    if (!gmail) throw new Aviso("Ligue o aviso por e-mail (Gmail) em Avisos e envio primeiro: os e-mails saem dele.");
+    const dados = { assunto, texto, botaoTexto, botaoLink };
+    if (formData.get("para") !== "todos") {
+      const m = emailDaCampanha(dados, { email: gmail, nome: "Maria" });
+      try {
+        await mandarEmailAoCliente(gmail, `[Teste] ${m.assunto}`, m.texto, m.html);
+      } catch (err) {
+        console.error("teste campanha", err);
+        throw new Aviso("Não deu para mandar pelo Gmail. Confira a senha de app.");
+      }
+      return `Teste enviado para ${gmail}. No teste, o {nome} vira "Maria".`;
+    }
+    let c;
+    try {
+      c = await criarCampanha(dados);
+    } catch (err) {
+      if (err instanceof Error && err.message === "lista vazia") throw new Aviso("Ainda não tem ninguém na lista.");
+      throw err;
+    }
+    after(() => processarCampanhas().then(() => undefined));
+    revalidatePath("/admin/campanhas");
+    return c.total > LIMITE_DIA
+      ? `Enviando para ${c.total} pessoas: ${LIMITE_DIA} por dia, termina em ${Math.ceil(c.total / LIMITE_DIA)} dias.`
+      : `Enviando para ${c.total} ${c.total === 1 ? "pessoa" : "pessoas"}. Leva alguns minutos.`;
+  });
+}
+
+export async function removerAssinanteAction(email: string) {
+  return executar(async () => {
+    await removerEmail(email);
+    revalidatePath("/admin/campanhas");
+    return "Tirado da lista.";
   });
 }

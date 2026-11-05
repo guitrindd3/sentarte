@@ -2,6 +2,7 @@ import "server-only";
 import { normalizarWhatsapp, salvarPedidoIniciado } from "./clientes";
 import { cuponsDoPedido } from "./cupons-store";
 import { anotarNoCaminho, vidValido } from "./estatisticas";
+import { inscreverEmail } from "./lista-email";
 import { calcularFrete } from "./frete-servidor";
 import { CATEGORIA_COM_PRECO, quantosTasseis, tipoValido } from "./offer";
 import { valorDoVale } from "./vale";
@@ -25,6 +26,8 @@ export type CorpoPedido = {
   cupom?: string;
   /** The browser's cart as it was (lib/cart-context CartItem[]), kept only to refill it from the reminder e-mail. */
   carrinho?: unknown;
+  /** Ticked "quero receber novidades e cupons por e-mail" (lib/lista-email.ts). */
+  novidades?: unknown;
 };
 
 const texto = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined);
@@ -125,7 +128,7 @@ export async function prepararPedido(corpo: CorpoPedido) {
   const telefone = entrega.telefone.replace(/\D/g, "");
   const carrinho = carrinhoSeguro(corpo.carrinho);
   const cupomDigitado = typeof corpo.cupom === "string" && corpo.cupom.trim() ? corpo.cupom.trim().slice(0, 30) : undefined;
-  return { ok: true, forma, ref, itens, conta, frete, valorProdutos, valor, entrega, telefone, carrinho, cupomDigitado } as const;
+  return { ok: true, forma, ref, itens, conta, frete, valorProdutos, valor, entrega, telefone, carrinho, cupomDigitado, novidades: corpo.novidades === true } as const;
 }
 
 type Pronto = Extract<Awaited<ReturnType<typeof prepararPedido>>, { ok: true }>;
@@ -169,6 +172,9 @@ export async function registrarPedido(p: Pronto, vid?: string) {
     carrinho: p.carrinho,
     cupomDigitado: p.cupomDigitado,
   });
+  if (p.novidades && p.entrega.email) {
+    await inscreverEmail({ email: p.entrega.email, nome: p.entrega.nome, origem: "compra" }).catch((err) => console.error("inscreverEmail", err));
+  }
   await anotarNoCaminho(vid, {
     k: "$",
     x: `${p.forma === "pix" ? "Pix" : "cartão"}, ${p.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,

@@ -108,6 +108,17 @@ export async function cuponsAutomaticos(): Promise<CupomPublico[]> {
  */
 export const cuponsDaVitrine = unstable_cache(cuponsAutomaticos, ["cupons-vitrine"], { revalidate: 600, tags: ["cupons"] });
 
+/** A one-use welcome coupon (lib/lista-email.ts keeps them apart from the admin's list). */
+async function cupomDeBoasVindas(cod: string): Promise<CupomComUsos | undefined> {
+  if (!cod.startsWith("OLA")) return undefined;
+  const [bruto, usos] = (await redis([["HGET", "boasvindas:cupons", cod], ["HGET", K.usos, cod]])) as (string | null)[];
+  try {
+    return bruto ? { ...(JSON.parse(bruto) as Cupom), usos: Number(usos) || 0 } : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** A typed code, if it exists and is usable now. */
 export async function buscarCupom(codigo: string): Promise<{ cupom?: CupomPublico; erro?: string }> {
   const cod = normalizarCodigo(codigo);
@@ -117,7 +128,7 @@ export async function buscarCupom(codigo: string): Promise<{ cupom?: CupomPublic
     const bf = await cupomBlackFridayDeHoje();
     if (bf) return { cupom: bf };
   }
-  const c = (await listarCupons()).find((x) => x.codigo === cod);
+  const c = (await listarCupons()).find((x) => x.codigo === cod) ?? (await cupomDeBoasVindas(cod));
   // Black Friday week: typed coupons are off too — only a vale-presente (it's a payment, not a discount)
   if (c && !c.vale && (await cupomBlackFridayDeHoje())) return { erro: "Na Black Friday vale só o desconto da Black Friday, que já entra sozinho." };
   if (!c) return { erro: cod === CODIGO_BLACK_FRIDAY ? "A Black Friday não está valendo agora." : "Cupom não encontrado." };

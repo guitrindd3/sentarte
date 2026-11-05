@@ -543,7 +543,7 @@ export const PAGINAS_EDITAVEIS: PaginaEditavel[] = [
         {
           titulo: "Lista de novidades",
           texto:
-            "Se você se cadastrar para receber novidades e cupons, guardamos seu nome e WhatsApp só para isso. Para sair da lista, é só pedir pelo WhatsApp que a gente apaga na hora.",
+            "Se você se cadastrar para receber novidades e cupons (no rodapé, na janela do cupom de boas-vindas ou marcando a opção na hora de pagar), guardamos seu nome e o WhatsApp ou e-mail que informar, só para isso. Todo e-mail de novidades tem um link para sair da lista; também dá para pedir pelo WhatsApp que a gente apaga na hora.",
         },
         {
           titulo: "Avaliações",

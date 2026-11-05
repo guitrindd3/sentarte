@@ -50,6 +50,7 @@ export function CheckoutForm({
   const [d, setD] = useState<DadosEntrega>(carregarEntrega);
   const [enviando, setEnviando] = useState<"pix" | "cartao" | null>(null);
   const [erro, setErro] = useState("");
+  const [novidades, setNovidades] = useState(false);
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [pix, setPix] = useState<PixGerado | null>(null);
   // Card inside the site (Mercado Pago Card Payment Brick) once the public key exists.
@@ -142,7 +143,7 @@ export function CheckoutForm({
         const r = await fetch("/api/pix", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ itens, entrega: d, email: d.email, referencia, vid: idDaVisita(), cupom: codigoDigitado, carrinho: items }),
+          body: JSON.stringify({ itens, entrega: d, email: d.email, referencia, vid: idDaVisita(), cupom: codigoDigitado, carrinho: items, novidades }),
         });
         const p = (await r.json()) as Partial<PixGerado> & { erro?: string };
         if (!r.ok || !p.id || !p.copiaECola) throw new Error(p.erro || "Não deu para gerar o Pix agora.");
@@ -155,7 +156,7 @@ export function CheckoutForm({
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ forma, itens, entrega: d, referencia, vid: idDaVisita(), cupom: codigoDigitado, carrinho: items }),
+        body: JSON.stringify({ forma, itens, entrega: d, referencia, vid: idDaVisita(), cupom: codigoDigitado, carrinho: items, novidades }),
       });
       const j = (await res.json()) as { url?: string; erro?: string; valor?: number };
       if (!res.ok || !j.url) throw new Error(j.erro || "Não foi possível abrir o pagamento.");
@@ -175,7 +176,7 @@ export function CheckoutForm({
       <CartaoNoSite
         valor={Math.round((conta.total + (valorFrete ?? 0)) * 100) / 100}
         email={(d.email ?? "").trim()}
-        corpoPedido={{ itens: itensDoPedido(), entrega: d, referencia: cartao.referencia, vid: idDaVisita(), cupom: codigoDigitado, carrinho: items }}
+        corpoPedido={{ itens: itensDoPedido(), entrega: d, referencia: cartao.referencia, vid: idDaVisita(), cupom: codigoDigitado, carrinho: items, novidades }}
         onVoltar={() => setCartao(null)}
         onPaginaMercadoPago={() => {
           setCartao(null);
@@ -222,6 +223,10 @@ export function CheckoutForm({
           <label className="col-span-2">
             <span className="text-ink-soft">E-mail (para o comprovante)</span>
             <input value={d.email ?? ""} onChange={set("email")} type="email" inputMode="email" autoComplete="email" placeholder="voce@email.com" className={campo} />
+          </label>
+          <label className="col-span-2 -mt-1 flex items-start gap-2 text-xs text-ink-soft">
+            <input type="checkbox" checked={novidades} onChange={(e) => setNovidades(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--ink)]" />
+            <span>Quero receber novidades e cupons por e-mail (dá para sair quando quiser).</span>
           </label>
           <label className="col-span-2">
             <span className="text-ink-soft">{soVale ? "CPF (para o pagamento)" : "CPF (vai na etiqueta de envio)"}</span>

@@ -8,6 +8,7 @@ const ITENS = [
   { href: "/admin/montar", titulo: "Montar e publicar", texto: "Monte uma trama e publique em Times, Boho, Desenhos ou Cadeiras." },
   { href: "/admin/vagas", titulo: "Vagas da semana", texto: "Quantas cadeiras dá para fazer por semana (aparece no site)." },
   { href: "/admin/cupons", titulo: "Cupons", texto: "Códigos de desconto para o carrinho." },
+  { href: "/admin/campanhas", titulo: "Campanhas", texto: "Cupom para quem vai sair do site e e-mails de novidades para a lista." },
   { href: "/admin/paginas", titulo: "Páginas do site", texto: "Textos do Sobre, FAQ, políticas e das seções da página inicial." },
   { href: "/admin/depoimentos", titulo: "Depoimentos", texto: "Elogios de clientes na página inicial." },
   { href: "/admin/site", titulo: "Textos e contato", texto: "Boas-vindas, WhatsApp, Instagram e Google." },
