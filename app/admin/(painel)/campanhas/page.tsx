@@ -2,6 +2,8 @@ import { estadoAvisos } from "@/lib/avisos";
 import { enviadosHoje, LIMITE_DIA, listarCampanhas, type Campanha } from "@/lib/campanhas";
 import { lerConfigBoasVindas, listarAssinantes, numerosBoasVindas, type Assinante } from "@/lib/lista-email";
 import { redisAtivo } from "@/lib/redis";
+import { hojeBR, naBlackFriday } from "@/lib/black-friday";
+import { configBlackFriday } from "@/lib/cupons-store";
 import { mandarCampanhaAction, removerAssinanteAction, salvarBoasVindasAction } from "../../actions";
 import { AdminForm, BotaoExcluir, Card, Field, inputClass, SaveButton } from "../../_ui";
 
@@ -40,15 +42,18 @@ export default async function Campanhas() {
   if (!redisAtivo()) {
     return <Card titulo="Campanhas"><p className="text-sm text-ink-soft">O banco do painel não está ligado.</p></Card>;
   }
-  const [cfg, numeros, lista, campanhas, hoje, avisos] = await Promise.all([
+  const [cfg, numeros, lista, campanhas, hoje, avisos, bf] = await Promise.all([
     lerConfigBoasVindas(),
     numerosBoasVindas(),
     listarAssinantes(),
     listarCampanhas(),
     enviadosHoje(),
     estadoAvisos(),
+    configBlackFriday(),
   ]);
   const n = lista.length;
+  // Black Friday week: typed coupons don't work, so the window waits (lib/lista-email.ts janelaValendo)
+  const semanaBf = bf.ligado ? naBlackFriday(hojeBR(), bf.inicioAntecipado) : null;
 
   return (
     <div className="space-y-6">
@@ -63,13 +68,21 @@ export default async function Campanhas() {
         titulo="Cupom para quem vai sair do site"
         descricao="Quando a pessoa vai embora sem comprar, aparece uma janela uma vez só: ela deixa o e-mail e ganha um cupom para a primeira compra, que já entra no carrinho. Cada cupom vale um uso."
         acao={
-          cfg.ligado ? (
+          cfg.ligado && semanaBf ? (
+            <span className="rounded-full bg-rattan/20 px-3 py-1 text-xs font-semibold text-wood-dark">Pausado na Black Friday</span>
+          ) : cfg.ligado ? (
             <span className="rounded-full bg-verde px-3 py-1 text-xs font-semibold text-paper">Ligado</span>
           ) : (
             <span className="rounded-full bg-canvas-deep px-3 py-1 text-xs font-semibold text-ink">Desligado</span>
           )
         }
       >
+        {cfg.ligado && semanaBf ? (
+          <p className="mb-4 rounded-xl bg-rattan/15 px-4 py-3 text-sm text-wood-dark">
+            A Black Friday está valendo até {semanaBf.fim.split("-").reverse().join("/")} e, enquanto ela vale, nenhum outro cupom funciona. Por isso a janela
+            fica escondida e volta sozinha no dia seguinte.
+          </p>
+        ) : null}
         <AdminForm action={salvarBoasVindasAction} className="space-y-4">
           <label className="flex items-start gap-3">
             <input name="ligado" type="checkbox" defaultChecked={cfg.ligado} className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--wood)]" />
