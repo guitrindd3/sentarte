@@ -805,3 +805,9 @@ User: "na aba de monte sua trama crie um também de animes e desenhos… exemplo
 - Only tell the user something is live after it prints "✓ No ar".
 - Commit timestamps: in Git Bash, `TZ=America/Sao_Paulo date` prints UTC mislabelled (it was 3 h ahead). Use `node -e` with `Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" })` instead.
 - Same day, the user sent a photo of a woven seat with one big top-view sea turtle (oval shell with cream lines between the plates). `tartarugaGrande(estilo)` in `lib/formas-extras-5.ts` draws it as geometry, so it fits both panels. There are 4 variations: `mar-tartaruga-grande` (plates), `-casco-liso`, `-invertida` (cream turtle on a dark field) and `-contorno`. A 30° tilted version came out jagged and was dropped. The Tartarugas sub-group now has 18 shapes.
+
+## "Vem com nome" no longer greys out the buy buttons (2026-11-05)
+- The user published "Sol e Lua" with "Nome trançado" ticked (`inclui.nome`), but the description said "Com nome (opcional)". The page then required a name, and the greyed-out Comprar/Carrinho buttons read as "can't buy" (user: "não dá para pessoa comprar nem adicionar no carrinho").
+- Fix: unticked it in content (it's optional, and every chair already has Sem nome/Personalizado).
+- Comprar/Carrinho are never disabled for a missing name now. Clicking scrolls to and focuses the name field (`pedirNome`, `AddToCartButton semNome`), and the product page turns the hint red.
+- The admin option text now says the name becomes mandatory.

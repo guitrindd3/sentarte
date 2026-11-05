@@ -9,6 +9,7 @@ export function AddToCartButton({
   disabled = false,
   contorno = false,
   curtoNoCelular = false,
+  semNome,
 }: {
   item: Omit<CartItem, "quantidade">;
   disabled?: boolean;
@@ -16,6 +17,8 @@ export function AddToCartButton({
   contorno?: boolean;
   /** Phones: only the icon (the label stays for screen readers). */
   curtoNoCelular?: boolean;
+  /** Set while a required name is still blank: the click asks for it instead of adding. */
+  semNome?: () => void;
 }) {
   const { addItem } = useCart();
   const [justAdded, setJustAdded] = useState(false);
@@ -29,6 +32,7 @@ export function AddToCartButton({
       disabled={disabled}
       onClick={(e) => {
         e.preventDefault();
+        if (semNome) return semNome();
         addItem(item);
         setJustAdded(true);
         clearTimeout(timeoutRef.current);

@@ -24,7 +24,7 @@ export function CampoInclui({ inicial }: { inicial?: ModeloInclui }) {
         <Opcao
           ativo={nome}
           titulo="Nome trançado"
-          detalhe="O cliente escreve o nome dele na hora de comprar."
+          detalhe="Já vem com nome: o cliente é obrigado a escrever o nome para comprar. Se o nome for opcional, deixe desmarcado (o site já oferece “Personalizado” em toda cadeira)."
           preco={`+${formatBRL(extraNome)}`}
         >
           <input type="checkbox" name="incluiNome" checked={nome} onChange={(e) => setNome(e.target.checked)} className="peer sr-only" />

@@ -375,7 +375,6 @@
           "corB": "#bd502e",
           "grupo": "boho",
           "inclui": {
-            "nome": true,
             "tasseis": 1,
             "tasselLado": "esq"
           },

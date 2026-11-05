@@ -240,17 +240,16 @@ export function ModeloCard({
         <div className="mt-4 grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-1">
           <button
             type="button"
-            disabled={faltaNome}
             data-rastro={`Comprar: ${ativo.nome}`}
-            onClick={() => comprarAgora(itemDoCarrinho)}
+            onClick={() => (faltaNome ? pedirNome() : comprarAgora(itemDoCarrinho))}
             className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas"
           >
             Comprar
           </button>
-          <AddToCartButton item={itemDoCarrinho} disabled={faltaNome} contorno curtoNoCelular />
+          <AddToCartButton item={itemDoCarrinho} semNome={faltaNome ? pedirNome : undefined} contorno curtoNoCelular />
         </div>
         {faltaNome ? (
-          <p className="mt-1.5 text-xs text-ink-soft">Escreva o nome para comprar ou adicionar ao carrinho.</p>
+          <p className="mt-1.5 text-xs text-ink-soft">Escreva o nome que vai trançado na cadeira para comprar.</p>
         ) : null}
         <a
           href={whatsappUrl(whatsappNumero, mensagemWhatsapp)}

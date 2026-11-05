@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { BotaoFavorito } from "@/components/botao-favorito";
@@ -43,6 +43,15 @@ export function ProdutoCompra({
   const precoBf = precoBlackFriday(e.preco, bf);
   const { comprarAgora } = useCart();
   const [zoom, setZoom] = useState(false);
+  // "vem com nome" chairs: buying without the name jumps to the field (2026-11-05 —
+  // greyed-out buttons made the user think "Sol e Lua" couldn't be bought)
+  const nomeRef = useRef<HTMLInputElement>(null);
+  const [avisoNome, setAvisoNome] = useState(false);
+  const pedirNome = () => {
+    setAvisoNome(true);
+    nomeRef.current?.focus();
+    nomeRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  };
   const [cep, setCep] = useState("");
   useEffect(() => {
     // CEP typed last time (localStorage) — only after hydration, like the cart drawer
@@ -222,6 +231,8 @@ export function ProdutoCompra({
                   placeholder="Ex: João"
                   maxLength={24}
                   autoFocus={!e.nomeIncluso}
+                  ref={nomeRef}
+                  aria-invalid={avisoNome && e.faltaNome ? true : undefined}
                   className="mt-1 w-full border border-line bg-paper px-3 py-2 text-ink focus:border-ink focus:outline-none"
                 />
               </label>
@@ -238,15 +249,16 @@ export function ProdutoCompra({
         <div className="mt-6 grid max-w-sm gap-2">
           <button
             type="button"
-            disabled={e.faltaNome}
             data-rastro={`Comprar (página): ${e.ativo.nome}`}
-            onClick={() => comprarAgora(e.itemDoCarrinho)}
+            onClick={() => (e.faltaNome ? pedirNome() : comprarAgora(e.itemDoCarrinho))}
             className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-3 font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas"
           >
             Comprar
           </button>
-          <AddToCartButton item={e.itemDoCarrinho} disabled={e.faltaNome} contorno />
-          {e.faltaNome ? <p className="text-xs text-ink-soft">Escreva o nome para comprar ou adicionar ao carrinho.</p> : null}
+          <AddToCartButton item={e.itemDoCarrinho} semNome={e.faltaNome ? pedirNome : undefined} contorno />
+          {e.faltaNome ? (
+            <p className={`text-xs ${avisoNome ? "font-medium text-red-700" : "text-ink-soft"}`}>Escreva o nome que vai trançado na cadeira para comprar.</p>
+          ) : null}
           {e.temPreco ? <VagasSemana className="mt-2" /> : null}
         </div>
 
