@@ -1,5 +1,6 @@
 import "server-only";
 import type { Frete } from "./frete";
+import { PRAZO_ENVIO_ES_DIAS_UTEIS } from "./prazo-entrega";
 
 // Shipping is quoted by Melhor Envio (Correios + carriers) from the atelier's
 // CEP to the customer's. Espírito Santo CEPs (29000-000 to 29999-999) ship
@@ -60,7 +61,7 @@ export async function calcularFrete(cep: string, porTipo: ChairsPorTipo, valorDe
   const destino = cep.replace(/\D/g, "");
   const qtdCadeiras = porTipo.normal + porTipo.infantil + porTipo.reclinavel;
   if (destino.length !== 8 || qtdCadeiras < 1) return null;
-  if (ehCepES(destino)) return { valor: 0 };
+  if (ehCepES(destino)) return { valor: 0, prazoDias: PRAZO_ENVIO_ES_DIAS_UTEIS };
 
   const token = process.env.MELHORENVIO_TOKEN;
   const origem = (process.env.FRETE_CEP_ORIGEM ?? "").replace(/\D/g, "");

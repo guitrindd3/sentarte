@@ -1,4 +1,6 @@
 import { cookies } from "next/headers";
+import { after } from "next/server";
+import { talvezRodarLembretes } from "@/lib/lembretes";
 import { registrar, type Evento } from "@/lib/estatisticas";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +32,8 @@ export async function POST(req: Request) {
     const corpo = (await req.text()).slice(0, 2000);
     const ev = JSON.parse(corpo) as Evento;
     if (ev && ["v", "c", "b", "a"].includes(ev.t)) await registrar(ev, req.headers);
+    // visits are the reminder e-mails' clock (lib/lembretes.ts): at most every 10 min, after the reply
+    if (ev?.t === "v") after(talvezRodarLembretes);
   } catch (err) {
     console.error("estatisticas", err);
   }

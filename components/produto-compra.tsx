@@ -8,6 +8,7 @@ import { CompartilharCadeira } from "@/components/compartilhar-cadeira";
 import { PreviaNome } from "@/components/previa-nome";
 import { OpcaoBraco } from "@/components/opcao-braco";
 import { VagasSemana } from "@/components/vagas-semana";
+import { PrevisaoEntrega } from "@/components/previsao-entrega";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
 import { formatBRL, PARCELAS_MAX, rotulosInclui, precoPix, PRAZO_PRODUCAO_DIAS_UTEIS } from "@/lib/offer";
@@ -292,6 +293,7 @@ export function ProdutoCompra({
             ) : (
               <p className="mt-2 text-xs text-ink-soft">Fica pronta em até {PRAZO_PRODUCAO_DIAS_UTEIS} dias úteis. Enviamos para todo o Brasil.</p>
             )}
+            <PrevisaoEntrega className="mt-2" prazoFrete={frete.tipo === "ok" ? frete.frete.prazoDias : undefined} pedirCep={frete.tipo === "sem-cep"} />
           </div>
         ) : null}
 

@@ -120,6 +120,18 @@ export default async function Clientes() {
                   <p className="mt-2 text-sm text-ink-soft">
                     {formatBRL(p.valor)} {noPagamento(p.forma)}
                   </p>
+                  {p.lembretes && (p.lembretes.pagar1 || p.lembretes.pagar2 || p.lembretes.avaliar) ? (
+                    <p className="mt-1 text-xs text-ink-soft">
+                      E-mail automático:{" "}
+                      {[
+                        p.lembretes.pagar1 ? `lembrete de 1 hora (${quando(p.lembretes.pagar1)})` : "",
+                        p.lembretes.pagar2 ? `lembrete de 24 horas (${quando(p.lembretes.pagar2)})` : "",
+                        p.lembretes.avaliar ? `pedido de avaliação (${quando(p.lembretes.avaliar)})` : "",
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
+                  ) : null}
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {p.status === "pago" ? (
                       <Link href={`/admin/clientes/${p.ref}`} className="inline-flex items-center gap-2 rounded-full bg-wood px-4 py-2 text-sm font-semibold text-paper hover:bg-wood-dark">

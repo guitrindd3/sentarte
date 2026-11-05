@@ -9,6 +9,7 @@ import { codificarCadeira, decodificarCadeira } from "./chair-link";
 import { SITE_URL } from "./nav";
 import { getContent } from "./content-store";
 import { nomesDesenho } from "./grupos";
+import type { ItemGuardado } from "./clientes";
 import { calcularPedido, descricaoItem, entregaCompleta, type DadosEntrega, type ItemDoPedido } from "./pedido";
 
 // Shared by the card (Checkout Pro redirect, /api/checkout) and the in-site
@@ -22,7 +23,52 @@ export type CorpoPedido = {
   referencia: string;
   vid?: string;
   cupom?: string;
+  /** The browser's cart as it was (lib/cart-context CartItem[]), kept only to refill it from the reminder e-mail. */
+  carrinho?: unknown;
 };
+
+const texto = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined);
+
+/**
+ * The cart items, cleaned: only known fields, short strings, local or https
+ * pictures. Never used for prices (the checkout recomputes everything) — only
+ * to put the same chairs back in the cart from /retomar/<ref>.
+ */
+export function carrinhoSeguro(bruto: unknown): ItemGuardado[] | undefined {
+  if (!Array.isArray(bruto)) return undefined;
+  const itens = bruto.slice(0, 30).flatMap((x): ItemGuardado[] => {
+    if (!x || typeof x !== "object") return [];
+    const i = x as Record<string, unknown>;
+    const id = texto(i.id, 200);
+    const categoriaSlug = texto(i.categoriaSlug, 60);
+    const modeloNome = texto(i.modeloNome, 120);
+    if (!id || !categoriaSlug || !modeloNome) return [];
+    const img = texto(i.imagemUrl, 900);
+    const cor = (c: unknown) => (typeof c === "string" && /^#[0-9a-f]{3,8}$/i.test(c) ? c : "#c9a77c");
+    return [
+      {
+        id,
+        categoriaSlug,
+        categoriaTitulo: texto(i.categoriaTitulo, 60) ?? "",
+        modeloId: texto(i.modeloId, 80) ?? "",
+        modeloNome,
+        imagemUrl: img && (/^\/(?!\/)/.test(img) || img.startsWith("https://")) ? img : undefined,
+        corA: cor(i.corA),
+        corB: cor(i.corB),
+        quantidade: Math.max(1, Math.min(20, Math.floor(Number(i.quantidade) || 1))),
+        nomePersonalizado: texto(i.nomePersonalizado, 64),
+        personalizada: i.personalizada === true || undefined,
+        variante: texto(i.variante, 40),
+        tipoCadeira: tipoValido(i.tipoCadeira),
+        bracoMadeira: i.bracoMadeira === true || undefined,
+        tassel: texto(i.tassel, 40),
+        tasselQtd: i.tasselQtd === 1 ? 1 : undefined,
+        tasselLado: i.tasselLado === "esq" ? "esq" : i.tasselLado === "dir" ? "dir" : undefined,
+      },
+    ];
+  });
+  return itens.length ? itens : undefined;
+}
 
 export async function prepararPedido(corpo: CorpoPedido) {
   const { forma, entrega, referencia } = corpo;
@@ -77,7 +123,9 @@ export async function prepararPedido(corpo: CorpoPedido) {
   const valorProdutos = forma === "pix" ? conta.totalPix : conta.total;
   const valor = Math.round((valorProdutos + frete.valor) * 100) / 100;
   const telefone = entrega.telefone.replace(/\D/g, "");
-  return { ok: true, forma, ref, itens, conta, frete, valorProdutos, valor, entrega, telefone } as const;
+  const carrinho = carrinhoSeguro(corpo.carrinho);
+  const cupomDigitado = typeof corpo.cupom === "string" && corpo.cupom.trim() ? corpo.cupom.trim().slice(0, 30) : undefined;
+  return { ok: true, forma, ref, itens, conta, frete, valorProdutos, valor, entrega, telefone, carrinho, cupomDigitado } as const;
 }
 
 type Pronto = Extract<Awaited<ReturnType<typeof prepararPedido>>, { ok: true }>;
@@ -118,6 +166,8 @@ export async function registrarPedido(p: Pronto, vid?: string) {
     },
     porTipo: p.conta.porTipo,
     frete: { valor: p.frete.valor, servico: p.frete.servico },
+    carrinho: p.carrinho,
+    cupomDigitado: p.cupomDigitado,
   });
   await anotarNoCaminho(vid, {
     k: "$",

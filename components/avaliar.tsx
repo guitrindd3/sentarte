@@ -18,8 +18,19 @@ async function encolherFoto(arquivo: File): Promise<string> {
 }
 
 /** "Já tem a sua? Avalie" — stars + comment, reviewed by the atelier before it shows. */
-export function Avaliar({ googleUrl }: { googleUrl?: string }) {
-  const [aberto, setAberto] = useState(false);
+export function Avaliar({
+  googleUrl,
+  nomeInicial,
+  cidadeInicial,
+  abertoInicial = false,
+}: {
+  googleUrl?: string;
+  /** Prefilled from the order on /acompanhar/<ref> (the review e-mail's link). */
+  nomeInicial?: string;
+  cidadeInicial?: string;
+  abertoInicial?: boolean;
+}) {
+  const [aberto, setAberto] = useState(abertoInicial);
   const [estrelas, setEstrelas] = useState(0);
   const [passando, setPassando] = useState(0);
   const [estado, setEstado] = useState<"livre" | "enviando" | "ok">("livre");
@@ -103,11 +114,11 @@ export function Avaliar({ googleUrl }: { googleUrl?: string }) {
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block text-sm">
           <span className="text-ink-soft">Seu nome</span>
-          <input name="nome" autoComplete="name" required maxLength={60} className="mt-1 w-full border border-line bg-canvas px-3 py-2 text-base text-ink focus:border-ink focus:outline-none sm:text-sm" />
+          <input name="nome" defaultValue={nomeInicial} autoComplete="name" required maxLength={60} className="mt-1 w-full border border-line bg-canvas px-3 py-2 text-base text-ink focus:border-ink focus:outline-none sm:text-sm" />
         </label>
         <label className="block text-sm">
           <span className="text-ink-soft">Cidade (opcional)</span>
-          <input name="cidade" maxLength={60} className="mt-1 w-full border border-line bg-canvas px-3 py-2 text-base text-ink focus:border-ink focus:outline-none sm:text-sm" />
+          <input name="cidade" defaultValue={cidadeInicial} maxLength={60} className="mt-1 w-full border border-line bg-canvas px-3 py-2 text-base text-ink focus:border-ink focus:outline-none sm:text-sm" />
         </label>
       </div>
       <label className="mt-3 block text-sm">

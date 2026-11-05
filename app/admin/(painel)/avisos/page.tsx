@@ -2,7 +2,8 @@ import QRCode from "qrcode";
 import { estadoAvisos } from "@/lib/avisos";
 import { lerRemetente, remetenteDaConta, type Remetente } from "@/lib/melhor-envio";
 import { redisAtivo } from "@/lib/redis";
-import { desligarGmailAction, desligarNtfyAction, ligarNtfyAction, salvarGmailAction, salvarRemetenteAction, testarAvisosAction } from "../../actions";
+import { desligarGmailAction, desligarNtfyAction, exemploLembretesAction, ligarNtfyAction, salvarGmailAction, salvarLembretesAction, salvarRemetenteAction, testarAvisosAction } from "../../actions";
+import { lerConfigLembretes, ultimaRodada } from "@/lib/lembretes";
 import { AdminForm, btnPrimary, btnSecondary, Card, Field, inputClass, SaveButton } from "../../_ui";
 import { CopiarNumeros } from "../clientes/copiar";
 
@@ -13,7 +14,7 @@ export default async function Avisos() {
   if (!redisAtivo()) {
     return <Card titulo="Avisos e envio"><p className="text-sm text-ink-soft">O banco do painel não está ligado.</p></Card>;
   }
-  const [estado, salvo] = await Promise.all([estadoAvisos(), lerRemetente()]);
+  const [estado, salvo, lembretes, rodada] = await Promise.all([estadoAvisos(), lerRemetente(), lerConfigLembretes(), ultimaRodada()]);
   const remetente: Partial<Remetente> = salvo ?? (await remetenteDaConta());
   const linkApp = estado.ntfy ? `ntfy://ntfy.sh/${estado.ntfy}` : "";
   const qr = estado.ntfy
@@ -102,6 +103,53 @@ export default async function Avisos() {
             <SaveButton className="rounded-full px-3 py-1.5 text-sm font-medium text-clay hover:bg-clay/10">Desligar aviso por e-mail</SaveButton>
           </AdminForm>
         ) : null}
+      </Card>
+
+      <Card
+        titulo="E-mails automáticos para o cliente"
+        descricao="Saem sozinhos do mesmo Gmail do aviso de venda. Se o cliente responder, a resposta chega no seu Gmail."
+        acao={
+          estado.email && (lembretes.pagar || lembretes.avaliar) ? (
+            <span className="rounded-full bg-verde px-3 py-1 text-xs font-semibold text-paper">Ligado</span>
+          ) : (
+            <span className="rounded-full bg-canvas-deep px-3 py-1 text-xs font-semibold text-ink">Desligado</span>
+          )
+        }
+      >
+        {!estado.email ? (
+          <p className="mb-4 rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay-dark">
+            Para funcionar, ligue o &ldquo;Aviso de venda por e-mail&rdquo; aqui em cima: os e-mails saem do seu Gmail.
+          </p>
+        ) : null}
+        <AdminForm action={salvarLembretesAction} className="space-y-4">
+          <label className="flex items-start gap-3">
+            <input name="pagar" type="checkbox" defaultChecked={lembretes.pagar} className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--wood)]" />
+            <span className="text-sm text-ink">
+              <strong className="font-semibold">Lembrete de pagamento.</strong> Quem preencheu os dados e não pagou recebe um lembrete depois de umas 1 hora e outro depois de
+              24 horas, com um botão que coloca a mesma cadeira de volta no carrinho. Se a pessoa pagar, os lembretes param.
+            </span>
+          </label>
+          <label className="flex items-start gap-3">
+            <input name="avaliar" type="checkbox" defaultChecked={lembretes.avaliar} className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--wood)]" />
+            <span className="text-sm text-ink">
+              <strong className="font-semibold">Pedido de avaliação.</strong> Uma semana depois de você marcar o pedido como &ldquo;Entregue&rdquo; (ou duas semanas
+              depois de &ldquo;Enviado&rdquo;, se não marcar), o cliente recebe um pedido de avaliação com foto e o link do Google.
+            </span>
+          </label>
+          <div className="flex flex-wrap items-center gap-3">
+            <SaveButton>Salvar</SaveButton>
+          </div>
+        </AdminForm>
+        {estado.email ? (
+          <AdminForm action={exemploLembretesAction} className="mt-3">
+            <SaveButton className={btnSecondary}>Ver como ficam (manda um exemplo para o seu e-mail)</SaveButton>
+          </AdminForm>
+        ) : null}
+        <p className="mt-4 text-xs text-ink-soft">
+          {rodada
+            ? `Última conferência: ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).format(new Date(rodada.em))}${rodada.enviados ? `, ${rodada.enviados} ${rodada.enviados === 1 ? "e-mail enviado" : "e-mails enviados"}` : ""}. Em Clientes, cada pedido mostra os e-mails que já recebeu.`
+            : "O site confere os pedidos sozinho a cada visita (no máximo a cada 10 minutos) e uma vez por dia."}
+        </p>
       </Card>
 
       {estado.ntfy || estado.email ? (

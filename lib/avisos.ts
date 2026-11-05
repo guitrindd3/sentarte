@@ -77,6 +77,18 @@ async function mandarEmail(cfg: ConfigGmail, assunto: string, texto: string) {
   await t.sendMail({ from: `Site SentArte <${cfg.email}>`, to: cfg.email, subject: assunto, text: texto });
 }
 
+/**
+ * An e-mail from the atelier's Gmail to a CUSTOMER (lib/lembretes.ts). Replies
+ * go to the atelier. Returns false when the Gmail isn't set up.
+ */
+export async function mandarEmailAoCliente(para: string, assunto: string, texto: string, html: string): Promise<boolean> {
+  const cfg = await lerGmail();
+  if (!cfg) return false;
+  const t = nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user: cfg.email, pass: cfg.senha } });
+  await t.sendMail({ from: `Ateliê SentArte <${cfg.email}>`, to: para, replyTo: cfg.email, subject: assunto, text: texto, html });
+  return true;
+}
+
 function textoCompleto(p: PedidoCliente) {
   const e = p.entrega;
   return [

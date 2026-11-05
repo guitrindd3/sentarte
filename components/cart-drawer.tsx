@@ -7,6 +7,7 @@ import { cepGuardado, guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import { CheckoutForm } from "@/components/checkout-form";
 import { CATEGORIA_VALE, valorDoVale } from "@/lib/vale";
 import { VagasSemana } from "@/components/vagas-semana";
+import { PrevisaoEntrega } from "@/components/previsao-entrega";
 import { calcularPedido } from "@/lib/pedido";
 import { useCart } from "@/lib/cart-context";
 import { CloseIcon, MinusIcon, PlusIcon, PresenteIcon, WhatsAppIcon } from "@/components/icons";
@@ -419,6 +420,7 @@ export function CartDrawer({
                 ) : null}
                 <p className="text-xs text-ink-soft">ou em até {PARCELAS_MAX}x no cartão</p>
                 {qtdCadeiras > 0 ? <VagasSemana className="pt-1 text-xs" /> : null}
+                {qtdCadeiras > 0 ? <PrevisaoEntrega className="text-xs" prazoFrete={prazoFrete} cadeiras={qtdCadeiras} pedirCep={estadoFrete.tipo === "sem-cep"} /> : null}
                 {subida ? (
                   <p className="mt-1 border border-ink/20 bg-canvas px-3 py-2 text-xs text-ink">
                     Leve mais {subida.faltam} {subida.faltam === 1 ? "cadeira" : "cadeiras"} e o desconto sobe para{" "}

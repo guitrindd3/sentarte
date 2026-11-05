@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { Avaliar } from "@/components/avaliar";
 import { CheckIcon } from "@/components/icons";
 import { lerPedido, type PedidoCliente } from "@/lib/clientes";
 import { getContent } from "@/lib/content-store";
@@ -82,6 +83,9 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
   const primeiroNome = p.nome.trim().split(/\s+/)[0];
   // photos the atelier takes while weaving it (lib/fotos-producao.ts)
   const fotos = soVale ? [] : await fotosDaProducao(p.ref).catch(() => []);
+  // the review e-mail (lib/lembretes.ts) links to #avaliar
+  const podeAvaliar = !soVale && p.status === "pago" && (p.etapa === "enviado" || p.etapa === "entregue");
+  const podeRetomar = p.status !== "pago" && Boolean(p.carrinho?.length);
 
   return (
     <>
@@ -169,6 +173,14 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
           <p className="mt-3 border-t border-line pt-3 text-ink-soft">
             Total: <strong className="text-ink">{formatBRL(p.valor)}</strong> {noPagamento(p.forma)}
           </p>
+          {podeRetomar ? (
+            <Link
+              href={`/retomar/${p.ref}`}
+              className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-ink px-5 py-2.5 font-semibold text-canvas hover:bg-ink/85"
+            >
+              Concluir o pagamento
+            </Link>
+          ) : null}
           <a
             href={whatsappUrl(site.whatsappNumero, `Oi! Quero falar sobre o meu pedido ${codigoDoPedido(p.ref)}.`)}
             target="_blank"
@@ -181,6 +193,14 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
             Voltar para a loja
           </Link>
         </aside>
+
+        {podeAvaliar ? (
+          <div id="avaliar" className="min-w-0 scroll-mt-28 md:col-span-2">
+            <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">Avalie a sua cadeira</h2>
+            <p className="mb-4 mt-1 text-sm text-ink-soft">Conte para a gente e, se quiser, mande uma foto com ela. Ajuda muito o ateliê!</p>
+            <Avaliar googleUrl={site.googleUrl} nomeInicial={primeiroNome} cidadeInicial={p.cidade.split("/")[0]} abertoInicial />
+          </div>
+        ) : null}
       </section>
     </>
   );

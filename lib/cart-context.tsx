@@ -69,6 +69,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore — start with an empty cart
     }
+    // /retomar/<ref> (reminder e-mail) refills the cart and comes back with ?carrinho=aberto
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("carrinho") === "aberto") {
+      setIsOpen(true);
+      url.searchParams.delete("carrinho");
+      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    }
     setHydrated(true);
   }, []);
 

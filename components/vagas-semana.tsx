@@ -11,7 +11,8 @@ const buscar = () =>
     .then((r) => r.json() as Promise<Estado>)
     .catch(() => ({ ligado: false })));
 
-export function VagasSemana({ className = "" }: { className?: string }) {
+/** This week's slots (null while loading). Also used by the delivery date (components/previsao-entrega.tsx). */
+export function useVagas() {
   const [v, setV] = useState<Estado | null>(null);
   useEffect(() => {
     let vivo = true;
@@ -20,6 +21,11 @@ export function VagasSemana({ className = "" }: { className?: string }) {
       vivo = false;
     };
   }, []);
+  return v;
+}
+
+export function VagasSemana({ className = "" }: { className?: string }) {
+  const v = useVagas();
   if (!v?.ligado || v.restantes === undefined) return null;
   const n = v.restantes;
   return (

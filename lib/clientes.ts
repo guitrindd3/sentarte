@@ -60,6 +60,33 @@ export type PedidoCliente = {
   obs?: string;
   /** The /eventos quote it came from (lib/orcamentos.ts), to show the customer's logo/pictures. */
   orcamento?: string;
+  /** The cart as the browser had it (since 2026-11-05): refills it from the reminder e-mail (/retomar/<ref>). */
+  carrinho?: ItemGuardado[];
+  /** The coupon code the customer typed, to put it back too. */
+  cupomDigitado?: string;
+  /** Automatic e-mails already sent to the customer (lib/lembretes.ts): when. */
+  lembretes?: { pagar1?: number; pagar2?: number; avaliar?: number };
+};
+
+/** A cart line as kept on the order — same shape as lib/cart-context CartItem. */
+export type ItemGuardado = {
+  id: string;
+  categoriaSlug: string;
+  categoriaTitulo: string;
+  modeloId: string;
+  modeloNome: string;
+  imagemUrl?: string;
+  corA: string;
+  corB: string;
+  quantidade: number;
+  nomePersonalizado?: string;
+  personalizada?: boolean;
+  variante?: string;
+  tipoCadeira?: "normal" | "infantil" | "reclinavel";
+  bracoMadeira?: boolean;
+  tassel?: string;
+  tasselQtd?: 1;
+  tasselLado?: "esq" | "dir";
 };
 
 const kcod = (cod: string) => `pedido:cod:${cod}`;

@@ -142,7 +142,7 @@ export function CheckoutForm({
         const r = await fetch("/api/pix", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ itens, entrega: d, email: d.email, referencia, vid: idDaVisita(), cupom: codigoDigitado }),
+          body: JSON.stringify({ itens, entrega: d, email: d.email, referencia, vid: idDaVisita(), cupom: codigoDigitado, carrinho: items }),
         });
         const p = (await r.json()) as Partial<PixGerado> & { erro?: string };
         if (!r.ok || !p.id || !p.copiaECola) throw new Error(p.erro || "Não deu para gerar o Pix agora.");
@@ -155,7 +155,7 @@ export function CheckoutForm({
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ forma, itens, entrega: d, referencia, vid: idDaVisita(), cupom: codigoDigitado }),
+        body: JSON.stringify({ forma, itens, entrega: d, referencia, vid: idDaVisita(), cupom: codigoDigitado, carrinho: items }),
       });
       const j = (await res.json()) as { url?: string; erro?: string; valor?: number };
       if (!res.ok || !j.url) throw new Error(j.erro || "Não foi possível abrir o pagamento.");
@@ -175,7 +175,7 @@ export function CheckoutForm({
       <CartaoNoSite
         valor={Math.round((conta.total + (valorFrete ?? 0)) * 100) / 100}
         email={(d.email ?? "").trim()}
-        corpoPedido={{ itens: itensDoPedido(), entrega: d, referencia: cartao.referencia, vid: idDaVisita(), cupom: codigoDigitado }}
+        corpoPedido={{ itens: itensDoPedido(), entrega: d, referencia: cartao.referencia, vid: idDaVisita(), cupom: codigoDigitado, carrinho: items }}
         onVoltar={() => setCartao(null)}
         onPaginaMercadoPago={() => {
           setCartao(null);

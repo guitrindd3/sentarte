@@ -16,7 +16,8 @@ import {
 import { editarInteressado, excluirInteressado, excluirPedido, normalizarWhatsapp, gravarPedido, lerPedido, registrarVendaDoPainel, type EtapaPedido } from "@/lib/clientes";
 import { excluirOrcamento, gravarOrcamento, lerOrcamento, type StatusOrcamento } from "@/lib/orcamentos";
 import { formatBRL } from "@/lib/offer";
-import { desligarGmail, desligarNtfy, estadoAvisos, ligarNtfy, salvarGmail, testarAvisos } from "@/lib/avisos";
+import { desligarGmail, desligarNtfy, estadoAvisos, ligarNtfy, mandarEmailAoCliente, salvarGmail, testarAvisos } from "@/lib/avisos";
+import { exemploDeLembrete, salvarConfigLembretes } from "@/lib/lembretes";
 import {
   atualizarEnvios,
   colocarNoCarrinho,
@@ -52,7 +53,7 @@ import {
   novosCodigosReserva,
   registrarEntrada,
 } from "@/lib/seguranca";
-import { getContentForWrite, prepararFoto, saveContent } from "@/lib/content-store";
+import { getContent, getContentForWrite, prepararFoto, saveContent } from "@/lib/content-store";
 import type { ArquivoNovo } from "@/lib/github-store";
 import { commitDaAcao } from "@/lib/github-store";
 import type { Categoria, Depoimento, Modelo } from "@/lib/content-schema";
@@ -932,6 +933,33 @@ export async function testarAvisosAction() {
     const erros = await testarAvisos();
     if (erros.length) throw new Aviso(`Não deu para mandar pelo ${erros.join(" nem pelo ")}.`);
     return "Aviso de teste enviado! Confira o celular / e-mail.";
+  });
+}
+
+export async function salvarLembretesAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    await salvarConfigLembretes({ pagar: formData.get("pagar") === "on", avaliar: formData.get("avaliar") === "on" });
+    revalidatePath("/admin/avisos");
+    return "E-mails automáticos salvos.";
+  });
+}
+
+/** Sends the three customer e-mails, filled with a made-up order, to the atelier's own Gmail. */
+export async function exemploLembretesAction() {
+  return executar(async () => {
+    const { email } = await estadoAvisos();
+    if (!email) throw new Aviso("Ligue o aviso por e-mail (Gmail) primeiro: os e-mails saem dele.");
+    const { site } = await getContent();
+    try {
+      for (const tipo of ["pagar1", "pagar2", "avaliar"] as const) {
+        const m = exemploDeLembrete(tipo, site);
+        await mandarEmailAoCliente(email, `[Exemplo] ${m.assunto}`, m.texto, m.html);
+      }
+    } catch (err) {
+      console.error("exemplo lembretes", err);
+      throw new Aviso("Não deu para mandar pelo Gmail. Confira a senha de app.");
+    }
+    return `Mandamos os 3 e-mails de exemplo para ${email}.`;
   });
 }
 
