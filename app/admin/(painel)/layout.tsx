@@ -1,7 +1,8 @@
 import Image from "next/image";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
-import { githubConfigurado } from "@/lib/github-store";
+import { estadoDaChave, githubConfigurado } from "@/lib/github-store";
 import { logoutAction, logoutTodosAction } from "../actions";
 import { StatusPublicacao, Toaster } from "../_ui";
 import { PainelPublicacao } from "../publicar";
@@ -89,7 +90,11 @@ export default async function PainelLayout({ children }: { children: React.React
             <p className="mb-6 rounded-xl border border-clay/40 bg-[#fbeee8] px-4 py-3 text-sm text-clay-dark">
               Salvar está desativado: falta configurar a chave do GitHub (GITHUB_TOKEN) na Vercel.
             </p>
-          ) : null}
+          ) : (
+            <Suspense>
+              <AvisoDaChave />
+            </Suspense>
+          )}
           {children}
         </div>
       </div>
@@ -97,6 +102,31 @@ export default async function PainelLayout({ children }: { children: React.React
       <NavInferior />
       <Toaster />
       <PainelPublicacao />
+    </div>
+  );
+}
+
+const diaCurto = (ms: number) => new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" }).format(new Date(ms));
+
+/** Warns 15 days before the GitHub key (GITHUB_TOKEN) expires, and once it has. */
+async function AvisoDaChave() {
+  const c = await estadoDaChave();
+  if (c.estado !== "vence" && c.estado !== "vencida") return null;
+  const vencida = c.estado === "vencida";
+  return (
+    <div
+      role="status"
+      className={`mb-6 rounded-xl border px-4 py-3 text-sm ${vencida ? "border-clay/40 bg-[#fbeee8] text-clay-dark" : "border-rattan/50 bg-rattan/10 text-wood-dark"}`}
+    >
+      <p className="font-semibold">
+        {vencida
+          ? "A chave do GitHub venceu: salvar no painel não funciona até trocar."
+          : `A chave do GitHub vence em ${c.dias} ${c.dias === 1 ? "dia" : "dias"} (${diaCurto(c.venceEm)}).`}
+      </p>
+      <p className="mt-1">
+        Crie uma nova em GitHub → Settings → Developer settings → Fine-grained tokens (só o repositório sentarte, Contents: Read and write, validade de 1 ano) e cole
+        na Vercel em GITHUB_TOKEN, no lugar da antiga. Depois o site precisa ser publicado de novo para a chave nova valer.
+      </p>
     </div>
   );
 }

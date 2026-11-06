@@ -134,3 +134,51 @@ export async function ultimosCommits(n = 20): Promise<CommitResumo[]> {
   );
   return lista.map((c) => ({ sha: c.sha, mensagem: c.commit.message.split("\n")[0], data: c.commit.committer.date }));
 }
+
+// ---- Token expiry warning (2026-11-06) ------------------------------------
+// The fine-grained token expires on a date chosen when it's created; GitHub
+// sends that date back in the `github-authentication-token-expiration`
+// header. The admin layout shows a warning 15 days before (and a red one once
+// it has expired, when GitHub answers 401). Cached per server instance for an
+// hour so the panel doesn't call GitHub on every page.
+
+export type EstadoChave =
+  | { estado: "ok" | "desconhecido" }
+  | { estado: "vence"; venceEm: number; dias: number }
+  | { estado: "vencida" };
+
+let cacheChave: { em: number; valor: EstadoChave } | null = null;
+
+/** "2026-12-06 14:19:00 UTC" / "2026-12-06 14:19:00 -0300" → ms. */
+export function lerDataDaChave(v: string): number | null {
+  const iso = v.trim().replace(/ UTC$/, "Z").replace(/ ([+-]\d{2})(\d{2})$/, "$1:$2").replace(" ", "T");
+  const ms = Date.parse(iso);
+  return Number.isFinite(ms) ? ms : null;
+}
+
+export async function estadoDaChave(agora = Date.now()): Promise<EstadoChave> {
+  if (!process.env.GITHUB_TOKEN) return { estado: "desconhecido" };
+  if (cacheChave && agora - cacheChave.em < 3600_000) return cacheChave.valor;
+  let valor: EstadoChave = { estado: "desconhecido" };
+  try {
+    const res = await fetch(`https://api.github.com/repos/${REPO}`, {
+      headers: cabecalhos(),
+      cache: "no-store",
+      signal: AbortSignal.timeout(4000),
+    });
+    if (res.status === 401) valor = { estado: "vencida" };
+    else if (res.ok) {
+      const cab = res.headers.get("github-authentication-token-expiration");
+      const venceEm = cab ? lerDataDaChave(cab) : null;
+      if (venceEm === null) valor = { estado: "ok" };
+      else {
+        const dias = Math.ceil((venceEm - agora) / 86_400_000);
+        valor = dias <= 0 ? { estado: "vencida" } : dias <= 15 ? { estado: "vence", venceEm, dias } : { estado: "ok" };
+      }
+    }
+  } catch {
+    return { estado: "desconhecido" }; // network hiccup: don't cache, don't warn
+  }
+  cacheChave = { em: agora, valor };
+  return valor;
+}
