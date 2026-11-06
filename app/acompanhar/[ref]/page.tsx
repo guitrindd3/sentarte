@@ -11,6 +11,7 @@ import { codigoDoPedido, noPagamento } from "@/lib/pedido";
 import { linkRastreio } from "@/lib/rastreio";
 import { fotosDaProducao } from "@/lib/fotos-producao";
 import { redisAtivo } from "@/lib/redis";
+import { codigoDoPassaporte, lerPassaportes, numeroBonito } from "@/lib/passaporte";
 import { whatsappUrl } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
@@ -86,6 +87,8 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
   // the review e-mail (lib/lembretes.ts) links to #avaliar
   const podeAvaliar = !soVale && p.status === "pago" && (p.etapa === "enviado" || p.etapa === "entregue");
   const podeRetomar = p.status !== "pago" && Boolean(p.carrinho?.length);
+  // each chair's passport (lib/passaporte.ts)
+  const passaportes = p.passaportes?.length ? await lerPassaportes(p.passaportes).catch(() => []) : [];
 
   return (
     <>
@@ -149,7 +152,29 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
           </div>
         ) : null}
 
-        <aside className="h-fit border border-line bg-paper p-5 text-sm">
+        {passaportes.length ? (
+          <div className="min-w-0 border border-ink bg-paper p-5 md:col-span-2">
+            <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">{passaportes.length === 1 ? "O passaporte da sua cadeira" : "Os passaportes das suas cadeiras"}</h2>
+            <p className="mt-1 max-w-prose text-sm text-ink-soft">
+              Cada cadeira tem o seu número e uma página com a história dela. Ela chega com uma etiqueta com QR code: é só apontar a câmera do celular.
+            </p>
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {passaportes.map((x) => (
+                <li key={x.n}>
+                  <Link
+                    href={`/p/${codigoDoPassaporte(x.n)}`}
+                    className="inline-flex items-center gap-2 border border-line px-3 py-2 text-sm text-ink hover:border-ink"
+                  >
+                    <span className="font-mono text-xs tracking-widest">Nº {numeroBonito(x.n)}</span>
+                    <span>{x.modelo}{x.colecao ? ` · ${String(x.colecao.numero).padStart(2, "0")}/${x.colecao.total}` : ""}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        <aside className="h-fit border border-line bg-paper p-5 text-sm md:col-start-2 md:row-start-1">
           <p className="font-serif text-lg font-medium tracking-tight text-ink">Resumo</p>
           <ul className="mt-3 space-y-1 text-ink">
             {p.itens.map((i, k) => (

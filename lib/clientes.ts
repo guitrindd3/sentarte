@@ -64,6 +64,10 @@ export type PedidoCliente = {
   carrinho?: ItemGuardado[];
   /** The coupon code the customer typed, to put it back too. */
   cupomDigitado?: string;
+  /** Chairs of a numbered collection in this order (lib/colecoes.ts), checked at checkout, numbered on payment. */
+  colecoes?: { id: string; nome: string; modeloNome: string; qtd: number }[];
+  /** Passport numbers of its chairs (lib/passaporte.ts), given on payment. */
+  passaportes?: number[];
   /** Automatic e-mails already sent to the customer (lib/lembretes.ts): when. */
   lembretes?: {
     pagar1?: number;
@@ -135,6 +139,7 @@ export async function registrarVendaDoPainel(p: Omit<PedidoCliente, "em" | "stat
   ]);
   const cadeiras = p.porTipo ? p.porTipo.normal + p.porTipo.infantil + p.porTipo.reclinavel : 0;
   await usarVagas(cadeiras);
+  await import("./passaporte").then((m) => m.gerarPassaportes(p.ref)).catch((err) => console.error("passaportes", err));
   return dados;
 }
 
@@ -166,6 +171,8 @@ export async function marcarPedido(ref: string, status: StatusPedido): Promise<P
         await avisarVenda(p).catch((err) => console.error("avisarVenda", err));
         // "Pedido confirmado" to the customer (lazy import: lib/lembretes.ts imports this file)
         await import("./lembretes").then((m) => m.avisarEtapaAgora(ref)).catch((err) => console.error("avisarEtapa", err));
+        // chair passports + collection numbers (lazy import: lib/passaporte.ts imports this file)
+        await import("./passaporte").then((m) => m.gerarPassaportes(ref)).catch((err) => console.error("passaportes", err));
       }
     }
     return p;

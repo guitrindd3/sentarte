@@ -33,6 +33,8 @@ export type Campanha = {
   falhas: number;
   /** When the queue emptied. */
   fim?: number;
+  /** Sent only to part of the list (e.g. a collection's waiting list). */
+  publico?: string;
 };
 
 const primeiroNome = (n?: string) => n?.trim().split(/\s+/)[0] ?? "";
@@ -98,10 +100,15 @@ export function emailBoasVindas(nome: string, email: string, cupom: Pick<CupomDa
 
 // --- the queue -------------------------------------------------------------------------
 
-export async function criarCampanha(dados: Pick<Campanha, "assunto" | "texto" | "botaoTexto" | "botaoLink">): Promise<Campanha> {
-  const lista = await listarAssinantes();
+export async function criarCampanha(
+  dados: Pick<Campanha, "assunto" | "texto" | "botaoTexto" | "botaoLink">,
+  /** Only these addresses (still on the list: whoever left is skipped). */
+  so?: { emails: string[]; publico: string }
+): Promise<Campanha> {
+  const alvo = so ? new Set(so.emails) : null;
+  const lista = (await listarAssinantes()).filter((a) => !alvo || alvo.has(a.email));
   if (!lista.length) throw new Error("lista vazia");
-  const c: Campanha = { ...dados, id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, em: Date.now(), total: lista.length, enviados: 0, falhas: 0 };
+  const c: Campanha = { ...dados, id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, em: Date.now(), total: lista.length, enviados: 0, falhas: 0, publico: so?.publico };
   const fila = lista.map((a) => a.email);
   const cmds: (string | number)[][] = [["SET", kc(c.id), JSON.stringify(c)], ["ZADD", "campanhas", c.em, c.id]];
   for (let i = 0; i < fila.length; i += 200) cmds.push(["RPUSH", kf(c.id), ...fila.slice(i, i + 200)]);

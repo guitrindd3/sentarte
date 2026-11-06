@@ -19,7 +19,7 @@ import { EVENTO_CUPOM } from "@/lib/use-cupons";
 // only at the moment it would show. Off during Black Friday week.
 
 const CHAVE = "sentarte-janela";
-const SEM_ROTAS = ["/admin", "/pedido", "/acompanhar", "/retomar", "/sair-da-lista"];
+const SEM_ROTAS = ["/admin", "/pedido", "/acompanhar", "/retomar", "/sair-da-lista", "/p/", "/colecao/"];
 const DIA = 86_400_000;
 
 type Info = { rotulo: string; condicao: string; validade: string };

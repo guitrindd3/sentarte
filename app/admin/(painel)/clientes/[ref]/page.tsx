@@ -9,7 +9,8 @@ import { codigoDoPedido, noPagamento } from "@/lib/pedido";
 import { linkRastreio } from "@/lib/rastreio";
 import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
-import { definirEtapaAction, salvarRastreioAction } from "../../../actions";
+import { definirEtapaAction, editarPassaporteAction, gerarPassaportesAction, salvarRastreioAction } from "../../../actions";
+import { codigoDoPassaporte, lerConfigPassaporte, lerPassaportes, numeroBonito, rotuloTipo } from "@/lib/passaporte";
 import { AdminForm, btnSecondary, Card, Field, inputClass, SaveButton } from "../../../_ui";
 import { CopiarNumeros } from "../copiar";
 import { Etiqueta } from "./etiqueta";
@@ -62,6 +63,8 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
   const etapa = p.etapa ?? (pago ? "producao" : undefined);
   const e = p.entrega;
   const fotos = await fotosDaProducao(p.ref).catch(() => []);
+  const passaportes = p.passaportes?.length ? await lerPassaportes(p.passaportes).catch(() => []) : [];
+  const cfgPassaporte = await lerConfigPassaporte().catch(() => null);
   const orc = p.orcamento ? await lerOrcamento(p.orcamento).catch(() => null) : null;
   const primeiroNome = p.nome.trim().split(/\s+/)[0];
   const avisoFoto = `Oi, ${primeiroNome}! Aqui é do Ateliê SentArte. Sua cadeira já está sendo trançada 😍 Olha como ela está ficando: ${SITE_URL}/acompanhar/${p.ref}`;
@@ -196,6 +199,72 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
             max={MAX_FOTOS_PRODUCAO}
             linkWhatsapp={whatsappUrl(p.whatsapp, avisoFoto)}
           />
+        </Card>
+      ) : null}
+
+      {pago && p.porTipo && p.porTipo.normal + p.porTipo.infantil + p.porTipo.reclinavel > 0 ? (
+        <Card
+          titulo="Passaporte da cadeira"
+          descricao="Cada cadeira tem um número e uma página com a história dela. Imprima a etiqueta com o QR code e prenda na cadeira antes de enviar."
+          acao={
+            passaportes.length ? (
+              <a href={`/admin/etiquetas?ref=${p.ref}`} target="_blank" rel="noreferrer" className={btnSecondary}>
+                Imprimir {passaportes.length === 1 ? "a etiqueta" : `as ${passaportes.length} etiquetas`}
+              </a>
+            ) : null
+          }
+        >
+          {passaportes.length ? (
+            <ul className="space-y-4">
+              {passaportes.map((x) => {
+                const padrao = cfgPassaporte?.porTipo[x.tipo];
+                return (
+                  <li key={x.n} className="rounded-xl border border-line/70 bg-canvas p-4">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <p className="font-semibold text-ink">
+                        Cadeira nº {numeroBonito(x.n)}
+                        {x.colecao ? (
+                          <span className="ml-2 rounded-full bg-ink px-2.5 py-0.5 text-xs font-semibold text-paper">
+                            {x.colecao.nome}: {String(x.colecao.numero).padStart(2, "0")} de {x.colecao.total}
+                          </span>
+                        ) : null}
+                      </p>
+                      <a href={`/p/${codigoDoPassaporte(x.n)}`} target="_blank" rel="noreferrer" className="text-sm font-medium text-wood-dark underline">
+                        Ver o passaporte
+                      </a>
+                    </div>
+                    <AdminForm action={editarPassaporteAction.bind(null, x.n)} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <Field label="Cadeira">
+                        <input name="modelo" defaultValue={x.modelo} maxLength={80} className={inputClass} />
+                      </Field>
+                      <Field label="Nome trançado">
+                        <input name="nome" defaultValue={x.nome ?? ""} maxLength={40} className={inputClass} placeholder="Sem nome" />
+                      </Field>
+                      <Field label="Quem trançou">
+                        <input name="artesa" defaultValue={x.artesa ?? ""} maxLength={60} className={inputClass} placeholder={cfgPassaporte?.artesa || "Ateliê SentArte"} />
+                      </Field>
+                      <Field label="Horas de trabalho">
+                        <input name="horas" inputMode="decimal" defaultValue={x.horas ?? ""} className={inputClass} placeholder={padrao?.horas ? `${padrao.horas} (padrão)` : "Ex.: 6"} />
+                      </Field>
+                      <Field label="Metros de fio">
+                        <input name="metros" inputMode="decimal" defaultValue={x.metros ?? ""} className={inputClass} placeholder={padrao?.metros ? `${padrao.metros} (padrão)` : "Ex.: 180"} />
+                      </Field>
+                      <Field label="Ficou pronta em">
+                        <input name="prontaEm" type="date" defaultValue={x.prontaEm ?? ""} className={inputClass} />
+                      </Field>
+                      <p className="text-xs text-ink-soft sm:col-span-2 lg:col-span-2">Tipo: {rotuloTipo(x.tipo)}{x.extras?.length ? `, ${x.extras.join(", ")}` : ""}. Em branco usa o padrão de <Link href="/admin/passaportes" className="underline">Passaportes</Link>.</p>
+                      <SaveButton>Salvar passaporte</SaveButton>
+                    </AdminForm>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <AdminForm action={gerarPassaportesAction.bind(null, p.ref)}>
+              <p className="mb-3 text-sm text-ink-soft">Esse pedido ainda não tem passaporte (os pedidos pagos a partir de agora ganham sozinhos).</p>
+              <SaveButton>Gerar passaportes</SaveButton>
+            </AdminForm>
+          )}
         </Card>
       ) : null}
 

@@ -3,6 +3,7 @@ import { normalizarWhatsapp, salvarPedidoIniciado } from "./clientes";
 import { cuponsDoPedido } from "./cupons-store";
 import { anotarNoCaminho, vidValido } from "./estatisticas";
 import { inscreverEmail } from "./lista-email";
+import { conferirColecoes } from "./colecoes";
 import { calcularFrete } from "./frete-servidor";
 import { CATEGORIA_COM_PRECO, quantosTasseis, tipoValido } from "./offer";
 import { valorDoVale } from "./vale";
@@ -118,6 +119,9 @@ export async function prepararPedido(corpo: CorpoPedido) {
   if (!conta.pagavel || conta.total <= 0) return { ok: false, erro: "Esse carrinho só pode ser fechado pelo WhatsApp." } as const;
   if (forma !== "pix" && forma !== "cartao") return { ok: false, erro: "Forma de pagamento inválida." } as const;
   if (!entrega || !entregaCompleta(entrega, conta.soVale)) return { ok: false, erro: "Preencha os dados de entrega." } as const;
+  // numbered collections: only while open, never more than what is left (lib/colecoes.ts)
+  const colecoes = await conferirColecoes(itens);
+  if (!colecoes.ok) return { ok: false, erro: colecoes.erro } as const;
   const ref = /^[a-z0-9-]{6,40}$/i.test(String(referencia)) ? String(referencia) : crypto.randomUUID();
   // shipping is recomputed here too (Espírito Santo ships free, see lib/frete-servidor.ts)
   // a vale-presente only order ships nothing
@@ -128,7 +132,7 @@ export async function prepararPedido(corpo: CorpoPedido) {
   const telefone = entrega.telefone.replace(/\D/g, "");
   const carrinho = carrinhoSeguro(corpo.carrinho);
   const cupomDigitado = typeof corpo.cupom === "string" && corpo.cupom.trim() ? corpo.cupom.trim().slice(0, 30) : undefined;
-  return { ok: true, forma, ref, itens, conta, frete, valorProdutos, valor, entrega, telefone, carrinho, cupomDigitado, novidades: corpo.novidades === true } as const;
+  return { ok: true, forma, ref, itens, conta, frete, valorProdutos, valor, entrega, telefone, carrinho, cupomDigitado, novidades: corpo.novidades === true, colecoes: colecoes.linhas } as const;
 }
 
 type Pronto = Extract<Awaited<ReturnType<typeof prepararPedido>>, { ok: true }>;
@@ -171,6 +175,7 @@ export async function registrarPedido(p: Pronto, vid?: string) {
     frete: { valor: p.frete.valor, servico: p.frete.servico },
     carrinho: p.carrinho,
     cupomDigitado: p.cupomDigitado,
+    colecoes: p.colecoes.length ? p.colecoes : undefined,
   });
   if (p.novidades && p.entrega.email) {
     await inscreverEmail({ email: p.entrega.email, nome: p.entrega.nome, origem: "compra" }).catch((err) => console.error("inscreverEmail", err));

@@ -1,4 +1,5 @@
 import { Carousel } from "@/components/home/carousel";
+import { ColecaoDestaque } from "@/components/home/colecao-destaque";
 import { CategoryBento } from "@/components/home/category-bento";
 import { ContactCta } from "@/components/home/contact-cta";
 import { Depoimentos } from "@/components/home/depoimentos";
@@ -30,6 +31,7 @@ export default async function Home() {
   return (
     <>
       <Carousel hero={content.hero} whatsappNumero={zap} fotos={t.fotos("carrossel")} />
+      <ColecaoDestaque />
       <OfferStrip />
       <CategoryBento categorias={content.categorias} titulo={t.linha("escolhaTitulo")} />
       <TeamShowcase categorias={content.categorias} whatsappNumero={zap} titulo={t.linha("nossasTitulo")} texto={textoSimples(t.linha("nossasTexto"))} />

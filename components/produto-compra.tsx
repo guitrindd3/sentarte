@@ -19,6 +19,7 @@ import { whatsappUrl } from "@/lib/urls";
 import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
 import { LogoBlackFriday } from "@/components/logo-black-friday";
 import { SeloBlackFriday } from "@/components/selo-black-friday";
+import { PortaoColecao, SeloColecao } from "@/components/colecao-compra";
 import type { Modelo } from "@/lib/content-schema";
 
 // Top of the product page /cadeira/<slug>: big photo gallery (tap to zoom),
@@ -174,6 +175,7 @@ export function ProdutoCompra({
             <BotaoFavorito slug={slug} nome={modelo.nome} />
           </div>
         </div>
+        <SeloColecao nome={modelo.nome} className="mt-3" />
         <p className="mt-3 max-w-[55ch] leading-relaxed text-ink-soft">{e.ativo.descricao}</p>
 
         {e.temPreco ? (
@@ -248,6 +250,7 @@ export function ProdutoCompra({
         ) : null}
 
         <div className="mt-6 grid max-w-sm gap-2">
+          <PortaoColecao nome={modelo.nome}>
           <button
             type="button"
             data-rastro={`Comprar (página): ${e.ativo.nome}`}
@@ -260,6 +263,7 @@ export function ProdutoCompra({
           {e.faltaNome ? (
             <p className={`text-xs ${avisoNome ? "font-medium text-red-700" : "text-ink-soft"}`}>Escreva o nome que vai trançado na cadeira para comprar.</p>
           ) : null}
+          </PortaoColecao>
           {e.temPreco ? <VagasSemana className="mt-2" /> : null}
         </div>
 

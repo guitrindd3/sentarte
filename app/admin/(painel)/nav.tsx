@@ -51,6 +51,16 @@ const ITENS: { href: string; rotulo: string; icone: ReactNode }[] = [
     icone: <path d="M4 6.5h16v11H4zM4 7l8 6 8-6" />,
   },
   {
+    href: "/admin/colecoes",
+    rotulo: "Coleções",
+    icone: <path d="M5 4.5h14v15H5zM9 4.5v15M12.5 9h3.5M12.5 12.5h3.5M12.5 16h2" />,
+  },
+  {
+    href: "/admin/passaportes",
+    rotulo: "Passaportes",
+    icone: <path d="M6 3.5h12a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1zM8.5 8h2.5v2.5H8.5zM13 8h2.5v2.5H13zM8.5 12.5h2.5V15H8.5zM13.5 13h2M13.5 16h2M8.5 17.5h3" />,
+  },
+  {
     href: "/admin/catalogo",
     rotulo: "Cadeiras",
     icone: (
@@ -97,7 +107,7 @@ const MAIS = {
   rotulo: "Mais",
   icone: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth="3" />,
 };
-const DENTRO_DE_MAIS = ["/admin/mais", "/admin/orcamentos", "/admin/avisos", "/admin/vagas", "/admin/montar", "/admin/cupons", "/admin/campanhas", "/admin/paginas", "/admin/depoimentos", "/admin/site", "/admin/seguranca"];
+const DENTRO_DE_MAIS = ["/admin/mais", "/admin/orcamentos", "/admin/avisos", "/admin/vagas", "/admin/montar", "/admin/cupons", "/admin/campanhas", "/admin/colecoes", "/admin/passaportes", "/admin/paginas", "/admin/depoimentos", "/admin/site", "/admin/seguranca"];
 
 function ativo(pathname: string, href: string) {
   if (href === "/admin/mais") return DENTRO_DE_MAIS.some((h) => pathname.startsWith(h));

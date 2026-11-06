@@ -11,7 +11,8 @@ import { redis } from "./redis";
 // para quem já comprou"). Only people who ticked a consent box are on it:
 // - "janela": the welcome-coupon window (components/janela-cupom.tsx) — they
 //   get a one-use coupon for the first order in exchange;
-// - "compra": the "quero receber novidades por e-mail" box at checkout.
+// - "compra": the "quero receber novidades por e-mail" box at checkout;
+// - "colecao": the waiting list of a numbered collection (lib/colecoes.ts).
 // Older buyers never agreed, so they are NOT on it. Campaigns (lib/campanhas.ts)
 // go only to this list, and every one carries a one-click unsubscribe link
 // (/sair-da-lista, signed with SESSION_SECRET). Leaving puts the address in
@@ -27,7 +28,7 @@ const K = {
   usos: "cupons:usos",
 };
 
-export type OrigemEmail = "janela" | "compra";
+export type OrigemEmail = "janela" | "compra" | "colecao";
 export type Assinante = { email: string; nome?: string; em: number; origem: OrigemEmail };
 
 export const emailValido = (e: unknown) => {

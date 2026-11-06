@@ -14,6 +14,7 @@ import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
 import { LogoBlackFriday } from "@/components/logo-black-friday";
 import { OpcaoBraco } from "@/components/opcao-braco";
 import { SeloBlackFriday } from "@/components/selo-black-friday";
+import { PortaoColecao, SeloColecao } from "@/components/colecao-compra";
 import { whatsappUrl } from "@/lib/urls";
 import type { Modelo } from "@/lib/content-schema";
 import { useCart } from "@/lib/cart-context";
@@ -165,6 +166,7 @@ export function ModeloCard({
         ) : (
           <p className="font-serif text-lg font-medium text-ink">{modelo.nome}</p>
         )}
+        <SeloColecao nome={modelo.nome} className="mt-1.5" />
         {bf && temPreco && !precoBf ? <SeloBlackFriday cupom={bf.cupom} className="mt-1" /> : null}
         {temPreco ? (
           <p className="mt-1 text-sm text-ink">
@@ -236,6 +238,7 @@ export function ModeloCard({
             Ver detalhes, medidas e frete
           </Link>
         ) : null}
+        <PortaoColecao nome={modelo.nome}>
         {/* phones: Comprar + a cart icon side by side; stacked from sm */}
         <div className="mt-4 grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-1">
           <button
@@ -251,6 +254,7 @@ export function ModeloCard({
         {faltaNome ? (
           <p className="mt-1.5 text-xs text-ink-soft">Escreva o nome que vai trançado na cadeira para comprar.</p>
         ) : null}
+        </PortaoColecao>
         <a
           href={whatsappUrl(whatsappNumero, mensagemWhatsapp)}
           target="_blank"

@@ -15,12 +15,14 @@ import {
 } from "@/lib/auth";
 import { editarInteressado, excluirInteressado, excluirPedido, normalizarWhatsapp, gravarPedido, lerPedido, registrarVendaDoPainel, type EtapaPedido } from "@/lib/clientes";
 import { excluirOrcamento, gravarOrcamento, lerOrcamento, type StatusOrcamento } from "@/lib/orcamentos";
-import { formatBRL } from "@/lib/offer";
 import { desligarGmail, desligarNtfy, estadoAvisos, ligarNtfy, mandarEmailAoCliente, salvarGmail, testarAvisos } from "@/lib/avisos";
 import { after } from "next/server";
 import { avisarEtapaAgora, exemploDeLembrete, salvarConfigLembretes } from "@/lib/lembretes";
 import { criarCampanha, emailDaCampanha, LIMITE_DIA, processarCampanhas } from "@/lib/campanhas";
 import { removerEmail, salvarConfigBoasVindas } from "@/lib/lista-email";
+import { apagarColecao, idColecaoValido, lerColecao, listaDeEspera, listarColecoes, numerosDasColecoes, salvarColecao, type Colecao, type EstadoColecao } from "@/lib/colecoes";
+import { gerarPassaportes, gravarPassaporte, lerPassaporte, numeroBonito, salvarConfigPassaporte } from "@/lib/passaporte";
+import { CATEGORIA_COM_PRECO, formatBRL, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
 import {
   atualizarEnvios,
   colocarNoCarrinho,
@@ -56,7 +58,7 @@ import {
   novosCodigosReserva,
   registrarEntrada,
 } from "@/lib/seguranca";
-import { getContent, getContentForWrite, prepararFoto, saveContent } from "@/lib/content-store";
+import { getAdminContent, getContent, getContentForWrite, prepararFoto, saveContent } from "@/lib/content-store";
 import type { ArquivoNovo } from "@/lib/github-store";
 import { commitDaAcao } from "@/lib/github-store";
 import type { Categoria, Depoimento, Modelo } from "@/lib/content-schema";
@@ -1204,6 +1206,7 @@ export async function mandarCampanhaAction(_p: Resultado, formData: FormData) {
     const { email: gmail } = await estadoAvisos();
     if (!gmail) throw new Aviso("Ligue o aviso por e-mail (Gmail) em Avisos e envio primeiro: os e-mails saem dele.");
     const dados = { assunto, texto, botaoTexto, botaoLink };
+    const colecaoId = String(formData.get("colecao") ?? "");
     if (formData.get("para") !== "todos") {
       const m = emailDaCampanha(dados, { email: gmail, nome: "Maria" });
       try {
@@ -1216,13 +1219,17 @@ export async function mandarCampanhaAction(_p: Resultado, formData: FormData) {
     }
     let c;
     try {
-      c = await criarCampanha(dados);
+      // a collection's waiting list (/admin/colecoes) or everyone
+      const col = colecaoId ? await lerColecao(colecaoId) : null;
+      if (colecaoId && !col) throw new Aviso(SUMIU);
+      c = await criarCampanha(dados, col ? { emails: await listaDeEspera(col.id), publico: `Lista de espera: ${col.nome}` } : undefined);
     } catch (err) {
-      if (err instanceof Error && err.message === "lista vazia") throw new Aviso("Ainda não tem ninguém na lista.");
+      if (err instanceof Error && err.message === "lista vazia") throw new Aviso(colecaoId ? "Ninguém na lista de espera ainda." : "Ainda não tem ninguém na lista.");
       throw err;
     }
     after(() => processarCampanhas().then(() => undefined));
     revalidatePath("/admin/campanhas");
+    revalidatePath("/admin/colecoes");
     return c.total > LIMITE_DIA
       ? `Enviando para ${c.total} pessoas: ${LIMITE_DIA} por dia, termina em ${Math.ceil(c.total / LIMITE_DIA)} dias.`
       : `Enviando para ${c.total} ${c.total === 1 ? "pessoa" : "pessoas"}. Leva alguns minutos.`;
@@ -1234,5 +1241,115 @@ export async function removerAssinanteAction(email: string) {
     await removerEmail(email);
     revalidatePath("/admin/campanhas");
     return "Tirado da lista.";
+  });
+}
+
+// --- Passaporte da cadeira (lib/passaporte.ts, 2026-11-06) ---------------------------
+
+/** Paid orders get passports by themselves; this is for older orders (or a run that broke). */
+export async function gerarPassaportesAction(ref: string) {
+  return executar(async () => {
+    const ns = await gerarPassaportes(ref, true);
+    if (!ns.length) throw new Aviso("Não deu para gerar: o pedido precisa estar pago e ter cadeiras.");
+    revalidatePath(`/admin/clientes/${ref}`);
+    return ns.length === 1 ? `Passaporte nº ${numeroBonito(ns[0])} criado.` : `${ns.length} passaportes criados.`;
+  });
+}
+
+const textoCurto = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? "").replace(/\s+/g, " ").trim().slice(0, max) || undefined;
+function numeroOpcional(fd: FormData, k: string) {
+  const v = String(fd.get(k) ?? "").replace(",", ".").trim();
+  if (!v) return undefined;
+  const x = Number(v);
+  if (!(x > 0 && x < 100000)) throw new Aviso("Horas e metros: escreva só o número (ex.: 6 ou 180).");
+  return Math.round(x * 10) / 10;
+}
+
+export async function editarPassaporteAction(n: number, _p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const p = await lerPassaporte(n);
+    if (!p) throw new Aviso(SUMIU);
+    p.modelo = textoCurto(formData, "modelo", 80) ?? p.modelo;
+    p.nome = textoCurto(formData, "nome", 40);
+    p.artesa = textoCurto(formData, "artesa", 60);
+    p.horas = numeroOpcional(formData, "horas");
+    p.metros = numeroOpcional(formData, "metros");
+    const pronta = String(formData.get("prontaEm") ?? "");
+    p.prontaEm = /^\d{4}-\d{2}-\d{2}$/.test(pronta) ? pronta : undefined;
+    await gravarPassaporte(p);
+    revalidatePath(`/admin/clientes/${p.ref}`);
+    return `Passaporte nº ${numeroBonito(n)} salvo. Já aparece no QR.`;
+  });
+}
+
+export async function salvarConfigPassaporteAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const porTipo: Partial<Record<TipoCadeira, { horas?: number; metros?: number }>> = {};
+    for (const t of Object.keys(TIPOS_CADEIRA) as TipoCadeira[]) {
+      const horas = numeroOpcional(formData, `horas_${t}`);
+      const metros = numeroOpcional(formData, `metros_${t}`);
+      if (horas || metros) porTipo[t] = { horas, metros };
+    }
+    await salvarConfigPassaporte({ artesa: textoCurto(formData, "artesa", 60) ?? "", porTipo });
+    revalidatePath("/admin/passaportes");
+    return "Salvo. Vale para todos os passaportes que não têm um valor próprio.";
+  });
+}
+
+// --- Coleções numeradas (lib/colecoes.ts, 2026-11-06) ---------------------------------
+
+const ESTADOS: EstadoColecao[] = ["rascunho", "espera", "aberta", "encerrada"];
+
+export async function salvarColecaoAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const nome = textoCurto(formData, "nome", 60) ?? "";
+    if (nome.length < 3) throw new Aviso("Dê um nome para a coleção (ex.: Coleção Verão 2027).");
+    const descricao = String(formData.get("descricao") ?? "").replace(/\r\n/g, "\n").trim().slice(0, 1500);
+    const total = Math.floor(Number(formData.get("total")));
+    if (!(total >= 1 && total <= 1000)) throw new Aviso("Quantas cadeiras a edição tem? De 1 a 1000.");
+    const estado = String(formData.get("estado")) as EstadoColecao;
+    if (!ESTADOS.includes(estado)) throw new Aviso("Escolha a situação da coleção.");
+    const abre = String(formData.get("abreEm") ?? "").trim();
+    // the field is Brasília time (no daylight saving since 2019)
+    const abreEm = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(abre) ? Date.parse(`${abre}:00-03:00`) : undefined;
+    const content = await getAdminContent();
+    const nomes = new Set((content.categorias.find((c) => c.slug === CATEGORIA_COM_PRECO)?.modelos ?? []).map((m) => m.nome));
+    const modelos = [...new Set(formData.getAll("modelos").map(String))].filter((m) => nomes.has(m));
+    if (!modelos.length) throw new Aviso("Marque pelo menos uma cadeira da coleção.");
+
+    const todas = await listarColecoes();
+    const editarId = String(formData.get("id") ?? "");
+    const atual = editarId ? todas.find((c) => c.id === editarId) : undefined;
+    if (editarId && !atual) throw new Aviso(SUMIU);
+    let id = atual?.id ?? slugDoModelo(nome).slice(0, 36);
+    if (!atual) {
+      if (!idColecaoValido(id)) id = `colecao-${Date.now().toString(36)}`;
+      const base = id;
+      for (let k = 2; todas.some((c) => c.id === id); k++) id = `${base}-${k}`;
+    }
+    // a chair can only be in one running collection (its number would be ambiguous)
+    if (estado !== "encerrada") {
+      for (const outra of todas) {
+        if (outra.id === id || outra.estado === "encerrada" || outra.estado === "rascunho") continue;
+        const repetida = modelos.find((m) => outra.modelos.includes(m));
+        if (repetida) throw new Aviso(`A ${repetida} já está na ${outra.nome}. Encerre aquela ou tire a cadeira de uma das duas.`);
+      }
+    }
+    const vendidos = atual ? (await numerosDasColecoes([id])).get(id)?.vendidos ?? 0 : 0;
+    if (total < vendidos) throw new Aviso(`Já foram vendidas ${vendidos}. O total não pode ser menor que isso.`);
+    const c: Colecao = { id, nome, descricao, total, modelos, estado, abreEm: estado === "aberta" ? abreEm : undefined, criadaEm: atual?.criadaEm ?? Date.now() };
+    await salvarColecao(c);
+    revalidatePath("/admin/colecoes");
+    return { msg: atual ? "Coleção salva. Já está assim no site." : "Coleção criada!", ir: `/admin/colecoes?editar=${id}` };
+  });
+}
+
+export async function apagarColecaoAction(id: string) {
+  return executar(async () => {
+    const vendidos = (await numerosDasColecoes([id])).get(id)?.vendidos ?? 0;
+    if (vendidos > 0) throw new Aviso("Essa coleção já vendeu cadeiras numeradas. Em vez de apagar, mude para Encerrada.");
+    await apagarColecao(id);
+    revalidatePath("/admin/colecoes");
+    return { msg: "Coleção apagada.", ir: "/admin/colecoes" };
   });
 }

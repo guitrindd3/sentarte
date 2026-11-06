@@ -26,7 +26,7 @@ function Progresso({ c }: { c: Campanha }) {
         </span>
       </div>
       <p className="mt-1 text-sm text-ink-soft">
-        {quando(c.em)} · {c.enviados} de {c.total} enviados{c.falhas ? ` · ${c.falhas} não foram (e-mail errado?)` : ""}
+        {c.publico ? `${c.publico} · ` : ""}{quando(c.em)} · {c.enviados} de {c.total} enviados{c.falhas ? ` · ${c.falhas} não foram (e-mail errado?)` : ""}
       </p>
       {!c.fim ? (
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line/60">
@@ -37,7 +37,7 @@ function Progresso({ c }: { c: Campanha }) {
   );
 }
 
-const ORIGEM: Record<Assinante["origem"], string> = { janela: "cupom de boas-vindas", compra: "marcou na compra" };
+const ORIGEM: Record<Assinante["origem"], string> = { janela: "cupom de boas-vindas", compra: "marcou na compra", colecao: "lista de espera de coleção" };
 
 export default async function Campanhas() {
   if (!redisAtivo()) {
