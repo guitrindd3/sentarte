@@ -1,3 +1,4 @@
+import { estadoDaChave, type EstadoChave } from "@/lib/github-store";
 import { redisAtivo } from "@/lib/redis";
 import { doisFatoresAtivo, historico, reservasRestantes, type Entrada } from "@/lib/seguranca";
 import { desativarDoisFatoresAction, logoutTodosAction } from "../../actions";
@@ -29,7 +30,7 @@ export default async function Seguranca() {
       </Card>
     );
   }
-  const [ativo, entradas] = await Promise.all([doisFatoresAtivo(), historico(60)]);
+  const [ativo, entradas, chave] = await Promise.all([doisFatoresAtivo(), historico(60), estadoDaChave()]);
   const reservas = ativo ? await reservasRestantes() : 0;
   const falhas24h = falhasRecentes(entradas);
 
@@ -68,6 +69,8 @@ export default async function Seguranca() {
           </div>
         </AtivarDoisFatores>
       </Card>
+
+      <ChaveGithub c={chave} />
 
       <Card
         titulo="Histórico de entradas"
@@ -121,5 +124,50 @@ export default async function Seguranca() {
         </form>
       </Card>
     </div>
+  );
+}
+
+const dataLonga = (ms: number) =>
+  new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" }).format(new Date(ms));
+
+/** When the GitHub key the panel saves with (GITHUB_TOKEN) expires. */
+function ChaveGithub({ c }: { c: EstadoChave }) {
+  const etiqueta =
+    c.estado === "vencida"
+      ? { t: "● Vencida", c: "bg-clay/10 text-clay-dark" }
+      : c.estado === "vence"
+        ? { t: `● Vence em ${c.dias} ${c.dias === 1 ? "dia" : "dias"}`, c: "bg-rattan/20 text-wood-dark" }
+        : c.estado === "ok"
+          ? { t: "● Funcionando", c: "bg-verde/10 text-verde-escuro" }
+          : { t: "● Sem resposta", c: "bg-canvas-deep text-ink-soft" };
+  return (
+    <Card
+      titulo="Chave do GitHub"
+      descricao="É com ela que o painel salva fotos, cadeiras e textos no site. Ela tem data para vencer; 15 dias antes aparece um aviso no topo do painel."
+      acao={<span className={`rounded-full px-3 py-1 text-xs font-semibold ${etiqueta.c}`}>{etiqueta.t}</span>}
+    >
+      <p className="text-sm text-ink">
+        {c.estado === "vencida" ? (
+          <>Venceu: salvar no painel não funciona até trocar.</>
+        ) : c.estado === "vence" || (c.estado === "ok" && c.venceEm) ? (
+          <>
+            Vence em <strong>{dataLonga((c as { venceEm: number }).venceEm)}</strong>.
+          </>
+        ) : c.estado === "ok" ? (
+          <>Essa chave não tem data para vencer.</>
+        ) : (
+          <>Não consegui falar com o GitHub agora. Recarregue a página daqui a pouco.</>
+        )}
+      </p>
+      <details className="mt-4 rounded-xl border border-line/70 bg-canvas/60 p-4">
+        <summary className="cursor-pointer text-sm font-semibold text-ink-soft hover:text-ink">Como trocar a chave</summary>
+        <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm text-ink">
+          <li>No GitHub: Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.</li>
+          <li>Validade (Expiration): 1 ano. Repositório: só o sentarte. Permissão Contents: Read and write.</li>
+          <li>Na Vercel: Settings → Environment Variables → GITHUB_TOKEN, cole a chave nova no lugar da antiga.</li>
+          <li>Publique o site de novo (Deployments → Redeploy) para a chave nova valer.</li>
+        </ol>
+      </details>
+    </Card>
   );
 }

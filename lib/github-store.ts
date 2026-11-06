@@ -143,7 +143,8 @@ export async function ultimosCommits(n = 20): Promise<CommitResumo[]> {
 // hour so the panel doesn't call GitHub on every page.
 
 export type EstadoChave =
-  | { estado: "ok" | "desconhecido" }
+  | { estado: "desconhecido" }
+  | { estado: "ok"; venceEm: number | null } // null = never expires
   | { estado: "vence"; venceEm: number; dias: number }
   | { estado: "vencida" };
 
@@ -170,10 +171,10 @@ export async function estadoDaChave(agora = Date.now()): Promise<EstadoChave> {
     else if (res.ok) {
       const cab = res.headers.get("github-authentication-token-expiration");
       const venceEm = cab ? lerDataDaChave(cab) : null;
-      if (venceEm === null) valor = { estado: "ok" };
+      if (venceEm === null) valor = { estado: "ok", venceEm: null };
       else {
         const dias = Math.ceil((venceEm - agora) / 86_400_000);
-        valor = dias <= 0 ? { estado: "vencida" } : dias <= 15 ? { estado: "vence", venceEm, dias } : { estado: "ok" };
+        valor = dias <= 0 ? { estado: "vencida" } : dias <= 15 ? { estado: "vence", venceEm, dias } : { estado: "ok", venceEm };
       }
     }
   } catch {
