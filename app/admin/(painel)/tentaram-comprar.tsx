@@ -95,7 +95,7 @@ export function TentaramComprar({ lista, agora }: { lista: Tentativa[]; agora: n
                   </a>
                 ) : null}
                 <Link href={`/admin/clientes/${p.ref}`} className="rounded-full border border-line px-4 py-2 text-center text-sm font-medium text-ink hover:border-wood">
-                  Ver pedido
+                  Ela pagou? Marcar como pago
                 </Link>
               </div>
             </li>

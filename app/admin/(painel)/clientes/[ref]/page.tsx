@@ -10,7 +10,7 @@ import { codigoDoPedido, noPagamento } from "@/lib/pedido";
 import { linkRastreio } from "@/lib/rastreio";
 import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
-import { definirEtapaAction, editarPassaporteAction, gerarPassaportesAction, salvarRastreioAction } from "../../../actions";
+import { definirEtapaAction, editarPassaporteAction, gerarPassaportesAction, recebiPorForaAction, salvarRastreioAction } from "../../../actions";
 import { codigoDoPassaporte, lerConfigPassaporte, lerPassaportes, numeroBonito, rotuloTipo } from "@/lib/passaporte";
 import { AdminForm, btnSecondary, Card, Field, inputClass, SaveButton } from "../../../_ui";
 import { CopiarNumeros } from "../copiar";
@@ -104,6 +104,29 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
             </ul>
           ) : null}
         </div>
+      ) : null}
+
+      {!pago ? (
+        <Card
+          titulo="Ela pagou por fora?"
+          descricao="Se a cliente pagou pelo WhatsApp (Pix direto, dinheiro, transferência…), marque aqui. O pedido vira pago e entra em produção com tudo pronto: código do pedido, link para acompanhar, confirmação para a cliente, passaporte e etiqueta de envio. Depois é só colocar o código de rastreio dos Correios quando despachar."
+        >
+          <AdminForm action={recebiPorForaAction.bind(null, p.ref)} className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+            <Field label="Como pagou">
+              <select name="forma" defaultValue="pix" className={inputClass}>
+                <option value="pix">Pix direto</option>
+                <option value="transferencia">Transferência</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="cartao">Cartão (maquininha ou link)</option>
+                <option value="outro">Outro</option>
+              </select>
+            </Field>
+            <Field label="Valor recebido (R$)" dica={`No site estava ${formatBRL(p.valor)}.`}>
+              <input name="valor" inputMode="decimal" required defaultValue={p.valor.toFixed(2).replace(".", ",")} className={inputClass} />
+            </Field>
+            <SaveButton>Marcar como pago</SaveButton>
+          </AdminForm>
+        </Card>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">

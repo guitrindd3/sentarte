@@ -55,6 +55,7 @@ export function CartaoNoSite({
   email,
   corpoPedido,
   onVoltar,
+  onPix,
   onPaginaMercadoPago,
 }: {
   valor: number;
@@ -62,6 +63,8 @@ export function CartaoNoSite({
   /** Order payload sent with the card token (items, delivery, reference, coupon…). */
   corpoPedido: Record<string, unknown>;
   onVoltar: () => void;
+  /** Same order, straight to the Pix QR code (offered after a refusal). */
+  onPix: () => void;
   onPaginaMercadoPago: () => void;
 }) {
   const router = useRouter();
@@ -175,7 +178,19 @@ export function CartaoNoSite({
         <p className="mt-1 text-sm text-ink-soft">
           Total: <strong className="text-ink">{formatBRL(valor)}</strong>, em até {PARCELAS_MAX}x (com a taxa do cartão).
         </p>
-        {erro ? <p className="mt-3 border border-clay/40 bg-clay/5 px-3 py-2 text-sm text-clay-dark">{erro}</p> : null}
+        {erro ? (
+          <div className="mt-3 border border-clay/40 bg-clay/5 px-3 py-2 text-sm text-clay-dark">
+            <p>{erro}</p>
+            {/* a refused card rarely passes on the next try: hand over the Pix right there */}
+            <button
+              type="button"
+              onClick={onPix}
+              className="mt-2 inline-flex items-center justify-center border border-ink bg-ink px-4 py-2 text-sm font-medium text-canvas hover:bg-transparent hover:text-ink"
+            >
+              Pagar no Pix (sai mais barato)
+            </button>
+          </div>
+        ) : null}
         {carregando ? <p className="mt-6 text-center text-sm text-ink-soft">Carregando o formulário seguro do Mercado Pago…</p> : null}
         {falhou ? (
           <p className="mt-6 text-sm text-ink">

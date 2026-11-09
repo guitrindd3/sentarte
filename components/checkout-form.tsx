@@ -178,6 +178,10 @@ export function CheckoutForm({
         email={(d.email ?? "").trim()}
         corpoPedido={{ itens: itensDoPedido(), entrega: d, referencia: cartao.referencia, vid: idDaVisita(), cupom: codigoDigitado, carrinho: items, novidades }}
         onVoltar={() => setCartao(null)}
+        onPix={() => {
+          setCartao(null);
+          void pagar("pix");
+        }}
         onPaginaMercadoPago={() => {
           setCartao(null);
           void pagar("cartao", true);

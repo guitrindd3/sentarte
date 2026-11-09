@@ -13,7 +13,7 @@ import {
   verifyPassword,
   verifySession,
 } from "@/lib/auth";
-import { editarInteressado, excluirInteressado, excluirPedido, normalizarWhatsapp, gravarPedido, lerPedido, registrarVendaDoPainel, type EtapaPedido } from "@/lib/clientes";
+import { editarInteressado, excluirInteressado, excluirPedido, marcarPedido, normalizarWhatsapp, gravarPedido, lerPedido, registrarVendaDoPainel, type EtapaPedido } from "@/lib/clientes";
 import { excluirOrcamento, gravarOrcamento, lerOrcamento, type StatusOrcamento } from "@/lib/orcamentos";
 import { desligarGmail, desligarNtfy, estadoAvisos, ligarNtfy, mandarEmailAoCliente, salvarGmail, testarAvisos } from "@/lib/avisos";
 import { after } from "next/server";
@@ -801,6 +801,31 @@ export async function tirarFotoProducaoAction(ref: string, id: string) {
     await tirarFotoProducao(ref, id);
     revalidatePath(`/admin/clientes/${ref}`);
     return "Foto apagada.";
+  });
+}
+
+/**
+ * "Ela pagou por fora" (2026-11-09): a site order whose card was refused, then
+ * paid on WhatsApp (Pix direto, dinheiro…). Turns THE SAME order into paid, so
+ * it keeps the items/address and gets everything a paid site order gets: the
+ * order code, /acompanhar, the "pedido confirmado" message, passports, the
+ * Melhor Envio label and, later, the tracking code.
+ */
+export async function recebiPorForaAction(ref: string, _p: Resultado, formData: FormData) {
+  return executar(async () => {
+    const p = await pedidoOuAviso(ref);
+    if (p.status === "pago") throw new Aviso("Esse pedido já está pago.");
+    const forma = String(formData.get("forma") ?? "pix") as FormaPagamento;
+    if (!["pix", "dinheiro", "transferencia", "cartao", "outro"].includes(forma)) throw new Aviso("Escolha como ela pagou.");
+    const valor = Math.round(Number(String(formData.get("valor") ?? "").replace(/\./g, "").replace(",", ".")) * 100) / 100;
+    if (!(valor > 0 && valor < 100000)) throw new Aviso("Confira o valor recebido.");
+    p.forma = forma;
+    p.valor = valor;
+    await gravarPedido(p);
+    await marcarPedido(ref, "pago");
+    revalidatePath(`/admin/clientes/${ref}`);
+    revalidatePath("/admin");
+    return `Pronto: pedido ${codigoDoPedido(ref)} pago e em produção. A cliente recebe a confirmação com o link para acompanhar.`;
   });
 }
 
