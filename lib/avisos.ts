@@ -6,6 +6,8 @@ import type { PedidoCliente } from "./clientes";
 import { SITE_URL } from "./nav";
 import { formatBRL } from "./offer";
 import { redis, redisAtivo } from "./redis";
+import { motivoParaOAtelie } from "./recusa-cartao";
+import { whatsappUrl } from "./urls";
 import { cifrar, decifrar } from "./seguranca";
 
 // Sale alerts (2026-10-06, user: "você receber um aviso na hora de cada
@@ -159,6 +161,45 @@ export async function avisarVenda(p: PedidoCliente) {
   await Promise.all([
     topico ? mandarNtfy(topico, titulo, curto, link).catch((e) => console.error("aviso ntfy", e)) : null,
     gmail ? mandarEmail(gmail, `${titulo} (${p.nome.split(" ")[0]})`, textoCompleto(p)).catch((e) => console.error("aviso email", e)) : null,
+  ]);
+}
+
+/**
+ * Card refused (2026-11-09, user: "não quero que ocorra mais erro na hora de
+ * pagar"): an alert right away, on the same channels as a sale, so the atelier
+ * can call while the customer still wants the chair. At most one per order
+ * every 20 minutes (retries in a row come as one alert).
+ */
+export async function avisarRecusa(p: PedidoCliente, detalhe?: string) {
+  if (!redisAtivo()) return;
+  const [livre] = await redis([["SET", `pedido:${p.ref}:aviso-recusa`, 1, "NX", "EX", 20 * 60]]);
+  if (livre !== "OK") return;
+  const [topico, gmail] = await Promise.all([redis([["GET", K.ntfy]]).then((r) => r[0] as string | null), lerGmail()]);
+  const { motivo, dica } = motivoParaOAtelie(detalhe);
+  const nome = p.nome.trim().split(/\s+/)[0];
+  const titulo = `Cartão recusado: ${formatBRL(p.valor)}`;
+  const curto = `${motivo}. Para ${p.cidade}. Toque para abrir o pedido e chamar no WhatsApp.`;
+  const link = `${SITE_URL}/admin/clientes/${p.ref}`;
+  const zap = whatsappUrl(
+    p.whatsapp,
+    `Oi, ${nome}! Aqui é do Ateliê SentArte. Vi que você tentou comprar no site (${p.itens.join(", ")}) e o pagamento no cartão não passou. Posso te ajudar? Se preferir, te mando o Pix, que é na hora.`
+  );
+  const texto = [
+    `${p.nome} tentou pagar ${formatBRL(p.valor)} no cartão e foi recusado.`,
+    "",
+    `Motivo: ${motivo}`,
+    `O que fazer: ${dica}`,
+    "",
+    `Itens: ${p.itens.join("; ")}`,
+    `Cidade: ${p.cidade}`,
+    `WhatsApp: ${p.whatsapp}`,
+    "",
+    `Chamar no WhatsApp (mensagem pronta oferecendo o Pix): ${zap}`,
+    `Ver o pedido no painel: ${link}`,
+  ].join("\n");
+  await Promise.all([
+    topico ? mandarNtfy(topico, titulo, curto, link).catch((e) => console.error("aviso recusa ntfy", e)) : null,
+    gmail ? mandarEmail(gmail, `${titulo} (${nome})`, texto).catch((e) => console.error("aviso recusa email", e)) : null,
   ]);
 }
 

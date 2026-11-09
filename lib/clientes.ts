@@ -1,5 +1,5 @@
 import "server-only";
-import { avisarVenda } from "./avisos";
+import { avisarRecusa, avisarVenda } from "./avisos";
 import { contarUsoDoCupom, criarCuponsDeVale } from "./cupons-store";
 import { anotarNoCaminho, diaBR } from "./estatisticas";
 import { novoCodigoVale, VALIDADE_VALE_DIAS } from "./vale";
@@ -365,6 +365,8 @@ export async function anotarRecusa(ref: string, r: Omit<Recusa, "em">) {
       ["LTRIM", krec(ref), -20, -1],
       ["EXPIRE", krec(ref), PEDIDO_S],
     ]);
+    const p = await lerPedido(ref);
+    if (p && p.status !== "pago") await avisarRecusa(p, r.detalhe).catch((err) => console.error("avisarRecusa", err));
   } catch (err) {
     console.error("anotarRecusa", err);
   }
