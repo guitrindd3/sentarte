@@ -17,7 +17,7 @@ import { editarInteressado, excluirInteressado, excluirPedido, marcarPedido, nor
 import { excluirOrcamento, gravarOrcamento, lerOrcamento, type StatusOrcamento } from "@/lib/orcamentos";
 import { desligarGmail, desligarNtfy, estadoAvisos, ligarNtfy, mandarEmailAoCliente, salvarGmail, testarAvisos } from "@/lib/avisos";
 import { after } from "next/server";
-import { avisarEtapaAgora, exemploDeLembrete, salvarConfigLembretes } from "@/lib/lembretes";
+import { avisarEtapaAgora, esquecerAvisosDasEtapas, exemploDeLembrete, salvarConfigLembretes } from "@/lib/lembretes";
 import { criarCampanha, emailDaCampanha, LIMITE_DIA, processarCampanhas } from "@/lib/campanhas";
 import { removerEmail, salvarConfigBoasVindas } from "@/lib/lista-email";
 import { apagarColecao, idColecaoValido, lerColecao, listaDeEspera, listarColecoes, numerosDasColecoes, salvarColecao, type Colecao, type EstadoColecao } from "@/lib/colecoes";
@@ -766,16 +766,33 @@ function erroDeEnvio(err: unknown): never {
   throw err;
 }
 
-export async function definirEtapaAction(ref: string, etapa: EtapaPedido) {
+/**
+ * The step chosen in "Andamento" — only when "Salvar andamento" is clicked
+ * (2026-11-09: a stray click on "Enviado" mailed the customer). Going back
+ * clears the later steps (dates and their e-mails), so they count again later.
+ */
+export async function definirEtapaAction(ref: string, _p: Resultado, formData: FormData) {
   return executar(async () => {
     const p = await pedidoOuAviso(ref);
     if (p.status !== "pago") throw new Aviso("Esse pedido ainda não foi pago.");
+    const ordem: EtapaPedido[] = ["producao", "enviado", "entregue"];
+    const etapa = String(formData.get("etapa") ?? "") as EtapaPedido;
+    if (!ordem.includes(etapa)) throw new Aviso("Escolha a etapa.");
+    const avisar = formData.get("avisar") === "1";
+    const depois = ordem.slice(ordem.indexOf(etapa) + 1);
     p.etapa = etapa;
     p.etapaEm = { ...p.etapaEm, [etapa]: p.etapaEm?.[etapa] ?? Date.now() };
+    for (const d of depois) delete p.etapaEm[d];
+    if (depois.length && p.lembretes) {
+      for (const d of depois) delete (p.lembretes as Record<string, unknown>)[d];
+      if (depois.includes("enviado")) delete p.lembretes.rastreioAvisado;
+    }
     await gravarPedido(p);
-    after(() => avisarEtapaAgora(ref));
+    await esquecerAvisosDasEtapas(ref, depois);
+    if (avisar) after(() => avisarEtapaAgora(ref));
     revalidatePath(`/admin/clientes/${ref}`);
-    return etapa === "producao" ? "Marcado como em produção." : etapa === "enviado" ? "Marcado como enviado." : "Marcado como entregue.";
+    const nome = etapa === "producao" ? "em produção" : etapa === "enviado" ? "enviado" : "entregue";
+    return avisar && etapa !== "producao" ? `Salvo como ${nome}. A cliente recebe o aviso por e-mail.` : `Salvo como ${nome}.`;
   });
 }
 

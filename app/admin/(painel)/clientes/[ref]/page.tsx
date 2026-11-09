@@ -324,24 +324,30 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
         }
       >
         {pago ? (
-          <div className="flex flex-wrap gap-2">
-            {ETAPAS.map((s) => (
-              <AdminForm key={s.v} action={definirEtapaAction.bind(null, p.ref, s.v)}>
-                <button
-                  type="submit"
-                  className={
-                    etapa === s.v
-                      ? "inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper"
-                      : btnSecondary
-                  }
+          // choosing a step does nothing until "Salvar andamento" (a stray click mailed a customer, 2026-11-09)
+          <AdminForm action={definirEtapaAction.bind(null, p.ref)}>
+            <fieldset className="flex flex-wrap gap-2">
+              <legend className="sr-only">Etapa</legend>
+              {ETAPAS.map((s) => (
+                <label
+                  key={s.v}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-medium text-ink transition hover:border-wood has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-paper"
                 >
-                  {etapa === s.v ? "✓ " : ""}
+                  <input type="radio" name="etapa" value={s.v} defaultChecked={etapa === s.v} className="sr-only" />
                   {s.t}
                   {p.etapaEm?.[s.v] ? <span className="font-normal opacity-70">{quando(p.etapaEm[s.v]).slice(0, 5)}</span> : null}
-                </button>
-              </AdminForm>
-            ))}
-          </div>
+                </label>
+              ))}
+            </fieldset>
+            <label className="mt-4 flex items-center gap-2 text-sm text-ink">
+              <input type="checkbox" name="avisar" value="1" defaultChecked className="h-4 w-4 accent-[var(--wood)]" />
+              Avisar a cliente por e-mail (enviado e entregue)
+            </label>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <SaveButton>Salvar andamento</SaveButton>
+              <span className="text-xs text-ink-soft">Escolher a etapa não manda nada: só vale depois de salvar.</span>
+            </div>
+          </AdminForm>
         ) : (
           <p className="text-sm text-ink-soft">As etapas aparecem quando o pagamento for aprovado.</p>
         )}

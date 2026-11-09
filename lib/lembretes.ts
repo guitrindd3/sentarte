@@ -124,6 +124,14 @@ export function etapaDevida(p: PedidoCliente, agora = Date.now()): EtapaEmail | 
 }
 
 /** Called right after the step changes (payment, admin buttons): mails it now. Never throws. */
+/**
+ * A step undone in the admin (a click by mistake, 2026-11-09): forget the
+ * e-mails of the later steps, so the real "enviado"/"entregue" goes out again.
+ */
+export async function esquecerAvisosDasEtapas(ref: string, etapas: string[]) {
+  if (etapas.length) await redis(etapas.map((t) => ["DEL", kFeito(ref, t)]));
+}
+
 export async function avisarEtapaAgora(ref: string) {
   if (!redisAtivo()) return;
   try {
