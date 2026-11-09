@@ -844,3 +844,5 @@ User picked two "visionary" ideas: "Passaporte da cadeira" and "Coleções numer
 - GitHub key expiry warning (2026-11-06): `estadoDaChave()` in lib/github-store.ts reads the `github-authentication-token-expiration` header (401 = expired), cached 1h per instance; the admin layout shows a banner 15 days before and once expired.
 
 - Card refusals (2026-11-09): `anotarRecusa`/`recusasDosPedidos` in lib/clientes.ts keep each refused payment (status_detail, deduped by payment id) in `pedido:<ref>:recusas` (the order JSON is rewritten per attempt); reasons in lib/recusa-cartao.ts (`detalhePrincipal` skips max_attempts/duplicated retries). Admin home shows "tentaram comprar e não conseguiram" (app/admin/(painel)/tentaram-comprar.tsx: recusado or aguardando >30min, 7 days, one per WhatsApp, hidden if they paid later).
+
+- Card approval (2026-11-09): the card form loads Mercado Pago security.js and sends window.MP_DEVICE_SESSION_ID (~231 chars, "armor.…") as `deviceId`; /api/cartao forwards it as `X-meli-session-id`, plus additional_info item category_id "home", buyer last_name/address, receiver city/state/apartment. CSP already allows *.mercadopago.com.

@@ -17,10 +17,24 @@ type MercadoPagoSDK = new (key: string, opts: { locale: string }) => {
 declare global {
   interface Window {
     MercadoPago?: MercadoPagoSDK;
+    /** Device fingerprint set by Mercado Pago's scripts (SDK / security.js); sent with the payment. */
+    MP_DEVICE_SESSION_ID?: string;
   }
 }
 
+/** Mercado Pago's device fingerprint script: fills window.MP_DEVICE_SESSION_ID for its anti-fraud. */
+function carregarIdDoAparelho() {
+  if (window.MP_DEVICE_SESSION_ID || document.getElementById("mp-security")) return;
+  const s = document.createElement("script");
+  s.id = "mp-security";
+  s.src = "https://www.mercadopago.com/v2/security.js";
+  s.setAttribute("view", "checkout");
+  s.async = true;
+  document.head.appendChild(s);
+}
+
 function carregarSdk(): Promise<MercadoPagoSDK> {
+  carregarIdDoAparelho();
   if (window.MercadoPago) return Promise.resolve(window.MercadoPago);
   return new Promise((ok, erro) => {
     const s = document.createElement("script");
@@ -76,7 +90,7 @@ export function CartaoNoSite({
                 fetch("/api/cartao", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ ...corpoRef.current, cartao: dados }),
+                  body: JSON.stringify({ ...corpoRef.current, cartao: dados, deviceId: window.MP_DEVICE_SESSION_ID }),
                 })
                   .then((r) => r.json())
                   .then((j: { id?: string; referencia?: string; status?: string; motivo?: string; erro?: string }) => {

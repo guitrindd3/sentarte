@@ -22,7 +22,7 @@ type Cartao = {
 export async function POST(req: Request) {
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!token) return NextResponse.json({ erro: "Pagamento online ainda não configurado." }, { status: 503 });
-  let corpo: CorpoPedido & { cartao?: Cartao };
+  let corpo: CorpoPedido & { cartao?: Cartao; deviceId?: unknown };
   try {
     corpo = await req.json();
   } catch {
@@ -38,6 +38,12 @@ export async function POST(req: Request) {
   const { ref, itens, conta, frete, valor, entrega } = pronto;
   const parcelas = Math.max(1, Math.min(PARCELAS_MAX, Math.floor(Number(c.installments) || 1)));
   const [nome, ...sobrenome] = entrega.nome.trim().split(/\s+/);
+  const ultimoNome = sobrenome.join(" ").slice(0, 60) || nome.slice(0, 40);
+  // Device fingerprint from Mercado Pago's own browser script (the SDK /
+  // security.js set window.MP_DEVICE_SESSION_ID): its anti-fraud weighs it a
+  // lot, and without it more good cards come back "cc_rejected_high_risk".
+  const deviceId = typeof corpo.deviceId === "string" && /^[\w:.-]{8,600}$/ /* e.g. "armor.<~225 chars>" */.test(corpo.deviceId) ? corpo.deviceId : undefined;
+  const endereco = { zip_code: entrega.cep.replace(/\D/g, ""), street_name: entrega.endereco.slice(0, 120), street_number: entrega.numero.slice(0, 10) };
 
   const res = await fetch("https://api.mercadopago.com/v1/payments", {
     method: "POST",
@@ -46,6 +52,7 @@ export async function POST(req: Request) {
       "Content-Type": "application/json",
       // the card token is single-use, so it makes each attempt unique
       "X-Idempotency-Key": `${ref}-cartao-${c.token.slice(-12)}`,
+      ...(deviceId ? { "X-meli-session-id": deviceId } : {}),
     },
     body: JSON.stringify({
       transaction_amount: valor,
@@ -60,17 +67,43 @@ export async function POST(req: Request) {
       payer: {
         email,
         first_name: nome.slice(0, 40),
-        last_name: sobrenome.join(" ").slice(0, 60) || nome.slice(0, 40),
+        last_name: ultimoNome,
         identification: c.payer?.identification?.number
           ? { type: c.payer.identification.type || "CPF", number: String(c.payer.identification.number).replace(/\D/g, "") }
           : undefined,
       },
+      // As much order data as Mercado Pago's "melhorar a aprovação" guide asks
+      // for (item with category, buyer, full delivery address): fewer false "high risk".
       additional_info: {
-        items: [{ id: ref, title: itens.map(descricaoItem).join(" | ").slice(0, 120), quantity: 1, unit_price: valor }],
-        payer: { first_name: nome.slice(0, 40), phone: { area_code: pronto.telefone.slice(0, 2), number: pronto.telefone.slice(2) } },
+        items: [
+          {
+            id: ref,
+            title: tituloDoPedido(conta).slice(0, 120),
+            description: itens.map(descricaoItem).join(" | ").slice(0, 250),
+            category_id: "home",
+            picture_url: `${SITE_URL}/brand/logo.png`,
+            quantity: 1,
+            unit_price: valor,
+          },
+        ],
+        payer: {
+          first_name: nome.slice(0, 40),
+          last_name: ultimoNome,
+          phone: { area_code: pronto.telefone.slice(0, 2), number: pronto.telefone.slice(2) },
+          ...(conta.soVale ? {} : { address: endereco }),
+        },
         ...(conta.soVale
           ? {}
-          : { shipments: { receiver_address: { zip_code: entrega.cep.replace(/\D/g, ""), street_name: entrega.endereco.slice(0, 120), street_number: entrega.numero.slice(0, 10) } } }),
+          : {
+              shipments: {
+                receiver_address: {
+                  ...endereco,
+                  ...(entrega.complemento.trim() ? { apartment: entrega.complemento.trim().slice(0, 40) } : {}),
+                  city_name: entrega.cidade.slice(0, 60),
+                  state_name: entrega.uf.slice(0, 2),
+                },
+              },
+            }),
       },
       metadata: { forma: "cartao", no_site: true, entrega: `${entrega.cidade}/${entrega.uf}`, frete: frete.valor, cupom: conta.cupom?.codigo ?? "", desconto: conta.desconto },
     }),
