@@ -15,6 +15,7 @@ export const MOTIVOS_CLIENTE: Record<string, string> = {
   cc_rejected_high_risk: "O pagamento foi recusado por segurança. Tente outro cartão ou pague no Pix.",
   cc_rejected_max_attempts: "Muitas tentativas com esse cartão. Use outro cartão ou o Pix.",
   cc_rejected_blacklist: "Esse cartão não pode ser usado. Tente outro cartão ou o Pix.",
+  cc_rejected_3ds_challenge: "O banco não confirmou o pagamento. Tente de novo e confirme no app do banco, ou pague no Pix.",
 };
 
 export const MOTIVO_CLIENTE_PADRAO = "O pagamento foi recusado pelo banco. Tente outro cartão ou pague no Pix.";
@@ -41,6 +42,9 @@ export function motivoParaOAtelie(detalhe?: string): { motivo: string; dica: str
       return { motivo: "Muitas tentativas com o mesmo cartão", dica: "Ofereça outro cartão ou o Pix." };
     case "cc_rejected_blacklist":
       return { motivo: "Cartão não aceito pelo Mercado Pago", dica: "Ofereça o Pix." };
+    case "cc_rejected_3ds_challenge":
+    case "cc_rejected_3ds_mandatory":
+      return { motivo: "Não confirmou no banco (verificação de segurança)", dica: "Peça para tentar de novo e confirmar no app do banco, ou ofereça o Pix." };
     case "cc_rejected_other_reason":
       return { motivo: "O banco recusou sem dizer o motivo", dica: "Peça para falar com o banco, ou ofereça o Pix." };
     case "cancelled":

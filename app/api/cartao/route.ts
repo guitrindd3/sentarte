@@ -45,16 +45,19 @@ export async function POST(req: Request) {
   const deviceId = typeof corpo.deviceId === "string" && /^[\w:.-]{8,600}$/ /* e.g. "armor.<~225 chars>" */.test(corpo.deviceId) ? corpo.deviceId : undefined;
   const endereco = { zip_code: entrega.cep.replace(/\D/g, ""), street_name: entrega.endereco.slice(0, 120), street_number: entrega.numero.slice(0, 10) };
 
-  const res = await fetch("https://api.mercadopago.com/v1/payments", {
+  const cobrar = (com3ds: boolean) => fetch("https://api.mercadopago.com/v1/payments", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
       // the card token is single-use, so it makes each attempt unique
-      "X-Idempotency-Key": `${ref}-cartao-${c.token.slice(-12)}`,
+      "X-Idempotency-Key": `${ref}-cartao-${c.token!.slice(-12)}${com3ds ? "" : "-sem3ds"}`,
       ...(deviceId ? { "X-meli-session-id": deviceId } : {}),
     },
     body: JSON.stringify({
+      // 3DS (2026-11-09): when the anti-fraud is unsure, the bank asks the
+      // buyer to confirm in its app instead of a flat "high risk" refusal.
+      ...(com3ds ? { three_d_secure_mode: "optional" } : {}),
       transaction_amount: valor,
       token: c.token,
       description: tituloDoPedido(conta).slice(0, 120),
@@ -109,7 +112,26 @@ export async function POST(req: Request) {
     }),
     cache: "no-store",
   });
-  const pg = (await res.json().catch(() => ({}))) as { id?: number; status?: string; status_detail?: string; message?: string };
+  let res = await cobrar(true);
+  // safety net: if the account ever refuses the 3DS field, charge the old way
+  if (res.status === 400) {
+    const txt = await res.clone().text();
+    if (/three_d_secure|3ds/i.test(txt)) {
+      console.error("mercadopago 3ds refused, retrying without", txt.slice(0, 300));
+      res = await cobrar(false);
+    }
+  }
+  const pg = (await res.json().catch(() => ({}))) as {
+    id?: number;
+    status?: string;
+    status_detail?: string;
+    message?: string;
+    three_ds_info?: { external_resource_url?: string; creq?: string };
+  };
+  const desafio =
+    pg.status === "pending" && pg.status_detail === "pending_challenge" && pg.three_ds_info?.external_resource_url?.startsWith("https://") && pg.three_ds_info.creq
+      ? { url: pg.three_ds_info.external_resource_url, creq: pg.three_ds_info.creq }
+      : undefined;
   if (!res.ok || !pg.id) {
     console.error("mercadopago card failed", res.status, JSON.stringify(pg).slice(0, 500));
     return NextResponse.json({ erro: "Não deu para processar o cartão agora. Confira os dados ou pague no Pix." }, { status: 502 });
@@ -117,6 +139,8 @@ export async function POST(req: Request) {
   await registrarPedido(pronto, corpo.vid);
   if (pg.status === "approved") {
     await marcarPedido(ref, "pago");
+  } else if (desafio) {
+    // waiting for the bank confirmation: stays "aguardando"; the webhook / status poll settles it
   } else if (pg.status === "in_process" || pg.status === "pending") {
     await marcarPedido(ref, "pendente");
   } else if (pg.status === "rejected") {
@@ -127,6 +151,7 @@ export async function POST(req: Request) {
     id: String(pg.id),
     referencia: ref,
     status: pg.status,
+    desafio,
     motivo: pg.status === "rejected" ? MOTIVOS_CLIENTE[pg.status_detail ?? ""] ?? MOTIVO_CLIENTE_PADRAO : undefined,
   });
 }

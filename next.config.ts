@@ -6,6 +6,9 @@ import type { NextConfig } from "next";
 // photo previews. (Vercel Blob hosts removed 2026-10-05: photos live in the repo.)
 // Mercado Pago (2026-10-06): the card form inside the site is Mercado Pago's
 // Card Payment Brick — its SDK, secure-field iframes, fonts and API calls.
+// 3DS (2026-11-09): the bank confirmation screen is the card issuer's own page
+// (any bank's https host), opened in an iframe by a form POST — hence the
+// https: in frame-src and form-action.
 const MP = "https://*.mercadopago.com https://*.mercadopago.com.br https://*.mercadolibre.com https://*.mercadolivre.com https://*.mlstatic.com";
 const CSP = [
   "default-src 'self'",
@@ -15,10 +18,10 @@ const CSP = [
   `font-src 'self' data: ${MP}`,
   "media-src 'self'",
   `connect-src 'self' https://viacep.com.br ${MP}`,
-  `frame-src ${MP}`,
+  `frame-src ${MP} https:`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  "form-action 'self' https:",
   "object-src 'none'",
   "upgrade-insecure-requests",
 ].join("; ");
