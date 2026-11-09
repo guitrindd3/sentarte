@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { lerPedido, type PedidoCliente } from "@/lib/clientes";
+import { lerPedido, recusasDosPedidos, type PedidoCliente } from "@/lib/clientes";
+import { detalhePrincipal, motivoParaOAtelie } from "@/lib/recusa-cartao";
 import { getAdminContent } from "@/lib/content-store";
 import { lerRemetente, remetenteCompleto } from "@/lib/melhor-envio";
 import { SITE_URL } from "@/lib/nav";
@@ -63,6 +64,7 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
   const etapa = p.etapa ?? (pago ? "producao" : undefined);
   const e = p.entrega;
   const fotos = await fotosDaProducao(p.ref).catch(() => []);
+  const recusas = (await recusasDosPedidos([p.ref])).get(p.ref) ?? [];
   const passaportes = p.passaportes?.length ? await lerPassaportes(p.passaportes).catch(() => []) : [];
   const cfgPassaporte = await lerConfigPassaporte().catch(() => null);
   const orc = p.orcamento ? await lerOrcamento(p.orcamento).catch(() => null) : null;
@@ -85,6 +87,24 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
           </strong>
         </p>
       </div>
+
+      {recusas.length && !pago ? (
+        <div className="rounded-2xl border-2 border-clay/40 bg-[#fbeee8] px-5 py-4">
+          <p className="font-semibold text-clay-dark">
+            Cartão recusado {recusas.length === 1 ? "1 vez" : `${recusas.length} vezes`}: {motivoParaOAtelie(detalhePrincipal(recusas)).motivo}
+          </p>
+          <p className="mt-0.5 text-sm text-ink">{motivoParaOAtelie(detalhePrincipal(recusas)).dica}</p>
+          {recusas.length > 1 ? (
+            <ul className="mt-2 space-y-0.5 text-xs text-ink-soft">
+              {recusas.map((r, i) => (
+                <li key={i}>
+                  {quando(r.em)}: {motivoParaOAtelie(r.detalhe).motivo}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card titulo="O que foi pedido">

@@ -343,3 +343,51 @@ export async function limiteDeCadastro(ip: string) {
   if (Number(n) === 1) await redis([["EXPIRE", k, 3600]]);
   return Number(n) > 5;
 }
+
+// ---- Card refusals (2026-11-09) -------------------------------------------
+// Each refused payment of an order, with Mercado Pago's status_detail, kept in
+// its own list (the order itself is rewritten on every new attempt) so the
+// admin can say why and how many times. Deduplicated by payment id: the card
+// route and the webhook both report the same refusal.
+
+export type Recusa = { em: number; id?: string; detalhe?: string };
+const krec = (ref: string) => `${kp(ref)}:recusas`;
+
+export async function anotarRecusa(ref: string, r: Omit<Recusa, "em">) {
+  if (!redisAtivo() || !/^[a-z0-9-]{6,40}$/i.test(ref)) return;
+  try {
+    if (r.id) {
+      const [lista] = (await redis([["LRANGE", krec(ref), 0, -1]])) as string[][];
+      if (lista?.some((x) => (JSON.parse(x) as Recusa).id === r.id)) return;
+    }
+    await redis([
+      ["RPUSH", krec(ref), JSON.stringify({ em: Date.now(), ...r })],
+      ["LTRIM", krec(ref), -20, -1],
+      ["EXPIRE", krec(ref), PEDIDO_S],
+    ]);
+  } catch (err) {
+    console.error("anotarRecusa", err);
+  }
+}
+
+/** Refusals of several orders (oldest first in each list). */
+export async function recusasDosPedidos(refs: string[]): Promise<Map<string, Recusa[]>> {
+  const mapa = new Map<string, Recusa[]>();
+  if (!refs.length || !redisAtivo()) return mapa;
+  try {
+    const res = (await redis(refs.map((r): Cmd => ["LRANGE", krec(r), 0, -1]))) as (string[] | null)[];
+    refs.forEach((r, i) => {
+      const l = (res[i] ?? []).flatMap((x) => {
+        try {
+          return [JSON.parse(x) as Recusa];
+        } catch {
+          return [];
+        }
+      });
+      if (l.length) mapa.set(r, l);
+    });
+  } catch (err) {
+    console.error("recusasDosPedidos", err);
+  }
+  return mapa;
+}

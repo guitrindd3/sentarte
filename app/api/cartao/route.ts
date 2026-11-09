@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prepararPedido, registrarPedido, type CorpoPedido } from "@/lib/checkout-servidor";
-import { marcarPedido } from "@/lib/clientes";
+import { anotarRecusa, marcarPedido } from "@/lib/clientes";
+import { MOTIVO_CLIENTE_PADRAO, MOTIVOS_CLIENTE } from "@/lib/recusa-cartao";
 import { PARCELAS_MAX } from "@/lib/offer";
 import { SITE_URL } from "@/lib/nav";
 import { descricaoItem, tituloDoPedido } from "@/lib/pedido";
@@ -16,21 +17,6 @@ type Cartao = {
   issuer_id?: string | number;
   installments?: number;
   payer?: { email?: string; identification?: { type?: string; number?: string } };
-};
-
-// Friendly reasons for the most common refusals (Mercado Pago status_detail).
-const MOTIVOS: Record<string, string> = {
-  cc_rejected_insufficient_amount: "O cartão não tem limite para esse valor.",
-  cc_rejected_bad_filled_security_code: "O código de segurança (CVV) está errado.",
-  cc_rejected_bad_filled_date: "A data de validade está errada.",
-  cc_rejected_bad_filled_card_number: "O número do cartão está errado.",
-  cc_rejected_bad_filled_other: "Algum dado do cartão está errado. Confira e tente de novo.",
-  cc_rejected_call_for_authorize: "O banco pediu para você autorizar esse pagamento. Ligue para o banco ou use outro cartão.",
-  cc_rejected_card_disabled: "O cartão está bloqueado. Ligue para o banco ou use outro cartão.",
-  cc_rejected_duplicated_payment: "Esse pagamento já foi feito agora há pouco. Confira o seu extrato.",
-  cc_rejected_high_risk: "O pagamento foi recusado por segurança. Tente outro cartão ou pague no Pix.",
-  cc_rejected_max_attempts: "Muitas tentativas com esse cartão. Use outro cartão ou o Pix.",
-  cc_rejected_blacklist: "Esse cartão não pode ser usado. Tente outro cartão ou o Pix.",
 };
 
 export async function POST(req: Request) {
@@ -102,11 +88,12 @@ export async function POST(req: Request) {
     await marcarPedido(ref, "pendente");
   } else if (pg.status === "rejected") {
     await marcarPedido(ref, "recusado");
+    await anotarRecusa(ref, { id: String(pg.id), detalhe: pg.status_detail });
   }
   return NextResponse.json({
     id: String(pg.id),
     referencia: ref,
     status: pg.status,
-    motivo: pg.status === "rejected" ? MOTIVOS[pg.status_detail ?? ""] ?? "O pagamento foi recusado pelo banco. Tente outro cartão ou pague no Pix." : undefined,
+    motivo: pg.status === "rejected" ? MOTIVOS_CLIENTE[pg.status_detail ?? ""] ?? MOTIVO_CLIENTE_PADRAO : undefined,
   });
 }

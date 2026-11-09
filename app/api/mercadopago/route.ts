@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { marcarPedido } from "@/lib/clientes";
+import { anotarRecusa, marcarPedido } from "@/lib/clientes";
 
 export const dynamic = "force-dynamic";
 
@@ -40,9 +40,10 @@ export async function POST(req: Request) {
     // 404 right after creation happens; a non-2xx makes Mercado Pago retry later.
     return NextResponse.json({ ok: false }, { status: res.status === 404 ? 404 : 502 });
   }
-  const p = (await res.json()) as { status?: string; external_reference?: string };
+  const p = (await res.json()) as { status?: string; status_detail?: string; external_reference?: string };
   const novo = STATUS[p.status ?? ""];
   // marcarPedido also counts the coupon, notes the visit journey and sends the sale alert — once.
   if (p.external_reference && novo) await marcarPedido(p.external_reference, novo);
+  if (p.external_reference && novo === "recusado") await anotarRecusa(p.external_reference, { id, detalhe: p.status_detail ?? p.status });
   return NextResponse.json({ ok: true });
 }

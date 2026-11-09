@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { avaliacoesPendentes } from "@/lib/avaliacoes";
-import { listarInteressados, pedidosRecentes, type Interessado, type PedidoCliente } from "@/lib/clientes";
+import { listarInteressados, pedidosRecentes, recusasDosPedidos, type Interessado, type PedidoCliente } from "@/lib/clientes";
 import { orcamentosRecentes } from "@/lib/orcamentos";
 import { getAdminContent } from "@/lib/content-store";
 import { githubConfigurado, ultimosCommits, type CommitResumo } from "@/lib/github-store";
@@ -9,6 +9,7 @@ import { ondeAparece } from "@/lib/admin-grupos";
 import { CATEGORIAS_OCULTAS } from "@/lib/offer";
 import { redisAtivo } from "@/lib/redis";
 import { Card } from "../_ui";
+import { TentaramComprar, tentativasDaSemana, type Tentativa } from "./tentaram-comprar";
 
 const ICONES_ATALHO = [
   <path key="n" d="M12 5v14M5 12h14" />,
@@ -28,9 +29,12 @@ function novosInteressados(lista: Interessado[]) {
   return lista.filter((i) => i.em > desde);
 }
 
-function carrinhosAbandonados(pedidos: PedidoCliente[]) {
+/** Refused or unfinished payments this week, with each card refusal's reason. */
+async function tentativas(pedidos: PedidoCliente[]): Promise<{ lista: Tentativa[]; agora: number }> {
   const agora = Date.now();
-  return pedidos.filter((p) => p.status === "aguardando" && agora - p.em > 30 * 60000 && agora - p.em < 7 * 86400000);
+  const ps = tentativasDaSemana(pedidos, agora).slice(0, 8);
+  const recusas = await recusasDosPedidos(ps.filter((p) => p.status === "recusado").map((p) => p.ref));
+  return { lista: ps.map((p) => ({ p, recusas: recusas.get(p.ref) ?? [] })), agora };
 }
 
 function quando(iso: string) {
@@ -52,7 +56,7 @@ export default async function VisaoGeral() {
   }
 
   // Carts that went to Mercado Pago and never got paid, last 7 days; reviews waiting for approval.
-  let abandonados: PedidoCliente[] = [];
+  let tentaram: { lista: Tentativa[]; agora: number } = { lista: [], agora: 0 };
   let paraEnviar: PedidoCliente[] = [];
   let avaliacoesEsperando = 0;
   let orcamentosNovos = 0;
@@ -60,7 +64,7 @@ export default async function VisaoGeral() {
   if (redisAtivo()) {
     try {
       const recentes = await pedidosRecentes(80);
-      abandonados = carrinhosAbandonados(recentes.slice(0, 30));
+      tentaram = await tentativas(recentes);
       // Paid orders the atelier still has to weave/ship.
       paraEnviar = recentes.filter((p) => p.status === "pago" && (p.etapa ?? "producao") === "producao");
       avaliacoesEsperando = (await avaliacoesPendentes()).length;
@@ -120,6 +124,8 @@ export default async function VisaoGeral() {
         </div>
       </div>
 
+      <TentaramComprar lista={tentaram.lista} agora={tentaram.agora} />
+
       {paraEnviar.length ? (
         <Link
           href={paraEnviar.length === 1 ? `/admin/clientes/${paraEnviar[0].ref}` : "/admin/clientes"}
@@ -176,20 +182,6 @@ export default async function VisaoGeral() {
         </Link>
       ) : null}
 
-      {abandonados.length ? (
-        <Link
-          href="/admin/clientes"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-clay/40 bg-[#fbeee8] px-5 py-4 transition hover:border-clay"
-        >
-          <span>
-            <span className="block font-semibold text-clay-dark">
-              {abandonados.length} {abandonados.length === 1 ? "pessoa foi pagar e não terminou" : "pessoas foram pagar e não terminaram"} esta semana
-            </span>
-            <span className="block text-sm text-ink">{abandonados.slice(0, 3).map((p) => p.nome.split(" ")[0]).join(", ")}. Chame no WhatsApp para fechar a venda.</span>
-          </span>
-          <span className="rounded-full bg-clay px-4 py-2 text-sm font-semibold text-paper">Ver clientes</span>
-        </Link>
-      ) : null}
 
       <section>
       <h2 className="mb-3 text-sm font-semibold text-ink-soft">Atalhos</h2>
