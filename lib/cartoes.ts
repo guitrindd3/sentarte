@@ -12,7 +12,7 @@ export async function lerCartoes(): Promise<Cartao[]> {
   if (!v) return [];
   try {
     const lista = JSON.parse(v) as unknown[];
-    return lista.map(normalizarCartao).filter((c): c is Cartao => c !== null);
+    return lista.map((c) => normalizarCartao(c)).filter((c): c is Cartao => c !== null);
   } catch {
     return [];
   }

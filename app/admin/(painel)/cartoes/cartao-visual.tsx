@@ -1,3 +1,4 @@
+import QRCode from "qrcode";
 import type { CSSProperties, PointerEvent as PE, ReactNode } from "react";
 import { LOGOS, type Cartao, type IconeCuidado, type Marca, type Parte } from "@/lib/cartoes-modelo";
 import { FAMILIA } from "./fontes";
@@ -115,6 +116,24 @@ function Instagram({ tam }: { tam: string }) {
 
 const PT = 0.3528; // 1pt in mm
 
+/** QR drawn as one SVG path (no HTML injection), in the card's ink colour. */
+function Qr({ texto, tam }: { texto: string; tam: number }) {
+  let d = "";
+  let n = 0;
+  try {
+    const q = QRCode.create(texto, { errorCorrectionLevel: "M" });
+    n = q.modules.size;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (q.modules.get(x, y)) d += `M${x} ${y}h1v1h-1z`;
+  } catch {
+    return null;
+  }
+  return (
+    <svg viewBox={`0 0 ${n} ${n}`} shapeRendering="crispEdges" style={{ width: `${tam}mm`, height: `${tam}mm`, display: "block" }} aria-hidden>
+      <path d={d} fill="currentColor" />
+    </svg>
+  );
+}
+
 /** In the editor preview: pieces can be grabbed and dragged. */
 export type Edicao = { selecionado: Parte | null; onPegar: (parte: Parte, e: PE<HTMLElement>) => void };
 
@@ -193,6 +212,11 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
         <p {...m("subtitulo", { ...texto(0.85), marginTop: "1mm", color: c.destaque, textTransform: "uppercase", letterSpacing: "0.14em", fontWeight: 600 })}>
           {c.subtitulo}
         </p>
+      ) : null}
+      {c.qr ? (
+        <div {...m("qr", { marginTop: "2.5mm" })}>
+          <Qr texto={c.qr} tam={c.qrTam} />
+        </div>
       ) : null}
       {c.texto ? (
         <div {...m("texto", { display: "flex", flexDirection: "column", alignItems: esquerda ? "flex-start" : "center" })}>

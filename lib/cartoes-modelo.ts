@@ -13,7 +13,7 @@ export const LOGOS: Record<LogoCor, { src: string; nome: string }> = {
 };
 
 export type FormaCartao = "retangulo" | "arredondado" | "redondo" | "etiqueta";
-export type TipoCartao = "visita" | "depara" | "aniversario" | "obrigado" | "cuidados" | "livre";
+export type TipoCartao = "visita" | "depara" | "aniversario" | "obrigado" | "cuidados" | "passaporte" | "livre";
 
 /** Care icons (drawn in the editor, components in cartao-visual.tsx). */
 export const ICONES_CUIDADO = ["pano", "mao", "alvejante", "sol", "chuva", "secadora", "ferro", "arrastar", "coracao"] as const;
@@ -38,7 +38,7 @@ export const NOMES_MARCAS: Record<Marca, string> = { sim: "✔ Pode / faça", na
 export type ItemLista = { marca: Marca; texto: string };
 
 /** Pieces of a card that can be dragged around in the editor. */
-export const PARTES = ["logo", "titulo", "subtitulo", "texto", "cuidados", "lista", "depara", "rodape"] as const;
+export const PARTES = ["logo", "titulo", "subtitulo", "qr", "texto", "cuidados", "lista", "depara", "rodape"] as const;
 export type Parte = (typeof PARTES)[number];
 export const NOMES_PARTES: Record<Parte, string> = {
   logo: "Logo",
@@ -46,6 +46,7 @@ export const NOMES_PARTES: Record<Parte, string> = {
   subtitulo: "Linha pequena",
   texto: "Texto",
   cuidados: "Cuidados",
+  qr: "QR code",
   lista: "Lista ✔ / ✖",
   depara: "De / Para",
   rodape: "Rodapé",
@@ -105,6 +106,12 @@ export type Cartao = {
   de: string;
   /** small line at the bottom; starting with @ it gets the Instagram icon */
   rodape: string;
+  /** link turned into a QR code (passport tags, or the site on a business card); empty = none */
+  qr: string;
+  /** mm */
+  qrTam: number;
+  /** back side (2026-11-10, "frente e verso"): its own texts/fonts/logo; size, shape and hole always follow the front */
+  verso: Cartao | null;
   /** hole at the top, to tie with a string */
   furo: boolean;
   /** false: print without the background colour (on kraft or coloured paper) */
@@ -154,6 +161,7 @@ export const LIMITES = {
   tamTitulo: [8, 48],
   tamTexto: [6, 18],
   logoTam: [8, 50],
+  qrTam: [12, 80],
 } as const;
 
 export type Contato = { whatsapp: string; instagram: string; site: string };
@@ -188,6 +196,9 @@ const base: Omit<Cartao, "id" | "nome" | "tipo"> = {
   para: "",
   de: "",
   rodape: "",
+  qr: "",
+  qrTam: 30,
+  verso: null,
   furo: false,
   imprimirFundo: false,
   cuidados: [],
@@ -195,6 +206,52 @@ const base: Omit<Cartao, "id" | "nome" | "tipo"> = {
   cantos: false,
   pos: {},
 };
+
+/**
+ * Chair passport tag (2026-11-10, user: "o passaporte quero que fique lá também
+ * [em] cartões... mas também mantenha no outro"): same look as the other cards
+ * (kraft, black ink). /admin/etiquetas and the Folha tab fill in each chair's
+ * number and QR link; the atelier can restyle it and save it in "Meus modelos"
+ * (the first saved one of type "passaporte" is then used everywhere).
+ */
+export const PASSAPORTE_PRONTO: Cartao = {
+  ...base,
+  id: "pronto-passaporte",
+  nome: "Etiqueta do passaporte",
+  tipo: "passaporte",
+  forma: "arredondado",
+  largura: 60,
+  altura: 90,
+  furo: true,
+  fonteTitulo: "bodoni",
+  fonteTexto: "archivo",
+  tamTitulo: 11,
+  tamTexto: 7.5,
+  logoTam: 10,
+  titulo: "Ateliê SentArte",
+  subtitulo: "Cadeira Nº 0000",
+  qr: "https://sentarte.com.br",
+  qrTam: 30,
+  texto: "Aponte a câmera e conheça\na história desta cadeira",
+  rodape: "Trançada à mão",
+};
+
+export type DadosPassaporte = { n: number; numero: string; link: string; colecao?: string };
+
+/** One chair's tag in the chosen style. */
+export function cartaoDoPassaporte(estilo: Cartao, p: DadosPassaporte): Cartao {
+  return {
+    ...estilo,
+    id: `passaporte-${p.n}`,
+    nome: `Passaporte Nº ${p.numero}`,
+    subtitulo: `Cadeira Nº ${p.numero}`,
+    qr: p.link,
+    rodape: p.colecao ?? estilo.rodape,
+  };
+}
+
+/** The style for passport tags: the first saved one of that type, else the ready one. */
+export const estiloPassaporte = (salvos: Cartao[]) => salvos.find((c) => c.tipo === "passaporte") ?? PASSAPORTE_PRONTO;
 
 /** The ready-made models (the atelier's own saved ones come from Redis). */
 export function modelosProntos(k: Contato): Cartao[] {
@@ -342,6 +399,7 @@ export function modelosProntos(k: Contato): Cartao[] {
       texto: "Cada fio desta cadeira foi trançado\nà mão, com carinho, pensando em você.",
       rodape: ig,
     },
+    PASSAPORTE_PRONTO,
     {
       ...base,
       id: "pronto-cuidados-praia",
@@ -398,7 +456,7 @@ function posicoes(v: unknown): Posicoes {
 }
 
 /** Anything from the browser becomes a valid card (or null when unusable). */
-export function normalizarCartao(v: unknown): Cartao | null {
+export function normalizarCartao(v: unknown, nivel = 0): Cartao | null {
   if (!v || typeof v !== "object") return null;
   const o = v as Record<string, unknown>;
   const id = typeof o.id === "string" && /^[a-z0-9-]{3,40}$/.test(o.id) ? o.id : null;
@@ -408,7 +466,7 @@ export function normalizarCartao(v: unknown): Cartao | null {
   return {
     id,
     nome: texto(o.nome, 60).trim() || "Meu cartão",
-    tipo: um(o.tipo, ["visita", "depara", "aniversario", "obrigado", "cuidados", "livre"] as const, "livre"),
+    tipo: um(o.tipo, ["visita", "depara", "aniversario", "obrigado", "cuidados", "passaporte", "livre"] as const, "livre"),
     forma,
     largura,
     altura: forma === "redondo" ? largura : num(o.altura, LIMITES.altura, 50),
@@ -431,6 +489,9 @@ export function normalizarCartao(v: unknown): Cartao | null {
     para: texto(o.para, 40),
     de: texto(o.de, 40),
     rodape: texto(o.rodape, 60),
+    qr: typeof o.qr === "string" && /^https?:\/\/[^\s<>"]{3,200}$/.test(o.qr.trim()) ? o.qr.trim() : "",
+    qrTam: num(o.qrTam, LIMITES.qrTam, 30),
+    verso: nivel === 0 && o.verso ? normalizarCartao(o.verso, 1) : null,
     furo: o.furo === true,
     imprimirFundo: o.imprimirFundo !== false,
     cuidados: (Array.isArray(o.cuidados) ? o.cuidados : [])
@@ -452,8 +513,72 @@ export function porFolha(c: Pick<Cartao, "largura" | "altura">) {
   return { colunas, linhas, total: colunas * linhas };
 }
 
-/** `girado`: printed turned sideways (90°) because that way it fit. */
-export type Colocado = { c: Cartao; x: number; y: number; girado?: boolean };
+/**
+ * `girado`: printed turned sideways because that way it fit; `sentido` -1 =
+ * turned the other way (the back of a turned card, so its top matches the front's).
+ */
+export type Colocado = { c: Cartao; x: number; y: number; girado?: boolean; sentido?: 1 | -1 };
+
+/** Fields shared by both sides: changing them on the back changes the front. */
+export const DOS_DOIS_LADOS = ["nome", "forma", "largura", "altura", "furo"] as const;
+
+/** The back as a full card (size/shape from the front), or null. */
+export function versoDe(c: Cartao): Cartao | null {
+  if (!c.verso) return null;
+  return { ...c.verso, id: "verso", nome: c.nome, forma: c.forma, largura: c.largura, altura: c.altura, furo: c.furo, verso: null };
+}
+
+/** A first back: same look, only the logo (big) and the footer. */
+export function novoVerso(c: Cartao): Cartao {
+  return {
+    ...c,
+    id: "verso",
+    verso: null,
+    titulo: "",
+    subtitulo: "",
+    texto: "",
+    lista: [],
+    cuidados: [],
+    dePara: false,
+    para: "",
+    de: "",
+    qr: "",
+    pos: {},
+    logo: "topo",
+    alinhar: "centro",
+    cantos: false,
+    logoTam: Math.round(Math.min(40, Math.min(c.largura, c.altura) * 0.42)),
+  };
+}
+
+/** One card × qtd on A4 sheets, a centred grid (8 mm margins, 3 mm apart). */
+export function paginasDoCartao(c: Cartao, qtd: number): Colocado[][] {
+  const f = porFolha(c);
+  if (!f.total) return [];
+  const GAP = 3;
+  const x0 = (194 - (f.colunas * c.largura + (f.colunas - 1) * GAP)) / 2;
+  const paginas: Colocado[][] = [];
+  for (let i = 0; i < qtd; i++) {
+    const p = Math.floor(i / f.total);
+    const k = i % f.total;
+    (paginas[p] ??= []).push({ c, x: x0 + (k % f.colunas) * (c.largura + GAP), y: Math.floor(k / f.colunas) * (c.altura + GAP) });
+  }
+  return paginas;
+}
+
+/**
+ * The back of a printed sheet: each card's back lands exactly behind its own
+ * front when the sheet is turned over like a book page (left ↔ right, the
+ * printer's "virar pela borda longa"). Printable area 194 mm wide, centred.
+ */
+export function versoDaPagina(pagina: Colocado[]): Colocado[] {
+  return pagina.flatMap((k) => {
+    const v = versoDe(k.c);
+    if (!v) return [];
+    const largura = k.girado ? k.c.altura : k.c.largura;
+    return [{ c: v, x: 194 - k.x - largura, y: k.y, girado: k.girado, sentido: k.girado ? -1 : 1 }];
+  });
+}
 
 /**
  * Several different cards on as few A4 sheets as possible: biggest first,

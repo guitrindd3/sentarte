@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import {
   CORES,
   FONTES,
@@ -14,8 +14,13 @@ import {
   NOMES_FORMAS,
   NOMES_ICONES,
   NOMES_PARTES,
+  DOS_DOIS_LADOS,
+  estiloPassaporte,
+  novoVerso,
+  paginasDoCartao,
   porFolha,
   TAMANHOS,
+  versoDe,
   type Cartao,
   type FormaCartao,
   type IconeCuidado,
@@ -26,7 +31,7 @@ import {
 import { avisar, btnPrimary, btnSecondary, Card, inputClass } from "../../_ui";
 import { excluirCartaoAction, salvarCartaoAction } from "../../actions";
 import { CartaoVisual, IconeCuidadoSvg, MarcaSvg, type Edicao } from "./cartao-visual";
-import { AbaFolha, cartoesDaFolha, PaginaA4, useFolha } from "./folha";
+import { AbaFolha, BotoesImprimir, cartoesDaFolha, ImpressaoFolhas, useAjusteVerso, useFolha, type ModoImpressao, type Passaporte } from "./folha";
 import { FAMILIA } from "./fontes";
 
 const MM = 96 / 25.4; // CSS px per mm
@@ -202,9 +207,26 @@ const cm = (mm: number) => String(mm / 10).replace(".", ",");
 const deCm = (v: string) => Math.round(Number(v.replace(",", ".")) * 10);
 const novoId = () => `meu-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
-export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; salvosIniciais: Cartao[] }) {
+/**
+ * A change made while editing one side. On the back, size/shape/hole/name
+ * still go to the front (both sides always match), the rest to the back.
+ */
+function aplicar(a: Cartao, p: Partial<Cartao>, lado: "frente" | "verso"): Cartao {
+  if (lado === "frente" || !a.verso) return { ...a, ...p };
+  const frente: Partial<Cartao> = {};
+  const verso: Partial<Cartao> = {};
+  for (const [k, v] of Object.entries(p)) Object.assign((DOS_DOIS_LADOS as readonly string[]).includes(k) ? frente : verso, { [k]: v });
+  return { ...a, ...frente, verso: { ...a.verso, ...verso } };
+}
+
+export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { prontos: Cartao[]; salvosIniciais: Cartao[]; passaportes: Passaporte[] }) {
   const [salvos, setSalvos] = useState(salvosIniciais);
-  const [c, setC] = useState<Cartao>(prontos[0]);
+  const [cartao, setCartao] = useState<Cartao>(prontos[0]);
+  const [lado, setLado] = useState<"frente" | "verso">("frente");
+  /** the side being edited, as a full card (the back takes size/shape from the front) */
+  const c = (lado === "verso" && versoDe(cartao)) || cartao;
+  const [modo, setModo] = useState<ModoImpressao>("tudo");
+  const [ajuste] = useAjusteVerso();
   const [quantidade, setQuantidade] = useState<number | null>(null);
   const [linhaCorte, setLinhaCorte] = useState(true);
   const [aba, setAba] = useState<"editar" | "folha">("editar");
@@ -223,8 +245,13 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
     () => false,
   );
 
-  const mudar = (p: Partial<Cartao>) => setC((a) => ({ ...a, ...p }));
-  const ehMeu = salvos.some((s) => s.id === c.id);
+  const mudar = (p: Partial<Cartao>) => setCartao((a) => aplicar(a, p, lado));
+  const ehMeu = salvos.some((s) => s.id === cartao.id);
+
+  function imprimir(m: ModoImpressao) {
+    flushSync(() => setModo(m));
+    window.print();
+  }
   const folha = porFolha(c);
   const qtd = Math.max(1, Math.min(200, quantidade ?? (folha.total || 1)));
   const paginas = folha.total ? Math.ceil(qtd / folha.total) : 0;
@@ -232,11 +259,11 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
   function mover(parte: Parte, pos: { x: number; y: number } | null) {
     setSelecionado(parte);
     if (!pos) return;
-    setC((a) => {
-      const p = { ...a.pos };
+    setCartao((a) => {
+      const p = { ...(lado === "verso" && a.verso ? a.verso : a).pos };
       if (pos.x === 0 && pos.y === 0) delete p[parte];
       else p[parte] = pos;
-      return { ...a, pos: p };
+      return aplicar(a, { pos: p }, lado);
     });
   }
   const empurrar = (dx: number, dy: number) => {
@@ -246,13 +273,14 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
   };
 
   function porNaFolha() {
-    gravarFolha([...itensFolha, { chave: "editor-" + Date.now().toString(36), c, qtd }]);
+    gravarFolha([...itensFolha, { chave: "editor-" + Date.now().toString(36), c: cartao, qtd }]);
     avisar("ok", qtd === 1 ? "1 cartão foi para a aba Folha." : qtd + " cartões foram para a aba Folha.");
   }
 
   function escolher(m: Cartao) {
     setSelecionado(null);
-    setC(m);
+    setLado("frente");
+    setCartao(m);
     setQuantidade(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -265,13 +293,13 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
   }
 
   function salvar(comoNovo: boolean) {
-    const nome = c.nome.trim() || "Meu cartão";
-    const cartao: Cartao = { ...c, nome, id: comoNovo || !ehMeu ? novoId() : c.id };
+    const nome = cartao.nome.trim() || "Meu cartão";
+    const salvo: Cartao = { ...cartao, nome, id: comoNovo || !ehMeu ? novoId() : cartao.id };
     comecar(async () => {
-      const r = await salvarCartaoAction(cartao);
+      const r = await salvarCartaoAction(salvo);
       if (r?.ok) {
-        setC(cartao);
-        setSalvos((l) => (l.some((x) => x.id === cartao.id) ? l.map((x) => (x.id === cartao.id ? cartao : x)) : [cartao, ...l]));
+        setCartao(salvo);
+        setSalvos((l) => (l.some((x) => x.id === salvo.id) ? l.map((x) => (x.id === salvo.id ? salvo : x)) : [salvo, ...l]));
         avisar("ok", r.msg);
       } else avisar("erro", r?.erro ?? "Não deu para salvar.");
     });
@@ -293,7 +321,7 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
       <button
         type="button"
         onClick={() => escolher(m)}
-        className={`flex h-full w-full flex-col items-center gap-2 rounded-2xl border bg-canvas p-3 text-center transition hover:border-wood ${c.id === m.id ? "border-wood ring-4 ring-rattan/25" : "border-line/70"}`}
+        className={`flex h-full w-full flex-col items-center gap-2 rounded-2xl border bg-canvas p-3 text-center transition hover:border-wood ${cartao.id === m.id ? "border-wood ring-4 ring-rattan/25" : "border-line/70"}`}
       >
         <div className="grid h-[118px] w-full place-items-center">
           <Escalado c={m} max={140} maxAltura={112} corte={false} />
@@ -360,7 +388,17 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
       </div>
 
       {aba === "folha" ? (
-        <AbaFolha modelos={[...salvos, ...prontos]} atual={c} itens={itensFolha} gravar={gravarFolha} linhaCorte={linhaCorte} setLinhaCorte={setLinhaCorte} />
+        <AbaFolha
+          modelos={[...salvos, ...prontos]}
+          atual={cartao}
+          itens={itensFolha}
+          gravar={gravarFolha}
+          linhaCorte={linhaCorte}
+          setLinhaCorte={setLinhaCorte}
+          passaportes={passaportes}
+          estiloPassaporte={estiloPassaporte(salvos)}
+          onImprimir={imprimir}
+        />
       ) : (
         <>
           <Card titulo="Escolha um modelo" descricao="Os prontos são um ponto de partida: tudo pode ser mudado. Os que você salvar aparecem em “Meus modelos”.">
@@ -453,6 +491,19 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
                 <Rotulo texto="Rodapé" dica="Começando com @ aparece o ícone do Instagram. Ex.: @atelie_sentarte ou Feito com amor.">
                   <input value={c.rodape} maxLength={60} onChange={(e) => mudar({ rodape: e.target.value })} className={inputClass} />
                 </Rotulo>
+                <Rotulo texto="QR code (link)" dica="Cole um link (o site, o Instagram, o WhatsApp…) e ele vira QR code no cartão. Em branco não aparece.">
+                  <input
+                    value={c.qr}
+                    maxLength={200}
+                    inputMode="url"
+                    placeholder="https://sentarte.com.br"
+                    onChange={(e) => mudar({ qr: e.target.value.trim() })}
+                    className={inputClass}
+                  />
+                </Rotulo>
+                {c.qr ? (
+                  <Deslizar texto="Tamanho do QR code" valor={c.qrTam} faixa={LIMITES.qrTam} passo={1} unidade="mm" onChange={(v) => mudar({ qrTam: v })} />
+                ) : null}
                 <Marcar
                   texto="Mostrar “De:” e “Para:”"
                   dica="Deixe os nomes em branco para escrever à mão na linha pontilhada."
@@ -704,6 +755,54 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
 
             <div className="space-y-4 lg:sticky lg:top-6">
               <Card>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                  {cartao.verso ? (
+                    <>
+                      <Pilulas<"frente" | "verso">
+                        valor={lado}
+                        onChange={(v) => {
+                          setSelecionado(null);
+                          setLado(v);
+                        }}
+                        opcoes={[
+                          ["frente", "Frente"],
+                          ["verso", "Verso"],
+                        ]}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelecionado(null);
+                          setLado("frente");
+                          setCartao((a) => ({ ...a, verso: null }));
+                        }}
+                        className="text-xs font-medium text-clay underline-offset-2 hover:underline"
+                      >
+                        Tirar o verso
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-ink-soft">Só frente.</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelecionado(null);
+                          setCartao((a) => ({ ...a, verso: novoVerso(a) }));
+                          setLado("verso");
+                        }}
+                        className={btnSecondary}
+                      >
+                        + Fazer o verso
+                      </button>
+                    </>
+                  )}
+                </div>
+                {lado === "verso" ? (
+                  <p className="mb-3 rounded-xl bg-espresso px-3 py-2 text-center text-xs font-semibold text-paper">
+                    Editando o VERSO: textos, letras, logo e posições valem só para as costas
+                  </p>
+                ) : null}
                 <div className="rounded-2xl bg-[repeating-conic-gradient(#f3efe8_0_25%,#fbf9f5_0_50%)] bg-[length:18px_18px] p-5">
                   <Escalado c={c} maxAltura={420} selecionado={selecionado} onMover={mover} />
                 </div>
@@ -790,15 +889,10 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
                     <div className="mt-3">
                       <Marcar texto="Linha cinza de corte" dica="Ajuda a recortar quando o fundo é claro." valor={linhaCorte} onChange={setLinhaCorte} />
                     </div>
-                    <button type="button" onClick={() => window.print()} className={`${btnPrimary} mt-4 w-full`}>
-                      Imprimir ou salvar em PDF
-                    </button>
+                    <BotoesImprimir comVerso={!!cartao.verso} onImprimir={imprimir} />
                     <button type="button" onClick={porNaFolha} className={btnSecondary + " mt-2 w-full"}>
                       Pôr {qtd} na folha com outros cartões
                     </button>
-                    <p className="mt-2 text-xs text-ink-soft">
-                      Na janela de impressão, deixe a escala em 100% (“Tamanho real”) e as margens no padrão. Para PDF, escolha “Salvar como PDF”.
-                    </p>
                   </>
                 ) : (
                   <p className="mt-1 text-sm text-clay-dark">Esse tamanho não cabe numa folha A4. Diminua para no máximo 19 × 28 cm.</p>
@@ -809,7 +903,7 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
                 <h2 className="font-serif text-xl font-medium tracking-tight text-ink">Guardar este modelo</h2>
                 <div className="mt-3">
                   <Rotulo texto="Nome do modelo">
-                    <input value={c.nome} maxLength={60} onChange={(e) => mudar({ nome: e.target.value })} className={inputClass} />
+                    <input value={cartao.nome} maxLength={60} onChange={(e) => mudar({ nome: e.target.value })} className={inputClass} />
                   </Rotulo>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -837,25 +931,11 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
                 @media print {
                   body > *:not(.folha-cartoes) { display: none !important }
                   body { background: #fff !important; padding: 0 !important; margin: 0 !important }
-                  .folha-cartoes .pagina { break-after: page; display: grid; justify-content: center; align-content: start; gap: 3mm }
-                  .folha-cartoes .pagina:last-child { break-after: auto }
-                  .folha-cartoes .pagina-mista { break-after: page }
-                  .folha-cartoes .pagina-mista:last-child { break-after: auto }
+                  .folha-cartoes .pagina-impressa { break-after: page; overflow: hidden; height: 281mm }
+                  .folha-cartoes .pagina-impressa:last-child { break-after: auto }
                 }
               `}</style>
-              {aba === "folha"
-                ? folhaMista.paginas.map((p, n) => (
-                    <div key={n} className="pagina-mista">
-                      <PaginaA4 cartoes={p} corte={linhaCorte} />
-                    </div>
-                  ))
-                : Array.from({ length: paginas }, (_, p) => (
-                    <div key={p} className="pagina" style={{ gridTemplateColumns: `repeat(${folha.colunas}, ${c.largura}mm)` }}>
-                      {Array.from({ length: Math.min(folha.total, qtd - p * folha.total) }, (_, i) => (
-                        <CartaoVisual key={i} c={c} semFundo={!c.imprimirFundo} corte={linhaCorte} />
-                      ))}
-                    </div>
-                  ))}
+              <ImpressaoFolhas frentes={aba === "folha" ? folhaMista.paginas : paginasDoCartao(cartao, qtd)} corte={linhaCorte} modo={modo} ajuste={ajuste} />
             </div>,
             document.body,
           )
