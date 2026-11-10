@@ -1,5 +1,5 @@
-import type { CSSProperties, ReactNode } from "react";
-import type { Cartao, IconeCuidado } from "@/lib/cartoes-modelo";
+import type { CSSProperties, PointerEvent as PE, ReactNode } from "react";
+import type { Cartao, IconeCuidado, Parte } from "@/lib/cartoes-modelo";
 import { FAMILIA } from "./fontes";
 
 // One card drawn at its real printed size (mm / pt). The editor shows it
@@ -92,7 +92,24 @@ function Instagram({ tam }: { tam: string }) {
 
 const PT = 0.3528; // 1pt in mm
 
-export function CartaoVisual({ c, semFundo = false, corte = false }: { c: Cartao; semFundo?: boolean; corte?: boolean }) {
+/** In the editor preview: pieces can be grabbed and dragged. */
+export type Edicao = { selecionado: Parte | null; onPegar: (parte: Parte, e: PE<HTMLElement>) => void };
+
+export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c: Cartao; semFundo?: boolean; corte?: boolean; edicao?: Edicao }) {
+  /** style + handlers that let a piece move (its offset from the automatic place) */
+  const m = (parte: Parte, base: CSSProperties = {}) => {
+    const p = c.pos?.[parte];
+    const style: CSSProperties = { ...base, position: base.position ?? "relative", transform: p ? `translate(${p.x}mm, ${p.y}mm)` : undefined };
+    if (!edicao) return { style };
+    style.cursor = "move";
+    style.touchAction = "none";
+    style.userSelect = "none";
+    if (edicao.selecionado === parte) {
+      style.outline = "0.35mm dashed #c1622f";
+      style.outlineOffset = "0.7mm";
+    }
+    return { style, onPointerDown: (e: PE<HTMLElement>) => edicao.onPegar(parte, e) };
+  };
   const menor = Math.min(c.largura, c.altura);
   const redondo = c.forma === "redondo";
   const pad = redondo ? c.largura * 0.15 : Math.min(7, Math.max(3, menor * 0.08));
@@ -138,30 +155,30 @@ export function CartaoVisual({ c, semFundo = false, corte = false }: { c: Cartao
     >
       {c.titulo ? (
         <p
-          style={{
+          {...m("titulo", {
             fontFamily: FAMILIA[c.fonteTitulo],
             fontSize: `${c.tamTitulo}pt`,
             lineHeight: 1.08,
             fontWeight: c.fonteTitulo === "bodoni" || c.fonteTitulo === "cormorant" ? 600 : undefined,
             whiteSpace: "pre-line",
-          }}
+          })}
         >
           {c.titulo}
         </p>
       ) : null}
       {c.subtitulo ? (
-        <p style={{ ...texto(0.85), marginTop: "1mm", color: c.destaque, textTransform: "uppercase", letterSpacing: "0.14em", fontWeight: 600 }}>
+        <p {...m("subtitulo", { ...texto(0.85), marginTop: "1mm", color: c.destaque, textTransform: "uppercase", letterSpacing: "0.14em", fontWeight: 600 })}>
           {c.subtitulo}
         </p>
       ) : null}
       {c.texto ? (
-        <>
+        <div {...m("texto", { display: "flex", flexDirection: "column", alignItems: esquerda ? "flex-start" : "center" })}>
           {c.titulo && !lado ? <span style={{ display: "block", width: "8mm", height: "0.35mm", background: c.destaque, margin: "2mm 0 1.5mm" }} /> : null}
           <p style={{ ...texto(), marginTop: lado || !c.titulo ? "2mm" : 0, lineHeight: 1.4, whiteSpace: "pre-line" }}>{c.texto}</p>
-        </>
+        </div>
       ) : null}
       {c.cuidados.length ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5mm 3mm", marginTop: "3mm", width: "100%" }}>
+        <div {...m("cuidados", { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5mm 3mm", marginTop: "3mm", width: "100%" })}>
           {c.cuidados.map((i, n) => (
             <div
               key={n}
@@ -174,7 +191,9 @@ export function CartaoVisual({ c, semFundo = false, corte = false }: { c: Cartao
         </div>
       ) : null}
       {c.dePara ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: `${c.tamTexto * PT * 1.1}mm`, marginTop: "3mm", width: "100%", textAlign: "left" }}>
+        <div
+          {...m("depara", { display: "flex", flexDirection: "column", gap: `${c.tamTexto * PT * 1.1}mm`, marginTop: "3mm", width: "100%", textAlign: "left" })}
+        >
           {linha("De:", c.de)}
           {linha("Para:", c.para)}
         </div>
@@ -254,20 +273,19 @@ export function CartaoVisual({ c, semFundo = false, corte = false }: { c: Cartao
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo.png" alt="" style={{ width: `${c.logoTam}mm`, height: `${c.logoTam}mm`, flexShrink: 0 }} />
+          <img src="/brand/logo.png" alt="" draggable={false} {...m("logo", { width: `${c.logoTam}mm`, height: `${c.logoTam}mm`, flexShrink: 0 })} />
           {corpo}
         </div>
         {c.rodape ? (
           <p
-            style={{
+            {...m("rodape", {
               ...texto(0.95),
-              position: "relative",
               marginTop: "2mm",
               display: "flex",
               alignItems: "center",
               justifyContent: esquerda ? "flex-start" : "center",
               gap: "1mm",
-            }}
+            })}
           >
             {c.rodape.startsWith("@") ? <Instagram tam={`${c.tamTexto * PT * 1.3}mm`} /> : null}
             {c.rodape}

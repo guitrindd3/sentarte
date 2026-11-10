@@ -24,6 +24,21 @@ export const NOMES_ICONES: Record<IconeCuidado, string> = {
 };
 export type ItemCuidado = { icone: IconeCuidado; texto: string };
 
+/** Pieces of a card that can be dragged around in the editor. */
+export const PARTES = ["logo", "titulo", "subtitulo", "texto", "cuidados", "depara", "rodape"] as const;
+export type Parte = (typeof PARTES)[number];
+export const NOMES_PARTES: Record<Parte, string> = {
+  logo: "Logo",
+  titulo: "Título",
+  subtitulo: "Linha pequena",
+  texto: "Texto",
+  cuidados: "Cuidados",
+  depara: "De / Para",
+  rodape: "Rodapé",
+};
+/** mm moved from the automatic place */
+export type Posicoes = Partial<Record<Parte, { x: number; y: number }>>;
+
 export const FONTES = ["bodoni", "playfair", "cormorant", "archivo", "montserrat", "greatvibes", "dancing", "parisienne"] as const;
 export type FonteCartao = (typeof FONTES)[number];
 
@@ -79,6 +94,8 @@ export type Cartao = {
   /** false: print without the background colour (on kraft or coloured paper) */
   imprimirFundo: boolean;
   cuidados: ItemCuidado[];
+  /** where the atelier dragged each piece (missing = automatic place) */
+  pos: Posicoes;
 };
 
 export const TAMANHOS: { nome: string; largura: number; altura: number }[] = [
@@ -146,6 +163,7 @@ const base: Omit<Cartao, "id" | "nome" | "tipo"> = {
   furo: false,
   imprimirFundo: true,
   cuidados: [],
+  pos: {},
 };
 
 /** The ready-made models (the atelier's own saved ones come from Redis). */
@@ -314,6 +332,20 @@ const num = (v: unknown, [min, max]: readonly [number, number], padrao: number) 
 const texto = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/\r\n/g, "\n").slice(0, max) : "");
 const um = <T extends string>(v: unknown, lista: readonly T[], padrao: T): T => (lista.includes(v as T) ? (v as T) : padrao);
 
+function posicoes(v: unknown): Posicoes {
+  const out: Posicoes = {};
+  if (!v || typeof v !== "object") return out;
+  for (const p of PARTES) {
+    const d = (v as Record<string, { x?: unknown; y?: unknown }>)[p];
+    if (!d || typeof d !== "object") continue;
+    const x = Number(d.x);
+    const y = Number(d.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y) || (x === 0 && y === 0)) continue;
+    out[p] = { x: Math.max(-200, Math.min(200, Math.round(x * 10) / 10)), y: Math.max(-200, Math.min(200, Math.round(y * 10) / 10)) };
+  }
+  return out;
+}
+
 /** Anything from the browser becomes a valid card (or null when unusable). */
 export function normalizarCartao(v: unknown): Cartao | null {
   if (!v || typeof v !== "object") return null;
@@ -352,6 +384,7 @@ export function normalizarCartao(v: unknown): Cartao | null {
     cuidados: (Array.isArray(o.cuidados) ? o.cuidados : [])
       .slice(0, 8)
       .map((i) => ({ icone: um((i as ItemCuidado)?.icone, ICONES_CUIDADO, "pano"), texto: texto((i as ItemCuidado)?.texto, 40) })),
+    pos: posicoes(o.pos),
   };
 }
 
@@ -361,4 +394,42 @@ export function porFolha(c: Pick<Cartao, "largura" | "altura">) {
   const colunas = Math.floor((194 + GAP) / (c.largura + GAP));
   const linhas = Math.floor((281 + GAP) / (c.altura + GAP));
   return { colunas, linhas, total: colunas * linhas };
+}
+
+export type Colocado = { c: Cartao; x: number; y: number };
+
+/**
+ * Several different cards on as few A4 sheets as possible (rows, tallest
+ * first). Cards bigger than the printable area come back in `grandes`.
+ */
+export function montarFolhas(cartoes: Cartao[]): { paginas: Colocado[][]; grandes: Cartao[] } {
+  const GAP = 3;
+  const L = 194;
+  const A = 281;
+  const grandes = cartoes.filter((c) => c.largura > L || c.altura > A);
+  const cabem = cartoes.filter((c) => c.largura <= L && c.altura <= A).sort((a, b) => b.altura - a.altura);
+  const paginas: Colocado[][] = [];
+  let pag: Colocado[] = [];
+  let x = 0;
+  let y = 0;
+  let linha = 0;
+  for (const c of cabem) {
+    if (x > 0 && x + c.largura > L) {
+      y += linha + GAP;
+      x = 0;
+      linha = 0;
+    }
+    if (y + c.altura > A) {
+      paginas.push(pag);
+      pag = [];
+      x = 0;
+      y = 0;
+      linha = 0;
+    }
+    pag.push({ c, x, y });
+    x += c.largura + GAP;
+    linha = Math.max(linha, c.altura);
+  }
+  if (pag.length) paginas.push(pag);
+  return { paginas, grandes };
 }
