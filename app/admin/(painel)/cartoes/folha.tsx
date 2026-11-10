@@ -4,6 +4,7 @@ import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from
 import { cartaoDoPassaporte, montarFolhas, normalizarCartao, versoDaPagina, type Cartao, type Colocado, type DadosPassaporte } from "@/lib/cartoes-modelo";
 import { btnPrimary, btnSecondary, Card } from "../../_ui";
 import { CartaoVisual } from "./cartao-visual";
+import { ListaPassaportes, textoDoPassaporte } from "./escolher-passaporte";
 
 // "Folha" tab (2026-11-10, user: "quero uma aba aonde eu posso colocar todos
 // que eu quiser imprimir em um papel só"): pick several cards — different
@@ -21,7 +22,18 @@ import { CartaoVisual } from "./cartao-visual";
 export type ItemFolha = { chave: string; c: Cartao; qtd: number };
 export type ModoImpressao = "tudo" | "frentes" | "versos";
 export type AjusteVerso = { x: number; y: number; girar: boolean };
-export type Passaporte = DadosPassaporte & { rotulo: string; dia: string };
+export type Passaporte = DadosPassaporte & {
+  rotulo: string;
+  dia: string;
+  modelo?: string;
+  nomeTrancado?: string;
+  tipo?: string;
+  imagem?: string;
+  cores?: string[];
+  /** buyer's first name + city (admin only) */
+  cliente?: string;
+  pedido?: string;
+};
 
 const EVENTO = "folha-cartoes";
 
@@ -338,8 +350,17 @@ export function AbaFolha({
               {itens.map((i) => (
                 <li key={i.chave} className="flex flex-wrap items-center gap-3 py-3">
                   <Miniatura c={i.c} />
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-[11rem] flex-1">
                     <p className="font-semibold leading-tight text-ink">{i.c.nome}</p>
+                    {(() => {
+                      const p = passaportes.find((x) => chavePassaporte(x) === i.chave);
+                      return p ? (
+                        <p className="text-sm text-ink">
+                          Vai na cadeira: {textoDoPassaporte(p)}
+                          {p.cliente ? <span className="text-ink-soft"> · cliente {p.cliente}</span> : null}
+                        </p>
+                      ) : null;
+                    })()}
                     <p className="text-xs text-ink-soft">
                       {cm(i.c.largura)} × {cm(i.c.altura)} cm{i.c.verso ? " · frente e verso" : ""}
                     </p>
@@ -394,27 +415,17 @@ export function AbaFolha({
           }
         >
           {passaportes.length ? (
-            <ul className="divide-y divide-line/70">
-              {passaportes.map((p) => {
+            <ListaPassaportes
+              passaportes={passaportes}
+              acao={(p) => {
                 const na = itens.some((i) => i.chave === chavePassaporte(p));
                 return (
-                  <li key={p.n} className="flex flex-wrap items-center gap-3 py-3 text-sm">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-ink">
-                        Nº {p.numero} · {p.rotulo}
-                      </p>
-                      <p className="text-xs text-ink-soft">
-                        {p.dia}
-                        {p.colecao ? ` · ${p.colecao}` : ""}
-                      </p>
-                    </div>
-                    <button type="button" disabled={na} onClick={() => porPassaportes([p])} className={btnSecondary}>
-                      {na ? "Já está na folha" : "Pôr na folha"}
-                    </button>
-                  </li>
+                  <button type="button" disabled={na} onClick={() => porPassaportes([p])} className={btnSecondary + " w-full sm:w-auto"}>
+                    {na ? "Já está na folha" : "Pôr na folha"}
+                  </button>
                 );
-              })}
-            </ul>
+              }}
+            />
           ) : (
             <p className="text-sm text-ink-soft">Ainda nenhum passaporte. Toda cadeira paga ganha o seu (veja em Passaportes).</p>
           )}

@@ -14,6 +14,7 @@ import {
   NOMES_FORMAS,
   NOMES_ICONES,
   NOMES_PARTES,
+  cartaoDoPassaporte,
   DOS_DOIS_LADOS,
   estiloPassaporte,
   novoVerso,
@@ -32,6 +33,7 @@ import { avisar, btnPrimary, btnSecondary, Card, inputClass } from "../../_ui";
 import { excluirCartaoAction, salvarCartaoAction } from "../../actions";
 import { CartaoVisual, IconeCuidadoSvg, MarcaSvg, type Edicao } from "./cartao-visual";
 import { AbaFolha, BotoesImprimir, cartoesDaFolha, ImpressaoFolhas, useAjusteVerso, useFolha, type ModoImpressao, type Passaporte } from "./folha";
+import { LinhaPassaporte, ListaPassaportes } from "./escolher-passaporte";
 import { FAMILIA } from "./fontes";
 
 const MM = 96 / 25.4; // CSS px per mm
@@ -225,6 +227,13 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
   const [lado, setLado] = useState<"frente" | "verso">("frente");
   /** the side being edited, as a full card (the back takes size/shape from the front) */
   const c = (lado === "verso" && versoDe(cartao)) || cartao;
+  /** passport tag: the chair it's for (its number, QR and collection fill the tag) */
+  const [cadeira, setCadeira] = useState<number | null>(null);
+  const ehPassaporte = cartao.tipo === "passaporte";
+  const escolhida = ehPassaporte ? (passaportes.find((p) => p.n === cadeira) ?? null) : null;
+  /** what is shown and printed: the tag of the chosen chair, or the card as edited */
+  const final = escolhida ? cartaoDoPassaporte(cartao, escolhida) : cartao;
+  const cVisto = (lado === "verso" && versoDe(final)) || final;
   const [modo, setModo] = useState<ModoImpressao>("tudo");
   const [ajuste] = useAjusteVerso();
   const [quantidade, setQuantidade] = useState<number | null>(null);
@@ -273,6 +282,12 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
   };
 
   function porNaFolha() {
+    if (escolhida) {
+      const chave = "passaporte-" + escolhida.n;
+      gravarFolha([...itensFolha.filter((i) => i.chave !== chave), { chave, c: final, qtd }]);
+      avisar("ok", "A etiqueta da cadeira Nº " + escolhida.numero + " foi para a aba Folha.");
+      return;
+    }
     gravarFolha([...itensFolha, { chave: "editor-" + Date.now().toString(36), c: cartao, qtd }]);
     avisar("ok", qtd === 1 ? "1 cartão foi para a aba Folha." : qtd + " cartões foram para a aba Folha.");
   }
@@ -281,6 +296,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
     setSelecionado(null);
     setLado("frente");
     setCartao(m);
+    setCadeira(null);
     setQuantidade(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -754,6 +770,53 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
             </div>
 
             <div className="space-y-4 lg:sticky lg:top-6">
+              {ehPassaporte ? (
+                <Card>
+                  <h2 className="font-serif text-xl font-medium tracking-tight text-ink">De qual cadeira é esta etiqueta?</h2>
+                  {escolhida ? (
+                    <div className="mt-3 rounded-2xl border-2 border-wood bg-rattan/10 p-3">
+                      <LinhaPassaporte
+                        p={escolhida}
+                        acao={
+                          <button type="button" onClick={() => setCadeira(null)} className={btnSecondary + " w-full sm:w-auto"}>
+                            Trocar
+                          </button>
+                        }
+                      />
+                      <p className="mt-2 text-xs text-ink-soft">
+                        A etiqueta já está com o número e o QR code desta cadeira. Imprima ou ponha na folha; o visual (letras, logo, posições) você muda nos
+                        passos ao lado.
+                      </p>
+                    </div>
+                  ) : passaportes.length ? (
+                    <>
+                      <p className="mt-1 text-sm text-ink-soft">
+                        Escolha a cadeira: a etiqueta sai com o número e o QR code dela. Confira pela foto, pelo nome trançado e pela cliente.
+                      </p>
+                      <div className="mt-3 max-h-[26rem] overflow-y-auto pr-1">
+                        <ListaPassaportes
+                          passaportes={passaportes}
+                          acao={(p) => (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCadeira(p.n);
+                                setQuantidade(1);
+                              }}
+                              className={btnPrimary + " w-full sm:w-auto"}
+                            >
+                              Escolher
+                            </button>
+                          )}
+                        />
+                      </div>
+                      <p className="mt-2 text-xs text-ink-soft">Sem escolher, a prévia mostra o número 0000 (só um exemplo).</p>
+                    </>
+                  ) : (
+                    <p className="mt-1 text-sm text-ink-soft">Ainda nenhuma cadeira com passaporte. Toda cadeira paga ganha o seu (veja em Passaportes).</p>
+                  )}
+                </Card>
+              ) : null}
               <Card>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                   {cartao.verso ? (
@@ -804,7 +867,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                   </p>
                 ) : null}
                 <div className="rounded-2xl bg-[repeating-conic-gradient(#f3efe8_0_25%,#fbf9f5_0_50%)] bg-[length:18px_18px] p-5">
-                  <Escalado c={c} maxAltura={420} selecionado={selecionado} onMover={mover} />
+                  <Escalado c={cVisto} maxAltura={420} selecionado={selecionado} onMover={mover} />
                 </div>
                 <p className="mt-3 text-center text-xs text-ink-soft">
                   Tamanho real: {cm(c.largura)} × {cm(c.altura)} cm
@@ -935,7 +998,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                   .folha-cartoes .pagina-impressa:last-child { break-after: auto }
                 }
               `}</style>
-              <ImpressaoFolhas frentes={aba === "folha" ? folhaMista.paginas : paginasDoCartao(cartao, qtd)} corte={linhaCorte} modo={modo} ajuste={ajuste} />
+              <ImpressaoFolhas frentes={aba === "folha" ? folhaMista.paginas : paginasDoCartao(final, qtd)} corte={linhaCorte} modo={modo} ajuste={ajuste} />
             </div>,
             document.body,
           )
