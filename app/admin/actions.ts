@@ -42,6 +42,8 @@ import { normalizarCodigo } from "@/lib/cupom";
 import { paginaEditavel, type Bloco, type ValorCampo } from "@/lib/textos-paginas";
 import { excluirCupom, listarCupons, salvarConfigBlackFriday, salvarCupom } from "@/lib/cupons-store";
 import { redisAtivo } from "@/lib/redis";
+import { gravarCartoes, lerCartoes, MAX_CARTOES } from "@/lib/cartoes";
+import { normalizarCartao } from "@/lib/cartoes-modelo";
 import { salvarVagas } from "@/lib/vagas";
 import { slugDoModelo } from "@/lib/produtos";
 import { colecaoDoForm } from "@/lib/admin-grupos";
@@ -1394,4 +1396,38 @@ export async function apagarColecaoAction(id: string) {
     revalidatePath("/admin/colecoes");
     return { msg: "Coleção apagada.", ir: "/admin/colecoes" };
   });
+}
+
+// --- Cartões (lib/cartoes.ts, 2026-11-10) -------------------------------------------
+
+export async function salvarCartaoAction(bruto: unknown): Promise<Resultado> {
+  await requireAdmin();
+  const c = normalizarCartao(bruto);
+  if (!c || c.id.startsWith("pronto-")) return { ok: false, erro: "Não deu para ler o cartão. Recarregue a página.", em: Date.now() };
+  try {
+    const lista = await lerCartoes();
+    const i = lista.findIndex((x) => x.id === c.id);
+    if (i >= 0) lista[i] = c;
+    else if (lista.length >= MAX_CARTOES) return { ok: false, erro: `Já tem ${MAX_CARTOES} modelos salvos. Exclua algum antes.`, em: Date.now() };
+    else lista.unshift(c);
+    await gravarCartoes(lista);
+    revalidatePath("/admin/cartoes");
+    return { ok: true, msg: i >= 0 ? "Alterações salvas no modelo." : "Modelo salvo em “Meus modelos”.", em: Date.now() };
+  } catch (err) {
+    console.error("salvar cartão", err);
+    return { ok: false, erro: "Não deu para salvar. Confira a internet e tente de novo.", em: Date.now() };
+  }
+}
+
+export async function excluirCartaoAction(id: string): Promise<Resultado> {
+  await requireAdmin();
+  try {
+    const lista = await lerCartoes();
+    await gravarCartoes(lista.filter((x) => x.id !== id));
+    revalidatePath("/admin/cartoes");
+    return { ok: true, msg: "Modelo excluído.", em: Date.now() };
+  } catch (err) {
+    console.error("excluir cartão", err);
+    return { ok: false, erro: "Não deu para excluir. Tente de novo.", em: Date.now() };
+  }
 }

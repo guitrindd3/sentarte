@@ -11,6 +11,7 @@ const ITENS = [
   { href: "/admin/campanhas", titulo: "Campanhas", texto: "Cupom para quem vai sair do site e e-mails de novidades para a lista." },
   { href: "/admin/colecoes", titulo: "Coleções numeradas", texto: "Edições limitadas com número, lista de espera e contagem no site." },
   { href: "/admin/passaportes", titulo: "Passaportes", texto: "A história de cada cadeira, com QR code na etiqueta." },
+  { href: "/admin/cartoes", titulo: "Cartões", texto: "Cartão de visita, De/Para, aniversário, agradecimento e cuidados, com a logo. Edite e imprima." },
   { href: "/admin/paginas", titulo: "Páginas do site", texto: "Textos do Sobre, FAQ, políticas e das seções da página inicial." },
   { href: "/admin/depoimentos", titulo: "Depoimentos", texto: "Elogios de clientes na página inicial." },
   { href: "/admin/site", titulo: "Textos e contato", texto: "Boas-vindas, WhatsApp, Instagram e Google." },

@@ -1,0 +1,279 @@
+import type { CSSProperties, ReactNode } from "react";
+import type { Cartao, IconeCuidado } from "@/lib/cartoes-modelo";
+import { FAMILIA } from "./fontes";
+
+// One card drawn at its real printed size (mm / pt). The editor shows it
+// scaled; the print sheet uses it as is.
+
+const X = <path d="M4 4l16 16M20 4 4 20" />;
+
+const ICONES: Record<IconeCuidado, ReactNode> = {
+  pano: (
+    <>
+      <path d="M4 7h13v9a3 3 0 0 1-3 3H4z" />
+      <path d="M7 11h7M7 14.5h5M19.5 3.5c1 1.3 1.5 2.1 1.5 2.8a1.5 1.5 0 0 1-3 0c0-.7.5-1.5 1.5-2.8z" />
+    </>
+  ),
+  mao: (
+    <>
+      <path d="M3 12l2 8h14l2-8M3 14.5c2 1.3 4 1.3 6 0s4-1.3 6 0 4 1.3 6 0" />
+      <path d="M9 11V5.5M11.5 11V4M14 11V5M16.5 11V7" />
+    </>
+  ),
+  alvejante: (
+    <>
+      <path d="M12 4.5 20.5 19h-17z" />
+      {X}
+    </>
+  ),
+  sol: (
+    <>
+      <circle cx="12" cy="12" r="3.5" />
+      <path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" />
+      {X}
+    </>
+  ),
+  chuva: (
+    <>
+      <path d="M7 14.5a3.8 3.8 0 0 1-.4-7.6A5 5 0 0 1 16.4 7.6 3.5 3.5 0 0 1 17 14.5z" />
+      <path d="M9 17.5 8 20M13 17.5 12 20M17 17.5 16 20" />
+      {X}
+    </>
+  ),
+  secadora: (
+    <>
+      <path d="M4.5 4.5h15v15h-15z" />
+      <circle cx="12" cy="12" r="4.5" />
+      {X}
+    </>
+  ),
+  ferro: (
+    <>
+      <path d="M3 17.5h17l-1.2-5.2A4 4 0 0 0 14.9 9H7.5M8.5 9V6.5h8" />
+      {X}
+    </>
+  ),
+  arrastar: (
+    <>
+      <path d="M6 4v15M6 12h8v7M14 12V9" />
+      <path d="M16 6h5M19 4l2 2-2 2" />
+      {X}
+    </>
+  ),
+  coracao: <path d="M12 20s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 7.6 4.2 4.2 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z" />,
+};
+
+export function IconeCuidadoSvg({ icone, tam }: { icone: IconeCuidado; tam: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ width: tam, height: tam }}
+      aria-hidden
+    >
+      {ICONES[icone]}
+    </svg>
+  );
+}
+
+function Instagram({ tam }: { tam: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ width: tam, height: tam, flexShrink: 0 }} aria-hidden>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17" cy="7" r="0.6" fill="currentColor" />
+    </svg>
+  );
+}
+
+const PT = 0.3528; // 1pt in mm
+
+export function CartaoVisual({ c, semFundo = false, corte = false }: { c: Cartao; semFundo?: boolean; corte?: boolean }) {
+  const menor = Math.min(c.largura, c.altura);
+  const redondo = c.forma === "redondo";
+  const pad = redondo ? c.largura * 0.15 : Math.min(7, Math.max(3, menor * 0.08));
+  const corteTag = Math.min(c.largura * 0.2, 10);
+  const furoTam = Math.max(3.5, Math.min(5, menor * 0.07));
+  const furoTopo = redondo ? c.largura * 0.06 : c.forma === "etiqueta" ? corteTag * 0.55 : 3;
+  const topoExtra = c.furo || c.forma === "etiqueta" ? furoTopo + furoTam + 1.5 - (redondo ? pad * 0.6 : pad * 0.4) : 0;
+  const inset = Math.max(2, pad * 0.45);
+  const raio = c.forma === "arredondado" ? `${Math.min(5, menor * 0.08)}mm` : redondo ? "50%" : "0";
+  const esquerda = c.alinhar === "esquerda";
+  const lado = c.logo === "lado";
+  const texto = (mult = 1): CSSProperties => ({ fontFamily: FAMILIA[c.fonteTexto], fontSize: `${c.tamTexto * mult}pt` });
+  const linha = (rotulo: string, nome: string) => (
+    <div style={{ display: "flex", alignItems: "baseline", gap: "1.5mm", width: "100%" }}>
+      <span style={{ ...texto(1.15), fontFamily: FAMILIA[c.fonteTitulo] }}>{rotulo}</span>
+      <span
+        style={{
+          flex: 1,
+          minHeight: `${c.tamTexto * PT * 1.6}mm`,
+          borderBottom: "0.3mm dotted currentColor",
+          fontFamily: FAMILIA[c.fonteTitulo],
+          fontSize: `${c.tamTexto * 1.25}pt`,
+          lineHeight: 1.1,
+          textAlign: "center",
+        }}
+      >
+        {nome}
+      </span>
+    </div>
+  );
+
+  const corpo = (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: esquerda ? "flex-start" : "center",
+        textAlign: esquerda ? "left" : "center",
+        minWidth: 0,
+        width: lado ? undefined : "100%",
+        flex: lado ? 1 : undefined,
+      }}
+    >
+      {c.titulo ? (
+        <p
+          style={{
+            fontFamily: FAMILIA[c.fonteTitulo],
+            fontSize: `${c.tamTitulo}pt`,
+            lineHeight: 1.08,
+            fontWeight: c.fonteTitulo === "bodoni" || c.fonteTitulo === "cormorant" ? 600 : undefined,
+            whiteSpace: "pre-line",
+          }}
+        >
+          {c.titulo}
+        </p>
+      ) : null}
+      {c.subtitulo ? (
+        <p style={{ ...texto(0.85), marginTop: "1mm", color: c.destaque, textTransform: "uppercase", letterSpacing: "0.14em", fontWeight: 600 }}>
+          {c.subtitulo}
+        </p>
+      ) : null}
+      {c.texto ? (
+        <>
+          {c.titulo && !lado ? <span style={{ display: "block", width: "8mm", height: "0.35mm", background: c.destaque, margin: "2mm 0 1.5mm" }} /> : null}
+          <p style={{ ...texto(), marginTop: lado || !c.titulo ? "2mm" : 0, lineHeight: 1.4, whiteSpace: "pre-line" }}>{c.texto}</p>
+        </>
+      ) : null}
+      {c.cuidados.length ? (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5mm 3mm", marginTop: "3mm", width: "100%" }}>
+          {c.cuidados.map((i, n) => (
+            <div
+              key={n}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", textAlign: "center", gap: "1mm" }}
+            >
+              <span style={{ ...texto(), lineHeight: 1.15, fontWeight: 500 }}>{i.texto}</span>
+              <IconeCuidadoSvg icone={i.icone} tam={`${c.tamTexto * PT * 2.6}mm`} />
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {c.dePara ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: `${c.tamTexto * PT * 1.1}mm`, marginTop: "3mm", width: "100%", textAlign: "left" }}>
+          {linha("De:", c.de)}
+          {linha("Para:", c.para)}
+        </div>
+      ) : null}
+    </div>
+  );
+
+  return (
+    <div
+      style={{
+        width: `${c.largura}mm`,
+        height: `${c.altura}mm`,
+        position: "relative",
+        flexShrink: 0,
+        filter: corte
+          ? "drop-shadow(0.12mm 0 0 #9a9a9a) drop-shadow(-0.12mm 0 0 #9a9a9a) drop-shadow(0 0.12mm 0 #9a9a9a) drop-shadow(0 -0.12mm 0 #9a9a9a)"
+          : undefined,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          overflow: "hidden",
+          background: semFundo ? "#ffffff" : c.fundo,
+          color: c.cor,
+          borderRadius: raio,
+          clipPath:
+            c.forma === "etiqueta"
+              ? `polygon(${corteTag}mm 0, calc(100% - ${corteTag}mm) 0, 100% ${corteTag}mm, 100% 100%, 0 100%, 0 ${corteTag}mm)`
+              : undefined,
+          printColorAdjust: "exact",
+          WebkitPrintColorAdjust: "exact",
+          display: "flex",
+          flexDirection: "column",
+          padding: `${pad + Math.max(0, topoExtra)}mm ${pad}mm ${pad}mm`,
+        }}
+      >
+        {c.moldura && c.forma !== "etiqueta" ? (
+          <span
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: `${inset}mm`,
+              border: `0.35mm solid ${c.destaque}`,
+              borderRadius: redondo ? "50%" : c.forma === "arredondado" ? "2.5mm" : 0,
+              pointerEvents: "none",
+            }}
+          />
+        ) : null}
+        {c.furo || c.forma === "etiqueta" ? (
+          <span
+            aria-hidden
+            style={{
+              position: "absolute",
+              top: `${furoTopo}mm`,
+              left: "50%",
+              width: `${furoTam}mm`,
+              height: `${furoTam}mm`,
+              marginLeft: `${-furoTam / 2}mm`,
+              borderRadius: "50%",
+              background: "#ffffff",
+              boxShadow: `0 0 0 0.6mm ${c.destaque}33, inset 0 0.2mm 0.4mm rgba(0,0,0,0.25)`,
+            }}
+          />
+        ) : null}
+        <div
+          style={{
+            position: "relative",
+            flex: 1,
+            minHeight: 0,
+            display: "flex",
+            flexDirection: lado ? "row" : "column",
+            alignItems: lado ? "center" : esquerda ? "flex-start" : "center",
+            justifyContent: "center",
+            gap: lado ? "4mm" : `${Math.max(1.5, menor * 0.03)}mm`,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/logo.png" alt="" style={{ width: `${c.logoTam}mm`, height: `${c.logoTam}mm`, flexShrink: 0 }} />
+          {corpo}
+        </div>
+        {c.rodape ? (
+          <p
+            style={{
+              ...texto(0.95),
+              position: "relative",
+              marginTop: "2mm",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: esquerda ? "flex-start" : "center",
+              gap: "1mm",
+            }}
+          >
+            {c.rodape.startsWith("@") ? <Instagram tam={`${c.tamTexto * PT * 1.3}mm`} /> : null}
+            {c.rodape}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
