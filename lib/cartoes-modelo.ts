@@ -5,6 +5,13 @@
 // Shared by the server (validation, Redis) and the editor in the browser.
 // Sizes are millimetres, font sizes points: what comes out of the printer.
 
+export type LogoCor = "linha" | "preta" | "colorida";
+export const LOGOS: Record<LogoCor, { src: string; nome: string }> = {
+  linha: { src: "/brand/logo-linha.png", nome: "Preta, só o contorno" },
+  preta: { src: "/brand/logo-preto.png", nome: "Preta, carimbo" },
+  colorida: { src: "/brand/logo.png", nome: "Colorida" },
+};
+
 export type FormaCartao = "retangulo" | "arredondado" | "redondo" | "etiqueta";
 export type TipoCartao = "visita" | "depara" | "aniversario" | "obrigado" | "cuidados" | "livre";
 
@@ -78,6 +85,8 @@ export type Cartao = {
   tamTexto: number;
   alinhar: "centro" | "esquerda";
   logo: "topo" | "lado";
+  /** linha: black outline (light on ink) · preta: solid black stamp · colorida: the original */
+  logoCor: LogoCor;
   /** mm */
   logoTam: number;
   moldura: boolean;
@@ -110,15 +119,23 @@ export const TAMANHOS: { nome: string; largura: number; altura: number }[] = [
   { nome: "A6 (14,8 × 10,5 cm)", largura: 148, altura: 105 },
 ];
 
-/** Colour sets taken from the logo (navy, sun orange) and the site (cream, wood). */
+/**
+ * Colour sets. The atelier prints on KRAFT paper with black ink (2026-11-10,
+ * user: "todos os modelos estilo preto e branco... a folha que sempre vamos
+ * imprimir é de papel craft"), so Kraft is the default: the preview shows the
+ * paper colour and the background is not printed. The others stay for
+ * when another paper is used.
+ */
 export const CORES: { nome: string; fundo: string; cor: string; destaque: string }[] = [
+  { nome: "Kraft (papel)", fundo: "#c9a47a", cor: "#1c1714", destaque: "#1c1714" },
+  { nome: "Kraft escuro", fundo: "#a9804f", cor: "#1c1714", destaque: "#1c1714" },
+  { nome: "Papel branco", fundo: "#ffffff", cor: "#1c1714", destaque: "#1c1714" },
   { nome: "Marinho da logo", fundo: "#13234a", cor: "#fbf6ee", destaque: "#e07b39" },
   { nome: "Creme", fundo: "#fbf6ee", cor: "#13234a", destaque: "#c1622f" },
   { nome: "Branco", fundo: "#ffffff", cor: "#241f1a", destaque: "#8a5636" },
   { nome: "Terracota", fundo: "#c1622f", cor: "#fffaf3", destaque: "#13234a" },
   { nome: "Madeira", fundo: "#6b4126", cor: "#fbf3e6", destaque: "#e0b45c" },
   { nome: "Rosé", fundo: "#f6e4dc", cor: "#5a2e1d", destaque: "#c1622f" },
-  { nome: "Kraft", fundo: "#c9a47a", cor: "#2b1f16", destaque: "#2b1f16" },
 ];
 
 export const LIMITES = {
@@ -142,15 +159,16 @@ const base: Omit<Cartao, "id" | "nome" | "tipo"> = {
   forma: "retangulo",
   largura: 90,
   altura: 50,
-  fundo: CORES[1].fundo,
-  cor: CORES[1].cor,
-  destaque: CORES[1].destaque,
+  fundo: CORES[0].fundo,
+  cor: CORES[0].cor,
+  destaque: CORES[0].destaque,
   fonteTitulo: "bodoni",
   fonteTexto: "archivo",
   tamTitulo: 16,
   tamTexto: 8,
   alinhar: "centro",
   logo: "topo",
+  logoCor: "linha",
   logoTam: 16,
   moldura: false,
   titulo: "",
@@ -161,7 +179,7 @@ const base: Omit<Cartao, "id" | "nome" | "tipo"> = {
   de: "",
   rodape: "",
   furo: false,
-  imprimirFundo: true,
+  imprimirFundo: false,
   cuidados: [],
   pos: {},
 };
@@ -171,18 +189,16 @@ export function modelosProntos(k: Contato): Cartao[] {
   const contato = [k.whatsapp ? `WhatsApp ${telefoneBonito(k.whatsapp)}` : "", k.instagram ? `@${k.instagram.replace(/^@/, "")}` : "", k.site]
     .filter(Boolean)
     .join("\n");
-  const cores = (i: number) => ({ fundo: CORES[i].fundo, cor: CORES[i].cor, destaque: CORES[i].destaque });
-  const [marinho, creme, terracota, kraft] = [cores(0), cores(1), cores(3), cores(6)];
   const ig = k.instagram ? `@${k.instagram.replace(/^@/, "")}` : "";
   return [
     {
       ...base,
-      ...marinho,
       id: "pronto-visita",
       nome: "Cartão de visita",
       tipo: "visita",
       alinhar: "esquerda",
       logo: "lado",
+      logoCor: "preta",
       logoTam: 30,
       tamTitulo: 15,
       tamTexto: 7.5,
@@ -192,9 +208,8 @@ export function modelosProntos(k: Contato): Cartao[] {
     },
     {
       ...base,
-      ...creme,
       id: "pronto-visita-claro",
-      nome: "Cartão de visita claro",
+      nome: "Cartão de visita centralizado",
       tipo: "visita",
       forma: "arredondado",
       moldura: true,
@@ -207,7 +222,6 @@ export function modelosProntos(k: Contato): Cartao[] {
     },
     {
       ...base,
-      ...creme,
       id: "pronto-depara",
       nome: "Etiqueta De / Para",
       tipo: "depara",
@@ -224,9 +238,8 @@ export function modelosProntos(k: Contato): Cartao[] {
     },
     {
       ...base,
-      ...kraft,
       id: "pronto-depara-redondo",
-      nome: "De / Para redondo kraft",
+      nome: "De / Para redondo",
       tipo: "depara",
       forma: "redondo",
       largura: 65,
@@ -242,7 +255,6 @@ export function modelosProntos(k: Contato): Cartao[] {
     },
     {
       ...base,
-      ...kraft,
       id: "pronto-cuidados",
       nome: "Cuidados com a cadeira",
       tipo: "cuidados",
@@ -266,7 +278,6 @@ export function modelosProntos(k: Contato): Cartao[] {
     },
     {
       ...base,
-      ...creme,
       id: "pronto-aniversario",
       nome: "Feliz aniversário",
       tipo: "aniversario",
@@ -285,7 +296,6 @@ export function modelosProntos(k: Contato): Cartao[] {
     },
     {
       ...base,
-      ...terracota,
       id: "pronto-aniversario-quadrado",
       nome: "Aniversário quadrado",
       tipo: "aniversario",
@@ -304,7 +314,6 @@ export function modelosProntos(k: Contato): Cartao[] {
     },
     {
       ...base,
-      ...marinho,
       id: "pronto-obrigado",
       nome: "Agradecimento",
       tipo: "obrigado",
@@ -370,6 +379,7 @@ export function normalizarCartao(v: unknown): Cartao | null {
     tamTexto: num(o.tamTexto, LIMITES.tamTexto, 8),
     alinhar: um(o.alinhar, ["centro", "esquerda"] as const, "centro"),
     logo: um(o.logo, ["topo", "lado"] as const, "topo"),
+    logoCor: um(o.logoCor, ["linha", "preta", "colorida"] as const, "linha"),
     logoTam: num(o.logoTam, LIMITES.logoTam, 16),
     moldura: o.moldura === true,
     titulo: texto(o.titulo, 80),
@@ -396,40 +406,74 @@ export function porFolha(c: Pick<Cartao, "largura" | "altura">) {
   return { colunas, linhas, total: colunas * linhas };
 }
 
-export type Colocado = { c: Cartao; x: number; y: number };
+/** `girado`: printed turned sideways (90°) because that way it fit. */
+export type Colocado = { c: Cartao; x: number; y: number; girado?: boolean };
 
 /**
- * Several different cards on as few A4 sheets as possible (rows, tallest
- * first). Cards bigger than the printable area come back in `grandes`.
+ * Several different cards on as few A4 sheets as possible: biggest first,
+ * each in the highest-then-leftmost free spot of the first sheet where it
+ * fits, turned sideways if only that way it fits. Cards bigger than the
+ * printable area come back in `grandes`.
  */
 export function montarFolhas(cartoes: Cartao[]): { paginas: Colocado[][]; grandes: Cartao[] } {
   const GAP = 3;
   const L = 194;
   const A = 281;
-  const grandes = cartoes.filter((c) => c.largura > L || c.altura > A);
-  const cabem = cartoes.filter((c) => c.largura <= L && c.altura <= A).sort((a, b) => b.altura - a.altura);
-  const paginas: Colocado[][] = [];
-  let pag: Colocado[] = [];
-  let x = 0;
-  let y = 0;
-  let linha = 0;
-  for (const c of cabem) {
-    if (x > 0 && x + c.largura > L) {
-      y += linha + GAP;
-      x = 0;
-      linha = 0;
+  const cabe = (w: number, h: number) => w <= L && h <= A;
+  const giravel = (c: Cartao) => c.forma !== "redondo" && c.largura !== c.altura;
+  const grandes = cartoes.filter((c) => !cabe(c.largura, c.altura) && !(giravel(c) && cabe(c.altura, c.largura)));
+  const cabem = cartoes.filter((c) => !grandes.includes(c));
+  const tam = (k: Colocado) => (k.girado ? { w: k.c.altura, h: k.c.largura } : { w: k.c.largura, h: k.c.altura });
+
+  function lugar(pag: Colocado[], w: number, h: number) {
+    const xs = [...new Set([0, ...pag.map((k) => k.x + tam(k).w + GAP)])].sort((a, b) => a - b);
+    const ys = [...new Set([0, ...pag.map((k) => k.y + tam(k).h + GAP)])].sort((a, b) => a - b);
+    for (const y of ys) {
+      if (y + h > A) break;
+      for (const x of xs) {
+        if (x + w > L) break;
+        const bate = pag.some((k) => {
+          const t = tam(k);
+          return x < k.x + t.w + GAP && x + w + GAP > k.x && y < k.y + t.h + GAP && y + h + GAP > k.y;
+        });
+        if (!bate) return { x, y };
+      }
     }
-    if (y + c.altura > A) {
-      paginas.push(pag);
-      pag = [];
-      x = 0;
-      y = 0;
-      linha = 0;
-    }
-    pag.push({ c, x, y });
-    x += c.largura + GAP;
-    linha = Math.max(linha, c.altura);
+    return null;
   }
-  if (pag.length) paginas.push(pag);
+
+  /** livre: also turn a card when that spot is higher up (not only when it is the only way it fits) */
+  function montar(fila: Cartao[], livre: boolean) {
+    const paginas: Colocado[][] = [];
+    for (const c of fila) {
+      let posto = false;
+      for (const pag of paginas) {
+        const p = cabe(c.largura, c.altura) ? lugar(pag, c.largura, c.altura) : null;
+        const g = (!p || livre) && giravel(c) && cabe(c.altura, c.largura) ? lugar(pag, c.altura, c.largura) : null;
+        const girar = !!g && (!p || g.y < p.y || (g.y === p.y && g.x < p.x));
+        if (p || g) {
+          pag.push({ c, ...(girar ? g! : p!), girado: girar });
+          posto = true;
+          break;
+        }
+      }
+      if (!posto) paginas.push([{ c, x: 0, y: 0, girado: !cabe(c.largura, c.altura) }]);
+    }
+    return paginas;
+  }
+
+  // a few orders, keep the one with fewest sheets (then the fullest first sheet)
+  const ordens: ((a: Cartao, b: Cartao) => number)[] = [
+    (a, b) => b.largura * b.altura - a.largura * a.altura || b.altura - a.altura,
+    (a, b) => b.altura - a.altura || b.largura - a.largura,
+    (a, b) => b.largura - a.largura || b.altura - a.altura,
+    (a, b) => Math.max(b.largura, b.altura) - Math.max(a.largura, a.altura),
+  ];
+  let paginas: Colocado[][] = [];
+  for (const o of ordens)
+    for (const livre of [false, true]) {
+      const p = montar([...cabem].sort(o), livre);
+      if (!paginas.length || p.length < paginas.length || (p.length === paginas.length && p[0].length > paginas[0].length)) paginas = p;
+    }
   return { paginas, grandes };
 }

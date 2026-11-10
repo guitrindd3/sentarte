@@ -66,7 +66,16 @@ export function PaginaA4({ cartoes, corte, escala }: { cartoes: Colocado[]; cort
   const pagina = (
     <div className="pagina-livre" style={{ position: "relative", width: "194mm", height: "281mm" }}>
       {cartoes.map((k, i) => (
-        <div key={i} style={{ position: "absolute", left: `${k.x}mm`, top: `${k.y}mm` }}>
+        <div
+          key={i}
+          style={{
+            position: "absolute",
+            left: `${k.x}mm`,
+            top: `${k.y}mm`,
+            // turned sideways: rotate around the top-left corner, then slide back into the slot
+            ...(k.girado ? { transform: `translateX(${k.c.altura}mm) rotate(90deg)`, transformOrigin: "top left" } : {}),
+          }}
+        >
           <CartaoVisual c={k.c} semFundo={!k.c.imprimirFundo} corte={corte} />
         </div>
       ))}
@@ -75,7 +84,7 @@ export function PaginaA4({ cartoes, corte, escala }: { cartoes: Colocado[]; cort
   if (!escala) return pagina;
   return (
     <div
-      className="mx-auto overflow-hidden bg-white shadow-[0_8px_30px_-12px_rgba(36,28,20,0.45)] ring-1 ring-line"
+      className="mx-auto overflow-hidden bg-[#c9a47a] shadow-[0_8px_30px_-12px_rgba(36,28,20,0.45)] ring-1 ring-line"
       style={{ width: 210 * MM * escala, height: 297 * MM * escala }}
     >
       <div style={{ transform: `scale(${escala})`, transformOrigin: "top left", width: 210 * MM, height: 297 * MM, padding: "8mm" }}>{pagina}</div>
@@ -247,7 +256,7 @@ function hash(c: Cartao) {
   return (h >>> 0).toString(36);
 }
 
-/** The A4 preview, as wide as the column allows (max 42%). */
+/** The A4 preview (kraft-coloured: that is the paper used), as wide as the column allows (max 42%). */
 function PreviaA4({ cartoes, corte }: { cartoes: Colocado[]; corte: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [escala, setEscala] = useState(0.42);

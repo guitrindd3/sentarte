@@ -1,5 +1,5 @@
 import type { CSSProperties, PointerEvent as PE, ReactNode } from "react";
-import type { Cartao, IconeCuidado, Parte } from "@/lib/cartoes-modelo";
+import { LOGOS, type Cartao, type IconeCuidado, type Parte } from "@/lib/cartoes-modelo";
 import { FAMILIA } from "./fontes";
 
 // One card drawn at its real printed size (mm / pt). The editor shows it
@@ -208,9 +208,6 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
         height: `${c.altura}mm`,
         position: "relative",
         flexShrink: 0,
-        filter: corte
-          ? "drop-shadow(0.12mm 0 0 #9a9a9a) drop-shadow(-0.12mm 0 0 #9a9a9a) drop-shadow(0 0.12mm 0 #9a9a9a) drop-shadow(0 -0.12mm 0 #9a9a9a)"
-          : undefined,
       }}
     >
       <div
@@ -218,7 +215,7 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
           position: "absolute",
           inset: 0,
           overflow: "hidden",
-          background: semFundo ? "#ffffff" : c.fundo,
+          background: semFundo ? "transparent" : c.fundo,
           color: c.cor,
           borderRadius: raio,
           clipPath:
@@ -273,7 +270,7 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo.png" alt="" draggable={false} {...m("logo", { width: `${c.logoTam}mm`, height: `${c.logoTam}mm`, flexShrink: 0 })} />
+          <img src={LOGOS[c.logoCor].src} alt="" draggable={false} {...m("logo", { width: `${c.logoTam}mm`, height: `${c.logoTam}mm`, flexShrink: 0 })} />
           {corpo}
         </div>
         {c.rodape ? (
@@ -292,6 +289,25 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
           </p>
         ) : null}
       </div>
+      {corte ? (
+        // cut line drawn around the shape itself: still there when the background is not printed (kraft)
+        <svg
+          aria-hidden
+          viewBox={`0 0 ${c.largura} ${c.altura}`}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none" }}
+          fill="none"
+          stroke="#8f8f8f"
+          strokeWidth={0.25}
+        >
+          {redondo ? (
+            <circle cx={c.largura / 2} cy={c.altura / 2} r={c.largura / 2} />
+          ) : c.forma === "etiqueta" ? (
+            <polygon points={`${corteTag},0 ${c.largura - corteTag},0 ${c.largura},${corteTag} ${c.largura},${c.altura} 0,${c.altura} 0,${corteTag}`} />
+          ) : (
+            <rect x={0} y={0} width={c.largura} height={c.altura} rx={c.forma === "arredondado" ? Math.min(5, menor * 0.08) : 0} />
+          )}
+        </svg>
+      ) : null}
     </div>
   );
 }

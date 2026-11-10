@@ -7,6 +7,7 @@ import {
   FONTES,
   ICONES_CUIDADO,
   LIMITES,
+  LOGOS,
   NOMES_FONTES,
   NOMES_FORMAS,
   NOMES_ICONES,
@@ -16,6 +17,7 @@ import {
   type Cartao,
   type FormaCartao,
   type IconeCuidado,
+  type LogoCor,
   type Parte,
 } from "@/lib/cartoes-modelo";
 import { avisar, btnPrimary, btnSecondary, Card, inputClass } from "../../_ui";
@@ -612,7 +614,7 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
                 </div>
                 <Marcar
                   texto="Imprimir a cor de fundo"
-                  dica="Desmarque para imprimir só as letras e a logo, em papel kraft ou colorido (a prévia continua mostrando a cor do papel)."
+                  dica="No papel kraft deixe desmarcado: a impressora põe só a tinta preta e a cor fica a do papel (a prévia mostra como vai ficar)."
                   valor={c.imprimirFundo}
                   onChange={(v) => mudar({ imprimirFundo: v })}
                 />
@@ -627,6 +629,16 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
                         ["topo", "Em cima"],
                         ["lado", "Do lado"],
                       ]}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <span className="text-sm font-semibold text-ink">Cor da logo</span>
+                  <div className="mt-1.5">
+                    <Pilulas<LogoCor>
+                      valor={c.logoCor}
+                      onChange={(v) => mudar({ logoCor: v })}
+                      opcoes={(Object.keys(LOGOS) as LogoCor[]).map((k) => [k, LOGOS[k].nome])}
                     />
                   </div>
                 </div>
