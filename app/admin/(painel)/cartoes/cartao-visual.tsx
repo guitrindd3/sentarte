@@ -1,5 +1,5 @@
 import type { CSSProperties, PointerEvent as PE, ReactNode } from "react";
-import { LOGOS, type Cartao, type IconeCuidado, type Parte } from "@/lib/cartoes-modelo";
+import { LOGOS, type Cartao, type IconeCuidado, type Marca, type Parte } from "@/lib/cartoes-modelo";
 import { FAMILIA } from "./fontes";
 
 // One card drawn at its real printed size (mm / pt). The editor shows it
@@ -62,6 +62,29 @@ const ICONES: Record<IconeCuidado, ReactNode> = {
   ),
   coracao: <path d="M12 20s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 7.6 4.2 4.2 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z" />,
 };
+
+const MARCA: Record<Marca, ReactNode> = {
+  sim: <path d="M4 12.5l5 5L20 6.5" strokeWidth="3" />,
+  nao: <path d="M6 6l12 12M18 6 6 18" strokeWidth="3" />,
+  dica: <path d="M4 12h14M13 6.5l5.5 5.5-5.5 5.5" strokeWidth="2.6" />,
+  ponto: <circle cx="12" cy="12" r="3.2" fill="currentColor" />,
+};
+
+export function MarcaSvg({ marca, tam }: { marca: Marca; tam: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ width: tam, height: tam, flexShrink: 0 }}
+      aria-hidden
+    >
+      {MARCA[marca]}
+    </svg>
+  );
+}
 
 export function IconeCuidadoSvg({ icone, tam }: { icone: IconeCuidado; tam: string }) {
   return (
@@ -190,6 +213,31 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
           ))}
         </div>
       ) : null}
+      {c.lista.length ? (
+        <ul
+          {...m("lista", { marginTop: "3mm", width: "100%", textAlign: "left", display: "flex", flexDirection: "column", gap: `${c.tamTexto * PT * 0.45}mm` })}
+        >
+          {c.lista.map((i, n) => (
+            <li
+              key={n}
+              style={{
+                ...texto(),
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "1.5mm",
+                lineHeight: 1.3,
+                // a little air where the list goes from ✔ to ✖ (or to the tip)
+                marginTop: n > 0 && c.lista[n - 1].marca !== i.marca ? `${c.tamTexto * PT * 0.9}mm` : 0,
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", height: `${c.tamTexto * PT * 1.3}mm` }}>
+                <MarcaSvg marca={i.marca} tam={`${c.tamTexto * PT * 1.15}mm`} />
+              </span>
+              <span>{i.texto}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {c.dePara ? (
         <div
           {...m("depara", { display: "flex", flexDirection: "column", gap: `${c.tamTexto * PT * 1.1}mm`, marginTop: "3mm", width: "100%", textAlign: "left" })}
@@ -240,6 +288,36 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
               pointerEvents: "none",
             }}
           />
+        ) : null}
+        {c.cantos ? (
+          <>
+            <span
+              aria-hidden
+              style={{
+                position: "absolute",
+                top: `${inset}mm`,
+                right: `${inset}mm`,
+                width: "35%",
+                height: "28%",
+                borderTop: `0.9mm solid ${c.destaque}`,
+                borderRight: `0.9mm solid ${c.destaque}`,
+                pointerEvents: "none",
+              }}
+            />
+            <span
+              aria-hidden
+              style={{
+                position: "absolute",
+                bottom: `${inset}mm`,
+                left: `${inset}mm`,
+                width: "35%",
+                height: "28%",
+                borderBottom: `0.9mm solid ${c.destaque}`,
+                borderLeft: `0.9mm solid ${c.destaque}`,
+                pointerEvents: "none",
+              }}
+            />
+          </>
         ) : null}
         {c.furo || c.forma === "etiqueta" ? (
           <span

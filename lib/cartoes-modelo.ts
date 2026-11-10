@@ -31,8 +31,14 @@ export const NOMES_ICONES: Record<IconeCuidado, string> = {
 };
 export type ItemCuidado = { icone: IconeCuidado; texto: string };
 
+/** Checklist lines (2026-11-10, model "Cuidados – cadeiras de praia"): marks drawn in black, they print well on kraft. */
+export const MARCAS = ["sim", "nao", "dica", "ponto"] as const;
+export type Marca = (typeof MARCAS)[number];
+export const NOMES_MARCAS: Record<Marca, string> = { sim: "✔ Pode / faça", nao: "✖ Não faça", dica: "➜ Dica", ponto: "• Item" };
+export type ItemLista = { marca: Marca; texto: string };
+
 /** Pieces of a card that can be dragged around in the editor. */
-export const PARTES = ["logo", "titulo", "subtitulo", "texto", "cuidados", "depara", "rodape"] as const;
+export const PARTES = ["logo", "titulo", "subtitulo", "texto", "cuidados", "lista", "depara", "rodape"] as const;
 export type Parte = (typeof PARTES)[number];
 export const NOMES_PARTES: Record<Parte, string> = {
   logo: "Logo",
@@ -40,6 +46,7 @@ export const NOMES_PARTES: Record<Parte, string> = {
   subtitulo: "Linha pequena",
   texto: "Texto",
   cuidados: "Cuidados",
+  lista: "Lista ✔ / ✖",
   depara: "De / Para",
   rodape: "Rodapé",
 };
@@ -103,6 +110,9 @@ export type Cartao = {
   /** false: print without the background colour (on kraft or coloured paper) */
   imprimirFundo: boolean;
   cuidados: ItemCuidado[];
+  lista: ItemLista[];
+  /** two L-shaped corners (top right, bottom left) */
+  cantos: boolean;
   /** where the atelier dragged each piece (missing = automatic place) */
   pos: Posicoes;
 };
@@ -181,6 +191,8 @@ const base: Omit<Cartao, "id" | "nome" | "tipo"> = {
   furo: false,
   imprimirFundo: false,
   cuidados: [],
+  lista: [],
+  cantos: false,
   pos: {},
 };
 
@@ -330,6 +342,36 @@ export function modelosProntos(k: Contato): Cartao[] {
       texto: "Cada fio desta cadeira foi trançado\nà mão, com carinho, pensando em você.",
       rodape: ig,
     },
+    {
+      ...base,
+      id: "pronto-cuidados-praia",
+      nome: "Cuidados – cadeira de praia",
+      tipo: "cuidados",
+      forma: "retangulo",
+      largura: 90,
+      altura: 135,
+      cantos: true,
+      fonteTitulo: "montserrat",
+      fonteTexto: "montserrat",
+      tamTitulo: 13,
+      tamTexto: 7.5,
+      logoTam: 13,
+      titulo: "CUIDADOS –\nCADEIRAS DE PRAIA",
+      subtitulo: "Fio náutico / corda",
+      texto: "Seguindo esses cuidados, sua peça\nvai durar por muito mais tempo ♡",
+      lista: [
+        { marca: "sim", texto: "Limpar com pano úmido, água e sabão neutro" },
+        { marca: "sim", texto: "Secar sempre à sombra" },
+        { marca: "sim", texto: "Pode molhar, mas evite deixar submersa por muito tempo" },
+        { marca: "sim", texto: "Após o uso na praia, retire o excesso de areia e sal" },
+        { marca: "nao", texto: "Não usar produtos abrasivos" },
+        { marca: "nao", texto: "Não usar cloro ou solventes" },
+        { marca: "nao", texto: "Não guardar molhada" },
+        { marca: "nao", texto: "Evitar exposição contínua ao sol quando não estiver em uso" },
+        { marca: "dica", texto: "Dica extra: guardar em local seco aumenta a durabilidade." },
+      ],
+      rodape: ig,
+    },
   ];
 }
 
@@ -394,6 +436,10 @@ export function normalizarCartao(v: unknown): Cartao | null {
     cuidados: (Array.isArray(o.cuidados) ? o.cuidados : [])
       .slice(0, 8)
       .map((i) => ({ icone: um((i as ItemCuidado)?.icone, ICONES_CUIDADO, "pano"), texto: texto((i as ItemCuidado)?.texto, 40) })),
+    lista: (Array.isArray(o.lista) ? o.lista : [])
+      .slice(0, 14)
+      .map((i) => ({ marca: um((i as ItemLista)?.marca, MARCAS, "ponto"), texto: texto((i as ItemLista)?.texto, 120) })),
+    cantos: o.cantos === true,
     pos: posicoes(o.pos),
   };
 }

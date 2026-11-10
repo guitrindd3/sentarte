@@ -8,6 +8,8 @@ import {
   ICONES_CUIDADO,
   LIMITES,
   LOGOS,
+  MARCAS,
+  NOMES_MARCAS,
   NOMES_FONTES,
   NOMES_FORMAS,
   NOMES_ICONES,
@@ -18,11 +20,12 @@ import {
   type FormaCartao,
   type IconeCuidado,
   type LogoCor,
+  type Marca,
   type Parte,
 } from "@/lib/cartoes-modelo";
 import { avisar, btnPrimary, btnSecondary, Card, inputClass } from "../../_ui";
 import { excluirCartaoAction, salvarCartaoAction } from "../../actions";
-import { CartaoVisual, IconeCuidadoSvg, type Edicao } from "./cartao-visual";
+import { CartaoVisual, IconeCuidadoSvg, MarcaSvg, type Edicao } from "./cartao-visual";
 import { AbaFolha, cartoesDaFolha, PaginaA4, useFolha } from "./folha";
 import { FAMILIA } from "./fontes";
 
@@ -439,7 +442,7 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
 
               <Passo n={2} titulo="Textos">
                 <Rotulo texto="Título">
-                  <textarea rows={1} value={c.titulo} maxLength={80} onChange={(e) => mudar({ titulo: e.target.value })} className={inputClass} />
+                  <textarea rows={2} value={c.titulo} maxLength={80} onChange={(e) => mudar({ titulo: e.target.value })} className={inputClass} />
                 </Rotulo>
                 <Rotulo texto="Linha pequena embaixo do título" dica="Ex.: Cadeiras trançadas à mão. Em branco não aparece.">
                   <input value={c.subtitulo} maxLength={80} onChange={(e) => mudar({ subtitulo: e.target.value })} className={inputClass} />
@@ -483,14 +486,14 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
                   <span className="mt-0.5 block text-xs text-ink-soft">Como na etiqueta de cuidados: cada item tem um desenho e uma frase curta.</span>
                   <ul className="mt-2 space-y-2">
                     {c.cuidados.map((item, i) => (
-                      <li key={i} className="flex items-center gap-2">
+                      <li key={i} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
                         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-line bg-canvas text-ink">
                           <IconeCuidadoSvg icone={item.icone} tam="22px" />
                         </span>
                         <select
                           value={item.icone}
                           onChange={(e) => mudar({ cuidados: c.cuidados.map((x, j) => (j === i ? { ...x, icone: e.target.value as IconeCuidado } : x)) })}
-                          className={`${inputClass} w-36 shrink-0`}
+                          className="h-11 min-w-0 flex-1 rounded-xl border border-line bg-paper px-2 text-sm text-ink outline-none focus:border-wood sm:w-40 sm:flex-none sm:shrink-0"
                           aria-label="Desenho"
                         >
                           {ICONES_CUIDADO.map((ic) => (
@@ -503,7 +506,7 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
                           value={item.texto}
                           maxLength={40}
                           onChange={(e) => mudar({ cuidados: c.cuidados.map((x, j) => (j === i ? { ...x, texto: e.target.value } : x)) })}
-                          className={inputClass}
+                          className={`${inputClass} order-last min-w-0 basis-full sm:order-none sm:basis-0 sm:flex-1`}
                           aria-label="Frase"
                         />
                         <button
@@ -524,6 +527,53 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
                       onClick={() => mudar({ cuidados: [...c.cuidados, { icone: "pano", texto: "Limpe com pano úmido" }] })}
                     >
                       + Item de cuidado
+                    </button>
+                  ) : null}
+                </div>
+                <div>
+                  <span className="text-sm font-semibold text-ink">Lista com ✔ e ✖</span>
+                  <span className="mt-0.5 block text-xs text-ink-soft">
+                    Uma frase por linha, com a marca na frente: ✔ o que pode, ✖ o que não pode, ➜ dica.
+                  </span>
+                  <ul className="mt-2 space-y-2">
+                    {c.lista.map((item, i) => (
+                      <li key={i} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-line bg-canvas text-ink">
+                          <MarcaSvg marca={item.marca} tam="18px" />
+                        </span>
+                        <select
+                          value={item.marca}
+                          onChange={(e) => mudar({ lista: c.lista.map((x, j) => (j === i ? { ...x, marca: e.target.value as Marca } : x)) })}
+                          className="h-11 min-w-0 flex-1 rounded-xl border border-line bg-paper px-2 text-sm text-ink outline-none focus:border-wood sm:w-40 sm:flex-none sm:shrink-0"
+                          aria-label="Marca"
+                        >
+                          {MARCAS.map((mc) => (
+                            <option key={mc} value={mc}>
+                              {NOMES_MARCAS[mc]}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          value={item.texto}
+                          maxLength={120}
+                          onChange={(e) => mudar({ lista: c.lista.map((x, j) => (j === i ? { ...x, texto: e.target.value } : x)) })}
+                          className={`${inputClass} order-last min-w-0 basis-full sm:order-none sm:basis-0 sm:flex-1`}
+                          aria-label="Frase"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => mudar({ lista: c.lista.filter((_, j) => j !== i) })}
+                          className="shrink-0 rounded-full px-2 py-1 text-sm text-ink-soft hover:text-clay"
+                          aria-label="Tirar esta linha"
+                        >
+                          Tirar
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  {c.lista.length < 14 ? (
+                    <button type="button" className={`${btnSecondary} mt-2`} onClick={() => mudar({ lista: [...c.lista, { marca: "sim", texto: "" }] })}>
+                      + Linha na lista
                     </button>
                   ) : null}
                 </div>
@@ -619,6 +669,12 @@ export function EditorCartoes({ prontos, salvosIniciais }: { prontos: Cartao[]; 
                   onChange={(v) => mudar({ imprimirFundo: v })}
                 />
                 <Marcar texto="Moldura fina por dentro" valor={c.moldura} onChange={(v) => mudar({ moldura: v })} />
+                <Marcar
+                  texto="Cantos decorativos"
+                  dica="Dois cantos em L, um no alto à direita e outro embaixo à esquerda."
+                  valor={c.cantos}
+                  onChange={(v) => mudar({ cantos: v })}
+                />
                 <div>
                   <span className="text-sm font-semibold text-ink">Logo do Ateliê</span>
                   <div className="mt-1.5">
