@@ -238,15 +238,23 @@ export const PASSAPORTE_PRONTO: Cartao = {
 
 export type DadosPassaporte = { n: number; numero: string; link: string; colecao?: string };
 
-/** One chair's tag in the chosen style. */
+const comPassaporte = (c: Cartao, p: DadosPassaporte): Cartao => ({ ...c, subtitulo: `Cadeira Nº ${p.numero}`, qr: p.link, rodape: p.colecao ?? c.rodape });
+
+/** Whether this card carries a passport (on the front, or on the back). */
+export const temPassaporte = (c: Cartao) => c.tipo === "passaporte" || c.verso?.tipo === "passaporte";
+
+/**
+ * One chair's tag in the chosen style. When the passport is on the BACK of
+ * another card (e.g. care tag in front, passport behind — user 2026-11-11),
+ * the chair's number/QR go on the back and the front stays as it is.
+ */
 export function cartaoDoPassaporte(estilo: Cartao, p: DadosPassaporte): Cartao {
+  const naFrente = estilo.tipo === "passaporte" || estilo.verso?.tipo !== "passaporte";
   return {
-    ...estilo,
+    ...(naFrente ? comPassaporte(estilo, p) : estilo),
     id: `passaporte-${p.n}`,
     nome: `Passaporte Nº ${p.numero}`,
-    subtitulo: `Cadeira Nº ${p.numero}`,
-    qr: p.link,
-    rodape: p.colecao ?? estilo.rodape,
+    verso: !naFrente && estilo.verso ? comPassaporte(estilo.verso, p) : estilo.verso,
   };
 }
 
@@ -526,6 +534,31 @@ export const DOS_DOIS_LADOS = ["nome", "forma", "largura", "altura", "furo"] as 
 export function versoDe(c: Cartao): Cartao | null {
   if (!c.verso) return null;
   return { ...c.verso, id: "verso", nome: c.nome, forma: c.forma, largura: c.largura, altura: c.altura, furo: c.furo, verso: null };
+}
+
+/**
+ * Another model (ready or saved) used as the back of `c` (user 2026-11-11:
+ * "no verso eu queria colocar um desses cartões"). Size, shape and hole stay
+ * the front's; letters, logo and QR shrink if the model was bigger.
+ */
+export function modeloNoVerso(c: Cartao, m: Cartao): Cartao {
+  const k = Math.min(1, c.largura / m.largura, c.altura / m.altura);
+  const enc = (v: number, [min, max]: readonly [number, number]) => Math.max(min, Math.min(max, Math.round(v * k * 2) / 2));
+  return {
+    ...m,
+    id: "verso",
+    nome: c.nome,
+    forma: c.forma,
+    largura: c.largura,
+    altura: c.altura,
+    furo: c.furo,
+    verso: null,
+    pos: k < 1 ? {} : { ...m.pos },
+    tamTitulo: enc(m.tamTitulo, LIMITES.tamTitulo),
+    tamTexto: enc(m.tamTexto, LIMITES.tamTexto),
+    logoTam: enc(m.logoTam, LIMITES.logoTam),
+    qrTam: enc(m.qrTam, LIMITES.qrTam),
+  };
 }
 
 /** A first back: same look, only the logo (big) and the footer. */

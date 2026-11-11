@@ -15,6 +15,8 @@ import {
   NOMES_ICONES,
   NOMES_PARTES,
   cartaoDoPassaporte,
+  modeloNoVerso,
+  temPassaporte,
   DOS_DOIS_LADOS,
   estiloPassaporte,
   novoVerso,
@@ -229,7 +231,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
   const c = (lado === "verso" && versoDe(cartao)) || cartao;
   /** passport tag: the chair it's for (its number, QR and collection fill the tag) */
   const [cadeira, setCadeira] = useState<number | null>(null);
-  const ehPassaporte = cartao.tipo === "passaporte";
+  const ehPassaporte = temPassaporte(cartao);
   const escolhida = ehPassaporte ? (passaportes.find((p) => p.n === cadeira) ?? null) : null;
   /** what is shown and printed: the tag of the chosen chair, or the card as edited */
   const final = escolhida ? cartaoDoPassaporte(cartao, escolhida) : cartao;
@@ -862,9 +864,42 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                   )}
                 </div>
                 {lado === "verso" ? (
-                  <p className="mb-3 rounded-xl bg-espresso px-3 py-2 text-center text-xs font-semibold text-paper">
-                    Editando o VERSO: textos, letras, logo e posições valem só para as costas
-                  </p>
+                  <>
+                    <p className="mb-3 rounded-xl bg-espresso px-3 py-2 text-center text-xs font-semibold text-paper">
+                      Editando o VERSO: textos, letras, logo e posições valem só para as costas
+                    </p>
+                    <details
+                      className="mb-3 rounded-2xl border border-line/70 bg-canvas p-3"
+                      open={!cartao.verso?.titulo && !cartao.verso?.qr && !cartao.verso?.lista.length && !cartao.verso?.cuidados.length}
+                    >
+                      <summary className="cursor-pointer text-sm font-semibold text-ink">Pôr um dos cartões prontos no verso</summary>
+                      <p className="mt-1 text-xs text-ink-soft">
+                        O verso fica com o tamanho e o formato da frente. Depois dá para mudar tudo nos passos ao lado.
+                      </p>
+                      <ul className="mt-3 grid grid-cols-3 gap-2">
+                        {[...salvos, ...prontos]
+                          .filter((m) => m.id !== cartao.id)
+                          .map((m) => (
+                            <li key={m.id}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelecionado(null);
+                                  setCartao((a) => ({ ...a, verso: modeloNoVerso(a, m) }));
+                                  avisar("ok", "“" + m.nome + "” foi para o verso.");
+                                }}
+                                className="flex h-full w-full flex-col items-center gap-1 rounded-xl border border-line/70 bg-paper p-2 text-center hover:border-wood"
+                              >
+                                <span className="grid h-16 w-full place-items-center">
+                                  <Escalado c={m} max={70} maxAltura={60} corte={false} />
+                                </span>
+                                <span className="text-xs font-semibold leading-tight text-ink">{m.nome}</span>
+                              </button>
+                            </li>
+                          ))}
+                      </ul>
+                    </details>
+                  </>
                 ) : null}
                 <div className="rounded-2xl bg-[repeating-conic-gradient(#f3efe8_0_25%,#fbf9f5_0_50%)] bg-[length:18px_18px] p-5">
                   <Escalado c={cVisto} maxAltura={420} selecionado={selecionado} onMover={mover} />
