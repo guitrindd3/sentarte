@@ -656,42 +656,60 @@ export function versoDaPagina(pagina: Colocado[]): Colocado[] {
  * without the back.
  */
 export function montarDobradas(cartoes: Cartao[]): { paginas: Colocado[][]; grandes: Cartao[] } {
-  // two ways, keep the one with fewer sheets: side by side (fold on the
-  // shared side edge) or stacked (back above, upside down, fold on the top edge)
+  // Two shapes of pair, keep the one with fewer sheets: side by side (fold on
+  // the shared side edge) or stacked (back above, upside down, fold on the top
+  // edge). Either pair may also be laid sideways as a whole (big cards, user
+  // 2026-11-11 "coloquei para imprimir e não deixou": a 10 × 15 pair only fits
+  // turned) — a whole pair turned is still a correct fold.
   const montar = (emPe: boolean) => {
     const original = new Map<Cartao, Cartao>();
     const pares = cartoes.map((c) => {
       if (!c.verso || c.forma === "redondo") return { ...c, verso: null };
-      // forma "redondo" here only stops montarFolhas from turning the pair
-      const par: Cartao = emPe ? { ...c, altura: c.altura * 2, forma: "redondo" } : { ...c, largura: c.largura * 2, forma: "redondo" };
+      const par: Cartao = emPe ? { ...c, altura: c.altura * 2 } : { ...c, largura: c.largura * 2 };
       original.set(par, c);
       return par;
     });
-    const { paginas, grandes } = montarFolhas(pares);
-    return {
-      grandes: grandes.map((g) => original.get(g) ?? g),
-      paginas: paginas.map((p) =>
-        p.flatMap((k): Colocado[] => {
-          const c = original.get(k.c);
-          if (!c) return [k];
-          const v = versoDe(c)!;
-          return emPe
+    const r = montarFolhas(pares);
+    const paginas = r.paginas.map((p) =>
+      p.flatMap((k): Colocado[] => {
+        const c = original.get(k.c);
+        if (!c) return [k];
+        const v = versoDe(c)!;
+        if (emPe)
+          return k.girado
             ? [
-                { c: v, x: k.x, y: k.y, invertido: true },
-                { c, x: k.x, y: k.y + c.altura, dobra: "topo" },
+                { c, x: k.x, y: k.y, girado: true, dobra: "topo" },
+                { c: v, x: k.x + c.altura, y: k.y, girado: true, sentido: -1 },
               ]
             : [
-                { c, x: k.x, y: k.y },
-                { c: v, x: k.x + c.largura, y: k.y, dobra: "esquerda" },
+                { c: v, x: k.x, y: k.y, invertido: true },
+                { c, x: k.x, y: k.y + c.altura, dobra: "topo" },
               ];
-        }),
-      ),
-    };
+        return k.girado
+          ? [
+              { c, x: k.x, y: k.y, girado: true },
+              { c: v, x: k.x, y: k.y + c.largura, girado: true, dobra: "esquerda" },
+            ]
+          : [
+              { c, x: k.x, y: k.y },
+              { c: v, x: k.x + c.largura, y: k.y, dobra: "esquerda" },
+            ];
+      }),
+    );
+    // a pair bigger than the sheet either way: front and back on their own (to glue), never left out
+    const soltos = r.grandes.flatMap((g) => {
+      const c = original.get(g);
+      return c ? [{ ...c, verso: null }, versoDe(c)!] : [g];
+    });
+    const extra = soltos.length ? montarFolhas(soltos) : { paginas: [], grandes: [] };
+    return { paginas: [...paginas, ...extra.paginas], grandes: extra.grandes, soltos: r.grandes.length };
   };
   const deLado = montar(false);
   const emPe = montar(true);
-  const nota = (r: typeof deLado) => r.grandes.length * 1000 + r.paginas.length;
-  return nota(emPe) < nota(deLado) ? emPe : deLado;
+  // fewest cards left out, then fewest pairs that could not be folded, then fewest sheets
+  const nota = (r: typeof deLado) => r.grandes.length * 1e6 + r.soltos * 1e3 + r.paginas.length;
+  const { paginas, grandes } = nota(emPe) < nota(deLado) ? emPe : deLado;
+  return { paginas, grandes };
 }
 
 /**
