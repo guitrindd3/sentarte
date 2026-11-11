@@ -1029,8 +1029,8 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                 @media print {
                   body > *:not(.folha-cartoes) { display: none !important }
                   body { background: #fff !important; padding: 0 !important; margin: 0 !important }
-                  .folha-cartoes .pagina-impressa { break-after: page; overflow: hidden; height: 281mm }
-                  .folha-cartoes .pagina-impressa:last-child { break-after: auto }
+                  .folha-cartoes .pagina-impressa { overflow: hidden; break-inside: avoid }
+                  .folha-cartoes .pagina-impressa + .pagina-impressa { break-before: page }
                 }
               `}</style>
               <ImpressaoFolhas frentes={aba === "folha" ? folhaMista.paginas : paginasDoCartao(final, qtd)} corte={linhaCorte} modo={modo} ajuste={ajuste} />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { cartaoDoPassaporte, montarFolhas, normalizarCartao, versoDaPagina, type Cartao, type Colocado, type DadosPassaporte } from "@/lib/cartoes-modelo";
+import { alturaDaPagina, cartaoDoPassaporte, montarFolhas, normalizarCartao, versoDaPagina, type Cartao, type Colocado, type DadosPassaporte } from "@/lib/cartoes-modelo";
 import { btnPrimary, btnSecondary, Card } from "../../_ui";
 import { CartaoVisual } from "./cartao-visual";
 import { ListaPassaportes, textoDoPassaporte } from "./escolher-passaporte";
@@ -111,9 +111,9 @@ function giro(k: Colocado) {
 }
 
 /** One A4 page with its cards in place (8 mm margins). */
-export function PaginaA4({ cartoes, corte, escala }: { cartoes: Colocado[]; corte: boolean; escala?: number }) {
+export function PaginaA4({ cartoes, corte, escala, altura = 281 }: { cartoes: Colocado[]; corte: boolean; escala?: number; altura?: number }) {
   const pagina = (
-    <div className="pagina-livre" style={{ position: "relative", width: "194mm", height: "281mm" }}>
+    <div className="pagina-livre" style={{ position: "relative", width: "194mm", height: `${altura}mm` }}>
       {cartoes.map((k, i) => (
         <div key={i} style={{ position: "absolute", left: `${k.x}mm`, top: `${k.y}mm`, ...giro(k) }}>
           <CartaoVisual c={k.c} semFundo={!k.c.imprimirFundo} corte={corte} />
@@ -140,24 +140,28 @@ export const temVerso = (paginas: Colocado[][]) => paginas.some((p) => p.some((k
  */
 export function ImpressaoFolhas({ frentes, corte, modo, ajuste }: { frentes: Colocado[][]; corte: boolean; modo: ModoImpressao; ajuste: AjusteVerso }) {
   const comVerso = temVerso(frentes);
-  const verso = (p: Colocado[], n: number) => (
-    <div key={`v${n}`} className="pagina-impressa">
-      <div
-        style={{
-          transform: `translate(${ajuste.x}mm, ${ajuste.y}mm)${ajuste.girar ? " rotate(180deg)" : ""}`,
-          transformOrigin: "97mm 140.5mm",
-        }}
-      >
-        <PaginaA4 cartoes={versoDaPagina(p)} corte={corte} />
+  // a back keeps its front's height (same y on both sides); turned 180° it needs the whole sheet
+  const verso = (p: Colocado[], n: number) => {
+    const h = ajuste.girar ? 281 : alturaDaPagina(p);
+    return (
+      <div key={`v${n}`} className="pagina-impressa" style={{ height: `${h}mm` }}>
+        <div
+          style={{
+            transform: `translate(${ajuste.x}mm, ${ajuste.y}mm)${ajuste.girar ? " rotate(180deg)" : ""}`,
+            transformOrigin: "97mm 140.5mm",
+          }}
+        >
+          <PaginaA4 cartoes={versoDaPagina(p)} corte={corte} altura={h} />
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
   return (
     <>
       {frentes.flatMap((p, n) => [
         modo !== "versos" ? (
-          <div key={`f${n}`} className="pagina-impressa">
-            <PaginaA4 cartoes={p} corte={corte} />
+          <div key={`f${n}`} className="pagina-impressa" style={{ height: `${alturaDaPagina(p)}mm` }}>
+            <PaginaA4 cartoes={p} corte={corte} altura={alturaDaPagina(p)} />
           </div>
         ) : null,
         comVerso && modo !== "frentes" ? verso(p, n) : null,

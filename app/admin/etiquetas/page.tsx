@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
 import { lerCartoes } from "@/lib/cartoes";
-import { cartaoDoPassaporte, estiloPassaporte, montarFolhas } from "@/lib/cartoes-modelo";
+import { alturaDaPagina, cartaoDoPassaporte, estiloPassaporte, montarFolhas } from "@/lib/cartoes-modelo";
 import { lerPedido } from "@/lib/clientes";
 import { TIPOS_CADEIRA } from "@/lib/offer";
 import { codigoDoPedido } from "@/lib/pedido";
@@ -53,7 +53,7 @@ export default async function Etiquetas({ searchParams }: PageProps<"/admin/etiq
 
   return (
     <main className="min-h-screen bg-canvas-deep px-6 py-8 print:bg-white print:p-0">
-      <style>{`@page { size: A4; margin: 8mm } @media print { .sem-imprimir { display: none !important } .pagina-etiquetas { break-after: page; margin: 0 !important; box-shadow: none !important; background: none !important; padding: 0 !important } .pagina-etiquetas:last-child { break-after: auto } }`}</style>
+      <style>{`@page { size: A4; margin: 8mm } @media print { .sem-imprimir { display: none !important } .pagina-etiquetas + .pagina-etiquetas { break-before: page } .pagina-etiquetas { break-after: auto; break-inside: avoid; margin: 0 !important; box-shadow: none !important; background: none !important; padding: 0 !important } }`}</style>
       <div className="sem-imprimir mx-auto mb-6 flex max-w-[194mm] flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-serif text-2xl font-medium tracking-tight text-ink">{titulo}</h1>
@@ -86,7 +86,7 @@ export default async function Etiquetas({ searchParams }: PageProps<"/admin/etiq
       {paginas.length ? (
         paginas.map((p, n) => (
           <div key={n} className="pagina-etiquetas mx-auto mb-6 w-[194mm] bg-[#c9a47a] shadow-lg print:bg-none">
-            <PaginaA4 cartoes={p} corte />
+            <PaginaA4 cartoes={p} corte altura={alturaDaPagina(p)} />
           </div>
         ))
       ) : (

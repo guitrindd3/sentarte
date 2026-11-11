@@ -527,6 +527,17 @@ export function porFolha(c: Pick<Cartao, "largura" | "altura">) {
  */
 export type Colocado = { c: Cartao; x: number; y: number; girado?: boolean; sentido?: 1 | -1 };
 
+/**
+ * How tall a printed page has to be: down to its lowest card (+1 mm), never
+ * the full 281 mm. A full-height box spilled its empty bottom onto an extra
+ * blank sheet on printers whose printable area is a bit smaller (user
+ * 2026-11-11: "ainda tá gerando mais folhas").
+ */
+export function alturaDaPagina(cartoes: Colocado[]) {
+  const fundo = Math.max(0, ...cartoes.map((k) => k.y + (k.girado ? k.c.largura : k.c.altura)));
+  return Math.min(281, Math.ceil(fundo) + 1);
+}
+
 /** Fields shared by both sides: changing them on the back changes the front. */
 export const DOS_DOIS_LADOS = ["nome", "forma", "largura", "altura", "furo"] as const;
 
