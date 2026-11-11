@@ -4,6 +4,7 @@ import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from
 import {
   alturaDaPagina,
   cartaoDoPassaporte,
+  montarDobradas,
   montarFolhas,
   normalizarCartao,
   versoDaPagina,
@@ -29,7 +30,7 @@ import { ListaPassaportes, textoDoPassaporte } from "./escolher-passaporte";
 // and a 180° turn fix printers that feed the sheet off or upside down.
 
 export type ItemFolha = { chave: string; c: Cartao; qtd: number };
-export type ModoImpressao = "tudo" | "frentes" | "versos" | "teste" | "teste-frente" | "teste-verso";
+export type ModoImpressao = "tudo" | "frentes" | "versos" | "teste" | "teste-frente" | "teste-verso" | "dobrar";
 export type AjusteVerso = { x: number; y: number; girar: boolean };
 export type Passaporte = DadosPassaporte & {
   rotulo: string;
@@ -104,14 +105,16 @@ export function useAjusteVerso(): [AjusteVerso, (a: AjusteVerso) => void] {
   return [ajuste, (a) => gravarBruto(JSON.stringify(a))];
 }
 
-export function cartoesDaFolha(itens: ItemFolha[]) {
-  return montarFolhas(itens.flatMap((i) => Array.from({ length: i.qtd }, () => i.c)));
+export function cartoesDaFolha(itens: ItemFolha[], dobrar = false) {
+  const lista = itens.flatMap((i) => Array.from({ length: i.qtd }, () => i.c));
+  return dobrar ? montarDobradas(lista) : montarFolhas(lista);
 }
 
 const MM = 96 / 25.4;
 const cm = (mm: number) => String(mm / 10).replace(".", ",");
 
 function giro(k: Colocado) {
+  if (k.invertido) return { transform: "rotate(180deg)", transformOrigin: `${k.c.largura / 2}mm ${k.c.altura / 2}mm` };
   if (!k.girado) return {};
   // rotate around the top-left corner, then slide back into the slot
   return k.sentido === -1
@@ -126,6 +129,31 @@ export function PaginaA4({ cartoes, corte, escala, altura = 281 }: { cartoes: Co
       {cartoes.map((k, i) => (
         <div key={i} style={{ position: "absolute", left: `${k.x}mm`, top: `${k.y}mm`, ...giro(k) }}>
           <CartaoVisual c={k.c} semFundo={!k.c.imprimirFundo} corte={corte} />
+          {k.dobra ? (
+            // fold line on the edge shared with the front: dashed, over a white strip hiding the cut line
+            <div
+              aria-hidden
+              style={
+                k.dobra === "topo"
+                  ? {
+                      position: "absolute",
+                      top: "-0.3mm",
+                      left: "-1.5mm",
+                      width: `${k.c.largura + 3}mm`,
+                      height: "0.6mm",
+                      background: "repeating-linear-gradient(to right, #000 0 1.5mm, #fff 1.5mm 3mm)",
+                    }
+                  : {
+                      position: "absolute",
+                      left: "-0.3mm",
+                      top: "-1.5mm",
+                      height: `${k.c.altura + 3}mm`,
+                      width: "0.6mm",
+                      background: "repeating-linear-gradient(to bottom, #000 0 1.5mm, #fff 1.5mm 3mm)",
+                    }
+              }
+            />
+          ) : null}
         </div>
       ))}
     </div>
@@ -263,7 +291,7 @@ export function ImpressaoFolhas({ frentes, corte, modo, ajuste }: { frentes: Col
         {modo !== "teste-frente" ? <TesteVerso ajuste={ajuste} /> : null}
       </>
     );
-  const comVerso = temVerso(frentes);
+  const comVerso = modo !== "dobrar" && temVerso(frentes);
   // The page has no printer margin (@page margin 0): each printed page is the
   // whole A4 width with our own 8 mm inside, so the cards' place on the paper
   // doesn't depend on the margins chosen in the print window.
@@ -342,7 +370,20 @@ export function BotoesImprimir({
           versos” logo abaixo.
         </p>
       </div>
-      <button type="button" disabled={desativado} onClick={() => onImprimir("tudo")} className={`${btnPrimary} w-full`}>
+      <div className="rounded-2xl border-2 border-wood bg-paper p-3 text-sm text-ink">
+        <p className="font-semibold">Jeito que nunca desalinha: imprimir para dobrar</p>
+        <p className="mt-1 text-xs text-ink-soft">
+          A frente e o verso saem <strong className="text-ink">lado a lado na mesma folha</strong>, num lado só do papel. Recorte em volta do par e{" "}
+          <strong className="text-ink">dobre na linha tracejada</strong> (o verso pode sair ao lado ou em cima, de cabeça para baixo, o que gastar menos papel):
+          o verso fica exatamente atrás da frente, não importa a impressora. Se quiser, passe cola antes de dobrar (fica mais firme). Cartões redondos não dá
+          para dobrar.
+        </p>
+        <button type="button" disabled={desativado} onClick={() => onImprimir("dobrar")} className={`${btnPrimary} mt-3 w-full`}>
+          Imprimir para dobrar
+        </button>
+      </div>
+      <p className="pt-1 text-xs font-semibold text-ink-soft">Ou frente e verso de verdade (depende da impressora acertar):</p>
+      <button type="button" disabled={desativado} onClick={() => onImprimir("tudo")} className={`${btnSecondary} w-full`}>
         Imprimir frente e verso
       </button>
       <div className="grid grid-cols-2 gap-2">

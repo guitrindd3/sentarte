@@ -525,7 +525,8 @@ export function porFolha(c: Pick<Cartao, "largura" | "altura">) {
  * `girado`: printed turned sideways because that way it fit; `sentido` -1 =
  * turned the other way (the back of a turned card, so its top matches the front's).
  */
-export type Colocado = { c: Cartao; x: number; y: number; girado?: boolean; sentido?: 1 | -1 };
+/** `dobra`: fold line on this card's left (side-by-side pair) or top (stacked pair); `invertido`: printed upside down (back of a stacked pair). */
+export type Colocado = { c: Cartao; x: number; y: number; girado?: boolean; sentido?: 1 | -1; dobra?: "esquerda" | "topo"; invertido?: boolean };
 
 /**
  * How tall a printed page has to be: down to its lowest card (+1 mm), never
@@ -642,6 +643,55 @@ export function versoDaPagina(pagina: Colocado[]): Colocado[] {
     const largura = k.girado ? k.c.altura : k.c.largura;
     return [{ c: v, x: 194 - k.x - largura, y: k.y, girado: k.girado, sentido: k.girado ? -1 : 1 }];
   });
+}
+
+/**
+ * "Para dobrar" (user 2026-11-11, after duplex printing kept landing off: "ainda
+ * assim não foi"): front and back side by side on the SAME face, sharing the
+ * right edge of the front. Cut around the pair and fold on the dashed line —
+ * the back always lands exactly behind the front, whatever the printer does.
+ * The hole is centred on top, so it matches after the fold. Pairs are never
+ * turned sideways (a turned pair would need its back upside down). Round
+ * cards can't be folded (two circles only touch at a point): they come out
+ * without the back.
+ */
+export function montarDobradas(cartoes: Cartao[]): { paginas: Colocado[][]; grandes: Cartao[] } {
+  // two ways, keep the one with fewer sheets: side by side (fold on the
+  // shared side edge) or stacked (back above, upside down, fold on the top edge)
+  const montar = (emPe: boolean) => {
+    const original = new Map<Cartao, Cartao>();
+    const pares = cartoes.map((c) => {
+      if (!c.verso || c.forma === "redondo") return { ...c, verso: null };
+      // forma "redondo" here only stops montarFolhas from turning the pair
+      const par: Cartao = emPe ? { ...c, altura: c.altura * 2, forma: "redondo" } : { ...c, largura: c.largura * 2, forma: "redondo" };
+      original.set(par, c);
+      return par;
+    });
+    const { paginas, grandes } = montarFolhas(pares);
+    return {
+      grandes: grandes.map((g) => original.get(g) ?? g),
+      paginas: paginas.map((p) =>
+        p.flatMap((k): Colocado[] => {
+          const c = original.get(k.c);
+          if (!c) return [k];
+          const v = versoDe(c)!;
+          return emPe
+            ? [
+                { c: v, x: k.x, y: k.y, invertido: true },
+                { c, x: k.x, y: k.y + c.altura, dobra: "topo" },
+              ]
+            : [
+                { c, x: k.x, y: k.y },
+                { c: v, x: k.x + c.largura, y: k.y, dobra: "esquerda" },
+              ];
+        }),
+      ),
+    };
+  };
+  const deLado = montar(false);
+  const emPe = montar(true);
+  const nota = (r: typeof deLado) => r.grandes.length * 1000 + r.paginas.length;
+  return nota(emPe) < nota(deLado) ? emPe : deLado;
 }
 
 /**

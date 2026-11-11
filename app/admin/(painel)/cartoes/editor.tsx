@@ -20,6 +20,7 @@ import {
   DOS_DOIS_LADOS,
   estiloPassaporte,
   novoVerso,
+  montarDobradas,
   paginasDoCartao,
   porFolha,
   TAMANHOS,
@@ -1033,7 +1034,20 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                   .folha-cartoes .pagina-impressa + .pagina-impressa { break-before: page }
                 }
               `}</style>
-              <ImpressaoFolhas frentes={aba === "folha" ? folhaMista.paginas : paginasDoCartao(final, qtd)} corte={linhaCorte} modo={modo} ajuste={ajuste} />
+              <ImpressaoFolhas
+                frentes={
+                  modo === "dobrar"
+                    ? aba === "folha"
+                      ? cartoesDaFolha(itensFolha, true).paginas
+                      : montarDobradas(Array.from({ length: qtd }, () => final)).paginas
+                    : aba === "folha"
+                      ? folhaMista.paginas
+                      : paginasDoCartao(final, qtd)
+                }
+                corte={linhaCorte}
+                modo={modo}
+                ajuste={ajuste}
+              />
             </div>,
             document.body,
           )
