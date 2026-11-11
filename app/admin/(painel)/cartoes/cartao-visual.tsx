@@ -1,10 +1,57 @@
+"use client";
+
 import QRCode from "qrcode";
-import type { CSSProperties, PointerEvent as PE, ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, type CSSProperties, type PointerEvent as PE, type ReactNode } from "react";
 import { LOGOS, type Cartao, type IconeCuidado, type Marca, type Parte } from "@/lib/cartoes-modelo";
 import { FAMILIA } from "./fontes";
 
 // One card drawn at its real printed size (mm / pt). The editor shows it
 // scaled; the print sheet uses it as is.
+//
+// Content always fits inside the margin (user 2026-11-11: "toda vez que eu
+// editar a largura o texto tem que mover mais para dentro mas não sair da
+// margem"): after each render the content is measured at full size and, if
+// it's taller/wider than the space inside the padding, shrunk as a whole with
+// CSS zoom (letters, logo, icons, QR together). Measuring needs layout, so
+// the hidden print sheet is kept off-screen, not display:none.
+
+/** Shrinks `conteudo` (zoom) until it fits inside `caixa`'s padding box. */
+function useEncaixar() {
+  const caixa = useRef<HTMLDivElement>(null);
+  const conteudo = useRef<HTMLDivElement>(null);
+  const medir = () => {
+    const box = caixa.current;
+    const el = conteudo.current;
+    if (!box || !el) return;
+    const cs = getComputedStyle(box);
+    const altura = box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const largura = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    if (altura <= 0 || largura <= 0) return; // not laid out (hidden)
+    el.style.zoom = "";
+    // visual sizes (the editor preview is scaled with a transform; ratios cancel it)
+    const k = box.getBoundingClientRect().height / box.offsetHeight;
+    if (!k) return;
+    const disponivel = altura * k;
+    let f = 1;
+    for (let i = 0; i < 5; i++) {
+      const passou = Math.max(el.getBoundingClientRect().height / disponivel, el.scrollWidth / Math.max(1, el.clientWidth));
+      if (passou <= 1.002) break;
+      f = Math.max(0.3, (f / passou) * 0.995);
+      el.style.zoom = String(f);
+    }
+  };
+  useLayoutEffect(medir);
+  useEffect(() => {
+    // letters from next/font may arrive after the first paint
+    let vivo = true;
+    document.fonts?.ready.then(() => vivo && medir());
+    return () => {
+      vivo = false;
+    };
+     
+  }, []);
+  return { caixa, conteudo };
+}
 
 const X = <path d="M4 4l16 16M20 4 4 20" />;
 
@@ -138,6 +185,7 @@ function Qr({ texto, tam }: { texto: string; tam: number }) {
 export type Edicao = { selecionado: Parte | null; onPegar: (parte: Parte, e: PE<HTMLElement>) => void };
 
 export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c: Cartao; semFundo?: boolean; corte?: boolean; edicao?: Edicao }) {
+  const { caixa, conteudo } = useEncaixar();
   /** style + handlers that let a piece move (its offset from the automatic place) */
   const m = (parte: Parte, base: CSSProperties = {}) => {
     const p = c.pos?.[parte];
@@ -283,6 +331,7 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
       }}
     >
       <div
+        ref={caixa}
         style={{
           position: "absolute",
           inset: 0,
@@ -359,37 +408,39 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
             }}
           />
         ) : null}
-        <div
-          style={{
-            position: "relative",
-            flex: 1,
-            minHeight: 0,
-            display: "flex",
-            flexDirection: lado ? "row" : "column",
-            alignItems: lado ? "center" : esquerda ? "flex-start" : "center",
-            justifyContent: "center",
-            gap: lado ? "4mm" : `${Math.max(1.5, menor * 0.03)}mm`,
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGOS[c.logoCor].src} alt="" draggable={false} {...m("logo", { width: `${c.logoTam}mm`, height: `${c.logoTam}mm`, flexShrink: 0 })} />
-          {corpo}
-        </div>
-        {c.rodape ? (
-          <p
-            {...m("rodape", {
-              ...texto(0.95),
-              marginTop: "2mm",
+        <div ref={conteudo} style={{ display: "flex", flexDirection: "column", flex: "1 0 auto", minWidth: 0 }}>
+          <div
+            style={{
+              position: "relative",
+              flex: 1,
+              minHeight: 0,
               display: "flex",
-              alignItems: "center",
-              justifyContent: esquerda ? "flex-start" : "center",
-              gap: "1mm",
-            })}
+              flexDirection: lado ? "row" : "column",
+              alignItems: lado ? "center" : esquerda ? "flex-start" : "center",
+              justifyContent: "center",
+              gap: lado ? "4mm" : `${Math.max(1.5, menor * 0.03)}mm`,
+            }}
           >
-            {c.rodape.startsWith("@") ? <Instagram tam={`${c.tamTexto * PT * 1.3}mm`} /> : null}
-            {c.rodape}
-          </p>
-        ) : null}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={LOGOS[c.logoCor].src} alt="" draggable={false} {...m("logo", { width: `${c.logoTam}mm`, height: `${c.logoTam}mm`, flexShrink: 0 })} />
+            {corpo}
+          </div>
+          {c.rodape ? (
+            <p
+              {...m("rodape", {
+                ...texto(0.95),
+                marginTop: "2mm",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: esquerda ? "flex-start" : "center",
+                gap: "1mm",
+              })}
+            >
+              {c.rodape.startsWith("@") ? <Instagram tam={`${c.tamTexto * PT * 1.3}mm`} /> : null}
+              {c.rodape}
+            </p>
+          ) : null}
+        </div>
       </div>
       {corte ? (
         // cut line drawn around the shape itself: still there when the background is not printed (kraft)

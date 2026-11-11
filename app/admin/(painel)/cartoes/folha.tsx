@@ -192,8 +192,16 @@ export function BotoesImprimir({
       <div className="rounded-2xl border border-line/70 bg-canvas p-3 text-sm text-ink">
         <p className="font-semibold">Frente e verso</p>
         <p className="mt-1 text-xs text-ink-soft">
-          O verso sai espelhado: cada costas cai atrás da sua frente quando a folha vira como página de livro (na impressora: “frente e verso, virar pela borda
-          longa”).
+          A janela de impressão mostra <strong className="text-ink">2 páginas para cada folha</strong>: a 1ª é a frente, a 2ª é o verso. É assim mesmo: elas só
+          viram UMA folha de papel quando a impressora imprime nos dois lados.
+        </p>
+        <p className="mt-2 text-xs text-ink-soft">
+          <strong className="text-ink">Impressora que imprime dos dois lados sozinha:</strong> na janela, abra “Mais definições” e ligue “Imprimir nos dois
+          lados” (ou “Frente e verso”), virando pela <strong className="text-ink">borda longa</strong>.
+        </p>
+        <p className="mt-2 text-xs text-ink-soft">
+          <strong className="text-ink">Não aparece essa opção?</strong> Sua impressora não vira o papel sozinha: use os botões “1º Só as frentes” e “2º Só os
+          versos” logo abaixo.
         </p>
       </div>
       <button type="button" disabled={desativado} onClick={() => onImprimir("tudo")} className={`${btnPrimary} w-full`}>

@@ -1025,7 +1025,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
             <div className="folha-cartoes">
               <style>{`
                 @page { size: A4; margin: 8mm }
-                @media screen { .folha-cartoes { display: none } }
+                @media screen { .folha-cartoes { position: fixed; left: -10000px; top: 0; width: 194mm; visibility: hidden; pointer-events: none } }
                 @media print {
                   body > *:not(.folha-cartoes) { display: none !important }
                   body { background: #fff !important; padding: 0 !important; margin: 0 !important }
