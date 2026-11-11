@@ -97,7 +97,9 @@ export function useAjusteVerso(): [AjusteVerso, (a: AjusteVerso) => void] {
     try {
       const a = JSON.parse(bruto) as Partial<AjusteVerso>;
       const mm = (v: unknown) => Math.max(-15, Math.min(15, Math.round((Number(v) || 0) * 2) / 2));
-      return { x: mm(a.x), y: mm(a.y), girar: a.girar === true };
+      // girar is no longer offered (user 2026-11-11: printer turns the sheet by itself, "não quero escolher");
+      // an old "outra ponta" choice left in this browser would print every back upside down, so it's ignored
+      return { x: mm(a.x), y: mm(a.y), girar: false };
     } catch {
       return { x: 0, y: 0, girar: false };
     }
@@ -123,12 +125,46 @@ function giro(k: Colocado) {
 }
 
 /** One A4 page with its cards in place (8 mm margins). */
-export function PaginaA4({ cartoes, corte, escala, altura = 281 }: { cartoes: Colocado[]; corte: boolean; escala?: number; altura?: number }) {
+/**
+ * `sangria` (mm): the card's printed background runs this far past its edge,
+ * so a back that lands a little off doesn't leave a white strip when the
+ * card is cut on the front's line (user 2026-11-11: "ajustar sozinho para
+ * quando eu recortar com a tesoura ficar no lugar correto").
+ */
+export function PaginaA4({
+  cartoes,
+  corte,
+  escala,
+  altura = 281,
+  sangria = 0,
+}: {
+  cartoes: Colocado[];
+  corte: boolean;
+  escala?: number;
+  altura?: number;
+  sangria?: number;
+}) {
   const pagina = (
     <div className="pagina-livre" style={{ position: "relative", width: "194mm", height: `${altura}mm` }}>
       {cartoes.map((k, i) => (
         <div key={i} style={{ position: "absolute", left: `${k.x}mm`, top: `${k.y}mm`, ...giro(k) }}>
-          <CartaoVisual c={k.c} semFundo={!k.c.imprimirFundo} corte={corte} />
+          {sangria && k.c.imprimirFundo ? (
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                left: `${-sangria}mm`,
+                top: `${-sangria}mm`,
+                width: `${k.c.largura + 2 * sangria}mm`,
+                height: `${k.c.altura + 2 * sangria}mm`,
+                background: k.c.fundo,
+                borderRadius: k.c.forma === "redondo" ? "50%" : 0,
+              }}
+            />
+          ) : null}
+          <div style={{ position: "relative" }}>
+            <CartaoVisual c={k.c} semFundo={!k.c.imprimirFundo} corte={corte} />
+          </div>
           {k.dobra ? (
             // fold line on the edge shared with the front: dashed, over a white strip hiding the cut line
             <div
@@ -306,7 +342,7 @@ export function ImpressaoFolhas({ frentes, corte, modo, ajuste }: { frentes: Col
             transformOrigin: "97mm 140.5mm",
           }}
         >
-          <PaginaA4 cartoes={versoDaPagina(p)} corte={corte} altura={h} />
+          <PaginaA4 cartoes={versoDaPagina(p)} corte={false} altura={h} sangria={1.5} />
         </div>
       </div>
     );
@@ -316,7 +352,7 @@ export function ImpressaoFolhas({ frentes, corte, modo, ajuste }: { frentes: Col
       {frentes.flatMap((p, n) => [
         modo !== "versos" ? (
           <div key={`f${n}`} className="pagina-impressa" style={{ height: `${alturaDaPagina(p) + 8}mm` }}>
-            <PaginaA4 cartoes={p} corte={corte} altura={alturaDaPagina(p)} />
+            <PaginaA4 cartoes={p} corte={corte} altura={alturaDaPagina(p)} sangria={comVerso ? 1.5 : 0} />
           </div>
         ) : null,
         comVerso && modo !== "frentes" ? verso(p, n) : null,
@@ -351,88 +387,57 @@ export function BotoesImprimir({
   const campo = "h-10 w-20 rounded-lg border border-line bg-paper px-2 text-center text-sm tabular-nums text-ink";
   return (
     <div className="mt-4 space-y-3">
-      <div className="rounded-2xl border border-line/70 bg-canvas p-3 text-sm text-ink">
+      <div className="rounded-2xl border-2 border-wood bg-paper p-3 text-sm text-ink">
         <p className="font-semibold">Frente e verso</p>
         <p className="mt-1 text-xs text-ink-soft">
-          A janela de impressão mostra <strong className="text-ink">2 páginas para cada folha</strong>: a 1ª é a frente, a 2ª é o verso. É assim mesmo: elas só
-          viram UMA folha de papel quando a impressora imprime nos dois lados.
+          O site já arruma tudo sozinho: os cartões ficam no meio da folha, cada verso cai atrás da sua frente, o verso não tem linha de corte (você corta pela
+          linha da frente) e o fundo colorido passa um pouquinho da borda, para não ficar filete branco se o papel correr 1 mm.
         </p>
-        <p className="mt-2 text-xs text-ink-soft">
-          <strong className="text-ink">Impressora que imprime dos dois lados sozinha:</strong> na janela, abra “Mais definições” e ligue “Imprimir nos dois
-          lados” (ou “Frente e verso”), virando pela <strong className="text-ink">borda longa</strong>.
-        </p>
-        <p className="mt-2 text-xs text-ink-soft">
-          Os cartões já saem <strong className="text-ink">no meio da folha</strong>, então o verso cai certinho atrás da frente: não mexa nas margens (deixe em
-          “Padrão”) e deixe a escala em 100%, sem “Ajustar à página”.
-        </p>
-        <p className="mt-2 text-xs text-ink-soft">
-          <strong className="text-ink">Não aparece essa opção?</strong> Sua impressora não vira o papel sozinha: use os botões “1º Só as frentes” e “2º Só os
-          versos” logo abaixo.
-        </p>
+        <p className="mt-2 text-xs font-semibold text-ink">Na janela de impressão:</p>
+        <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-ink-soft">
+          <li>
+            Mais definições → <strong className="text-ink">Imprimir nos dois lados</strong> → <strong className="text-ink">Virar na borda longa</strong>
+          </li>
+          <li>
+            Margens: <strong className="text-ink">Padrão</strong> · Escala: <strong className="text-ink">100%</strong> (nada de “Ajustar à página”)
+          </li>
+          <li>Ela mostra 2 páginas por folha (frente e verso): é assim mesmo.</li>
+        </ul>
+        <button type="button" disabled={desativado} onClick={() => onImprimir("tudo")} className={`${btnPrimary} mt-3 w-full`}>
+          Imprimir frente e verso
+        </button>
       </div>
-      <div className="rounded-2xl border-2 border-wood bg-paper p-3 text-sm text-ink">
-        <p className="font-semibold">Jeito que nunca desalinha: imprimir para dobrar</p>
+      <div className="rounded-2xl border border-line/70 bg-canvas p-3 text-sm text-ink">
+        <p className="font-semibold">Ou: imprimir para dobrar (nunca desalinha)</p>
         <p className="mt-1 text-xs text-ink-soft">
-          A frente e o verso saem <strong className="text-ink">lado a lado na mesma folha</strong>, num lado só do papel. Recorte em volta do par e{" "}
-          <strong className="text-ink">dobre na linha tracejada</strong> (o verso pode sair ao lado ou em cima, de cabeça para baixo, o que gastar menos papel):
-          o verso fica exatamente atrás da frente, não importa a impressora. Se quiser, passe cola antes de dobrar (fica mais firme). Cartões redondos não dá
-          para dobrar.
+          Frente e verso lado a lado, num lado só do papel. Recorte em volta do par e dobre na linha tracejada. Gasta mais papel. Cartões redondos não dá para
+          dobrar.
         </p>
-        <button type="button" disabled={desativado} onClick={() => onImprimir("dobrar")} className={`${btnPrimary} mt-3 w-full`}>
+        <button type="button" disabled={desativado} onClick={() => onImprimir("dobrar")} className={`${btnSecondary} mt-3 w-full`}>
           Imprimir para dobrar
         </button>
       </div>
-      <p className="pt-1 text-xs font-semibold text-ink-soft">Ou frente e verso de verdade (depende da impressora acertar):</p>
-      <button type="button" disabled={desativado} onClick={() => onImprimir("tudo")} className={`${btnSecondary} w-full`}>
-        Imprimir frente e verso
-      </button>
-      <div className="grid grid-cols-2 gap-2">
-        <button type="button" disabled={desativado} onClick={() => onImprimir("frentes")} className={btnSecondary}>
-          1º Só as frentes
-        </button>
-        <button type="button" disabled={desativado} onClick={() => onImprimir("versos")} className={btnSecondary}>
-          2º Só os versos
-        </button>
-      </div>
-      <p className="text-xs text-ink-soft">
-        Virando o papel à mão: imprima as frentes, ponha as folhas de volta na bandeja com o lado impresso virado (como a sua impressora pede) e imprima os
-        versos.
-      </p>
-      <fieldset className="rounded-2xl border border-line/70 bg-canvas p-3 text-sm text-ink">
-        <legend className="px-1 font-semibold">Quando a folha volta para imprimir o verso, a impressora puxa por qual ponta?</legend>
-        <label className="mt-1 flex cursor-pointer items-start gap-2 text-xs">
-          <input
-            type="radio"
-            name="ponta"
-            checked={!ajuste.girar}
-            onChange={() => setAjuste({ ...ajuste, girar: false })}
-            className="mt-0.5 h-4 w-4 accent-wood"
-          />
-          <span>
-            <strong>Pela mesma ponta</strong> (o topo da folha entra primeiro de novo)
-          </span>
-        </label>
-        <label className="mt-2 flex cursor-pointer items-start gap-2 text-xs">
-          <input
-            type="radio"
-            name="ponta"
-            checked={ajuste.girar}
-            onChange={() => setAjuste({ ...ajuste, girar: true })}
-            className="mt-0.5 h-4 w-4 accent-wood"
-          />
-          <span>
-            <strong>Pela outra ponta</strong> (a folha entra pelo lado de baixo: o site vira o verso de cabeça para baixo para compensar)
-          </span>
-        </label>
-        <p className="mt-2 text-xs text-ink-soft">Não sabe? Imprima a folha de teste abaixo: ela mostra.</p>
-      </fieldset>
+      <details className="rounded-2xl border border-line/70 p-3 text-sm">
+        <summary className="cursor-pointer font-semibold text-ink">Sua impressora não vira o papel sozinha?</summary>
+        <p className="mt-2 text-xs text-ink-soft">
+          Impressora que não vira o papel sozinha: “1º Só as frentes”, ponha as folhas de volta na bandeja e “2º Só os versos”.
+        </p>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <button type="button" disabled={desativado} onClick={() => onImprimir("frentes")} className={btnSecondary}>
+            1º Só as frentes
+          </button>
+          <button type="button" disabled={desativado} onClick={() => onImprimir("versos")} className={btnSecondary}>
+            2º Só os versos
+          </button>
+        </div>
+      </details>
       <div className="rounded-2xl border border-line/70 p-3 text-sm text-ink">
         <p className="font-semibold">Folha de teste (gasta 1 folha)</p>
         <ol className="mt-1 list-decimal space-y-1 pl-4 text-xs text-ink-soft">
           <li>Imprima a folha de teste do mesmo jeito que vai imprimir os cartões.</li>
           <li>
-            Olhe a folha <strong className="text-ink">contra a luz</strong>, pelo lado do verso. Se as setas “TOPO” apontam para lados opostos, troque a
-            resposta acima e teste de novo.
+            Olhe a folha <strong className="text-ink">contra a luz</strong>, pelo lado do verso. Se as setas “TOPO” apontam para lados opostos, na janela de
+            impressão troque “borda longa” por “borda curta” (ou o contrário) e teste de novo.
           </li>
           <li>Veja em que número da régua do verso caiu a cruz da frente e escreva abaixo. Se caiu no zero, está perfeito.</li>
         </ol>
