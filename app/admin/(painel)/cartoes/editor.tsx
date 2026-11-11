@@ -1024,12 +1024,12 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
         ? createPortal(
             <div className="folha-cartoes">
               <style>{`
-                @page { size: A4; margin: 8mm }
-                @media screen { .folha-cartoes { position: fixed; left: -10000px; top: 0; width: 194mm; visibility: hidden; pointer-events: none } }
+                @page { size: A4; margin: 0 }
+                @media screen { .folha-cartoes { position: fixed; left: -10000px; top: 0; width: 210mm; visibility: hidden; pointer-events: none } }
                 @media print {
                   body > *:not(.folha-cartoes) { display: none !important }
                   body { background: #fff !important; padding: 0 !important; margin: 0 !important }
-                  .folha-cartoes .pagina-impressa { overflow: hidden; break-inside: avoid }
+                  .folha-cartoes .pagina-impressa { overflow: hidden; break-inside: avoid; width: 210mm; padding: 8mm 8mm 0; box-sizing: border-box }
                   .folha-cartoes .pagina-impressa + .pagina-impressa { break-before: page }
                 }
               `}</style>

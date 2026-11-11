@@ -1,7 +1,16 @@
 "use client";
 
 import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { alturaDaPagina, cartaoDoPassaporte, montarFolhas, normalizarCartao, versoDaPagina, type Cartao, type Colocado, type DadosPassaporte } from "@/lib/cartoes-modelo";
+import {
+  alturaDaPagina,
+  cartaoDoPassaporte,
+  montarFolhas,
+  normalizarCartao,
+  versoDaPagina,
+  type Cartao,
+  type Colocado,
+  type DadosPassaporte,
+} from "@/lib/cartoes-modelo";
 import { btnPrimary, btnSecondary, Card } from "../../_ui";
 import { CartaoVisual } from "./cartao-visual";
 import { ListaPassaportes, textoDoPassaporte } from "./escolher-passaporte";
@@ -140,11 +149,14 @@ export const temVerso = (paginas: Colocado[][]) => paginas.some((p) => p.some((k
  */
 export function ImpressaoFolhas({ frentes, corte, modo, ajuste }: { frentes: Colocado[][]; corte: boolean; modo: ModoImpressao; ajuste: AjusteVerso }) {
   const comVerso = temVerso(frentes);
-  // a back keeps its front's height (same y on both sides); turned 180° it needs the whole sheet
+  // The page has no printer margin (@page margin 0): each printed page is the
+  // whole A4 width with our own 8 mm inside, so the cards' place on the paper
+  // doesn't depend on the margins chosen in the print window.
+  // A back keeps its front's height (same y on both sides); turned 180° it needs the whole sheet.
   const verso = (p: Colocado[], n: number) => {
     const h = ajuste.girar ? 281 : alturaDaPagina(p);
     return (
-      <div key={`v${n}`} className="pagina-impressa" style={{ height: `${h}mm` }}>
+      <div key={`v${n}`} className="pagina-impressa" style={{ height: `${h + 8}mm` }}>
         <div
           style={{
             transform: `translate(${ajuste.x}mm, ${ajuste.y}mm)${ajuste.girar ? " rotate(180deg)" : ""}`,
@@ -160,7 +172,7 @@ export function ImpressaoFolhas({ frentes, corte, modo, ajuste }: { frentes: Col
     <>
       {frentes.flatMap((p, n) => [
         modo !== "versos" ? (
-          <div key={`f${n}`} className="pagina-impressa" style={{ height: `${alturaDaPagina(p)}mm` }}>
+          <div key={`f${n}`} className="pagina-impressa" style={{ height: `${alturaDaPagina(p) + 8}mm` }}>
             <PaginaA4 cartoes={p} corte={corte} altura={alturaDaPagina(p)} />
           </div>
         ) : null,
@@ -187,7 +199,7 @@ export function BotoesImprimir({
         <button type="button" disabled={desativado} onClick={() => onImprimir("tudo")} className={`${btnPrimary} mt-4 w-full`}>
           Imprimir ou salvar em PDF
         </button>
-        <p className="mt-2 text-xs text-ink-soft">Na janela de impressão, deixe a escala em 100% (“Tamanho real”) e as margens no padrão.</p>
+        <p className="mt-2 text-xs text-ink-soft">Na janela de impressão, deixe a escala em 100% (“Padrão” ou “Tamanho real”) e as margens em “Padrão”.</p>
       </>
     );
   const campo = "h-10 w-20 rounded-lg border border-line bg-paper px-2 text-center text-sm tabular-nums text-ink";
@@ -202,6 +214,10 @@ export function BotoesImprimir({
         <p className="mt-2 text-xs text-ink-soft">
           <strong className="text-ink">Impressora que imprime dos dois lados sozinha:</strong> na janela, abra “Mais definições” e ligue “Imprimir nos dois
           lados” (ou “Frente e verso”), virando pela <strong className="text-ink">borda longa</strong>.
+        </p>
+        <p className="mt-2 text-xs text-ink-soft">
+          Os cartões já saem <strong className="text-ink">no meio da folha</strong>, então o verso cai certinho atrás da frente: não mexa nas margens (deixe em
+          “Padrão”) e deixe a escala em 100%, sem “Ajustar à página”.
         </p>
         <p className="mt-2 text-xs text-ink-soft">
           <strong className="text-ink">Não aparece essa opção?</strong> Sua impressora não vira o papel sozinha: use os botões “1º Só as frentes” e “2º Só os

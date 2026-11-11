@@ -538,6 +538,26 @@ export function alturaDaPagina(cartoes: Colocado[]) {
   return Math.min(281, Math.ceil(fundo) + 1);
 }
 
+/**
+ * Moves a page's cards so the whole group sits in the middle of the sheet,
+ * across and down (user 2026-11-11: "deixa centralizada quando for imprimir
+ * frente e verso, para eu não ter que mexer em margem"). A centred group is
+ * its own mirror image, so the back lands behind the front even when the
+ * printer's margins are a bit off, and every card can be cut alone.
+ */
+export function centrarPagina(pagina: Colocado[]): Colocado[] {
+  if (!pagina.length) return pagina;
+  const w = (k: Colocado) => (k.girado ? k.c.altura : k.c.largura);
+  const h = (k: Colocado) => (k.girado ? k.c.largura : k.c.altura);
+  const x0 = Math.min(...pagina.map((k) => k.x));
+  const y0 = Math.min(...pagina.map((k) => k.y));
+  const x1 = Math.max(...pagina.map((k) => k.x + w(k)));
+  const y1 = Math.max(...pagina.map((k) => k.y + h(k)));
+  const dx = Math.round(((194 - (x1 - x0)) / 2 - x0) * 10) / 10;
+  const dy = Math.round(((281 - (y1 - y0)) / 2 - y0) * 10) / 10;
+  return pagina.map((k) => ({ ...k, x: k.x + dx, y: k.y + dy }));
+}
+
 /** Fields shared by both sides: changing them on the back changes the front. */
 export const DOS_DOIS_LADOS = ["nome", "forma", "largura", "altura", "furo"] as const;
 
@@ -607,7 +627,7 @@ export function paginasDoCartao(c: Cartao, qtd: number): Colocado[][] {
     const k = i % f.total;
     (paginas[p] ??= []).push({ c, x: x0 + (k % f.colunas) * (c.largura + GAP), y: Math.floor(k / f.colunas) * (c.altura + GAP) });
   }
-  return paginas;
+  return paginas.map(centrarPagina);
 }
 
 /**
@@ -690,5 +710,5 @@ export function montarFolhas(cartoes: Cartao[]): { paginas: Colocado[][]; grande
       const p = montar([...cabem].sort(o), livre);
       if (!paginas.length || p.length < paginas.length || (p.length === paginas.length && p[0].length > paginas[0].length)) paginas = p;
     }
-  return { paginas, grandes };
+  return { paginas: paginas.map(centrarPagina), grandes };
 }
