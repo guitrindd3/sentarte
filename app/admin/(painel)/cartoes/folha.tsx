@@ -29,7 +29,7 @@ import { ListaPassaportes, textoDoPassaporte } from "./escolher-passaporte";
 // and a 180° turn fix printers that feed the sheet off or upside down.
 
 export type ItemFolha = { chave: string; c: Cartao; qtd: number };
-export type ModoImpressao = "tudo" | "frentes" | "versos";
+export type ModoImpressao = "tudo" | "frentes" | "versos" | "teste" | "teste-frente" | "teste-verso";
 export type AjusteVerso = { x: number; y: number; girar: boolean };
 export type Passaporte = DadosPassaporte & {
   rotulo: string;
@@ -143,11 +143,126 @@ export function PaginaA4({ cartoes, corte, escala, altura = 281 }: { cartoes: Co
 
 export const temVerso = (paginas: Colocado[][]) => paginas.some((p) => p.some((k) => k.c.verso));
 
+// Alignment test sheet (user 2026-11-11: "a margem não ficou boa… lembra que
+// a impressora depois puxa do outro lado a folha"). Front: a cross in the
+// middle of the paper and "TOPO" arrows. Back: a mm ruler around the middle,
+// moved by the current fine adjustment, and the arrows turned like the real
+// backs. Held against the light, the number under the front's cross is the
+// correction (added to the current value), and arrows pointing opposite ways
+// mean the paper comes back the other way round (turn the back 180°).
+const PAPEL = { w: 210, h: 289 }; // printed box: the 297 mm sheet minus a safety 8 mm at the bottom; centre at 105 × 148.5
+
+function Seta({ y, texto }: { y: number; texto: string }) {
+  return (
+    <g>
+      <path d={`M105 ${y} l-4 6 h8 z`} fill="#000" />
+      <text x={105} y={y + 11} textAnchor="middle" fontSize={4} fontFamily="Arial, sans-serif" fontWeight={700}>
+        {texto}
+      </text>
+    </g>
+  );
+}
+
+function TesteFrente() {
+  const cx = 105;
+  const cy = 148.5;
+  return (
+    <div className="pagina-impressa" style={{ height: `${PAPEL.h}mm`, padding: 0 }}>
+      <svg width={`${PAPEL.w}mm`} height={`${PAPEL.h}mm`} viewBox={`0 0 ${PAPEL.w} ${PAPEL.h}`} style={{ display: "block" }}>
+        <Seta y={20} texto="TOPO (FRENTE)" />
+        <line x1={cx - 40} y1={cy} x2={cx + 40} y2={cy} stroke="#000" strokeWidth={0.3} />
+        <line x1={cx} y1={cy - 40} x2={cx} y2={cy + 40} stroke="#000" strokeWidth={0.3} />
+        <text x={cx} y={cy + 55} textAnchor="middle" fontSize={4} fontFamily="Arial, sans-serif" fontWeight={700}>
+          FOLHA DE TESTE: FRENTE
+        </text>
+        <text x={cx} y={cy + 62} textAnchor="middle" fontSize={3.2} fontFamily="Arial, sans-serif">
+          Imprima o verso nas costas desta folha e olhe contra a luz.
+        </text>
+      </svg>
+    </div>
+  );
+}
+
+function TesteVerso({ ajuste }: { ajuste: AjusteVerso }) {
+  const cx = 105;
+  const cy = 148.5;
+  const marcas = Array.from({ length: 31 }, (_, i) => i - 15);
+  const fonte = { fontFamily: "Arial, sans-serif", fontSize: 2.6 };
+  return (
+    <div className="pagina-impressa" style={{ height: `${PAPEL.h}mm`, padding: 0, position: "relative" }}>
+      {/* the ruler is symmetric around the centre, so only the fine adjustment moves it */}
+      <svg
+        width={`${PAPEL.w}mm`}
+        height={`${PAPEL.h}mm`}
+        viewBox={`0 0 ${PAPEL.w} ${PAPEL.h}`}
+        style={{ display: "block", position: "absolute", inset: 0, transform: `translate(${ajuste.x}mm, ${ajuste.y}mm)` }}
+      >
+        {/* two separate rulers, where the front's lines cross them (25 mm from the middle) */}
+        {marcas.map((t) => {
+          const grande = t % 5 === 0;
+          const l = t === 0 ? 7 : grande ? 5 : 3;
+          const forte = t === 0 ? 0.4 : 0.2;
+          const rot = t > 0 ? `+${t}` : String(t);
+          return (
+            <g key={t}>
+              <line x1={cx + t} y1={cy + 25} x2={cx + t} y2={cy + 25 + l} stroke="#000" strokeWidth={forte} />
+              <line x1={cx + 25} y1={cy + t} x2={cx + 25 + l} y2={cy + t} stroke="#000" strokeWidth={forte} />
+              {grande ? (
+                <>
+                  <text x={cx + t} y={cy + 25 + 10} textAnchor="middle" {...fonte}>
+                    {rot}
+                  </text>
+                  <text x={cx + 25 + 8.5} y={cy + t + 0.9} {...fonte}>
+                    {rot}
+                  </text>
+                </>
+              ) : null}
+            </g>
+          );
+        })}
+        <text x={cx} y={cy + 25 + 15} textAnchor="middle" {...fonte} fontWeight={700}>
+          ↔ LINHA EM PÉ
+        </text>
+        <text x={cx + 25} y={cy - 19} textAnchor="middle" {...fonte} fontWeight={700}>
+          LINHA DEITADA ↕
+        </text>
+        <text x={cx} y={cy + 55} textAnchor="middle" fontSize={4} fontFamily="Arial, sans-serif" fontWeight={700}>
+          FOLHA DE TESTE: VERSO (réguas em mm)
+        </text>
+        <text x={cx} y={cy + 62} textAnchor="middle" fontSize={3.2} fontFamily="Arial, sans-serif">
+          Contra a luz: em que número caiu cada linha da cruz da frente?
+        </text>
+      </svg>
+      <svg
+        width={`${PAPEL.w}mm`}
+        height={`${PAPEL.h}mm`}
+        viewBox={`0 0 ${PAPEL.w} ${PAPEL.h}`}
+        style={{
+          display: "block",
+          position: "absolute",
+          inset: 0,
+          transform: `translate(${ajuste.x}mm, ${ajuste.y}mm)${ajuste.girar ? " rotate(180deg)" : ""}`,
+          transformOrigin: "105mm 148.5mm",
+        }}
+      >
+        <Seta y={20} texto="TOPO (VERSO)" />
+      </svg>
+    </div>
+  );
+}
+
 /**
  * What goes to the printer: fronts and (mirrored) backs, in the order the
  * chosen mode needs. Rendered into <body> by the editor; hidden on screen.
  */
 export function ImpressaoFolhas({ frentes, corte, modo, ajuste }: { frentes: Colocado[][]; corte: boolean; modo: ModoImpressao; ajuste: AjusteVerso }) {
+  if (modo === "teste" || modo === "teste-frente" || modo === "teste-verso")
+    return (
+      <>
+        {modo !== "teste-verso" ? <TesteFrente /> : null}
+        {modo !== "teste-frente" ? <TesteVerso ajuste={ajuste} /> : null}
+      </>
+    );
   const comVerso = temVerso(frentes);
   // The page has no printer margin (@page margin 0): each printed page is the
   // whole A4 width with our own 8 mm inside, so the cards' place on the paper
@@ -193,6 +308,9 @@ export function BotoesImprimir({
   desativado?: boolean;
 }) {
   const [ajuste, setAjuste] = useAjusteVerso();
+  const [caiu, setCaiu] = useState({ x: "", y: "" });
+  const num = (v: string) => Number(v.replace(",", ".").replace(/[^\d.+-]/g, "")) || 0;
+  const limitar = (v: number) => Math.max(-15, Math.min(15, Math.round(v * 2) / 2));
   if (!comVerso)
     return (
       <>
@@ -237,12 +355,98 @@ export function BotoesImprimir({
       </div>
       <p className="text-xs text-ink-soft">
         Virando o papel à mão: imprima as frentes, ponha as folhas de volta na bandeja com o lado impresso virado (como a sua impressora pede) e imprima os
-        versos. Faça uma folha de teste primeiro.
+        versos.
       </p>
-      <details className="rounded-2xl border border-line/70 p-3 text-sm">
-        <summary className="cursor-pointer font-semibold text-ink">Ajuste fino do verso</summary>
+      <fieldset className="rounded-2xl border border-line/70 bg-canvas p-3 text-sm text-ink">
+        <legend className="px-1 font-semibold">Quando a folha volta para imprimir o verso, a impressora puxa por qual ponta?</legend>
+        <label className="mt-1 flex cursor-pointer items-start gap-2 text-xs">
+          <input
+            type="radio"
+            name="ponta"
+            checked={!ajuste.girar}
+            onChange={() => setAjuste({ ...ajuste, girar: false })}
+            className="mt-0.5 h-4 w-4 accent-wood"
+          />
+          <span>
+            <strong>Pela mesma ponta</strong> (o topo da folha entra primeiro de novo)
+          </span>
+        </label>
+        <label className="mt-2 flex cursor-pointer items-start gap-2 text-xs">
+          <input
+            type="radio"
+            name="ponta"
+            checked={ajuste.girar}
+            onChange={() => setAjuste({ ...ajuste, girar: true })}
+            className="mt-0.5 h-4 w-4 accent-wood"
+          />
+          <span>
+            <strong>Pela outra ponta</strong> (a folha entra pelo lado de baixo: o site vira o verso de cabeça para baixo para compensar)
+          </span>
+        </label>
+        <p className="mt-2 text-xs text-ink-soft">Não sabe? Imprima a folha de teste abaixo: ela mostra.</p>
+      </fieldset>
+      <div className="rounded-2xl border border-line/70 p-3 text-sm text-ink">
+        <p className="font-semibold">Folha de teste (gasta 1 folha)</p>
+        <ol className="mt-1 list-decimal space-y-1 pl-4 text-xs text-ink-soft">
+          <li>Imprima a folha de teste do mesmo jeito que vai imprimir os cartões.</li>
+          <li>
+            Olhe a folha <strong className="text-ink">contra a luz</strong>, pelo lado do verso. Se as setas “TOPO” apontam para lados opostos, troque a
+            resposta acima e teste de novo.
+          </li>
+          <li>Veja em que número da régua do verso caiu a cruz da frente e escreva abaixo. Se caiu no zero, está perfeito.</li>
+        </ol>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <button type="button" onClick={() => onImprimir("teste")} className={`${btnSecondary} col-span-3`}>
+            Imprimir folha de teste (frente e verso)
+          </button>
+          <button type="button" onClick={() => onImprimir("teste-frente")} className={btnSecondary}>
+            Teste 1º frente
+          </button>
+          <button type="button" onClick={() => onImprimir("teste-verso")} className={btnSecondary}>
+            Teste 2º verso
+          </button>
+        </div>
+        <div className="mt-3 flex flex-wrap items-end gap-3">
+          <label className="text-xs font-semibold text-ink">
+            Linha em pé caiu no
+            <input
+              inputMode="decimal"
+              placeholder="0"
+              value={caiu.x}
+              onChange={(e) => setCaiu({ ...caiu, x: e.target.value })}
+              className={`${campo} mt-1 block`}
+            />
+          </label>
+          <label className="text-xs font-semibold text-ink">
+            Linha deitada caiu no
+            <input
+              inputMode="decimal"
+              placeholder="0"
+              value={caiu.y}
+              onChange={(e) => setCaiu({ ...caiu, y: e.target.value })}
+              className={`${campo} mt-1 block`}
+            />
+          </label>
+          <button
+            type="button"
+            disabled={!num(caiu.x) && !num(caiu.y)}
+            onClick={() => {
+              setAjuste({ ...ajuste, x: limitar(ajuste.x + num(caiu.x)), y: limitar(ajuste.y + num(caiu.y)) });
+              setCaiu({ x: "", y: "" });
+            }}
+            className={btnPrimary}
+          >
+            Corrigir
+          </button>
+        </div>
         <p className="mt-2 text-xs text-ink-soft">
-          Se no teste o verso saiu um pouco deslocado, corrija aqui (fica guardado neste aparelho). Positivo: direita / para baixo, olhando o verso.
+          Depois de corrigir, imprima o teste de novo: a cruz deve cair no zero. A correção fica guardada neste aparelho.
+        </p>
+      </div>
+      <details className="rounded-2xl border border-line/70 p-3 text-sm">
+        <summary className="cursor-pointer font-semibold text-ink">Ajuste fino do verso (valores guardados)</summary>
+        <p className="mt-2 text-xs text-ink-soft">
+          O que já está corrigido, em mm. Positivo: direita / para baixo, olhando o verso. Zere os dois para voltar ao normal.
         </p>
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <label className="text-xs font-semibold text-ink">
@@ -266,17 +470,6 @@ export function BotoesImprimir({
             />
           </label>
         </div>
-        <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs text-ink">
-          <input
-            type="checkbox"
-            checked={ajuste.girar}
-            onChange={(e) => setAjuste({ ...ajuste, girar: e.target.checked })}
-            className="mt-0.5 h-4 w-4 accent-wood"
-          />
-          <span>
-            <strong>Virar o verso de cabeça para baixo</strong> (se o verso saiu invertido no teste)
-          </span>
-        </label>
       </details>
     </div>
   );
