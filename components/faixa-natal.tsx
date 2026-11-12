@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { naBlackFriday } from "@/lib/black-friday";
+import { emPreviaDeEpoca } from "@/lib/previa-epoca";
 import { FaixaDeNatal, useNatal } from "@/components/natal";
 import { FaixaDeAnoNovo, useAnoNovo } from "@/components/ano-novo";
 
@@ -35,7 +36,9 @@ export function FaixaNatal({
     return () => clearInterval(t);
   }, []);
 
-  const semana = blackFriday ? naBlackFriday(hoje, blackFriday.inicioAntecipado) : null;
+  // A season preview (?natal=1 / ?anonovo=1) shows that season as in its own dates — Black Friday hidden in that tab.
+  const previa = agora !== null && emPreviaDeEpoca();
+  const semana = blackFriday && !previa ? naBlackFriday(hoje, blackFriday.inicioAntecipado) : null;
   if (semana && blackFriday) {
     return (
       <div className="relative z-50 bg-ink px-4 py-2 text-center text-xs text-canvas sm:text-sm [&_a]:inline-block [&_a]:py-1 [&_a]:font-semibold [&_a]:!text-canvas [&_a]:underline [&_a]:underline-offset-2">

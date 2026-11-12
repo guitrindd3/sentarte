@@ -911,3 +911,4 @@ The user approved the preview ("gostei do ano novo, pode deixar para subir no si
   - band "Comece o ano com a sua cadeira" with two clinking flutes (tim-tim) and the vale buttons (`BrindeDeAnoNovo`); white-and-gold footer band with streamers (`RodapeDeAnoNovo`).
 - CSS in globals.css (`.anonovo-*`); everything stops with "reduzir movimento".
 - The user did NOT approve the "Verão" theme for the site (only a preview artifact exists); after 15/01 the site returns to the normal look.
+- 2026-11-12: "não funcionou o link do natal" — during Black Friday the BF strip covered the preview and `!bf` hid the ribbons. `lib/previa-epoca.ts` `emPreviaDeEpoca()` (query or the sessionStorage keys) now makes `useBlackFriday()` return null and `FaixaNatal` skip the BF strip in a previewing tab only, so `?natal=1` / `?anonovo=1` look exactly like their own dates. Checkout prices are server-side, unaffected.

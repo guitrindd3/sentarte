@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CODIGO_BLACK_FRIDAY, hojeBR, semanaDaBlackFriday } from "./black-friday";
 import type { CupomPublico } from "./cupom";
+import { emPreviaDeEpoca } from "./previa-epoca";
 
 // One request per page view, shared by every card that asks (the cart asks
 // /api/cupom anyway). The server decides whether it's Black Friday (week +
@@ -13,6 +14,7 @@ let pedido: Promise<CupomPublico | null> | null = null;
 export function useBlackFriday() {
   const [bf, setBf] = useState<{ cupom: CupomPublico; fimMs: number } | null>(null);
   useEffect(() => {
+    if (emPreviaDeEpoca()) return;
     pedido ??= fetch("/api/cupom", { cache: "no-store" })
       .then((r) => r.json())
       .then((j: { automaticos?: CupomPublico[] }) => j.automaticos?.find((c) => c.codigo === CODIGO_BLACK_FRIDAY) ?? null)
