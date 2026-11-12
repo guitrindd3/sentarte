@@ -27,7 +27,8 @@ function anoNovoAgora() {
     const q = new URLSearchParams(window.location.search).get("anonovo");
     if (q === "1") sessionStorage.setItem(PREVIA, "1");
     if (q === "0") sessionStorage.removeItem(PREVIA);
-    if (sessionStorage.getItem(PREVIA) === "1") return anoQueVem(hoje);
+    // Previewing outside the dates (e.g. in November): show the coming turn of the year (2026 → 2027), with the countdown.
+    if (sessionStorage.getItem(PREVIA) === "1") return naEpocaDeAnoNovo(hoje) ? anoQueVem(hoje) : Number(hoje.slice(0, 4)) + 1;
   } catch {}
   return naEpocaDeAnoNovo(hoje) ? anoQueVem(hoje) : 0;
 }
@@ -145,14 +146,16 @@ export function FogosNoTopo() {
     const reduzir = reduzMovimento();
     type Bolha = { x: number; y: number; v: number; r: number; f: number };
     type Faisca = { x: number; y: number; vx: number; vy: number; vida: number; cor: string };
-    type Foguete = { x: number; y: number; alvo: number; v: number };
+    // Rockets rise on a clock (ease-out from the bottom to their burst height), so every one bursts — the old
+    // per-frame slowdown (v *= 0.985) capped the climb at ~370 px and tall screens kept frozen streaks (user 2026-11-12).
+    type Foguete = { x: number; y: number; y0: number; alvo: number; t0: number; dur: number; feito?: boolean };
     const CORES = ["255,236,190", "233,211,154", "255,252,240", "214,210,200"];
     let W = 1,
       H = 1,
       bolhas: Bolha[] = [],
       faiscas: Faisca[] = [],
       foguetes: Foguete[] = [],
-      proxima = 600,
+      proxima = 900,
       antes = 0,
       raf = 0;
     const bolha = (qualquer: boolean): Bolha => ({
@@ -163,17 +166,24 @@ export function FogosNoTopo() {
       f: Math.random() * 6.3,
     });
     const estourar = (x: number, y: number) => {
-      const n = W > 700 ? 34 : 22,
+      const n = W > 700 ? 46 : 30,
         cor = CORES[Math.floor(Math.random() * CORES.length)],
-        vel = W > 700 ? 2.2 : 1.5;
+        vel = W > 700 ? 3 : 2.1;
+      clarao = { x, y, vida: 1 };
       for (let i = 0; i < n; i++) {
         const a = (i / n) * Math.PI * 2 + Math.random() * 0.2,
           v = vel * (0.6 + Math.random() * 0.5);
         faiscas.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vida: 1, cor });
       }
     };
-    const lancar = () =>
-      foguetes.push({ x: W * (0.1 + Math.random() * 0.8), y: H * 0.95, alvo: H * (0.1 + Math.random() * 0.28), v: (W > 700 ? 5.5 : 4) + Math.random() * 1.5 });
+    let agoraMs = 0,
+      clarao: { x: number; y: number; vida: number } | null = null;
+    const lancar = () => {
+      const y0 = H * 0.95;
+      // keep clear of the title in the middle: bursts go to the left or right third
+      const lado = Math.random() < 0.5 ? 0.08 + Math.random() * 0.25 : 0.67 + Math.random() * 0.25;
+      foguetes.push({ x: W * lado, y: y0, y0, alvo: H * (0.12 + Math.random() * 0.22), t0: agoraMs, dur: 1100 + Math.random() * 500 });
+    };
     const medir = () => {
       const r = cv.getBoundingClientRect();
       W = Math.max(1, Math.round(r.width));
@@ -182,7 +192,7 @@ export function FogosNoTopo() {
       cv.width = W * dpr;
       cv.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      bolhas = Array.from({ length: W > 700 ? 34 : 18 }, () => bolha(true));
+      bolhas = Array.from({ length: W > 700 ? 22 : 12 }, () => bolha(true));
       faiscas = [];
       foguetes = [];
     };
@@ -227,11 +237,21 @@ export function FogosNoTopo() {
         ctx.lineTo(f.x, f.y + 26);
         ctx.stroke();
       }
+      if (clarao) {
+        const g = ctx.createRadialGradient(clarao.x, clarao.y, 0, clarao.x, clarao.y, 46);
+        g.addColorStop(0, "rgba(255,244,214,.9)");
+        g.addColorStop(1, "rgba(255,244,214,0)");
+        ctx.globalAlpha = clarao.vida;
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(clarao.x, clarao.y, 46, 0, 6.29);
+        ctx.fill();
+      }
       for (const p of faiscas) {
         ctx.globalAlpha = Math.max(0, p.vida);
         ctx.fillStyle = `rgb(${p.cor})`;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.4, 0, 6.29);
+        ctx.arc(p.x, p.y, 1.7, 0, 6.29);
         ctx.fill();
         ctx.globalAlpha = Math.max(0, p.vida) * 0.35;
         ctx.strokeStyle = `rgb(${p.cor})`;
@@ -253,27 +273,28 @@ export function FogosNoTopo() {
     const passo = (t: number) => {
       const dt = t - (antes || t);
       antes = t;
+      agoraMs = t;
       if (!document.hidden) {
         for (const b of bolhas) {
           b.y -= b.v;
           if (b.y < H * 0.25) Object.assign(b, bolha(false));
         }
         for (const f of foguetes) {
-          f.y -= f.v;
-          f.v *= 0.985;
-          if (f.y <= f.alvo) {
+          const p = Math.min(1, (t - f.t0) / f.dur);
+          f.y = f.y0 + (f.alvo - f.y0) * (1 - (1 - p) * (1 - p));
+          if (p >= 1) {
             estourar(f.x, f.y);
-            f.alvo = Infinity;
+            f.feito = true;
           }
         }
-        foguetes = foguetes.filter((f) => f.alvo !== Infinity);
+        foguetes = foguetes.filter((f) => !f.feito);
+        if (clarao && (clarao.vida -= 0.06) <= 0) clarao = null;
         faiscas.forEach(avancar);
         faiscas = faiscas.filter((p) => p.vida > 0);
         proxima -= dt;
         if (proxima <= 0) {
           lancar();
-          if (Math.random() < 0.35) lancar();
-          proxima = 1100 + Math.random() * 1300;
+          proxima = 2600 + Math.random() * 1800;
         }
         desenhar(t);
       }
