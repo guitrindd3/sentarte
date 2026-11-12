@@ -6,6 +6,7 @@ import Link from "next/link";
 import { WhatsAppIcon } from "@/components/icons";
 import { whatsappUrl } from "@/lib/urls";
 import { NatalNoTopo, useNatal } from "@/components/natal";
+import { FogosNoTopo, useAnoNovo } from "@/components/ano-novo";
 import type { SiteContent } from "@/lib/content-schema";
 
 // Default photos and their descriptions (order set by the user 2026-09-30). Since
@@ -33,6 +34,7 @@ export function Carousel({ hero, whatsappNumero, fotos }: { hero: SiteContent["h
     ? fotos.map((src) => ({ src, alt: PADRAO.find((p) => p.src === src)?.alt ?? "Cadeiras de praia SentArte, trançadas à mão" }))
     : PADRAO;
   const natal = useNatal();
+  const anoNovo = useAnoNovo();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -63,12 +65,13 @@ export function Carousel({ hero, whatsappNumero, fotos }: { hero: SiteContent["h
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-espresso/60 via-transparent to-espresso/55 md:from-espresso/85 md:via-espresso/25 md:to-espresso/45" />
         <NatalNoTopo />
+        <FogosNoTopo />
 
         {/* Welcome + title sit up near the top of the photo; the phrase sits
           down with the buttons/dots instead. */}
         <div className="absolute inset-x-0 top-3 mx-auto max-w-2xl px-6 text-center text-canvas md:top-6">
           <p className="font-serif text-lg italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-2xl">
-            {natal ? "Feliz Natal do" : "Bem-vindo ao"}
+            {natal ? "Feliz Natal do" : anoNovo ? <span className="anonovo-ouro">Feliz Ano Novo do</span> : "Bem-vindo ao"}
           </p>
           <h1 className="mt-1 font-serif text-5xl font-semibold md:mt-2 md:text-6xl lg:text-8xl leading-[1.08] tracking-tight text-canvas [text-shadow:0_2px_20px_rgba(16,32,42,0.45)]">
             {hero.titulo}

@@ -891,3 +891,15 @@ The user approved a preview (claude.ai artifact) and said "pode colocar no site 
   - homepage band "Presente que dura verões" with a kraft gift box: the vale tags fly out on hover (mouse) or tap (touch), and each tag adds that vale to the cart;
   - sand band with a rope Christmas tree at the end of the homepage.
 - CSS lives in globals.css (`.natal-*`); the seasonal red/green/gold hex values live only there. Everything stops with "reduzir movimento".
+
+## New Year (2026-11-12)
+
+The user approved the preview ("gostei do ano novo, pode deixar para subir no site também, quando acabar o do Natal") and set the window to **26 December – 15 January** (Brasília, both inclusive, `lib/ano-novo.ts` `naEpocaDeAnoNovo`). No coupon. The year shown is computed (`anoQueVem`: December → next year), never hard-coded.
+- **Decorations** in `components/ano-novo.tsx`, client-only like Christmas. `useAnoNovo()` checks the browser date, or `?anonovo=1` to preview (`?anonovo=0` ends it); Christmas wins if both are on. Pieces:
+  - top strip: night blue, "Feliz {ano}!" in gold with a flip countdown to midnight of 31/12 (`viradaMs`, UTC−3); after the turn it reads "Feliz Ano Novo! Que {ano} seja de muito sol." (`FaixaDeAnoNovo`, swapped in by `FaixaNatal`);
+  - gold year + sparkle beside the logo; fireworks and champagne bubbles on the hero (`FogosNoTopo`);
+  - gold "FELIZ {ano}" ribbon on chair photos (`FitaAnoNovo`, the user's pick over a seal; never rotates);
+  - "Relógio da virada" (smaller, per the user): a clock strikes midnight, drops confetti and rolls the year;
+  - band "Comece o ano com a sua cadeira" with two clinking flutes (tim-tim) and the vale buttons (`BrindeDeAnoNovo`); white-and-gold footer band with streamers (`RodapeDeAnoNovo`).
+- CSS in globals.css (`.anonovo-*`); everything stops with "reduzir movimento".
+- The user did NOT approve the "Verão" theme for the site (only a preview artifact exists); after 15/01 the site returns to the normal look.

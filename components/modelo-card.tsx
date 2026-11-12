@@ -13,6 +13,7 @@ import { useEscolhaModelo } from "@/lib/use-escolha-modelo";
 import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
 import { LogoBlackFriday } from "@/components/logo-black-friday";
 import { LacoNatal, PrecoNatal } from "@/components/natal";
+import { FitaAnoNovo } from "@/components/ano-novo";
 import { OpcaoBraco } from "@/components/opcao-braco";
 import { SeloBlackFriday } from "@/components/selo-black-friday";
 import { PortaoColecao, SeloColecao } from "@/components/colecao-compra";
@@ -110,6 +111,7 @@ export function ModeloCard({
         )}
         {bf && temPreco ? <LogoBlackFriday className="w-[42%]" /> : null}
         {temPreco && !bf ? <LacoNatal /> : null}
+        {temPreco && !bf ? <FitaAnoNovo /> : null}
         {pagina ? <BotaoFavorito slug={pagina.slice("/cadeira/".length)} nome={modelo.nome} className="absolute right-2 top-2" /> : null}
         {temVariantes ? (
           <>

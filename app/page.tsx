@@ -12,6 +12,7 @@ import { TeamShowcase } from "@/components/home/team-showcase";
 import type { Metadata } from "next";
 import { OfferStrip } from "@/components/offer-strip";
 import { PraiaDeNatal, PresenteDeNatal } from "@/components/natal";
+import { BrindeDeAnoNovo, RodapeDeAnoNovo } from "@/components/ano-novo";
 import { textoSimples } from "@/components/texto-rico";
 import { getContent } from "@/lib/content-store";
 import { textosDaPagina } from "@/lib/textos-paginas";
@@ -37,6 +38,7 @@ export default async function Home() {
       <CategoryBento categorias={content.categorias} titulo={t.linha("escolhaTitulo")} />
       <TeamShowcase categorias={content.categorias} whatsappNumero={zap} titulo={t.linha("nossasTitulo")} texto={textoSimples(t.linha("nossasTexto"))} />
       <PresenteDeNatal />
+      <BrindeDeAnoNovo />
       <PersonalizationSteps titulo={t.linha("passosTitulo")} passos={t.blocos("passos").map((b) => ({ titulo: b.titulo, texto: textoSimples(b.texto) }))} />
       <PullQuote frase={textoSimples(t.linha("frase"))} assinatura={textoSimples(t.linha("fraseAssinatura"))} />
       <MaterialSpec
@@ -55,6 +57,7 @@ export default async function Home() {
         texto={textoSimples(t.linha("contatoTexto"))}
       />
       <PraiaDeNatal />
+      <RodapeDeAnoNovo />
     </>
   );
 }

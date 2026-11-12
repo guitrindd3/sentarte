@@ -19,6 +19,7 @@ import { whatsappUrl } from "@/lib/urls";
 import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
 import { LogoBlackFriday } from "@/components/logo-black-friday";
 import { LacoNatal, PrecoNatal } from "@/components/natal";
+import { FitaAnoNovo } from "@/components/ano-novo";
 import { SeloBlackFriday } from "@/components/selo-black-friday";
 import { PortaoColecao, SeloColecao } from "@/components/colecao-compra";
 import type { Modelo } from "@/lib/content-schema";
@@ -112,6 +113,7 @@ export function ProdutoCompra({
               <Image key={e.fotoAtiva} src={e.fotoAtiva} alt={e.ativo.nome} fill priority className="object-cover" sizes="(min-width: 768px) 55vw, 100vw" />
               {bf && e.temPreco ? <LogoBlackFriday className="z-10 w-[34%]" /> : null}
               {e.temPreco && !bf ? <LacoNatal /> : null}
+              {e.temPreco && !bf ? <FitaAnoNovo /> : null}
               <button
                 type="button"
                 onClick={() => setZoom(true)}

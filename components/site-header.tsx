@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { EstrelaLogo } from "@/components/natal";
+import { AnoNoLogo } from "@/components/ano-novo";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CartIcon, CloseIcon, CoracaoIcon, LockIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "@/components/icons";
@@ -57,7 +58,10 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
               <Image src="/brand/logo.png" alt="" width={40} height={40} className="h-10 w-10" />
               <EstrelaLogo />
             </span>
-            <span className="font-serif text-2xl font-medium tracking-tight text-ink">{siteName}</span>
+            <span className="relative font-serif text-2xl font-medium tracking-tight text-ink">
+              {siteName}
+              <AnoNoLogo />
+            </span>
           </Link>
 
           {/* 8 links since Casamento (2026-10-23): nowrap + tighter at lg, where the WhatsApp button steps aside */}
