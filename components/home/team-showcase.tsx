@@ -1,3 +1,4 @@
+import { LuzesTitulo } from "@/components/natal";
 import { AutoScrollRow } from "@/components/auto-scroll-row";
 import { ModeloCard } from "@/components/modelo-card";
 import type { Categoria, Modelo } from "@/lib/content-schema";
@@ -9,9 +10,15 @@ import { getTeamPairs } from "@/lib/team-models";
 // One row that drifts by itself and loops, on phones and desktop alike.
 export function TeamShowcase({
   categorias,
-  whatsappNumero, titulo = "Nossas cadeiras", texto }: {
+  whatsappNumero,
+  titulo = "Nossas cadeiras",
+  texto,
+}: {
   categorias: Categoria[];
-  whatsappNumero: string; titulo?: string; texto?: string }) {
+  whatsappNumero: string;
+  titulo?: string;
+  texto?: string;
+}) {
   const cadeiras = categorias.find((c) => c.slug === "cadeiras");
   if (!cadeiras) return null;
   type Item = { base: Modelo; personalizado?: Modelo };
@@ -56,6 +63,7 @@ export function TeamShowcase({
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">{titulo}</h2>
+            <LuzesTitulo />
             <p className="mt-2 max-w-[60ch] text-sm text-ink-soft">
               {texto ?? "De time, boho ou com o seu desenho preferido — todas trançadas à mão, e qualquer uma pode levar um nome no encosto."}
             </p>
@@ -67,13 +75,14 @@ export function TeamShowcase({
           up with the text column. Cards made smaller 2026-10-05 ("muito grande"). */}
       <AutoScrollRow
         copiaNoNavegador
-        className="mt-8 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:gap-6 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] [&::-webkit-scrollbar]:hidden [&>*]:flex [&>*>*]:w-full [&>*]:w-[calc((100vw-3rem)*0.76)] [&>*]:shrink-0 sm:[&>*]:w-[calc((100vw-3rem)*0.34)] lg:[&>*]:w-[calc((min(100vw,72rem)-3rem)*0.235)]">
-          {/* The second copy for the seamless loop is added by AutoScrollRow in
+        className="mt-8 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:gap-6 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] [&::-webkit-scrollbar]:hidden [&>*]:flex [&>*>*]:w-full [&>*]:w-[calc((100vw-3rem)*0.76)] [&>*]:shrink-0 sm:[&>*]:w-[calc((100vw-3rem)*0.34)] lg:[&>*]:w-[calc((min(100vw,72rem)-3rem)*0.235)]"
+      >
+        {/* The second copy for the seamless loop is added by AutoScrollRow in
               the browser (speed pass 2026-10-31: 35 full cards twice made the
               homepage HTML ~765 KB). */}
-          {itens.map((it) => (
-            <div key={it.chave}>{cartao(it)}</div>
-          ))}
+        {itens.map((it) => (
+          <div key={it.chave}>{cartao(it)}</div>
+        ))}
       </AutoScrollRow>
     </section>
   );

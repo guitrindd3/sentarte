@@ -18,6 +18,7 @@ import { cepGuardado, guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
 import { whatsappUrl } from "@/lib/urls";
 import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
 import { LogoBlackFriday } from "@/components/logo-black-friday";
+import { LacoNatal, PrecoNatal } from "@/components/natal";
 import { SeloBlackFriday } from "@/components/selo-black-friday";
 import { PortaoColecao, SeloColecao } from "@/components/colecao-compra";
 import type { Modelo } from "@/lib/content-schema";
@@ -108,16 +109,9 @@ export function ProdutoCompra({
         <div className="relative aspect-square overflow-hidden border border-line bg-canvas md:aspect-[4/5]">
           {e.fotoAtiva ? (
             <>
-              <Image
-                key={e.fotoAtiva}
-                src={e.fotoAtiva}
-                alt={e.ativo.nome}
-                fill
-                priority
-                className="object-cover"
-                sizes="(min-width: 768px) 55vw, 100vw"
-              />
+              <Image key={e.fotoAtiva} src={e.fotoAtiva} alt={e.ativo.nome} fill priority className="object-cover" sizes="(min-width: 768px) 55vw, 100vw" />
               {bf && e.temPreco ? <LogoBlackFriday className="z-10 w-[34%]" /> : null}
+              {e.temPreco && !bf ? <LacoNatal /> : null}
               <button
                 type="button"
                 onClick={() => setZoom(true)}
@@ -189,6 +183,7 @@ export function ProdutoCompra({
               <strong className="font-semibold">{formatBRL(precoPix(precoBf ?? e.preco))} no Pix</strong>
               <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
             </p>
+            {precoBf ? null : <PrecoNatal preco={e.preco} className="mt-1 text-sm" />}
             {rotulosInclui(e.inclui).length ? (
               <p className="mt-2 text-sm text-ink">
                 <span className="text-ink-soft">Já vem com: </span>
@@ -205,24 +200,24 @@ export function ProdutoCompra({
           <div className="mt-6">
             <p className="text-sm font-medium text-ink">Personalização</p>
             {e.nomeIncluso ? null : (
-            <div className="mt-2 inline-flex border border-line text-sm" role="group" aria-label="Personalização">
-              <button
-                type="button"
-                onClick={() => e.escolherNome(false)}
-                aria-pressed={!e.wantsNome}
-                className={`px-4 py-2 transition-colors ${!e.wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"}`}
-              >
-                Sem nome
-              </button>
-              <button
-                type="button"
-                onClick={() => e.escolherNome(true)}
-                aria-pressed={e.wantsNome}
-                className={`border-l border-line px-4 py-2 transition-colors ${e.wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"}`}
-              >
-                Personalizado
-              </button>
-            </div>
+              <div className="mt-2 inline-flex border border-line text-sm" role="group" aria-label="Personalização">
+                <button
+                  type="button"
+                  onClick={() => e.escolherNome(false)}
+                  aria-pressed={!e.wantsNome}
+                  className={`px-4 py-2 transition-colors ${!e.wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"}`}
+                >
+                  Sem nome
+                </button>
+                <button
+                  type="button"
+                  onClick={() => e.escolherNome(true)}
+                  aria-pressed={e.wantsNome}
+                  className={`border-l border-line px-4 py-2 transition-colors ${e.wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"}`}
+                >
+                  Personalizado
+                </button>
+              </div>
             )}
             {e.wantsNome ? (
               <label className="mt-3 block max-w-sm">
@@ -251,18 +246,18 @@ export function ProdutoCompra({
 
         <div className="mt-6 grid max-w-sm gap-2">
           <PortaoColecao nome={modelo.nome}>
-          <button
-            type="button"
-            data-rastro={`Comprar (página): ${e.ativo.nome}`}
-            onClick={() => (e.faltaNome ? pedirNome() : comprarAgora(e.itemDoCarrinho))}
-            className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-3 font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas"
-          >
-            Comprar
-          </button>
-          <AddToCartButton item={e.itemDoCarrinho} semNome={e.faltaNome ? pedirNome : undefined} contorno />
-          {e.faltaNome ? (
-            <p className={`text-xs ${avisoNome ? "font-medium text-red-700" : "text-ink-soft"}`}>Escreva o nome que vai trançado na cadeira para comprar.</p>
-          ) : null}
+            <button
+              type="button"
+              data-rastro={`Comprar (página): ${e.ativo.nome}`}
+              onClick={() => (e.faltaNome ? pedirNome() : comprarAgora(e.itemDoCarrinho))}
+              className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-3 font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas"
+            >
+              Comprar
+            </button>
+            <AddToCartButton item={e.itemDoCarrinho} semNome={e.faltaNome ? pedirNome : undefined} contorno />
+            {e.faltaNome ? (
+              <p className={`text-xs ${avisoNome ? "font-medium text-red-700" : "text-ink-soft"}`}>Escreva o nome que vai trançado na cadeira para comprar.</p>
+            ) : null}
           </PortaoColecao>
           {e.temPreco ? <VagasSemana className="mt-2" /> : null}
         </div>
@@ -286,9 +281,7 @@ export function ProdutoCompra({
                 maxLength={9}
                 className="w-32 border border-line bg-canvas px-3 py-2 text-ink focus:border-ink focus:outline-none"
               />
-              <span className="text-sm text-ink">
-                {frete.tipo === "ok" && frete.frete.valor > 0 ? formatBRL(frete.frete.valor) : textoFrete(frete)}
-              </span>
+              <span className="text-sm text-ink">{frete.tipo === "ok" && frete.frete.valor > 0 ? formatBRL(frete.frete.valor) : textoFrete(frete)}</span>
             </div>
             {frete.tipo === "ok" && frete.frete.prazoDias ? (
               <p className="mt-2 text-xs text-ink-soft">

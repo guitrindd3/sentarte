@@ -12,6 +12,7 @@ import { caminhoDoModelo } from "@/lib/produtos";
 import { useEscolhaModelo } from "@/lib/use-escolha-modelo";
 import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
 import { LogoBlackFriday } from "@/components/logo-black-friday";
+import { LacoNatal, PrecoNatal } from "@/components/natal";
 import { OpcaoBraco } from "@/components/opcao-braco";
 import { SeloBlackFriday } from "@/components/selo-black-friday";
 import { PortaoColecao, SeloColecao } from "@/components/colecao-compra";
@@ -108,9 +109,8 @@ export function ModeloCard({
           />
         )}
         {bf && temPreco ? <LogoBlackFriday className="w-[42%]" /> : null}
-        {pagina ? (
-          <BotaoFavorito slug={pagina.slice("/cadeira/".length)} nome={modelo.nome} className="absolute right-2 top-2" />
-        ) : null}
+        {temPreco && !bf ? <LacoNatal /> : null}
+        {pagina ? <BotaoFavorito slug={pagina.slice("/cadeira/".length)} nome={modelo.nome} className="absolute right-2 top-2" /> : null}
         {temVariantes ? (
           <>
             <button
@@ -151,9 +151,7 @@ export function ModeloCard({
                   </button>
                 ))}
               </div>
-              <span className="text-xs font-medium text-canvas [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">
-                {contagemFotos}
-              </span>
+              <span className="text-xs font-medium text-canvas [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">{contagemFotos}</span>
             </div>
           </>
         ) : null}
@@ -177,6 +175,7 @@ export function ModeloCard({
               {formatBRL(precoPix(precoBf ?? preco))} no Pix
               {wantsNome || !podePersonalizar ? null : <>. Com nome: {formatBRL(precoBlackFriday(precoComNome, bf) ?? precoComNome)}</>}
             </span>
+            {precoBf ? null : <PrecoNatal preco={preco} className="mt-0.5" />}
           </p>
         ) : null}
 
@@ -193,9 +192,7 @@ export function ModeloCard({
               type="button"
               onClick={() => escolherNome(false)}
               aria-pressed={!wantsNome}
-              className={`px-3 py-2 transition-colors ${
-                !wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"
-              }`}
+              className={`px-3 py-2 transition-colors ${!wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"}`}
             >
               Sem nome
             </button>
@@ -203,15 +200,12 @@ export function ModeloCard({
               type="button"
               onClick={() => escolherNome(true)}
               aria-pressed={wantsNome}
-              className={`border-l border-line px-3 py-2 transition-colors ${
-                wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"
-              }`}
+              className={`border-l border-line px-3 py-2 transition-colors ${wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"}`}
             >
               Personalizado
             </button>
           </div>
         ) : null}
-
 
         {temPreco && !madeiraInclusa ? <OpcaoBraco madeira={madeira} onChange={setMadeira} compacto /> : null}
 
@@ -231,29 +225,33 @@ export function ModeloCard({
         ) : null}
 
         {/* phones: no description on the card (it's on the chair's page) — the cards were very long */}
-        <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft max-sm:hidden" title={ativo.descricao}>{ativo.descricao}</p>
+        <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft max-sm:hidden" title={ativo.descricao}>
+          {ativo.descricao}
+        </p>
         <span className="flex-1 sm:hidden" />
         {pagina ? (
-          <Link href={pagina} data-rastro={`Ver detalhes: ${modelo.nome}`} className="mt-2 w-fit py-1 text-xs text-ink underline underline-offset-2 hover:text-ink-soft">
+          <Link
+            href={pagina}
+            data-rastro={`Ver detalhes: ${modelo.nome}`}
+            className="mt-2 w-fit py-1 text-xs text-ink underline underline-offset-2 hover:text-ink-soft"
+          >
             Ver detalhes, medidas e frete
           </Link>
         ) : null}
         <PortaoColecao nome={modelo.nome}>
-        {/* phones: Comprar + a cart icon side by side; stacked from sm */}
-        <div className="mt-4 grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-1">
-          <button
-            type="button"
-            data-rastro={`Comprar: ${ativo.nome}`}
-            onClick={() => (faltaNome ? pedirNome() : comprarAgora(itemDoCarrinho))}
-            className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas"
-          >
-            Comprar
-          </button>
-          <AddToCartButton item={itemDoCarrinho} semNome={faltaNome ? pedirNome : undefined} contorno curtoNoCelular />
-        </div>
-        {faltaNome ? (
-          <p className="mt-1.5 text-xs text-ink-soft">Escreva o nome que vai trançado na cadeira para comprar.</p>
-        ) : null}
+          {/* phones: Comprar + a cart icon side by side; stacked from sm */}
+          <div className="mt-4 grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-1">
+            <button
+              type="button"
+              data-rastro={`Comprar: ${ativo.nome}`}
+              onClick={() => (faltaNome ? pedirNome() : comprarAgora(itemDoCarrinho))}
+              className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas"
+            >
+              Comprar
+            </button>
+            <AddToCartButton item={itemDoCarrinho} semNome={faltaNome ? pedirNome : undefined} contorno curtoNoCelular />
+          </div>
+          {faltaNome ? <p className="mt-1.5 text-xs text-ink-soft">Escreva o nome que vai trançado na cadeira para comprar.</p> : null}
         </PortaoColecao>
         <a
           href={whatsappUrl(whatsappNumero, mensagemWhatsapp)}

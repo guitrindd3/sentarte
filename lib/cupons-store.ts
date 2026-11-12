@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { CUPOM_PADRAO, normalizarCodigo, type Cupom, type CupomPublico } from "./cupom";
 import { diaBR } from "./estatisticas";
 import { redis, redisAtivo } from "./redis";
+import { CODIGO_NATAL, cupomNatal, naEpocaDeNatal } from "./natal";
 import { BLACK_FRIDAY_PADRAO, CODIGO_BLACK_FRIDAY, cupomBlackFriday, naBlackFriday, type ConfigBlackFriday } from "./black-friday";
 
 // Coupons live in Redis (hash `cupons`, by code) so the admin's changes work
@@ -57,7 +58,10 @@ async function semearSePreciso() {
 
 export async function listarCupons(): Promise<CupomComUsos[]> {
   await semearSePreciso();
-  const [bruto, usos] = (await redis([["HGETALL", K.cupons], ["HGETALL", K.usos]])) as string[][];
+  const [bruto, usos] = (await redis([
+    ["HGETALL", K.cupons],
+    ["HGETALL", K.usos],
+  ])) as string[][];
   const mapaUsos = new Map<string, number>();
   for (let i = 0; i + 1 < (usos ?? []).length; i += 2) mapaUsos.set(usos[i], Number(usos[i + 1]) || 0);
   const lista: CupomComUsos[] = [];
@@ -111,7 +115,10 @@ export const cuponsDaVitrine = unstable_cache(cuponsAutomaticos, ["cupons-vitrin
 /** A one-use welcome coupon (lib/lista-email.ts keeps them apart from the admin's list). */
 async function cupomDeBoasVindas(cod: string): Promise<CupomComUsos | undefined> {
   if (!cod.startsWith("OLA")) return undefined;
-  const [bruto, usos] = (await redis([["HGET", "boasvindas:cupons", cod], ["HGET", K.usos, cod]])) as (string | null)[];
+  const [bruto, usos] = (await redis([
+    ["HGET", "boasvindas:cupons", cod],
+    ["HGET", K.usos, cod],
+  ])) as (string | null)[];
   try {
     return bruto ? { ...(JSON.parse(bruto) as Cupom), usos: Number(usos) || 0 } : undefined;
   } catch {
@@ -124,6 +131,11 @@ export async function buscarCupom(codigo: string): Promise<{ cupom?: CupomPublic
   const cod = normalizarCodigo(codigo);
   if (!cod) return { erro: "Digite o código do cupom." };
   if (!redisAtivo()) return cod === CUPOM_PADRAO.codigo ? { cupom: CUPOM_PADRAO } : { erro: "Cupom não encontrado." };
+  // Christmas coupon (lib/natal.ts): virtual, 1–25 December only
+  if (cod === CODIGO_NATAL) {
+    if (naEpocaDeNatal(diaBR())) return { cupom: cupomNatal() };
+    return { erro: "O cupom de Natal vale de 1º a 25 de dezembro." };
+  }
   if (cod === CODIGO_BLACK_FRIDAY) {
     const bf = await cupomBlackFridayDeHoje();
     if (bf) return { cupom: bf };
@@ -168,16 +180,22 @@ export async function criarCuponsDeVale(vales: { codigo: string; valor: number; 
         criadoEm: Date.now(),
       };
       return ["HSETNX", K.cupons, c.codigo, JSON.stringify(c)];
-    })
+    }),
   );
 }
 
 export async function salvarCupom(c: Cupom) {
-  await redis([["HSET", K.cupons, c.codigo, JSON.stringify(c)], ["SET", K.semeado, 1]]);
+  await redis([
+    ["HSET", K.cupons, c.codigo, JSON.stringify(c)],
+    ["SET", K.semeado, 1],
+  ]);
 }
 
 export async function excluirCupom(codigo: string) {
-  await redis([["HDEL", K.cupons, codigo], ["HDEL", K.usos, codigo]]);
+  await redis([
+    ["HDEL", K.cupons, codigo],
+    ["HDEL", K.usos, codigo],
+  ]);
 }
 
 export async function contarUsoDoCupom(codigo: string) {

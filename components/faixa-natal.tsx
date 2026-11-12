@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { naBlackFriday } from "@/lib/black-friday";
+import { FaixaDeNatal, useNatal } from "@/components/natal";
 
 // Top strip (2026-10-20: a yearly calendar, lib/faixas-calendario.ts). Only
 // one shows at a time: the one whose window (inicio..ate, YYYY-MM-DD,
@@ -19,6 +20,7 @@ export function FaixaNatal({
   /** null when Black Friday is turned off in the admin */
   blackFriday: { conteudo: ReactNode; inicioAntecipado?: string } | null;
 }) {
+  const natal = useNatal();
   const [hoje, setHoje] = useState(hojeServidor);
   const [agora, setAgora] = useState<number | null>(null);
   useEffect(() => {
@@ -46,6 +48,8 @@ export function FaixaNatal({
   }
 
   const atual = faixas.find((f) => f.inicio <= hoje && f.ate >= hoje);
+  // 1–25 December (components/natal.tsx): lights + the Christmas coupon, alternating with the calendar's strip
+  if (natal) return <FaixaDeNatal calendario={atual?.conteudo} />;
   if (!atual) return null;
   return (
     <div className="relative z-50 bg-espresso px-4 py-2 text-center text-xs text-canvas sm:text-sm [&_a]:inline-block [&_a]:py-1 [&_a]:font-medium [&_a]:!text-canvas [&_a]:underline [&_a]:underline-offset-2">
@@ -57,7 +61,9 @@ export function FaixaNatal({
 /** "3 dias e 5 h" / "5 h 12 min" / "12 min". */
 function faltam(ms: number) {
   const min = Math.ceil(ms / 60_000);
-  const d = Math.floor(min / 1440), h = Math.floor((min % 1440) / 60), m = min % 60;
+  const d = Math.floor(min / 1440),
+    h = Math.floor((min % 1440) / 60),
+    m = min % 60;
   if (d) return `${d} ${d === 1 ? "dia" : "dias"} e ${h} h`;
   if (h) return `${h} h ${m} min`;
   return `${m} min`;

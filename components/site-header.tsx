@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { EstrelaLogo } from "@/components/natal";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CartIcon, CloseIcon, CoracaoIcon, LockIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "@/components/icons";
@@ -21,8 +22,7 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
-    const publicar = () =>
-      document.documentElement.style.setProperty("--altura-topo", `${el.getBoundingClientRect().height}px`);
+    const publicar = () => document.documentElement.style.setProperty("--altura-topo", `${el.getBoundingClientRect().height}px`);
     publicar();
     const ro = new ResizeObserver(publicar);
     ro.observe(el);
@@ -53,7 +53,10 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
               }
             }}
           >
-            <Image src="/brand/logo.png" alt="" width={40} height={40} className="h-10 w-10" />
+            <span className="relative">
+              <Image src="/brand/logo.png" alt="" width={40} height={40} className="h-10 w-10" />
+              <EstrelaLogo />
+            </span>
             <span className="font-serif text-2xl font-medium tracking-tight text-ink">{siteName}</span>
           </Link>
 
@@ -82,12 +85,7 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
             </a>
 
             <div className="flex items-center gap-3">
-              <Link
-                href="/busca"
-                aria-label="Buscar"
-                title="Buscar"
-                className="-m-2 p-2 text-ink-soft transition-colors hover:text-ink"
-              >
+              <Link href="/busca" aria-label="Buscar" title="Buscar" className="-m-2 p-2 text-ink-soft transition-colors hover:text-ink">
                 <SearchIcon className="h-5 w-5" />
               </Link>
               <Link
@@ -135,12 +133,7 @@ export function SiteHeader({ siteName, whatsappNumero }: { siteName: string; wha
           <div className="border-t border-line bg-canvas px-6 py-4 lg:hidden">
             <nav className="flex flex-col gap-4">
               {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="text-base text-ink-soft"
-                  onClick={() => setOpen(false)}
-                >
+                <Link key={link.href} href={link.href} className="text-base text-ink-soft" onClick={() => setOpen(false)}>
                   {link.label}
                 </Link>
               ))}

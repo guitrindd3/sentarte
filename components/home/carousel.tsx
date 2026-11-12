@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { WhatsAppIcon } from "@/components/icons";
 import { whatsappUrl } from "@/lib/urls";
+import { NatalNoTopo, useNatal } from "@/components/natal";
 import type { SiteContent } from "@/lib/content-schema";
 
 // Default photos and their descriptions (order set by the user 2026-09-30). Since
@@ -27,18 +28,11 @@ const PADRAO = [
 /** Time each photo stays up (was 6s — the user found it slow). */
 const INTERVALO_MS = 4000;
 
-export function Carousel({
-  hero,
-  whatsappNumero,
-  fotos,
-}: {
-  hero: SiteContent["hero"];
-  whatsappNumero: string;
-  fotos?: string[];
-}) {
+export function Carousel({ hero, whatsappNumero, fotos }: { hero: SiteContent["hero"]; whatsappNumero: string; fotos?: string[] }) {
   const SLIDES = fotos?.length
     ? fotos.map((src) => ({ src, alt: PADRAO.find((p) => p.src === src)?.alt ?? "Cadeiras de praia SentArte, trançadas à mão" }))
     : PADRAO;
+  const natal = useNatal();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -59,49 +53,35 @@ export function Carousel({
     >
       <div className="relative aspect-square md:absolute md:inset-0 md:aspect-auto">
         {SLIDES.map((slide, i) => (
-          <div
-            key={slide.src}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              i === index ? "opacity-100" : "opacity-0"
-            }`}
-          >
+          <div key={slide.src} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${i === index ? "opacity-100" : "opacity-0"}`}>
             {/* Fills the frame on every size (user 2026-09-30: the square
                 photo "ficou certo", the wider ones letterboxed). On phones
                 the frame is square, so the 4:3 / 5:4 photos only lose a
                 little of each side. */}
-            <Image
-              src={slide.src}
-              alt={slide.alt}
-              fill
-              priority={i === 0}
-              className="object-cover"
-              sizes="100vw"
-            />
+            <Image src={slide.src} alt={slide.alt} fill priority={i === 0} className="object-cover" sizes="100vw" />
           </div>
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-espresso/60 via-transparent to-espresso/55 md:from-espresso/85 md:via-espresso/25 md:to-espresso/45" />
+        <NatalNoTopo />
 
-      {/* Welcome + title sit up near the top of the photo; the phrase sits
+        {/* Welcome + title sit up near the top of the photo; the phrase sits
           down with the buttons/dots instead. */}
-      <div className="absolute inset-x-0 top-3 mx-auto max-w-2xl px-6 text-center text-canvas md:top-6">
-        <p className="font-serif text-lg italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-2xl">
-          Bem-vindo ao
-        </p>
-        <h1 className="mt-1 font-serif text-5xl font-semibold md:mt-2 md:text-6xl lg:text-8xl leading-[1.08] tracking-tight text-canvas [text-shadow:0_2px_20px_rgba(16,32,42,0.45)]">
-          {hero.titulo}
-        </h1>
+        <div className="absolute inset-x-0 top-3 mx-auto max-w-2xl px-6 text-center text-canvas md:top-6">
+          <p className="font-serif text-lg italic tracking-[0.01em] text-canvas/80 [text-shadow:0_1px_12px_rgba(16,32,42,0.5)] md:text-2xl">
+            {natal ? "Feliz Natal do" : "Bem-vindo ao"}
+          </p>
+          <h1 className="mt-1 font-serif text-5xl font-semibold md:mt-2 md:text-6xl lg:text-8xl leading-[1.08] tracking-tight text-canvas [text-shadow:0_2px_20px_rgba(16,32,42,0.45)]">
+            {hero.titulo}
+          </h1>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {hero.tags.map((tag) => (
-            <span
-              key={tag}
-              className="border border-dashed border-canvas/50 px-3 py-1.5 text-xs leading-snug text-canvas/90"
-            >
-              {tag}
-            </span>
-          ))}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {hero.tags.map((tag) => (
+              <span key={tag} className="border border-dashed border-canvas/50 px-3 py-1.5 text-xs leading-snug text-canvas/90">
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
       </div>
 
       {/* Phrase + CTA buttons + carousel dots anchored near the bottom, away
@@ -140,9 +120,7 @@ export function Carousel({
               className="group/dot flex h-8 items-center px-1"
             >
               <span
-                className={`block h-1.5 rounded-full transition-all ${
-                  i === index ? "w-6 bg-canvas" : "w-1.5 bg-canvas/40 group-hover/dot:bg-canvas/70"
-                }`}
+                className={`block h-1.5 rounded-full transition-all ${i === index ? "w-6 bg-canvas" : "w-1.5 bg-canvas/40 group-hover/dot:bg-canvas/70"}`}
               />
             </button>
           ))}
