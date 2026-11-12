@@ -35,7 +35,19 @@ import {
 import { avisar, btnPrimary, btnSecondary, Card, inputClass } from "../../_ui";
 import { excluirCartaoAction, salvarCartaoAction } from "../../actions";
 import { CartaoVisual, IconeCuidadoSvg, MarcaSvg, type Edicao } from "./cartao-visual";
-import { AbaFolha, BotoesImprimir, cartoesDaFolha, ImpressaoFolhas, useAjusteVerso, useFolha, type ModoImpressao, type Passaporte } from "./folha";
+import {
+  AbaFolha,
+  BotoesImprimir,
+  cartoesDaFolha,
+  ImpressaoFolhas,
+  PdfPronto,
+  useAjusteVerso,
+  useFolha,
+  type EstadoPdf,
+  type ModoImpressao,
+  type Passaporte,
+} from "./folha";
+import { folhaEmPdf } from "./pdf";
 import { LinhaPassaporte, ListaPassaportes } from "./escolher-passaporte";
 import { FAMILIA } from "./fontes";
 
@@ -238,6 +250,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
   const final = escolhida ? cartaoDoPassaporte(cartao, escolhida) : cartao;
   const cVisto = (lado === "verso" && versoDe(final)) || final;
   const [modo, setModo] = useState<ModoImpressao>("tudo");
+  const [pdf, setPdf] = useState<EstadoPdf>(null);
   const [ajuste] = useAjusteVerso();
   const [quantidade, setQuantidade] = useState<number | null>(null);
   const [linhaCorte, setLinhaCorte] = useState(true);
@@ -264,6 +277,28 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
     flushSync(() => setModo(m));
     window.print();
   }
+  async function gerarPdf(m: ModoImpressao) {
+    flushSync(() => {
+      setModo(m);
+      setPdf("gerando");
+    });
+    try {
+      const raiz = document.querySelector<HTMLElement>(".folha-cartoes");
+      if (!raiz) throw new Error("sem folha");
+      const blob = await folhaEmPdf(raiz);
+      const nome = m === "dobrar" ? "cartoes-para-dobrar.pdf" : m.startsWith("teste") ? "folha-de-teste.pdf" : "cartoes-sentarte.pdf";
+      const frenteVerso = m === "teste" || (m === "tudo" && document.querySelectorAll(".folha-cartoes .pagina-impressa").length > 1 && temVersoAgora());
+      setPdf({ url: URL.createObjectURL(blob), arquivo: new File([blob], nome, { type: "application/pdf" }), frenteVerso });
+    } catch {
+      setPdf(null);
+      avisar("erro", "Não consegui montar o PDF. Tente de novo, ou use um computador.");
+    }
+  }
+  function fecharPdf() {
+    if (pdf && pdf !== "gerando") URL.revokeObjectURL(pdf.url);
+    setPdf(null);
+  }
+  const temVersoAgora = () => (aba === "folha" ? folhaMista.paginas.some((p) => p.some((k) => k.c.verso)) : !!final.verso);
   const folha = porFolha(c);
   const qtd = Math.max(1, Math.min(200, quantidade ?? (folha.total || 1)));
   const paginas = folha.total ? Math.ceil(qtd / folha.total) : 0;
@@ -417,6 +452,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
           passaportes={passaportes}
           estiloPassaporte={estiloPassaporte(salvos)}
           onImprimir={imprimir}
+          onPdf={gerarPdf}
         />
       ) : (
         <>
@@ -988,7 +1024,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                     <div className="mt-3">
                       <Marcar texto="Linha cinza de corte" dica="Ajuda a recortar quando o fundo é claro." valor={linhaCorte} onChange={setLinhaCorte} />
                     </div>
-                    <BotoesImprimir comVerso={!!cartao.verso} onImprimir={imprimir} />
+                    <BotoesImprimir comVerso={!!cartao.verso} onImprimir={imprimir} onPdf={gerarPdf} />
                     <button type="button" onClick={porNaFolha} className={btnSecondary + " mt-2 w-full"}>
                       Pôr {qtd} na folha com outros cartões
                     </button>
@@ -1026,11 +1062,16 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
             <div className="folha-cartoes">
               <style>{`
                 @page { size: A4; margin: 0 }
-                @media screen { .folha-cartoes { position: fixed; left: -10000px; top: 0; width: 210mm; visibility: hidden; pointer-events: none } }
+                @media screen {
+                  .folha-cartoes { position: fixed; left: -10000px; top: 0; width: 210mm; visibility: hidden; pointer-events: none }
+                  .folha-cartoes[data-pdf] { visibility: visible }
+                  .folha-cartoes .pagina-impressa { background: #fff }
+                }
+                .folha-cartoes .pagina-impressa { overflow: hidden; width: 210mm; padding: 8mm 8mm 0; box-sizing: border-box }
                 @media print {
                   body > *:not(.folha-cartoes) { display: none !important }
                   body { background: #fff !important; padding: 0 !important; margin: 0 !important }
-                  .folha-cartoes .pagina-impressa { overflow: hidden; break-inside: avoid; width: 210mm; padding: 8mm 8mm 0; box-sizing: border-box }
+                  .folha-cartoes .pagina-impressa { break-inside: avoid }
                   .folha-cartoes .pagina-impressa + .pagina-impressa { break-before: page }
                 }
               `}</style>
@@ -1052,6 +1093,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
             document.body,
           )
         : null}
+      <PdfPronto estado={pdf} fechar={fecharPdf} />
     </div>
   );
 }

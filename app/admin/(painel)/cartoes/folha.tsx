@@ -361,16 +361,106 @@ export function ImpressaoFolhas({ frentes, corte, modo, ajuste }: { frentes: Col
   );
 }
 
+/** Touch screen (phone/tablet): print through a PDF instead of the browser's print window. */
+export function useCelular() {
+  return useSyncExternalStore(
+    (cb) => {
+      const m = window.matchMedia("(pointer: coarse)");
+      m.addEventListener("change", cb);
+      return () => m.removeEventListener("change", cb);
+    },
+    () => window.matchMedia("(pointer: coarse)").matches,
+    () => false,
+  );
+}
+
+export type EstadoPdf = null | "gerando" | { url: string; arquivo: File; frenteVerso: boolean };
+
+/** Bottom sheet shown while the PDF is made and once it's ready (share / open / download). */
+export function PdfPronto({ estado, fechar }: { estado: EstadoPdf; fechar: () => void }) {
+  if (!estado) return null;
+  const pronto = estado !== "gerando" ? estado : null;
+  const podeCompartilhar = !!pronto && typeof navigator !== "undefined" && !!navigator.canShare?.({ files: [pronto.arquivo] });
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-3 sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label="PDF para imprimir"
+    >
+      <div className="w-full max-w-md rounded-3xl bg-paper p-5 text-ink shadow-xl">
+        {!pronto ? (
+          <div className="flex items-center gap-3 py-4">
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-line border-t-wood" aria-hidden />
+            <p className="font-semibold">Montando o PDF… (leva alguns segundos)</p>
+          </div>
+        ) : (
+          <>
+            <p className="text-lg font-semibold">PDF pronto para imprimir</p>
+            <p className="mt-1 text-sm text-ink-soft">
+              Os cartões já estão no lugar certo da folha A4. Mande para a impressora pelo app dela (HP Smart, Epson, Canon…) ou pelo “Imprimir” do celular.
+            </p>
+            <p className="mt-3 text-sm font-semibold">Na impressora, escolha:</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-ink-soft">
+              <li>
+                Papel <strong className="text-ink">A4</strong> · Tamanho <strong className="text-ink">real / 100%</strong> (não “Ajustar à página”)
+              </li>
+              {pronto.frenteVerso ? (
+                <li>
+                  <strong className="text-ink">Frente e verso</strong> (2 lados) → <strong className="text-ink">borda longa</strong>
+                </li>
+              ) : (
+                <li>Só um lado do papel</li>
+              )}
+            </ul>
+            <div className="mt-4 grid gap-2">
+              {podeCompartilhar ? (
+                <button
+                  type="button"
+                  className={`${btnPrimary} w-full`}
+                  onClick={() => navigator.share({ files: [pronto.arquivo], title: pronto.arquivo.name }).catch(() => {})}
+                >
+                  Mandar para a impressora
+                </button>
+              ) : null}
+              <a href={pronto.url} target="_blank" rel="noopener" className={`${podeCompartilhar ? btnSecondary : btnPrimary} w-full text-center`}>
+                Abrir o PDF
+              </a>
+              <a href={pronto.url} download={pronto.arquivo.name} className={`${btnSecondary} w-full text-center`}>
+                Baixar o PDF
+              </a>
+              <button type="button" onClick={fechar} className="py-2 text-sm font-semibold text-ink-soft">
+                Fechar
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Buttons + printer fine-tuning, used by the editor and the Folha tab. */
 export function BotoesImprimir({
   comVerso,
-  onImprimir,
+  onImprimir: imprimirNoNavegador,
+  onPdf,
   desativado = false,
 }: {
   comVerso: boolean;
   onImprimir: (m: ModoImpressao) => void;
+  onPdf: (m: ModoImpressao) => void;
   desativado?: boolean;
 }) {
+  // phones: every print button makes a PDF (their print services ignore margins/scale); computers: print window + a PDF link
+  const celular = useCelular();
+  const onImprimir = celular ? onPdf : imprimirNoNavegador;
+  const linkPdf = (m: ModoImpressao) =>
+    celular ? null : (
+      <button type="button" disabled={desativado} onClick={() => onPdf(m)} className="mt-2 w-full py-1 text-xs font-semibold text-ink-soft underline">
+        Ou baixar em PDF (para imprimir de outro aparelho)
+      </button>
+    );
   const [ajuste, setAjuste] = useAjusteVerso();
   const [caiu, setCaiu] = useState({ x: "", y: "" });
   const num = (v: string) => Number(v.replace(",", ".").replace(/[^\d.+-]/g, "")) || 0;
@@ -379,9 +469,14 @@ export function BotoesImprimir({
     return (
       <>
         <button type="button" disabled={desativado} onClick={() => onImprimir("tudo")} className={`${btnPrimary} mt-4 w-full`}>
-          Imprimir ou salvar em PDF
+          {celular ? "Imprimir (gera o PDF)" : "Imprimir ou salvar em PDF"}
         </button>
-        <p className="mt-2 text-xs text-ink-soft">Na janela de impressão, deixe a escala em 100% (“Padrão” ou “Tamanho real”) e as margens em “Padrão”.</p>
+        <p className="mt-2 text-xs text-ink-soft">
+          {celular
+            ? "O site monta um PDF já no tamanho certo. Na impressora: papel A4, tamanho real / 100%."
+            : "Na janela de impressão, deixe a escala em 100% (“Padrão” ou “Tamanho real”) e as margens em “Padrão”."}
+        </p>
+        {linkPdf("tudo")}
       </>
     );
   const campo = "h-10 w-20 rounded-lg border border-line bg-paper px-2 text-center text-sm tabular-nums text-ink";
@@ -393,19 +488,35 @@ export function BotoesImprimir({
           O site já arruma tudo sozinho: os cartões ficam no meio da folha, cada verso cai atrás da sua frente, o verso não tem linha de corte (você corta pela
           linha da frente) e o fundo colorido passa um pouquinho da borda, para não ficar filete branco se o papel correr 1 mm.
         </p>
-        <p className="mt-2 text-xs font-semibold text-ink">Na janela de impressão:</p>
-        <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-ink-soft">
-          <li>
-            Mais definições → <strong className="text-ink">Imprimir nos dois lados</strong> → <strong className="text-ink">Virar na borda longa</strong>
-          </li>
-          <li>
-            Margens: <strong className="text-ink">Padrão</strong> · Escala: <strong className="text-ink">100%</strong> (nada de “Ajustar à página”)
-          </li>
-          <li>Ela mostra 2 páginas por folha (frente e verso): é assim mesmo.</li>
-        </ul>
+        {celular ? (
+          <>
+            <p className="mt-2 text-xs font-semibold text-ink">Pelo celular:</p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-ink-soft">
+              <li>O botão monta um PDF com as páginas certinhas (frente, verso, frente, verso…).</li>
+              <li>
+                Mande para o app da impressora (ou “Imprimir”) e escolha <strong className="text-ink">Frente e verso → borda longa</strong>, papel{" "}
+                <strong className="text-ink">A4</strong>, tamanho <strong className="text-ink">real / 100%</strong>.
+              </li>
+            </ul>
+          </>
+        ) : (
+          <>
+            <p className="mt-2 text-xs font-semibold text-ink">Na janela de impressão:</p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-ink-soft">
+              <li>
+                Mais definições → <strong className="text-ink">Imprimir nos dois lados</strong> → <strong className="text-ink">Virar na borda longa</strong>
+              </li>
+              <li>
+                Margens: <strong className="text-ink">Padrão</strong> · Escala: <strong className="text-ink">100%</strong> (nada de “Ajustar à página”)
+              </li>
+              <li>Ela mostra 2 páginas por folha (frente e verso): é assim mesmo.</li>
+            </ul>
+          </>
+        )}
         <button type="button" disabled={desativado} onClick={() => onImprimir("tudo")} className={`${btnPrimary} mt-3 w-full`}>
-          Imprimir frente e verso
+          {celular ? "Imprimir frente e verso (gera o PDF)" : "Imprimir frente e verso"}
         </button>
+        {linkPdf("tudo")}
       </div>
       <div className="rounded-2xl border border-line/70 bg-canvas p-3 text-sm text-ink">
         <p className="font-semibold">Ou: imprimir para dobrar (nunca desalinha)</p>
@@ -416,6 +527,7 @@ export function BotoesImprimir({
         <button type="button" disabled={desativado} onClick={() => onImprimir("dobrar")} className={`${btnSecondary} mt-3 w-full`}>
           Imprimir para dobrar
         </button>
+        {linkPdf("dobrar")}
       </div>
       <details className="rounded-2xl border border-line/70 p-3 text-sm">
         <summary className="cursor-pointer font-semibold text-ink">Sua impressora não vira o papel sozinha?</summary>
@@ -570,6 +682,7 @@ export function AbaFolha({
   passaportes,
   estiloPassaporte,
   onImprimir,
+  onPdf,
 }: {
   modelos: Cartao[];
   atual: Cartao;
@@ -580,6 +693,7 @@ export function AbaFolha({
   passaportes: Passaporte[];
   estiloPassaporte: Cartao;
   onImprimir: (m: ModoImpressao) => void;
+  onPdf: (m: ModoImpressao) => void;
 }) {
   const { paginas, grandes } = useMemo(() => cartoesDaFolha(itens), [itens]);
   const total = itens.reduce((n, i) => n + i.qtd, 0);
@@ -735,7 +849,7 @@ export function AbaFolha({
             <input type="checkbox" checked={linhaCorte} onChange={(e) => setLinhaCorte(e.target.checked)} className="h-4 w-4 accent-wood" />
             Linha cinza de corte
           </label>
-          <BotoesImprimir comVerso={comVerso} onImprimir={onImprimir} desativado={!paginas.length} />
+          <BotoesImprimir comVerso={comVerso} onImprimir={onImprimir} onPdf={onPdf} desativado={!paginas.length} />
         </Card>
       </div>
     </div>

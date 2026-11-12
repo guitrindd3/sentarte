@@ -10,6 +10,7 @@
     "conferir": "node scripts/conferir-publicacao.mjs"
   },
   "dependencies": {
+    "html-to-image": "^1.11.13",
     "jose": "^6.2.12",
     "next": "^16.3.8",
     "nodemailer": "^10.0.15",
