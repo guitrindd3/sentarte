@@ -71,16 +71,10 @@ function Digito({ valor, rotulo }: { valor: string; rotulo: string }) {
 }
 
 /** Top strip from 26/12 to 15/01: countdown to midnight, then the wish; alternates with the calendar's strip. */
-export function FaixaDeAnoNovo({ ano, calendario }: { ano: number; calendario?: ReactNode }) {
+// Only the countdown / New Year wish — no alternating calendar strip (user 2026-11-12: "prefiro que fique a contagem do ano novo").
+export function FaixaDeAnoNovo({ ano }: { ano: number }) {
   const alvo = viradaMs(ano);
   const agora = useAgora(alvo);
-  const [vez, setVez] = useState(0);
-  useEffect(() => {
-    if (!calendario || reduzMovimento()) return;
-    const t = setInterval(() => setVez((v) => v + 1), 7000);
-    return () => clearInterval(t);
-  }, [calendario]);
-  const mostrarCalendario = !!calendario && vez % 2 === 1;
   const depois = agora !== null && agora >= alvo;
   let digitos: ReactNode = null;
   if (agora !== null && !depois) {
@@ -103,17 +97,13 @@ export function FaixaDeAnoNovo({ ano, calendario }: { ano: number; calendario?: 
   }
   return (
     <div className="anonovo-faixa relative z-50 overflow-hidden px-4 py-2 text-center text-xs sm:text-sm [&_a]:inline-block [&_a]:py-1 [&_a]:font-semibold [&_a]:!text-[#fbf3e0] [&_a]:underline [&_a]:underline-offset-2">
-      {mostrarCalendario ? (
-        <div className="relative py-1">{calendario}</div>
-      ) : (
-        <span className="relative inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
-          <span className="inline-flex items-center gap-2 whitespace-nowrap">
-            <em className="anonovo-ouro font-serif text-base italic sm:text-lg">{depois ? "Feliz Ano Novo!" : `Feliz ${ano}!`}</em>
-            <span>{depois ? `Que ${ano} seja de muito sol.` : "A virada chega em"}</span>
-          </span>
-          {digitos}
+      <span className="relative inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
+        <span className="inline-flex items-center gap-2 whitespace-nowrap">
+          <em className="anonovo-ouro font-serif text-base italic sm:text-lg">{depois ? "Feliz Ano Novo!" : `Feliz ${ano}!`}</em>
+          <span>{depois ? `Que ${ano} seja de muito sol.` : "A virada chega em"}</span>
         </span>
-      )}
+        {digitos}
+      </span>
     </div>
   );
 }

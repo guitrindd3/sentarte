@@ -55,8 +55,8 @@ export function FaixaNatal({
   const atual = faixas.find((f) => f.inicio <= hoje && f.ate >= hoje);
   // 1–25 December (components/natal.tsx): lights + the Christmas coupon, alternating with the calendar's strip
   if (natal) return <FaixaDeNatal calendario={atual?.conteudo} />;
-  // 26 December – 15 January (components/ano-novo.tsx): countdown to midnight, then the wish, alternating the same way
-  if (anoNovo) return <FaixaDeAnoNovo ano={anoNovo} calendario={atual?.conteudo} />;
+  // 26 December – 15 January (components/ano-novo.tsx): countdown to midnight, then the wish — never alternates
+  if (anoNovo) return <FaixaDeAnoNovo ano={anoNovo} />;
   if (!atual) return null;
   return (
     <div className="relative z-50 bg-espresso px-4 py-2 text-center text-xs text-canvas sm:text-sm [&_a]:inline-block [&_a]:py-1 [&_a]:font-medium [&_a]:!text-canvas [&_a]:underline [&_a]:underline-offset-2">
