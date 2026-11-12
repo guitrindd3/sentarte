@@ -483,13 +483,88 @@ export function PrecoNatal({ preco, className = "" }: { preco: number; className
   );
 }
 
-/** Little string of lights under a section title. */
+const LUZ_QUENTE = ["#f0b93f", "#ffe39a", "#e09a2e"];
+
+/**
+ * Warm fairy lights draped edge to edge across the top of a section (user 2026-11-12:
+ * the small multicolour string under "Nossas cadeiras" "está feio"). Thin green wire
+ * in deep swags, small warm bulbs with a soft glow that twinkle out of step, and a gold
+ * sparkle at each hook. Fills its parent's width.
+ */
 export function LuzesTitulo() {
-  if (!useNatal()) return null;
+  return useNatal() ? <VaralQuente /> : null;
+}
+
+function VaralQuente() {
+  const [ref, w] = useLargura<SVGSVGElement>();
+  let conteudo: ReactNode = null;
+  if (w) {
+    const n = Math.max(2, Math.round(w / (w > 700 ? 280 : 170)));
+    const passo = w / n,
+      y0 = 6,
+      flecha = w > 700 ? 26 : 18;
+    const yEm = (x: number) => {
+      const t = (x % passo) / passo;
+      return y0 + 4 * flecha * t * (1 - t);
+    };
+    let fio = `M0 ${y0}`;
+    for (let i = 0; i < n; i++) fio += ` Q${r1(passo * i + passo / 2)} ${y0 + flecha * 2} ${r1(passo * (i + 1))} ${y0}`;
+    const luzes: ReactNode[] = [];
+    const espaco = w > 700 ? 28 : 22;
+    let k = 0;
+    for (let x = espaco / 2; x < w; x += espaco, k++) {
+      const t = (x % passo) / passo;
+      if (t < 0.06 || t > 0.94) continue; // keep the hooks clear
+      const y = yEm(x) + 2.5,
+        cor = LUZ_QUENTE[k % LUZ_QUENTE.length],
+        atraso = `-${((k * 0.53) % 3.2).toFixed(2)}s`;
+      luzes.push(
+        <g key={k} className="natal-fada" style={{ animationDelay: atraso }}>
+          <circle cx={r1(x)} cy={r1(y)} r={11} fill="url(#natal-brilho)" />
+          <circle cx={r1(x)} cy={r1(y)} r={3.2} fill={cor} stroke="rgba(120,80,20,.35)" strokeWidth={0.5} />
+          <circle cx={r1(x - 0.7)} cy={r1(y - 0.7)} r={0.8} fill="#fff" opacity={0.9} />
+        </g>,
+      );
+    }
+    const ganchos: ReactNode[] = [];
+    for (let i = 0; i <= n; i++) {
+      const x = r1(passo * i);
+      ganchos.push(
+        <path
+          key={i}
+          className="natal-cintila"
+          style={{ animationDelay: `-${(i * 0.7).toFixed(1)}s` }}
+          d={`M${x} ${y0 - 6} L${x + 1.6} ${y0 - 1.6} L${x + 6} ${y0} L${x + 1.6} ${y0 + 1.6} L${x} ${y0 + 6} L${x - 1.6} ${y0 + 1.6} L${x - 6} ${y0} L${x - 1.6} ${y0 - 1.6} Z`}
+          fill="#c9a14a"
+        />,
+      );
+    }
+    conteudo = (
+      <>
+        <defs>
+          <radialGradient id="natal-brilho">
+            <stop offset="0" stopColor="#f5c04a" stopOpacity="0.85" />
+            <stop offset="1" stopColor="#f5c04a" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <path d={fio} fill="none" stroke="#4f5f3c" strokeWidth={1.3} />
+        <path d={fio} fill="none" stroke="#7d8c5f" strokeWidth={0.6} strokeDasharray="2 3" />
+        {luzes}
+        {ganchos}
+      </>
+    );
+  }
+  const alto = (w > 700 ? 26 : 18) + 20;
   return (
-    <div className="mt-1 w-48 md:w-72">
-      <Varal y0={3} vao={1000} porVao={6} />
-    </div>
+    <svg
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-0 block w-full overflow-visible"
+      height={alto}
+      viewBox={`0 0 ${w || 1} ${alto}`}
+    >
+      {conteudo}
+    </svg>
   );
 }
 

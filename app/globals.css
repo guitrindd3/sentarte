@@ -155,6 +155,8 @@ html {
    Seasonal red/green/gold are raw hex on purpose, like WeavePattern: they only
    exist in these decorations, never in the site chrome. */
 .natal-lampada { animation: natal-piscar 2.6s ease-in-out infinite; }
+.natal-fada { animation: natal-fada 3.2s ease-in-out infinite; }
+@keyframes natal-fada { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 @keyframes natal-piscar { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 .natal-pend { animation: natal-pendulo 3.4s ease-in-out infinite; transform-box: view-box; }
 @keyframes natal-pendulo { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
@@ -202,7 +204,7 @@ html {
   .natal-caixa.aberta .tampa { transform: translate(-104px, 34px) rotate(-12deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .natal-lampada, .natal-pend, .natal-cintila, .natal-laco svg, .natal-laco .fita-h::after, .natal-laco .fita-v::after, .natal-caixa { animation: none !important; }
+  .natal-lampada, .natal-fada, .natal-pend, .natal-cintila, .natal-laco svg, .natal-laco .fita-h::after, .natal-laco .fita-v::after, .natal-caixa { animation: none !important; }
   .natal-caixa .tampa, .natal-vale { transition: none; }
 }
 

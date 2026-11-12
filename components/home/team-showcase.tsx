@@ -58,16 +58,17 @@ export function TeamShowcase({
   );
 
   return (
-    <section className="border-t border-line py-12 md:py-16">
+    <section className="relative border-t border-line py-12 md:py-16">
+      {/* December: warm fairy lights edge to edge along the top */}
+      <LuzesTitulo />
+      {/* Title and text spread across the column (user 2026-11-12: "mais distribuído"):
+          side by side from md, stacked on phones. */}
       <div className="mx-auto max-w-6xl px-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">{titulo}</h2>
-            <LuzesTitulo />
-            <p className="mt-2 max-w-[60ch] text-sm text-ink-soft">
-              {texto ?? "De time, boho ou com o seu desenho preferido — todas trançadas à mão, e qualquer uma pode levar um nome no encosto."}
-            </p>
-          </div>
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:items-end md:gap-12">
+          <h2 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{titulo}</h2>
+          <p className="text-sm leading-relaxed text-ink-soft md:border-l md:border-line md:pl-8 md:text-base">
+            {texto ?? "De time, boho ou com o seu desenho preferido — todas trançadas à mão, e qualquer uma pode levar um nome no encosto."}
+          </p>
         </div>
       </div>
       {/* Full screen width (user 2026-10-05: chairs should slide in and out at the
