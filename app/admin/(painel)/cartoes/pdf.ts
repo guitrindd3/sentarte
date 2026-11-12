@@ -84,7 +84,9 @@ export async function folhaEmPdf(raiz: HTMLElement): Promise<Blob> {
     await proximoQuadro();
     const elementos = Array.from(raiz.querySelectorAll<HTMLElement>(".pagina-impressa"));
     if (!elementos.length) throw new Error("nada para imprimir");
-    const fontEmbedCSS = await getFontEmbedCSS(raiz, { preferredFontFormat: "woff2" });
+    // no preferredFontFormat: html-to-image 1.11 filters it with a global regex whose lastIndex leaks between
+    // @font-face rules, so every other rule lost its src and the PDF came out in a fallback font (next/font is woff2 only anyway)
+    const fontEmbedCSS = await getFontEmbedCSS(raiz);
     const paginas = [];
     for (const [i, el] of elementos.entries()) {
       const pixelRatio = PX_LARGURA / el.offsetWidth;

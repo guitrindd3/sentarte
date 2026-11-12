@@ -3,7 +3,9 @@
 import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   alturaDaPagina,
+  caminhoDaFigura,
   cartaoDoPassaporte,
+  ehFigura,
   montarDobradas,
   montarFolhas,
   normalizarCartao,
@@ -148,7 +150,15 @@ export function PaginaA4({
     <div className="pagina-livre" style={{ position: "relative", width: "194mm", height: `${altura}mm` }}>
       {cartoes.map((k, i) => (
         <div key={i} style={{ position: "absolute", left: `${k.x}mm`, top: `${k.y}mm`, ...giro(k) }}>
-          {sangria && k.c.imprimirFundo ? (
+          {sangria && k.c.imprimirFundo && ehFigura(k.c.forma) ? (
+            <svg
+              aria-hidden
+              viewBox={`0 0 ${k.c.largura} ${k.c.altura}`}
+              style={{ position: "absolute", inset: 0, width: `${k.c.largura}mm`, height: `${k.c.altura}mm`, overflow: "visible", printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}
+            >
+              <path d={caminhoDaFigura(k.c.forma, k.c.largura, k.c.altura, -sangria)} fill={k.c.fundo} />
+            </svg>
+          ) : sangria && k.c.imprimirFundo ? (
             <div
               aria-hidden
               style={{
@@ -521,8 +531,8 @@ export function BotoesImprimir({
       <div className="rounded-2xl border border-line/70 bg-canvas p-3 text-sm text-ink">
         <p className="font-semibold">Ou: imprimir para dobrar (nunca desalinha)</p>
         <p className="mt-1 text-xs text-ink-soft">
-          Frente e verso lado a lado, num lado só do papel. Recorte em volta do par e dobre na linha tracejada. Gasta mais papel. Cartões redondos não dá para
-          dobrar.
+          Frente e verso lado a lado, num lado só do papel. Recorte em volta do par e dobre na linha tracejada. Gasta mais papel. Cartões redondos ou com formato (árvore,
+          estrela, bola, sino, coração) não dá para dobrar: saem só com a frente.
         </p>
         <button type="button" disabled={desativado} onClick={() => onImprimir("dobrar")} className={`${btnSecondary} mt-3 w-full`}>
           Imprimir para dobrar

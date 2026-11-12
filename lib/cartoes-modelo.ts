@@ -12,7 +12,8 @@ export const LOGOS: Record<LogoCor, { src: string; nome: string }> = {
   colorida: { src: "/brand/logo.png", nome: "Colorida" },
 };
 
-export type FormaCartao = "retangulo" | "arredondado" | "redondo" | "etiqueta";
+export const FORMAS = ["retangulo", "arredondado", "redondo", "etiqueta", "arvore", "estrela", "bola", "sino", "coracao"] as const;
+export type FormaCartao = (typeof FORMAS)[number];
 export type TipoCartao = "visita" | "depara" | "aniversario" | "obrigado" | "cuidados" | "passaporte" | "livre";
 
 /** Care icons (drawn in the editor, components in cartao-visual.tsx). */
@@ -73,7 +74,132 @@ export const NOMES_FORMAS: Record<FormaCartao, string> = {
   arredondado: "Cantos arredondados",
   redondo: "Redondo",
   etiqueta: "Etiqueta com furo",
+  arvore: "Árvore de Natal",
+  estrela: "Estrela",
+  bola: "Bola de Natal",
+  sino: "Sino",
+  coracao: "Coração",
 };
+
+/**
+ * Seasonal card shapes (2026-11-12, user: "formas sazonais, ex.: Natal uma
+ * árvore de Natal"). The card itself is cut in this outline. `d` is drawn in
+ * a 100 × 100 box (absolute M/L/C/Q/A/Z only) and stretched to the card's
+ * width × height; `seguro` = the inner rectangle (fractions x0, y0, x1, y1)
+ * where text/logo always fit (useEncaixar measures against it); `furoY` =
+ * centre of the hole (fraction of the height); largura/altura = size when
+ * the shape is picked. All are left-right symmetric, so a mirrored back
+ * lands right; they never turn on the sheet and can't be folded.
+ */
+export type Figura = { d: string; seguro: readonly [number, number, number, number]; furoY: number; largura: number; altura: number };
+
+function pontasDeEstrela(cx: number, cy: number, R: number, r: number) {
+  const p: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const a = ((-90 + i * 36) * Math.PI) / 180;
+    const k = i % 2 ? r : R;
+    p.push(`${(cx + k * Math.cos(a)).toFixed(2)} ${(cy + k * Math.sin(a)).toFixed(2)}`);
+  }
+  return `M${p[0]} ${p
+    .slice(1)
+    .map((x) => "L" + x)
+    .join(" ")} Z`;
+}
+
+export const FIGURAS: Partial<Record<FormaCartao, Figura>> = {
+  arvore: {
+    d: "M50 2 L72 30 L62 30 L84 58 L72 58 L95 86 L58 86 L58 98 L42 98 L42 86 L5 86 L28 58 L16 58 L38 30 L28 30 Z",
+    seguro: [0.31, 0.4, 0.69, 0.83],
+    furoY: 0.16,
+    largura: 80,
+    altura: 100,
+  },
+  estrela: { d: pontasDeEstrela(50, 52.6, 50, 27.5), seguro: [0.3, 0.37, 0.7, 0.69], furoY: 0.19, largura: 90, altura: 90 },
+  bola: {
+    d: "M41 23.1 L41 12 Q41 8 45 8 L55 8 Q59 8 59 12 L59 23.1 A38 38 0 1 1 41 23.1 Z",
+    seguro: [0.25, 0.38, 0.75, 0.82],
+    furoY: 0.15,
+    largura: 80,
+    altura: 80,
+  },
+  sino: {
+    d: "M44 13 Q44 3 50 3 Q56 3 56 13 C72 15 77 30 77 50 C77 66 83 75 95 81 L95 86 L59 86 A9 9 0 0 1 41 86 L5 86 L5 81 C17 75 23 66 23 50 C23 30 28 15 44 13 Z",
+    seguro: [0.27, 0.3, 0.73, 0.8],
+    furoY: 0.085,
+    largura: 80,
+    altura: 85,
+  },
+  coracao: {
+    d: "M50 95 C22 74 3 54 3 31 C3 15 14 5 28 5 C39 5 46 12 50 21 C54 12 61 5 72 5 C86 5 97 15 97 31 C97 54 78 74 50 95 Z",
+    seguro: [0.2, 0.27, 0.8, 0.62],
+    furoY: 0.3,
+    largura: 90,
+    altura: 80,
+  },
+};
+export const ehFigura = (f: FormaCartao) => !!FIGURAS[f];
+
+const ARGS: Record<string, number> = { M: 2, L: 2, C: 6, Q: 4, A: 7, Z: 0 };
+
+/**
+ * A shape's outline in mm for a card of `largura` × `altura`. `folga` (mm)
+ * pulls it inward (frame inside the card) or, negative, outward (bleed).
+ */
+export function caminhoDaFigura(forma: FormaCartao, largura: number, altura: number, folga = 0): string {
+  const f = FIGURAS[forma];
+  if (!f) return "";
+  const kx = (largura - 2 * folga) / largura;
+  const ky = (altura - 2 * folga) / altura;
+  const X = (v: number) => +(largura / 2 + ((v * largura) / 100 - largura / 2) * kx).toFixed(3);
+  const Y = (v: number) => +(altura / 2 + ((v * altura) / 100 - altura / 2) * ky).toFixed(3);
+  const t = f.d.match(/[MLCQAZ]|-?\d*\.?\d+/g) ?? [];
+  const out: string[] = [];
+  let i = 0;
+  while (i < t.length) {
+    const cmd = t[i++];
+    const n = t.slice(i, i + ARGS[cmd]).map(Number);
+    i += ARGS[cmd];
+    if (cmd === "A") out.push(`A${+((n[0] * largura * kx) / 100).toFixed(3)} ${+((n[1] * altura * ky) / 100).toFixed(3)} ${n[2]} ${n[3]} ${n[4]} ${X(n[5])} ${Y(n[6])}`);
+    else if (cmd === "Z") out.push("Z");
+    else out.push(cmd + n.map((v, j) => (j % 2 ? Y(v) : X(v))).join(" "));
+  }
+  return out.join(" ");
+}
+
+/**
+ * Drawings that go on top of any card (2026-11-12, "Desenhos"): clean line
+ * art printed in the card's ink colour as SVG (cartoes/desenhos.tsx). Each
+ * is square; `x`/`y` = its centre in mm from the card's top-left corner,
+ * `tam` = its side in mm.
+ */
+export const DESENHOS = {
+  arvore: "Árvore",
+  estrela: "Estrela",
+  sino: "Sino",
+  bola: "Bola",
+  laco: "Laço",
+  floco: "Floco de neve",
+  presente: "Presente",
+  guirlanda: "Guirlanda",
+  gorro: "Gorro",
+  tacas: "Taças brindando",
+  fogos: "Fogos",
+  relogio: "Relógio",
+  estrelinhas: "Estrelinhas",
+  concha: "Concha",
+  "estrela-do-mar": "Estrela-do-mar",
+  onda: "Onda",
+  coracao: "Coração",
+  gaivota: "Gaivotas",
+} as const;
+export type DesenhoId = keyof typeof DESENHOS;
+export const GRUPOS_DESENHOS: { nome: string; ids: DesenhoId[] }[] = [
+  { nome: "Natal", ids: ["arvore", "estrela", "sino", "bola", "laco", "floco", "presente", "guirlanda", "gorro"] },
+  { nome: "Ano Novo", ids: ["tacas", "fogos", "relogio", "estrelinhas"] },
+  { nome: "Praia e outros", ids: ["concha", "estrela-do-mar", "onda", "coracao", "gaivota"] },
+];
+export type Desenho = { id: DesenhoId; x: number; y: number; tam: number; espelhar: boolean };
+export const MAX_DESENHOS = 12;
 
 export type Cartao = {
   id: string;
@@ -122,6 +248,8 @@ export type Cartao = {
   cantos: boolean;
   /** where the atelier dragged each piece (missing = automatic place) */
   pos: Posicoes;
+  /** drawings on top (max MAX_DESENHOS) */
+  desenhos: Desenho[];
 };
 
 export const TAMANHOS: { nome: string; largura: number; altura: number }[] = [
@@ -162,6 +290,7 @@ export const LIMITES = {
   tamTexto: [6, 18],
   logoTam: [8, 50],
   qrTam: [12, 80],
+  desenho: [5, 80],
 } as const;
 
 export type Contato = { whatsapp: string; instagram: string; site: string };
@@ -205,6 +334,7 @@ const base: Omit<Cartao, "id" | "nome" | "tipo"> = {
   lista: [],
   cantos: false,
   pos: {},
+  desenhos: [],
 };
 
 /**
@@ -438,6 +568,86 @@ export function modelosProntos(k: Contato): Cartao[] {
       ],
       rodape: ig,
     },
+    // seasonal (2026-11-12): shapes + drawings, still kraft + black ink
+    {
+      ...base,
+      id: "pronto-natal-arvore",
+      nome: "Natal – árvore",
+      tipo: "livre",
+      forma: "arvore",
+      largura: 80,
+      altura: 100,
+      moldura: true,
+      fonteTitulo: "greatvibes",
+      fonteTexto: "cormorant",
+      tamTitulo: 20,
+      tamTexto: 8,
+      logoTam: 12,
+      titulo: "Feliz\nNatal",
+      desenhos: [{ id: "estrela", x: 40, y: 13, tam: 9, espelhar: false }],
+    },
+    {
+      ...base,
+      id: "pronto-natal-cartao",
+      nome: "Natal – cartão",
+      tipo: "livre",
+      forma: "arredondado",
+      largura: 100,
+      altura: 70,
+      fonteTitulo: "greatvibes",
+      fonteTexto: "cormorant",
+      tamTitulo: 26,
+      tamTexto: 10,
+      logoTam: 11,
+      titulo: "Feliz Natal",
+      texto: "Que o seu Natal seja leve\ncomo um fim de tarde na praia.",
+      desenhos: [
+        { id: "floco", x: 13, y: 13, tam: 12, espelhar: false },
+        { id: "bola", x: 87, y: 14, tam: 14, espelhar: false },
+        { id: "arvore", x: 13, y: 55, tam: 18, espelhar: false },
+        { id: "presente", x: 87, y: 56, tam: 15, espelhar: false },
+      ],
+    },
+    {
+      ...base,
+      id: "pronto-natal-bola",
+      nome: "Natal – bola De/Para",
+      tipo: "depara",
+      forma: "bola",
+      largura: 80,
+      altura: 80,
+      furo: true,
+      moldura: true,
+      fonteTitulo: "greatvibes",
+      fonteTexto: "dancing",
+      tamTitulo: 16,
+      tamTexto: 10,
+      logoTam: 10,
+      titulo: "Feliz Natal",
+      dePara: true,
+    },
+    {
+      ...base,
+      id: "pronto-ano-novo",
+      nome: "Ano Novo",
+      tipo: "livre",
+      forma: "arredondado",
+      largura: 100,
+      altura: 70,
+      fonteTitulo: "parisienne",
+      fonteTexto: "cormorant",
+      tamTitulo: 26,
+      tamTexto: 10,
+      logoTam: 11,
+      titulo: "Feliz Ano Novo!",
+      texto: "Que o ano que chega venha com\nmuito sol, mar e boas histórias.",
+      desenhos: [
+        { id: "estrelinhas", x: 13, y: 13, tam: 12, espelhar: false },
+        { id: "fogos", x: 87, y: 15, tam: 16, espelhar: false },
+        { id: "tacas", x: 14, y: 54, tam: 19, espelhar: false },
+        { id: "relogio", x: 87, y: 56, tam: 14, espelhar: false },
+      ],
+    },
   ];
 }
 
@@ -469,15 +679,16 @@ export function normalizarCartao(v: unknown, nivel = 0): Cartao | null {
   const o = v as Record<string, unknown>;
   const id = typeof o.id === "string" && /^[a-z0-9-]{3,40}$/.test(o.id) ? o.id : null;
   if (!id) return null;
-  const forma = um(o.forma, ["retangulo", "arredondado", "redondo", "etiqueta"] as const, "retangulo");
+  const forma = um(o.forma, FORMAS, "retangulo");
   const largura = num(o.largura, LIMITES.largura, 90);
+  const altura = forma === "redondo" ? largura : num(o.altura, LIMITES.altura, 50);
   return {
     id,
     nome: texto(o.nome, 60).trim() || "Meu cartão",
     tipo: um(o.tipo, ["visita", "depara", "aniversario", "obrigado", "cuidados", "passaporte", "livre"] as const, "livre"),
     forma,
     largura,
-    altura: forma === "redondo" ? largura : num(o.altura, LIMITES.altura, 50),
+    altura,
     fundo: cor(o.fundo, "#ffffff"),
     cor: cor(o.cor, "#241f1a"),
     destaque: cor(o.destaque, "#c1622f"),
@@ -510,7 +721,28 @@ export function normalizarCartao(v: unknown, nivel = 0): Cartao | null {
       .map((i) => ({ marca: um((i as ItemLista)?.marca, MARCAS, "ponto"), texto: texto((i as ItemLista)?.texto, 120) })),
     cantos: o.cantos === true,
     pos: posicoes(o.pos),
+    desenhos: desenhos(o.desenhos, largura, altura),
   };
+}
+
+/** Known drawings only, at most MAX_DESENHOS, centre kept on the card. */
+function desenhos(v: unknown, largura: number, altura: number): Desenho[] {
+  if (!Array.isArray(v)) return [];
+  const out: Desenho[] = [];
+  for (const d of v) {
+    if (out.length >= MAX_DESENHOS) break;
+    if (!d || typeof d !== "object") continue;
+    const o = d as Record<string, unknown>;
+    if (typeof o.id !== "string" || !Object.prototype.hasOwnProperty.call(DESENHOS, o.id)) continue;
+    out.push({
+      id: o.id as DesenhoId,
+      x: num(o.x, [0, largura], largura / 2),
+      y: num(o.y, [0, altura], altura / 2),
+      tam: num(o.tam, LIMITES.desenho, 15),
+      espelhar: o.espelhar === true,
+    });
+  }
+  return out;
 }
 
 /** How many fit on an A4 sheet (8 mm margins, 3 mm between cards). */
@@ -586,6 +818,12 @@ export function modeloNoVerso(c: Cartao, m: Cartao): Cartao {
     furo: c.furo,
     verso: null,
     pos: k < 1 ? {} : { ...m.pos },
+    desenhos: m.desenhos.map((d) => ({
+      ...d,
+      x: Math.round(((d.x * c.largura) / m.largura) * 2) / 2,
+      y: Math.round(((d.y * c.altura) / m.altura) * 2) / 2,
+      tam: Math.max(LIMITES.desenho[0], Math.round(d.tam * k * 2) / 2),
+    })),
     tamTitulo: enc(m.tamTitulo, LIMITES.tamTitulo),
     tamTexto: enc(m.tamTexto, LIMITES.tamTexto),
     logoTam: enc(m.logoTam, LIMITES.logoTam),
@@ -609,6 +847,7 @@ export function novoVerso(c: Cartao): Cartao {
     de: "",
     qr: "",
     pos: {},
+    desenhos: [],
     logo: "topo",
     alinhar: "centro",
     cantos: false,
@@ -655,6 +894,9 @@ export function versoDaPagina(pagina: Colocado[]): Colocado[] {
  * cards can't be folded (two circles only touch at a point): they come out
  * without the back.
  */
+/** Front and back fold apart only along a straight edge (not round / seasonal shapes). */
+export const dobravel = (c: Pick<Cartao, "forma">) => c.forma !== "redondo" && !ehFigura(c.forma);
+
 export function montarDobradas(cartoes: Cartao[]): { paginas: Colocado[][]; grandes: Cartao[] } {
   // Two shapes of pair, keep the one with fewer sheets: side by side (fold on
   // the shared side edge) or stacked (back above, upside down, fold on the top
@@ -664,7 +906,7 @@ export function montarDobradas(cartoes: Cartao[]): { paginas: Colocado[][]; gran
   const montar = (emPe: boolean) => {
     const original = new Map<Cartao, Cartao>();
     const pares = cartoes.map((c) => {
-      if (!c.verso || c.forma === "redondo") return { ...c, verso: null };
+      if (!c.verso || !dobravel(c)) return { ...c, verso: null };
       const par: Cartao = emPe ? { ...c, altura: c.altura * 2 } : { ...c, largura: c.largura * 2 };
       original.set(par, c);
       return par;
@@ -723,7 +965,8 @@ export function montarFolhas(cartoes: Cartao[]): { paginas: Colocado[][]; grande
   const L = 194;
   const A = 281;
   const cabe = (w: number, h: number) => w <= L && h <= A;
-  const giravel = (c: Cartao) => c.forma !== "redondo" && c.largura !== c.altura;
+  // round and seasonal shapes keep their orientation (a tree lying down is wrong)
+  const giravel = (c: Cartao) => c.forma !== "redondo" && !ehFigura(c.forma) && c.largura !== c.altura;
   const grandes = cartoes.filter((c) => !cabe(c.largura, c.altura) && !(giravel(c) && cabe(c.altura, c.largura)));
   const cabem = cartoes.filter((c) => !grandes.includes(c));
   const tam = (k: Colocado) => (k.girado ? { w: k.c.altura, h: k.c.largura } : { w: k.c.largura, h: k.c.altura });

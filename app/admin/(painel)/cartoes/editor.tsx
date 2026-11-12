@@ -4,7 +4,12 @@ import { useLayoutEffect, useRef, useState, useSyncExternalStore, useTransition,
 import { createPortal, flushSync } from "react-dom";
 import {
   CORES,
+  DESENHOS,
+  ehFigura,
+  FIGURAS,
   FONTES,
+  GRUPOS_DESENHOS,
+  MAX_DESENHOS,
   ICONES_CUIDADO,
   LIMITES,
   LOGOS,
@@ -26,15 +31,16 @@ import {
   TAMANHOS,
   versoDe,
   type Cartao,
+  type DesenhoId,
   type FormaCartao,
   type IconeCuidado,
   type LogoCor,
   type Marca,
-  type Parte,
 } from "@/lib/cartoes-modelo";
 import { avisar, btnPrimary, btnSecondary, Card, inputClass } from "../../_ui";
 import { excluirCartaoAction, salvarCartaoAction } from "../../actions";
-import { CartaoVisual, IconeCuidadoSvg, MarcaSvg, type Edicao } from "./cartao-visual";
+import { CartaoVisual, IconeCuidadoSvg, MarcaSvg, type Edicao, type Peca } from "./cartao-visual";
+import { DesenhoSvg } from "./desenhos";
 import {
   AbaFolha,
   BotoesImprimir,
@@ -53,6 +59,9 @@ import { FAMILIA } from "./fontes";
 
 const MM = 96 / 25.4; // CSS px per mm
 
+/** Where a piece is: a part's offset from its automatic place, or a drawing's centre (mm). */
+const posDe = (c: Cartao, p: Peca) => (typeof p === "number" ? { x: c.desenhos[p]?.x ?? 0, y: c.desenhos[p]?.y ?? 0 } : (c.pos[p] ?? { x: 0, y: 0 }));
+
 /** The card at real size, scaled down to fit the box. */
 function Escalado({
   c,
@@ -66,9 +75,9 @@ function Escalado({
   max?: number;
   maxAltura: number;
   corte?: boolean;
-  selecionado?: Parte | null;
+  selecionado?: Peca | null;
   /** given: the preview lets pieces be dragged (offset in mm; null = just selected) */
-  onMover?: (parte: Parte, pos: { x: number; y: number } | null) => void;
+  onMover?: (peca: Peca, pos: { x: number; y: number } | null) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [largura, setLargura] = useState(max ?? 320);
@@ -90,7 +99,7 @@ function Escalado({
           e.preventDefault();
           e.stopPropagation();
           onMover(parte, null);
-          const inicio = { px: e.clientX, py: e.clientY, x: c.pos[parte]?.x ?? 0, y: c.pos[parte]?.y ?? 0 };
+          const inicio = { px: e.clientX, py: e.clientY, ...posDe(c, parte) };
           const mover = (ev: PointerEvent) => {
             const x = Math.round((inicio.x + (ev.clientX - inicio.px) / (s * MM)) * 2) / 2;
             const y = Math.round((inicio.y + (ev.clientY - inicio.py) / (s * MM)) * 2) / 2;
@@ -220,6 +229,10 @@ const SETAS: [string, number, number][] = [
   ["", 0, 0],
 ];
 
+/** where each new drawing lands, in drawing sizes from the card's middle (first one right in the middle) */
+const PERTO = [[0, 0], [-1, -1], [1, 1], [1, -1], [-1, 1], [0, -1], [0, 1], [-1, 0], [1, 0]] as const;
+/** heights (mm) offered for seasonal shapes; the width follows the shape */
+const TAMANHOS_FIGURA = [60, 80, 100, 130];
 const cm = (mm: number) => String(mm / 10).replace(".", ",");
 const deCm = (v: string) => Math.round(Number(v.replace(",", ".")) * 10);
 const novoId = () => `meu-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -256,7 +269,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
   const [linhaCorte, setLinhaCorte] = useState(true);
   const [aba, setAba] = useState<"editar" | "folha">("editar");
   /** piece picked in the preview (dashed outline, arrows move it) */
-  const [selecionado, setSelecionado] = useState<Parte | null>(null);
+  const [selecionado, setSelecionado] = useState<Peca | null>(null);
   const [itensFolha, gravarFolha] = useFolha();
   const folhaMista = cartoesDaFolha(itensFolha);
   const naFolha = itensFolha.reduce((n, i) => n + i.qtd, 0);
@@ -303,9 +316,16 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
   const qtd = Math.max(1, Math.min(200, quantidade ?? (folha.total || 1)));
   const paginas = folha.total ? Math.ceil(qtd / folha.total) : 0;
 
-  function mover(parte: Parte, pos: { x: number; y: number } | null) {
+  function mover(parte: Peca, pos: { x: number; y: number } | null) {
     setSelecionado(parte);
     if (!pos) return;
+    if (typeof parte === "number") {
+      // a drawing: its centre stays on the card
+      const x = Math.max(0, Math.min(c.largura, pos.x));
+      const y = Math.max(0, Math.min(c.altura, pos.y));
+      mudarDesenho(parte, { x, y });
+      return;
+    }
     setCartao((a) => {
       const p = { ...(lado === "verso" && a.verso ? a.verso : a).pos };
       if (pos.x === 0 && pos.y === 0) delete p[parte];
@@ -314,10 +334,33 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
     });
   }
   const empurrar = (dx: number, dy: number) => {
-    if (!selecionado) return;
-    const p = c.pos[selecionado] ?? { x: 0, y: 0 };
+    if (selecionado === null) return;
+    const p = posDe(c, selecionado);
     mover(selecionado, { x: p.x + dx, y: p.y + dy });
   };
+
+  function mudarDesenho(i: number, p: Partial<Cartao["desenhos"][number]>) {
+    setCartao((a) => {
+      const lista = (lado === "verso" && a.verso ? a.verso : a).desenhos;
+      return aplicar(a, { desenhos: lista.map((d, j) => (j === i ? { ...d, ...p } : d)) }, lado);
+    });
+  }
+  function porDesenho(id: DesenhoId) {
+    if (c.desenhos.length >= MAX_DESENHOS) return avisar("erro", "Já tem " + MAX_DESENHOS + " desenhos neste lado. Tire algum antes.");
+    const tam = Math.round(Math.max(8, Math.min(30, Math.min(c.largura, c.altura) * 0.22)));
+    // a little apart from the last one, so they don't land on top of each other
+    const n = c.desenhos.length;
+    const [dx, dy] = PERTO[n % PERTO.length];
+    const x = Math.round(Math.max(tam / 2, Math.min(c.largura - tam / 2, c.largura / 2 + dx * tam * 0.7)));
+    const y = Math.round(Math.max(tam / 2, Math.min(c.altura - tam / 2, c.altura / 2 + dy * tam * 0.7)));
+    mudar({ desenhos: [...c.desenhos, { id, x, y, tam, espelhar: false }] });
+    setSelecionado(n);
+  }
+  function tirarDesenho(i: number) {
+    setSelecionado(null);
+    mudar({ desenhos: c.desenhos.filter((_, j) => j !== i) });
+  }
+  const desenhoSel = typeof selecionado === "number" ? c.desenhos[selecionado] : undefined;
 
   function porNaFolha() {
     if (escolhida) {
@@ -340,7 +383,14 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
   }
 
   function mudarForma(forma: FormaCartao) {
-    if (forma === "redondo") {
+    const f = FIGURAS[forma];
+    if (f) {
+      // seasonal shape: its own proportions, logo on top, centred; corners don't fit a tree
+      mudar({ forma, largura: f.largura, altura: f.altura, logo: "topo", alinhar: "centro", cantos: false });
+      // drawings stay on the card
+      const dentro = (l: Cartao["desenhos"]) => l.map((d) => ({ ...d, x: Math.min(d.x, f.largura), y: Math.min(d.y, f.altura) }));
+      setCartao((a) => ({ ...a, desenhos: dentro(a.desenhos), verso: a.verso ? { ...a.verso, desenhos: dentro(a.verso.desenhos) } : null }));
+    } else if (forma === "redondo") {
       const lado = Math.max(c.largura, c.altura) > 100 ? 80 : Math.min(c.largura, c.altura);
       mudar({ forma, largura: lado, altura: lado, logo: "topo", alinhar: "centro" });
     } else mudar({ forma });
@@ -369,6 +419,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
     });
   }
 
+  const figura = FIGURAS[c.forma];
   const tamanhoAtual = TAMANHOS.findIndex((t) => t.largura === c.largura && t.altura === c.altura);
   const miniatura = (m: Cartao, meu: boolean) => (
     <li key={m.id} className="relative">
@@ -407,6 +458,79 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
       ) : null}
     </li>
   );
+
+
+  /** what is picked in the preview: arrows (1 mm), and for a drawing its size / mirror / remove */
+  const painelMover =
+    selecionado !== null ? (
+      <>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-semibold text-ink">
+            Movendo: {typeof selecionado === "number" ? "Desenho" + (desenhoSel ? " – " + DESENHOS[desenhoSel.id] : "") : NOMES_PARTES[selecionado]}
+          </p>
+          <button type="button" onClick={() => setSelecionado(null)} className="rounded-full px-3 py-2 text-sm font-medium text-ink-soft hover:text-ink">
+            Pronto
+          </button>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-4">
+          <div className="grid grid-cols-3 gap-1">
+            {SETAS.map(([seta, dx, dy], i) =>
+              seta ? (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => empurrar(dx, dy)}
+                  className="grid h-11 w-11 place-items-center rounded-lg border border-line bg-paper text-lg text-ink hover:border-wood"
+                  aria-label={"Mover 1 mm " + seta}
+                >
+                  {seta}
+                </button>
+              ) : (
+                <span key={i} />
+              ),
+            )}
+          </div>
+          {typeof selecionado === "number" ? (
+            desenhoSel ? (
+              <div className="min-w-[10rem] flex-1 space-y-3">
+                <Deslizar
+                  texto="Tamanho"
+                  valor={desenhoSel.tam}
+                  faixa={[LIMITES.desenho[0], Math.min(LIMITES.desenho[1], Math.max(c.largura, c.altura))]}
+                  passo={1}
+                  unidade="mm"
+                  onChange={(v) => mudarDesenho(selecionado, { tam: v })}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    aria-pressed={desenhoSel.espelhar}
+                    onClick={() => mudarDesenho(selecionado, { espelhar: !desenhoSel.espelhar })}
+                    className={`rounded-full border px-4 py-2.5 text-sm font-medium transition ${desenhoSel.espelhar ? "border-espresso bg-espresso text-paper" : "border-line bg-paper text-ink hover:border-wood"}`}
+                  >
+                    Espelhar
+                  </button>
+                  <button type="button" onClick={() => tirarDesenho(selecionado)} className="rounded-full border border-line bg-paper px-4 py-2.5 text-sm font-medium text-clay transition hover:border-clay">
+                    Tirar
+                  </button>
+                </div>
+              </div>
+            ) : null
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xs text-ink-soft">Cada toque move 1 mm.</p>
+              <button type="button" onClick={() => mover(selecionado, { x: 0, y: 0 })} className={btnSecondary} disabled={!c.pos[selecionado]}>
+                Voltar ao lugar
+              </button>
+            </div>
+          )}
+        </div>
+      </>
+    ) : (
+      <p className="text-sm text-ink-soft">
+        <strong className="text-ink">Para mover:</strong> arraste a logo, um texto ou um desenho na prévia. Toque nele para ajustar com as setas.
+      </p>
+    );
 
   return (
     <div className="space-y-6">
@@ -473,8 +597,49 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                 <Pilulas<FormaCartao>
                   valor={c.forma}
                   onChange={mudarForma}
-                  opcoes={(Object.keys(NOMES_FORMAS) as FormaCartao[]).map((f) => [f, NOMES_FORMAS[f]])}
+                  opcoes={(Object.keys(NOMES_FORMAS) as FormaCartao[]).filter((f) => !ehFigura(f)).map((f) => [f, NOMES_FORMAS[f]])}
                 />
+                <div>
+                  <span className="text-sm font-semibold text-ink">Formatos de época</span>
+                  <span className="mt-0.5 block text-xs text-ink-soft">O cartão sai recortado no desenho. A linha de corte segue o contorno.</span>
+                  <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                    {(Object.keys(FIGURAS) as FormaCartao[]).map((f) => (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => mudarForma(f)}
+                        aria-pressed={c.forma === f}
+                        className={`flex flex-col items-center gap-1 rounded-2xl border px-2 py-2.5 text-xs font-semibold transition ${
+                          c.forma === f ? "border-espresso bg-espresso text-paper" : "border-line bg-paper text-ink hover:border-wood"
+                        }`}
+                      >
+                        <svg viewBox="-2 -2 104 104" className="h-9 w-9" aria-hidden>
+                          <path d={FIGURAS[f]!.d} fill={c.forma === f ? "#c9a47a" : "none"} stroke="currentColor" strokeWidth={4} strokeLinejoin="round" />
+                        </svg>
+                        {NOMES_FORMAS[f]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {figura ? (
+                  <Rotulo texto="Tamanho">
+                    <select
+                      className={inputClass}
+                      value={TAMANHOS_FIGURA.findIndex((a) => Math.round((figura.largura * a) / figura.altura) === c.largura && a === c.altura)}
+                      onChange={(e) => {
+                        const a = TAMANHOS_FIGURA[Number(e.target.value)];
+                        if (a) mudar({ largura: Math.round((figura.largura * a) / figura.altura), altura: a });
+                      }}
+                    >
+                      <option value={-1}>Do meu jeito (abaixo)</option>
+                      {TAMANHOS_FIGURA.map((a, i) => (
+                        <option key={a} value={i}>
+                          {["Pequena", "Média", "Grande", "Bem grande"][i]} ({cm(Math.round((figura.largura * a) / figura.altura))} × {cm(a)} cm)
+                        </option>
+                      ))}
+                    </select>
+                  </Rotulo>
+                ) : (
                 <Rotulo texto="Tamanho">
                   <select
                     className={inputClass}
@@ -494,6 +659,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                     ))}
                   </select>
                 </Rotulo>
+                )}
                 <div className="flex flex-wrap items-end gap-3">
                   <Rotulo texto={c.forma === "redondo" ? "Diâmetro (cm)" : "Largura (cm)"}>
                     <input
@@ -518,9 +684,11 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                           className={`${inputClass} w-28`}
                         />
                       </Rotulo>
-                      <button type="button" className={btnSecondary} onClick={() => mudar({ largura: c.altura, altura: c.largura })}>
-                        Deitar / pôr em pé
-                      </button>
+                      {figura ? null : (
+                        <button type="button" className={btnSecondary} onClick={() => mudar({ largura: c.altura, altura: c.largura })}>
+                          Deitar / pôr em pé
+                        </button>
+                      )}
                     </>
                   ) : null}
                 </div>
@@ -775,12 +943,14 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                   onChange={(v) => mudar({ imprimirFundo: v })}
                 />
                 <Marcar texto="Moldura fina por dentro" valor={c.moldura} onChange={(v) => mudar({ moldura: v })} />
-                <Marcar
-                  texto="Cantos decorativos"
-                  dica="Dois cantos em L, um no alto à direita e outro embaixo à esquerda."
-                  valor={c.cantos}
-                  onChange={(v) => mudar({ cantos: v })}
-                />
+                {figura ? null : (
+                  <Marcar
+                    texto="Cantos decorativos"
+                    dica="Dois cantos em L, um no alto à direita e outro embaixo à esquerda."
+                    valor={c.cantos}
+                    onChange={(v) => mudar({ cantos: v })}
+                  />
+                )}
                 <div>
                   <span className="text-sm font-semibold text-ink">Logo do Ateliê</span>
                   <div className="mt-1.5">
@@ -805,6 +975,79 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                   </div>
                 </div>
                 <Deslizar texto="Tamanho da logo" valor={c.logoTam} faixa={LIMITES.logoTam} passo={1} unidade="mm" onChange={(v) => mudar({ logoTam: v })} />
+              </Passo>
+
+              <Passo n={5} titulo="Desenhos">
+                <p className="text-sm text-ink-soft">
+                  Toque num desenho para pôr no cartão{cartao.verso ? (lado === "verso" ? " (no verso)" : " (na frente)") : ""}. Depois arraste na prévia,
+                  mude o tamanho ou espelhe. Sai na cor das letras (preto no kraft). Até {MAX_DESENHOS} por lado.
+                </p>
+                {GRUPOS_DESENHOS.map((g) => (
+                  <div key={g.nome}>
+                    <h3 className="mb-2 text-sm font-semibold text-ink">{g.nome}</h3>
+                    <ul className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                      {g.ids.map((id) => (
+                        <li key={id}>
+                          <button
+                            type="button"
+                            onClick={() => porDesenho(id)}
+                            disabled={c.desenhos.length >= MAX_DESENHOS}
+                            className="flex h-full w-full flex-col items-center gap-1 rounded-2xl border border-line bg-paper px-1.5 py-2.5 text-center text-xs font-medium leading-tight text-ink transition hover:border-wood active:scale-95 disabled:opacity-40"
+                          >
+                            <DesenhoSvg id={id} style={{ width: 40, height: 40 }} />
+                            <span className="text-ink">{DESENHOS[id]}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+                {c.desenhos.length ? (
+                  <div className="lg:hidden">
+                    <p className="mb-2 text-sm font-semibold text-ink">No cartão ({c.desenhos.length})</p>
+                    {/* on the phone the big preview is far below: a small one here to drag the drawings */}
+                    <div className="rounded-2xl bg-[repeating-conic-gradient(#f3efe8_0_25%,#fbf9f5_0_50%)] bg-[length:18px_18px] p-3">
+                      <Escalado c={cVisto} maxAltura={280} selecionado={selecionado} onMover={mover} />
+                    </div>
+                    <ul className="mt-3 flex flex-wrap gap-2">
+                      {c.desenhos.map((d, i) => (
+                        <li key={i}>
+                          <button
+                            type="button"
+                            onClick={() => setSelecionado(i)}
+                            aria-pressed={selecionado === i}
+                            className={`flex items-center gap-1.5 rounded-full border py-1.5 pl-2 pr-3 text-sm font-medium ${
+                              selecionado === i ? "border-espresso bg-espresso text-paper" : "border-line bg-paper text-ink"
+                            }`}
+                          >
+                            <DesenhoSvg id={d.id} espelhar={d.espelhar} style={{ width: 24, height: 24 }} />
+                            {DESENHOS[d.id]}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    {typeof selecionado === "number" ? <div className="mt-3 rounded-2xl border border-line/70 bg-canvas p-4">{painelMover}</div> : null}
+                  </div>
+                ) : null}
+                {c.desenhos.length ? (
+                  <ul className="hidden flex-wrap gap-2 lg:flex">
+                    {c.desenhos.map((d, i) => (
+                      <li key={i}>
+                        <button
+                          type="button"
+                          onClick={() => setSelecionado(i)}
+                          aria-pressed={selecionado === i}
+                          className={`flex items-center gap-1.5 rounded-full border py-1.5 pl-2 pr-3 text-sm font-medium ${
+                            selecionado === i ? "border-espresso bg-espresso text-paper" : "border-line bg-paper text-ink hover:border-wood"
+                          }`}
+                        >
+                          <DesenhoSvg id={d.id} espelhar={d.espelhar} style={{ width: 24, height: 24 }} />
+                          {DESENHOS[d.id]}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </Passo>
             </div>
 
@@ -945,45 +1188,7 @@ export function EditorCartoes({ prontos, salvosIniciais, passaportes }: { pronto
                   Tamanho real: {cm(c.largura)} × {cm(c.altura)} cm
                 </p>
                 <div className="mt-4 rounded-2xl border border-line/70 bg-canvas p-4">
-                  {selecionado ? (
-                    <>
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-ink">Movendo: {NOMES_PARTES[selecionado]}</p>
-                        <button type="button" onClick={() => setSelecionado(null)} className="text-xs font-medium text-ink-soft hover:text-ink">
-                          Pronto
-                        </button>
-                      </div>
-                      <div className="mt-3 flex items-center gap-4">
-                        <div className="grid grid-cols-3 gap-1">
-                          {SETAS.map(([seta, dx, dy], i) =>
-                            seta ? (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={() => empurrar(dx, dy)}
-                                className="grid h-9 w-9 place-items-center rounded-lg border border-line bg-paper text-ink hover:border-wood"
-                                aria-label={"Mover 1 mm " + seta}
-                              >
-                                {seta}
-                              </button>
-                            ) : (
-                              <span key={i} />
-                            ),
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-xs text-ink-soft">Cada toque move 1 mm.</p>
-                          <button type="button" onClick={() => mover(selecionado, { x: 0, y: 0 })} className={btnSecondary} disabled={!c.pos[selecionado]}>
-                            Voltar ao lugar
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <p className="text-sm text-ink-soft">
-                      <strong className="text-ink">Para mover:</strong> arraste a logo ou qualquer texto na prévia. Toque nele para ajustar com as setas.
-                    </p>
-                  )}
+                  {painelMover}
                   {Object.keys(c.pos).length ? (
                     <button
                       type="button"

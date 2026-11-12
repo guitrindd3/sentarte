@@ -1,8 +1,9 @@
 "use client";
 
 import QRCode from "qrcode";
-import { useEffect, useLayoutEffect, useRef, type CSSProperties, type PointerEvent as PE, type ReactNode } from "react";
-import { LOGOS, type Cartao, type IconeCuidado, type Marca, type Parte } from "@/lib/cartoes-modelo";
+import { useEffect, useId, useLayoutEffect, useRef, type CSSProperties, type PointerEvent as PE, type ReactNode } from "react";
+import { caminhoDaFigura, FIGURAS, LOGOS, type Cartao, type IconeCuidado, type Marca, type Parte } from "@/lib/cartoes-modelo";
+import { DesenhoSvg } from "./desenhos";
 import { FAMILIA } from "./fontes";
 
 // One card drawn at its real printed size (mm / pt). The editor shows it
@@ -182,10 +183,13 @@ function Qr({ texto, tam }: { texto: string; tam: number }) {
 }
 
 /** In the editor preview: pieces can be grabbed and dragged. */
-export type Edicao = { selecionado: Parte | null; onPegar: (parte: Parte, e: PE<HTMLElement>) => void };
+/** A movable piece: one of the parts, or a drawing (its index in `c.desenhos`). */
+export type Peca = Parte | number;
+export type Edicao = { selecionado: Peca | null; onPegar: (peca: Peca, e: PE<Element>) => void };
 
 export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c: Cartao; semFundo?: boolean; corte?: boolean; edicao?: Edicao }) {
   const { caixa, conteudo } = useEncaixar();
+  const idSvg = "c" + useId().replace(/[^a-zA-Z0-9]/g, "");
   /** style + handlers that let a piece move (its offset from the automatic place) */
   const m = (parte: Parte, base: CSSProperties = {}) => {
     const p = c.pos?.[parte];
@@ -202,11 +206,23 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
   };
   const menor = Math.min(c.largura, c.altura);
   const redondo = c.forma === "redondo";
+  /** seasonal shape (tree, star…): background and cut line are its SVG outline, content stays in its safe area */
+  const figura = FIGURAS[c.forma];
+  const contorno = figura ? caminhoDaFigura(c.forma, c.largura, c.altura) : "";
   const pad = redondo ? c.largura * 0.15 : Math.min(7, Math.max(3, menor * 0.08));
   const corteTag = Math.min(c.largura * 0.2, 10);
   const furoTam = Math.max(3.5, Math.min(5, menor * 0.07));
-  const furoTopo = redondo ? c.largura * 0.06 : c.forma === "etiqueta" ? corteTag * 0.55 : 3;
-  const topoExtra = c.furo || c.forma === "etiqueta" ? furoTopo + furoTam + 1.5 - (redondo ? pad * 0.6 : pad * 0.4) : 0;
+  const furoTopo = figura
+    ? figura.furoY * c.altura - furoTam / 2
+    : redondo
+      ? c.largura * 0.06
+      : c.forma === "etiqueta"
+        ? corteTag * 0.55
+        : 3;
+  const topoExtra = !figura && (c.furo || c.forma === "etiqueta") ? furoTopo + furoTam + 1.5 - (redondo ? pad * 0.6 : pad * 0.4) : 0;
+  const padding = figura
+    ? `${Math.max(figura.seguro[1] * c.altura, c.furo ? figura.furoY * c.altura + furoTam / 2 + 1.5 : 0)}mm ${(1 - figura.seguro[2]) * c.largura}mm ${(1 - figura.seguro[3]) * c.altura}mm ${figura.seguro[0] * c.largura}mm`
+    : `${pad + Math.max(0, topoExtra)}mm ${pad}mm ${pad}mm`;
   const inset = Math.max(2, pad * 0.45);
   const raio = c.forma === "arredondado" ? `${Math.min(5, menor * 0.08)}mm` : redondo ? "50%" : "0";
   const esquerda = c.alinhar === "esquerda";
@@ -328,15 +344,44 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
         height: `${c.altura}mm`,
         position: "relative",
         flexShrink: 0,
+        color: c.cor,
       }}
     >
+      {figura ? (
+        // the shape itself: background and inner frame drawn as its outline (no clip-path: prints and turns into PDF the same everywhere)
+        <svg
+          aria-hidden
+          viewBox={`0 0 ${c.largura} ${c.altura}`}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none", printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}
+        >
+          {semFundo ? null : <path d={contorno} fill={c.fundo} />}
+          {c.moldura ? (
+            // inner frame at a true distance from the edge (a shrunk copy crossed the cut line at the tree's notches):
+            // the band between two strokes of the outline, kept inside it
+            <>
+              <defs>
+                <clipPath id={idSvg + "d"}>
+                  <path d={contorno} />
+                </clipPath>
+                <mask id={idSvg + "m"} maskUnits="userSpaceOnUse" x={-5} y={-5} width={c.largura + 10} height={c.altura + 10}>
+                  <path d={contorno} fill="none" stroke="#fff" strokeWidth={2 * inset + 0.35} strokeLinejoin="round" />
+                  <path d={contorno} fill="none" stroke="#000" strokeWidth={2 * inset - 0.35} strokeLinejoin="round" />
+                </mask>
+              </defs>
+              <g clipPath={`url(#${idSvg}d)`}>
+                <rect x={0} y={0} width={c.largura} height={c.altura} fill={c.destaque} mask={`url(#${idSvg}m)`} />
+              </g>
+            </>
+          ) : null}
+        </svg>
+      ) : null}
       <div
         ref={caixa}
         style={{
           position: "absolute",
           inset: 0,
           overflow: "hidden",
-          background: semFundo ? "transparent" : c.fundo,
+          background: semFundo || figura ? "transparent" : c.fundo,
           color: c.cor,
           borderRadius: raio,
           clipPath:
@@ -347,10 +392,10 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
           WebkitPrintColorAdjust: "exact",
           display: "flex",
           flexDirection: "column",
-          padding: `${pad + Math.max(0, topoExtra)}mm ${pad}mm ${pad}mm`,
+          padding,
         }}
       >
-        {c.moldura && c.forma !== "etiqueta" ? (
+        {c.moldura && c.forma !== "etiqueta" && !figura ? (
           <span
             aria-hidden
             style={{
@@ -362,7 +407,7 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
             }}
           />
         ) : null}
-        {c.cantos ? (
+        {c.cantos && !figura ? (
           <>
             <span
               aria-hidden
@@ -442,6 +487,27 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
           ) : null}
         </div>
       </div>
+      {c.desenhos.map((d, i) => {
+        const sel = edicao?.selecionado === i;
+        return (
+          <DesenhoSvg
+            key={i}
+            id={d.id}
+            espelhar={d.espelhar}
+            style={{
+              position: "absolute",
+              left: `${d.x - d.tam / 2}mm`,
+              top: `${d.y - d.tam / 2}mm`,
+              width: `${d.tam}mm`,
+              height: `${d.tam}mm`,
+              ...(edicao
+                ? { cursor: "move", touchAction: "none", userSelect: "none", outline: sel ? "0.35mm dashed #c1622f" : undefined, outlineOffset: "0.7mm" }
+                : { pointerEvents: "none" }),
+            }}
+            onPointerDown={edicao ? (e) => edicao.onPegar(i, e) : undefined}
+          />
+        );
+      })}
       {corte ? (
         // cut line drawn around the shape itself: still there when the background is not printed (kraft)
         <svg
@@ -452,7 +518,9 @@ export function CartaoVisual({ c, semFundo = false, corte = false, edicao }: { c
           stroke="#8f8f8f"
           strokeWidth={0.25}
         >
-          {redondo ? (
+          {figura ? (
+            <path d={contorno} strokeLinejoin="round" />
+          ) : redondo ? (
             <circle cx={c.largura / 2} cy={c.altura / 2} r={c.largura / 2} />
           ) : c.forma === "etiqueta" ? (
             <polygon points={`${corteTag},0 ${c.largura - corteTag},0 ${c.largura},${corteTag} ${c.largura},${c.altura} 0,${c.altura} 0,${corteTag}`} />
