@@ -4,6 +4,38 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+/** Same name the layout reads (a constant exported from this client file would reach the server as a reference, not a string). */
+const COOKIE_MENU = "sentarte_menu";
+
+/**
+ * Shrinks the desktop sidebar to icons only, or opens it again (user
+ * 2026-11-13). Flips data-menu on the .admin wrapper (the CSS follows it) and
+ * remembers it in a cookie for a year.
+ */
+export function BotaoRecolher() {
+  const alternar = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const raiz = e.currentTarget.closest<HTMLElement>(".admin");
+    if (!raiz) return;
+    const novo = raiz.dataset.menu !== "curto";
+    raiz.dataset.menu = novo ? "curto" : "largo";
+    document.cookie = `${COOKIE_MENU}=${novo ? "curto" : "largo"}; path=/admin; max-age=31536000; samesite=lax`;
+  };
+  return (
+    <button
+      type="button"
+      onClick={alternar}
+      aria-label="Recolher ou mostrar o menu"
+      title="Recolher / mostrar o menu"
+      className="mt-6 flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium text-paper/50 transition hover:bg-paper/5 hover:text-paper group-data-[menu=curto]/admin:justify-center"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 shrink-0 transition-transform group-data-[menu=curto]/admin:rotate-180" aria-hidden>
+        <path d="M4 5.5v13M15 7l-5 5 5 5M10 12h10" />
+      </svg>
+      <span className="group-data-[menu=curto]/admin:hidden">Recolher menu</span>
+    </button>
+  );
+}
+
 const ITENS: { href: string; rotulo: string; icone: ReactNode }[] = [
   {
     href: "/admin",
@@ -139,14 +171,15 @@ export function NavLateral() {
             key={i.href}
             href={i.href}
             aria-current={on ? "page" : undefined}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.95rem] font-medium transition ${
+            title={i.rotulo}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.95rem] font-medium transition group-data-[menu=curto]/admin:justify-center ${
               on ? "bg-paper/10 text-paper" : "text-paper/65 hover:bg-paper/5 hover:text-paper"
             }`}
           >
             <span className={on ? "text-rattan" : ""}>
               <Icone>{i.icone}</Icone>
             </span>
-            {i.rotulo}
+            <span className="group-data-[menu=curto]/admin:sr-only">{i.rotulo}</span>
           </Link>
         );
       })}

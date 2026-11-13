@@ -928,3 +928,6 @@ User: "se já foi um sobre aquele assunto não mande outro a não ser que eu pe�
 ## 2026-11-13: text on each production photo + tag shows the model
 - Each production photo on the admin order has its own editable text box ("Salvar texto" shows when changed; `editarLegendaFotoAction` → `editarLegendaFoto`), up to `MAX_LEGENDA` 300 chars with line breaks; /acompanhar and the passport show it with `whitespace-pre-line`. The field above the upload is "Texto da próxima foto".
 - Passport tag subtitle is now the model, "Cadeira Sol" (`nomeNaEtiqueta`, " personalizado" dropped; no model → old "Cadeira Nº 0001"). `DadosPassaporte.modelo`; /admin/etiquetas passes it, the Cartões editor/Folha already had it. The number stays on the passport page the QR opens.
+
+## 2026-11-13: collapsible admin sidebar
+Desktop sidebar shrinks to icons ("Recolher menu" under the logo, `BotaoRecolher` in nav.tsx): flips `data-menu` curto/largo on the `.admin` wrapper (named group `group/admin`, classes `group-data-[menu=curto]/admin:*`; grid 16rem → 4.75rem) and saves cookie `sentarte_menu` (path /admin, 1 year), which the layout reads so pages open the same way. Labels become sr-only + `title` tooltips; "Sair" links hide when collapsed. Phones unchanged.

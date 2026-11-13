@@ -1,12 +1,13 @@
 import Image from "next/image";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
 import { estadoDaChave, githubConfigurado } from "@/lib/github-store";
 import { logoutAction, logoutTodosAction } from "../actions";
 import { StatusPublicacao, Toaster } from "../_ui";
 import { PainelPublicacao } from "../publicar";
-import { NavInferior, NavLateral } from "./nav";
+import { BotaoRecolher, NavInferior, NavLateral } from "./nav";
 
 export const dynamic = "force-dynamic";
 
@@ -14,19 +15,25 @@ export const dynamic = "force-dynamic";
 // on phones; the public site's header/footer are hidden here (ForaDoAdmin).
 export default async function PainelLayout({ children }: { children: React.ReactNode }) {
   if (!(await verifySession())) redirect("/admin/login");
+  // Desktop sidebar can shrink to icons only (user 2026-11-13); the choice is a cookie so the page opens the same way.
+  const curto = (await cookies()).get("sentarte_menu")?.value === "curto";
 
   return (
-    <div className="admin min-h-screen bg-canvas lg:grid lg:grid-cols-[16rem_1fr]">
+    <div
+      data-menu={curto ? "curto" : "largo"}
+      className="admin group/admin min-h-screen bg-canvas lg:grid lg:grid-cols-[16rem_1fr] lg:data-[menu=curto]:grid-cols-[4.75rem_1fr]"
+    >
       <div className="hidden bg-espresso lg:block">
-      <aside className="sticky top-0 flex h-screen flex-col px-4 py-6 text-paper">
-        <div className="flex items-center gap-3 px-2">
-          <Image src="/brand/logo.png" alt="" width={40} height={40} className="rounded-full bg-paper" />
-          <div>
+      <aside className="sticky top-0 flex h-screen flex-col overflow-y-auto px-4 py-6 text-paper [scrollbar-width:none] group-data-[menu=curto]/admin:px-2.5">
+        <div className="flex items-center gap-3 px-2 group-data-[menu=curto]/admin:justify-center group-data-[menu=curto]/admin:px-0">
+          <Image src="/brand/logo.png" alt="" width={40} height={40} className="shrink-0 rounded-full bg-paper" />
+          <div className="group-data-[menu=curto]/admin:hidden">
             <p className="font-serif text-lg font-medium leading-tight tracking-tight">SentArte</p>
             <p className="text-xs text-paper/55">Painel do ateliê</p>
           </div>
         </div>
-        <div className="mt-8">
+        <BotaoRecolher />
+        <div className="mt-4">
           <NavLateral />
         </div>
         <div className="mt-auto space-y-3 border-t border-paper/10 pt-4">
@@ -34,14 +41,15 @@ export default async function PainelLayout({ children }: { children: React.React
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-paper/80 transition hover:bg-paper/5 hover:text-paper"
+            title="Abrir o site"
+            className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-paper/80 transition hover:bg-paper/5 hover:text-paper group-data-[menu=curto]/admin:justify-center"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-4 w-4" aria-hidden>
               <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Abrir o site
+            <span className="group-data-[menu=curto]/admin:hidden">Abrir o site</span>
           </a>
-          <div className="flex items-center justify-between px-3 text-xs">
+          <div className="flex items-center justify-between px-3 text-xs group-data-[menu=curto]/admin:hidden">
             <form action={logoutAction}>
               <button type="submit" className="text-paper/60 underline-offset-2 hover:text-paper hover:underline">
                 Sair
