@@ -10,7 +10,7 @@ import { codigoDoPedido, noPagamento } from "@/lib/pedido";
 import { linkRastreio } from "@/lib/rastreio";
 import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
-import { definirEtapaAction, editarPassaporteAction, gerarPassaportesAction, recebiPorForaAction, salvarRastreioAction } from "../../../actions";
+import { definirEtapaAction, editarPassaporteAction, gerarPassaportesAction, recebiPorForaAction, reenviarEmailAction, salvarRastreioAction } from "../../../actions";
 import { codigoDoPassaporte, lerConfigPassaporte, lerPassaportes, numeroBonito, rotuloTipo } from "@/lib/passaporte";
 import { AdminForm, Card, Field, SaveButton } from "../../../_ui";
 import { btnSecondary, inputClass } from "../../../_classes";
@@ -348,6 +348,15 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
               <SaveButton>Salvar andamento</SaveButton>
               <span className="text-xs text-ink-soft">Escolher a etapa não manda nada: só vale depois de salvar.</span>
             </div>
+          </AdminForm>
+        ) : null}
+        {pago ? (
+          // each e-mail goes once by itself; sending one again is only by hand (user 2026-11-13)
+          <AdminForm action={reenviarEmailAction.bind(null, p.ref)} className="mt-3 flex flex-wrap items-center gap-3">
+            <button type="submit" className={btnSecondary}>
+              Reenviar o e-mail desta etapa
+            </button>
+            <span className="text-xs text-ink-soft">Cada aviso vai uma vez só, sozinho. Use aqui só se a cliente pedir de novo.</span>
           </AdminForm>
         ) : (
           <p className="text-sm text-ink-soft">As etapas aparecem quando o pagamento for aprovado.</p>

@@ -17,7 +17,7 @@ import { editarInteressado, excluirInteressado, excluirPedido, marcarPedido, nor
 import { excluirOrcamento, gravarOrcamento, lerOrcamento, type StatusOrcamento } from "@/lib/orcamentos";
 import { desligarGmail, desligarNtfy, estadoAvisos, ligarNtfy, mandarEmailAoCliente, salvarGmail, testarAvisos } from "@/lib/avisos";
 import { after } from "next/server";
-import { avisarEtapaAgora, esquecerAvisosDasEtapas, exemploDeLembrete, salvarConfigLembretes } from "@/lib/lembretes";
+import { avisarEtapaAgora, exemploDeLembrete, reenviarEmailDaEtapa, salvarConfigLembretes } from "@/lib/lembretes";
 import { criarCampanha, emailDaCampanha, LIMITE_DIA, processarCampanhas } from "@/lib/campanhas";
 import { removerEmail, salvarConfigBoasVindas } from "@/lib/lista-email";
 import { apagarColecao, idColecaoValido, lerColecao, listaDeEspera, listarColecoes, numerosDasColecoes, salvarColecao, type Colecao, type EstadoColecao } from "@/lib/colecoes";
@@ -771,7 +771,8 @@ function erroDeEnvio(err: unknown): never {
 /**
  * The step chosen in "Andamento" — only when "Salvar andamento" is clicked
  * (2026-11-09: a stray click on "Enviado" mailed the customer). Going back
- * clears the later steps (dates and their e-mails), so they count again later.
+ * clears the later steps' dates, but an e-mail already sent is never sent
+ * again by itself (user 2026-11-13) — only with "Reenviar o e-mail".
  */
 export async function definirEtapaAction(ref: string, _p: Resultado, formData: FormData) {
   return executar(async () => {
@@ -785,12 +786,7 @@ export async function definirEtapaAction(ref: string, _p: Resultado, formData: F
     p.etapa = etapa;
     p.etapaEm = { ...p.etapaEm, [etapa]: p.etapaEm?.[etapa] ?? Date.now() };
     for (const d of depois) delete p.etapaEm[d];
-    if (depois.length && p.lembretes) {
-      for (const d of depois) delete (p.lembretes as Record<string, unknown>)[d];
-      if (depois.includes("enviado")) delete p.lembretes.rastreioAvisado;
-    }
     await gravarPedido(p);
-    await esquecerAvisosDasEtapas(ref, depois);
     if (avisar) after(() => avisarEtapaAgora(ref));
     revalidatePath(`/admin/clientes/${ref}`);
     const nome = etapa === "producao" ? "em produção" : etapa === "enviado" ? "enviado" : "entregue";
@@ -845,6 +841,13 @@ export async function recebiPorForaAction(ref: string, _p: Resultado, formData: 
     revalidatePath(`/admin/clientes/${ref}`);
     revalidatePath("/admin");
     return `Pronto: pedido ${codigoDoPedido(ref)} pago e em produção. A cliente recebe a confirmação com o link para acompanhar.`;
+  });
+}
+
+export async function reenviarEmailAction(ref: string, _p: Resultado, _f: FormData) {
+  return executar(async () => {
+    await pedidoOuAviso(ref);
+    return reenviarEmailDaEtapa(ref);
   });
 }
 

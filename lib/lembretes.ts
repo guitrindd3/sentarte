@@ -116,21 +116,33 @@ export function etapaDevida(p: PedidoCliente, agora = Date.now()): EtapaEmail | 
   if (etapa === "enviado") {
     const quando = p.etapaEm?.enviado;
     if (!l.enviado) return recente(quando) ? "enviado" : null;
-    const novo = !!p.rastreio && codigoLimpo(p.rastreio) !== (l.rastreioAvisado ?? "");
+    // one tracking e-mail per order (user 2026-11-13: never twice on the same subject unless asked)
+    const novo = !!p.rastreio && !l.rastreio && !l.rastreioAvisado;
     return novo && recente(quando, 10) ? "rastreio" : null;
   }
   // a sale typed in the admin was agreed on WhatsApp: no "payment received" e-mail
   return !l.confirmado && p.origem !== "painel" && recente(p.pagoEm) ? "confirmado" : null;
 }
 
-/** Called right after the step changes (payment, admin buttons): mails it now. Never throws. */
 /**
- * A step undone in the admin (a click by mistake, 2026-11-09): forget the
- * e-mails of the later steps, so the real "enviado"/"entregue" goes out again.
+ * "Reenviar o e-mail" in the admin order (2026-11-13): the only way an e-mail
+ * on a subject the customer already got goes out again — the current step's
+ * e-mail ("enviado" carries the tracking code when there is one).
  */
-export async function esquecerAvisosDasEtapas(ref: string, etapas: string[]) {
-  if (etapas.length) await redis(etapas.map((t) => ["DEL", kFeito(ref, t)]));
+export async function reenviarEmailDaEtapa(ref: string): Promise<string> {
+  const p = await lerPedido(ref);
+  if (!p) return "Pedido não encontrado.";
+  if (p.status !== "pago") return "Esse pedido ainda não foi pago.";
+  if (!emailDo(p)) return "Esse pedido não tem e-mail da cliente.";
+  const etapa = p.etapa ?? "producao";
+  const tipo: EtapaEmail = etapa === "producao" ? "confirmado" : etapa;
+  await redis([["DEL", kFeito(ref, tipo)]]);
+  const { site } = await getContent();
+  const r = await enviar(p, tipo, site);
+  return r === "ok" ? "E-mail reenviado para a cliente." : r === "sem-gmail" ? "O e-mail do ateliê não está ligado (Avisos e envio)." : "Não deu para enviar agora. Tente de novo em alguns minutos.";
 }
+
+/** Called right after the step changes (payment, admin buttons): mails it now. Never throws. */
 
 export async function avisarEtapaAgora(ref: string) {
   if (!redisAtivo()) return;
@@ -149,7 +161,7 @@ export async function avisarEtapaAgora(ref: string) {
 
 /** Sends one e-mail, at most once per order (Redis guard). */
 async function enviar(p: PedidoCliente, tipo: Tipo, site: Site): Promise<"ok" | "ja" | "sem-gmail" | "erro"> {
-  const chave = kFeito(p.ref, tipo === "rastreio" ? `rastreio:${codigoLimpo(p.rastreio ?? "")}` : tipo);
+  const chave = kFeito(p.ref, tipo);
   const [livre] = await redis([["SET", chave, 1, "NX", "EX", 90 * 24 * 3600]]);
   if (livre !== "OK") return "ja";
   try {
