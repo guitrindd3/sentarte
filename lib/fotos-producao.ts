@@ -64,4 +64,4 @@ export async function tirarFotoProducao(ref: string, id: string) {
 
 export const MAX_FOTOS_PRODUCAO = MAX;
 /** Longest text under a photo (was 80, one line; 2026-11-13 a few sentences). */
-export const MAX_LEGENDA = 300;
+export const MAX_LEGENDA = 1000;

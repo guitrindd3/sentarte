@@ -931,3 +931,5 @@ User: "se já foi um sobre aquele assunto não mande outro a não ser que eu pe�
 
 ## 2026-11-13: collapsible admin sidebar
 Desktop sidebar shrinks to icons ("Recolher menu" under the logo, `BotaoRecolher` in nav.tsx): flips `data-menu` curto/largo on the `.admin` wrapper (named group `group/admin`, classes `group-data-[menu=curto]/admin:*`; grid 16rem → 4.75rem) and saves cookie `sentarte_menu` (path /admin, 1 year), which the layout reads so pages open the same way. Labels become sr-only + `title` tooltips; "Sair" links hide when collapsed. Phones unchanged.
+
+- 2026-11-13: "Texto da próxima foto" (admin order page, production photos) is now a 4-row textarea with a character counter, and the suggestions are buttons that fill it (a datalist does not work on a textarea). The caption limit went from 300 to 1000 characters: MAX_LEGENDA in lib/fotos-producao.ts AND the copy in fotos-producao.tsx must match.

@@ -6,7 +6,7 @@ import { adicionarFotoProducaoAction, editarLegendaFotoAction, tirarFotoProducao
 import { btnSecondary, inputClass } from "../../../_ui";
 
 /** Same cap as MAX_LEGENDA in lib/fotos-producao.ts (server-only). */
-const MAX_LEGENDA = 300;
+const MAX_LEGENDA = 1000;
 const SUGESTOES = ["Começamos a trançar a sua!", "Já está na metade", "Quase pronta", "Pronta! Indo para o envio"];
 
 /** Shrinks the photo in the browser to a ≤1200px JPEG data URL (same as the review photos). */
@@ -146,26 +146,32 @@ export function FotosProducao({
       )}
 
       {fotos.length < max ? (
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
           <label className="block text-sm">
             <span className="font-medium text-ink">Texto da próxima foto</span>
             <span className="mt-0.5 block text-xs text-ink-soft">Depois de pôr a foto, dá para mudar o texto embaixo dela.</span>
-            <input
+            <textarea
               id="legenda-producao"
-              list="legendas-producao"
               value={legenda}
               onChange={(e) => setLegenda(e.target.value)}
               maxLength={MAX_LEGENDA}
-              className={`mt-1 ${inputClass}`}
+              rows={4}
+              placeholder="Escreva o que quiser para a cliente ver junto com a foto"
+              className={`mt-1 ${inputClass} resize-y leading-snug`}
             />
-            <datalist id="legendas-producao">
-              {SUGESTOES.map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
+            <span className="mt-0.5 block text-right text-xs text-ink-soft tabular-nums">
+              {legenda.length}/{MAX_LEGENDA}
+            </span>
           </label>
+          <div className="flex flex-wrap gap-1.5 sm:col-start-1">
+            {SUGESTOES.map((t) => (
+              <button key={t} type="button" onClick={() => setLegenda(t)} className="rounded-full border border-line px-2.5 py-1 text-xs text-ink-soft hover:border-wood hover:text-ink">
+                {t}
+              </button>
+            ))}
+          </div>
           <input ref={arquivo} id="foto-producao" type="file" accept="image/*" className="sr-only" onChange={(e) => enviar(e.target.files?.[0])} />
-          <button type="button" disabled={pendente} onClick={() => arquivo.current?.click()} className={btnSecondary}>
+          <button type="button" disabled={pendente} onClick={() => arquivo.current?.click()} className={`${btnSecondary} sm:col-start-2 sm:row-start-1 sm:mt-11`}>
             {pendente ? "Enviando…" : "Tirar ou escolher foto"}
           </button>
         </div>
