@@ -87,7 +87,29 @@ export async function gravarCommit(
   mensagem: string,
   conferir?: { caminho: string; sha: string }
 ) {
-  const ref = await gh<{ object: { sha: string } }>(`${GIT}/ref/heads/${BRANCH}`);
+  // main can move between reading it and moving it (another save, a deploy
+  // push), or GitHub can still answer with the old head for a few seconds
+  // after a push — that made "O conteúdo mudou…" show for a save that had no
+  // real conflict (2026-11-13, depoimentos). Only the final ref move is
+  // retried; the content-file check runs again on each try, so a real
+  // concurrent edit is still refused.
+  for (let tentativa = 1; ; tentativa++) {
+    try {
+      return await umCommit(arquivos, mensagem, conferir);
+    } catch (e) {
+      if (!(e instanceof RefAndou) || tentativa >= 4) {
+        throw e instanceof RefAndou ? new Error("O conteúdo mudou enquanto você editava. Recarregue o painel e salve de novo.") : e;
+      }
+      await new Promise((r) => setTimeout(r, 1500 * tentativa));
+    }
+  }
+}
+
+/** main moved (or GitHub served a stale head) between reading and updating it. */
+class RefAndou extends Error {}
+
+async function umCommit(arquivos: ArquivoNovo[], mensagem: string, conferir?: { caminho: string; sha: string }) {
+  const ref = await gh<{ object: { sha: string } }>(`${GIT}/ref/heads/${BRANCH}?t=${Date.now()}`);
   const head = ref.object.sha;
   if (conferir) {
     const atual = await gh<{ sha: string }>(`${API}/${encodeURI(conferir.caminho)}?ref=${head}`);
@@ -116,10 +138,15 @@ export async function gravarCommit(
     body: JSON.stringify({ message: mensagem, tree: novaArvore.sha, parents: [head] }),
   });
   // force: false → if main moved since we read it, GitHub refuses (422).
-  await gh(`${GIT}/refs/heads/${BRANCH}`, {
-    method: "PATCH",
-    body: JSON.stringify({ sha: commit.sha, force: false }),
-  });
+  try {
+    await gh(`${GIT}/refs/heads/${BRANCH}`, {
+      method: "PATCH",
+      body: JSON.stringify({ sha: commit.sha, force: false }),
+    });
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("O conteúdo mudou")) throw new RefAndou(e.message);
+    throw e;
+  }
   const registro = commitDaAcao.getStore();
   if (registro) registro.sha = commit.sha;
   return commit.sha;
