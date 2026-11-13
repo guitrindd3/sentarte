@@ -46,6 +46,7 @@ export default async function Etiquetas({ searchParams }: PageProps<"/admin/etiq
         n: p.n,
         numero: numeroBonito(p.n),
         link: linkDoPassaporte(p.n),
+        modelo: p.modelo,
         colecao: p.colecao ? `${p.colecao.nome} · ${String(p.colecao.numero).padStart(2, "0")}/${p.colecao.total}` : undefined,
       }),
     ),

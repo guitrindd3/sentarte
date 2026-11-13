@@ -137,7 +137,7 @@ export default async function PassaportePage({ params }: PageProps<"/p/[codigo]"
               <li key={f.id}>
                 {/* eslint-disable-next-line @next/next/no-img-element -- served from Redis through the passport's signed code */}
                 <img src={`/api/passaporte/${codigoDoPassaporte(p.n)}/${f.id}`} alt={f.legenda} className="aspect-square w-full border border-line object-cover" />
-                <p className="mt-2 text-sm text-ink">{f.legenda}</p>
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink">{f.legenda}</p>
               </li>
             ))}
           </ul>

@@ -144,7 +144,7 @@ export default async function PedidoAcompanhar({ params }: PageProps<"/acompanha
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={`/api/producao/${p.ref}/${f.id}`} alt={f.legenda} className="aspect-square w-full border border-line object-cover" />
                   </a>
-                  <p className="mt-2 text-sm text-ink">{f.legenda}</p>
+                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink">{f.legenda}</p>
                   <p className="text-xs text-ink-soft">{quando(f.em)}</p>
                 </li>
               ))}

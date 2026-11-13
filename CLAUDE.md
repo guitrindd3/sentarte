@@ -924,3 +924,7 @@ The order page "Código de rastreio" box rendered with no border/padding, so the
 
 ## 2026-11-13: order e-mails go once per subject
 User: "se já foi um sobre aquele assunto não mande outro a não ser que eu peça". `etapaDevida()` sends "rastreio" at most once per order (guard key `pedido:<ref>:lembrete:rastreio`, no longer per code); going back a step in Andamento no longer clears the sent e-mails (`esquecerAvisosDasEtapas` removed). The only way to send again: "Reenviar o e-mail desta etapa" on the admin order (`reenviarEmailAction` → `reenviarEmailDaEtapa`, current step: confirmado/enviado(with code)/entregue). Order 34F1B01C got confirmado 09/11, enviado 13/11 11:08, rastreio 13/11 11:47 — none from tests.
+
+## 2026-11-13: text on each production photo + tag shows the model
+- Each production photo on the admin order has its own editable text box ("Salvar texto" shows when changed; `editarLegendaFotoAction` → `editarLegendaFoto`), up to `MAX_LEGENDA` 300 chars with line breaks; /acompanhar and the passport show it with `whitespace-pre-line`. The field above the upload is "Texto da próxima foto".
+- Passport tag subtitle is now the model, "Cadeira Sol" (`nomeNaEtiqueta`, " personalizado" dropped; no model → old "Cadeira Nº 0001"). `DadosPassaporte.modelo`; /admin/etiquetas passes it, the Cartões editor/Folha already had it. The number stays on the passport page the QR opens.

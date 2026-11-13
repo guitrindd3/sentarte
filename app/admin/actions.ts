@@ -37,7 +37,7 @@ import {
 } from "@/lib/melhor-envio";
 import { codigoDoPedido, cpfValido, type FormaPagamento } from "@/lib/pedido";
 import { avaliacoesPendentes, fotoDaAvaliacao, fotoValida, tirarAvaliacao } from "@/lib/avaliacoes";
-import { adicionarFotoProducao, MAX_FOTOS_PRODUCAO, tirarFotoProducao } from "@/lib/fotos-producao";
+import { adicionarFotoProducao, editarLegendaFoto, MAX_FOTOS_PRODUCAO, MAX_LEGENDA, tirarFotoProducao } from "@/lib/fotos-producao";
 import { normalizarCodigo } from "@/lib/cupom";
 import { paginaEditavel, type Bloco, type ValorCampo } from "@/lib/textos-paginas";
 import { excluirCupom, listarCupons, salvarConfigBlackFriday, salvarCupom } from "@/lib/cupons-store";
@@ -801,13 +801,32 @@ export async function adicionarFotoProducaoAction(ref: string, legenda: string, 
     const foto = fotoValida(dataUrl);
     if (!foto) throw new Aviso("Não deu para usar essa foto. Tente outra (JPG ou PNG).");
     try {
-      await adicionarFotoProducao(ref, String(legenda ?? "").replace(/\s+/g, " ").trim().slice(0, 80) || "Sua cadeira sendo feita", foto);
+      await adicionarFotoProducao(ref, limparLegenda(legenda) || "Sua cadeira sendo feita", foto);
     } catch (err) {
       if (err instanceof Error && err.message.startsWith("no máximo")) throw new Aviso(`Cada pedido aceita até ${MAX_FOTOS_PRODUCAO} fotos. Apague uma para pôr outra.`);
       throw err;
     }
     revalidatePath(`/admin/clientes/${ref}`);
     return "Foto adicionada. O cliente já vê na página do pedido.";
+  });
+}
+
+/** Keeps line breaks (at most one blank line), trims, caps the length. */
+const limparLegenda = (t: string) =>
+  String(t ?? "")
+    .replace(/\r/g, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, MAX_LEGENDA);
+
+/** The text under a production photo (user 2026-11-13: write something on each one). */
+export async function editarLegendaFotoAction(ref: string, id: string, legenda: string) {
+  return executar(async () => {
+    await pedidoOuAviso(ref);
+    if (!(await editarLegendaFoto(ref, id, limparLegenda(legenda)))) throw new Aviso("Essa foto não existe mais. Atualize a página.");
+    revalidatePath(`/admin/clientes/${ref}`);
+    return "Texto salvo. A cliente já vê na página do pedido e no passaporte.";
   });
 }
 

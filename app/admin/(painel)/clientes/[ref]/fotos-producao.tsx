@@ -2,9 +2,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { adicionarFotoProducaoAction, tirarFotoProducaoAction } from "../../../actions";
+import { adicionarFotoProducaoAction, editarLegendaFotoAction, tirarFotoProducaoAction } from "../../../actions";
 import { btnSecondary, inputClass } from "../../../_ui";
 
+/** Same cap as MAX_LEGENDA in lib/fotos-producao.ts (server-only). */
+const MAX_LEGENDA = 300;
 const SUGESTOES = ["Começamos a trançar a sua!", "Já está na metade", "Quase pronta", "Pronta! Indo para o envio"];
 
 /** Shrinks the photo in the browser to a ≤1200px JPEG data URL (same as the review photos). */
@@ -17,6 +19,59 @@ async function encolherFoto(arquivo: File): Promise<string> {
   c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
   img.close();
   return c.toDataURL("image/jpeg", 0.82);
+}
+
+/**
+ * The text under one photo, editable after it's up (user 2026-11-13: "quero
+ * poder escrever em cada foto que eu anexo para pessoa ver no passaporte").
+ */
+function TextoDaFoto({
+  pedidoRef,
+  id,
+  inicial,
+  onAviso,
+}: {
+  pedidoRef: string;
+  id: string;
+  inicial: string;
+  onAviso: (a: { ok: boolean; t: string }) => void;
+}) {
+  const [texto, setTexto] = useState(inicial);
+  const [salvo, setSalvo] = useState(inicial);
+  const [pendente, iniciar] = useTransition();
+  const mudou = texto.trim() !== salvo.trim();
+  return (
+    <div className="space-y-1">
+      <label className="sr-only" htmlFor={`texto-${id}`}>
+        Texto desta foto
+      </label>
+      <textarea
+        id={`texto-${id}`}
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+        maxLength={MAX_LEGENDA}
+        rows={3}
+        placeholder="Escreva algo para a cliente sobre esta foto"
+        className={`${inputClass} resize-y text-sm leading-snug`}
+      />
+      {mudou ? (
+        <button
+          type="button"
+          disabled={pendente}
+          onClick={() =>
+            iniciar(async () => {
+              const r = await editarLegendaFotoAction(pedidoRef, id, texto);
+              if (r?.ok) setSalvo(texto);
+              onAviso(r?.ok ? { ok: true, t: r.msg } : { ok: false, t: r?.erro ?? "Não deu para salvar." });
+            })
+          }
+          className="rounded-full bg-wood px-3 py-1.5 text-xs font-semibold text-paper hover:bg-wood-dark disabled:opacity-60"
+        >
+          {pendente ? "Salvando…" : "Salvar texto"}
+        </button>
+      ) : null}
+    </div>
+  );
 }
 
 /**
@@ -67,7 +122,7 @@ export function FotosProducao({
             <li key={f.id} className="space-y-1.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/api/producao/${pedidoRef}/${f.id}`} alt={f.legenda} className="aspect-square w-full border border-line object-cover" />
-              <p className="text-sm text-ink">{f.legenda}</p>
+              <TextoDaFoto pedidoRef={pedidoRef} id={f.id} inicial={f.legenda} onAviso={setAviso} />
               <p className="text-xs text-ink-soft">{f.quando}</p>
               <button
                 type="button"
@@ -93,13 +148,14 @@ export function FotosProducao({
       {fotos.length < max ? (
         <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
           <label className="block text-sm">
-            <span className="font-medium text-ink">Legenda</span>
+            <span className="font-medium text-ink">Texto da próxima foto</span>
+            <span className="mt-0.5 block text-xs text-ink-soft">Depois de pôr a foto, dá para mudar o texto embaixo dela.</span>
             <input
               id="legenda-producao"
               list="legendas-producao"
               value={legenda}
               onChange={(e) => setLegenda(e.target.value)}
-              maxLength={80}
+              maxLength={MAX_LEGENDA}
               className={`mt-1 ${inputClass}`}
             />
             <datalist id="legendas-producao">

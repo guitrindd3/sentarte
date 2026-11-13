@@ -359,16 +359,25 @@ export const PASSAPORTE_PRONTO: Cartao = {
   tamTexto: 7.5,
   logoTam: 10,
   titulo: "Ateliê SentArte",
-  subtitulo: "Cadeira Nº 0000",
+  subtitulo: "Cadeira Sol",
   qr: "https://sentarte.com.br",
   qrTam: 30,
   texto: "Aponte a câmera e conheça\na história desta cadeira",
   rodape: "Trançada à mão",
 };
 
-export type DadosPassaporte = { n: number; numero: string; link: string; colecao?: string };
+export type DadosPassaporte = { n: number; numero: string; link: string; colecao?: string; modelo?: string };
 
-const comPassaporte = (c: Cartao, p: DadosPassaporte): Cartao => ({ ...c, subtitulo: `Cadeira Nº ${p.numero}`, qr: p.link, rodape: p.colecao ?? c.rodape });
+/**
+ * The tag says the chair's model ("Cadeira Sol"), not its number (user
+ * 2026-11-13); the number stays on the passport page the QR opens.
+ */
+export const nomeNaEtiqueta = (p: DadosPassaporte) => {
+  const m = (p.modelo ?? "").replace(/ personalizad[ao]$/i, "").trim();
+  return m ? (/^cadeira\b/i.test(m) ? m : `Cadeira ${m}`) : `Cadeira Nº ${p.numero}`;
+};
+
+const comPassaporte = (c: Cartao, p: DadosPassaporte): Cartao => ({ ...c, subtitulo: nomeNaEtiqueta(p), qr: p.link, rodape: p.colecao ?? c.rodape });
 
 /** Whether this card carries a passport (on the front, or on the back). */
 export const temPassaporte = (c: Cartao) => c.tipo === "passaporte" || c.verso?.tipo === "passaporte";

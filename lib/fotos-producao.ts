@@ -47,9 +47,21 @@ export async function adicionarFotoProducao(ref: string, legenda: string, dataUr
   ]);
 }
 
+/** The text under one photo (user 2026-11-13: "em cada uma escrever algo"), shown on /acompanhar and the passport. */
+export async function editarLegendaFoto(ref: string, id: string, legenda: string) {
+  if (!refValida(ref) || !idFotoValido(id)) return false;
+  const [bruto] = (await redis([["HGET", kLista(ref), id]])) as (string | null)[];
+  if (!bruto) return false;
+  const m = JSON.parse(bruto) as Omit<FotoProducao, "id">;
+  await redis([["HSET", kLista(ref), id, JSON.stringify({ ...m, legenda })]]);
+  return true;
+}
+
 export async function tirarFotoProducao(ref: string, id: string) {
   if (!refValida(ref) || !idFotoValido(id)) return;
   await redis([["HDEL", kLista(ref), id], ["DEL", kFoto(ref, id)]]);
 }
 
 export const MAX_FOTOS_PRODUCAO = MAX;
+/** Longest text under a photo (was 80, one line; 2026-11-13 a few sentences). */
+export const MAX_LEGENDA = 300;
