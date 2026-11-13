@@ -30,7 +30,7 @@ async function muitasTentativas(ip: string) {
 
 export default async function Acompanhar({ searchParams }: PageProps<"/acompanhar">) {
   const q = await searchParams;
-  const numero = typeof q.n === "string" ? q.n.trim().slice(0, 20) : "";
+  const numero = typeof q.n === "string" ? q.n.trim().slice(0, 40) : "";
   const fim = typeof q.w === "string" ? q.w.replace(/\D/g, "").slice(-4) : "";
   const { site } = await getContent();
   let erro = "";
@@ -45,7 +45,7 @@ export default async function Acompanhar({ searchParams }: PageProps<"/acompanha
     } else {
       const p = await pedidoPeloCodigo(numero);
       if (p && p.whatsapp.replace(/\D/g, "").endsWith(fim)) redirect(`/acompanhar/${p.ref}`);
-      erro = "Não achamos esse pedido. Confira o número (está na tela do pagamento e no resumo do WhatsApp).";
+      erro = "Não achamos esse pedido. Confira o número do pedido (está na tela do pagamento e no resumo do WhatsApp) ou o código de rastreio.";
     }
   }
 
@@ -55,14 +55,14 @@ export default async function Acompanhar({ searchParams }: PageProps<"/acompanha
       <section className="mx-auto max-w-6xl px-6 py-14">
         <form method="get" className="max-w-md border border-line bg-paper p-6">
           <label className="block text-sm">
-            <span className="text-ink-soft">Número do pedido</span>
+            <span className="text-ink-soft">Número do pedido ou código de rastreio</span>
             <input
               name="n"
               defaultValue={numero}
               required
               autoComplete="off"
               autoCapitalize="characters"
-              placeholder="Ex.: 7K3D9Q2A"
+              placeholder="Ex.: 7K3D9Q2A ou AA123456789BR"
               className="mt-1 w-full border border-line bg-canvas px-3 py-2.5 font-mono uppercase tracking-wider text-ink outline-none focus:border-ink"
             />
           </label>

@@ -215,12 +215,20 @@ export async function gravarPedido(p: PedidoCliente) {
   await redis([["SET", kp(p.ref), JSON.stringify(p), "KEEPTTL"]]);
 }
 
-/** Finds an order by its short number (what the customer types on /acompanhar). */
+/**
+ * Finds an order by what the customer types on /acompanhar: its short number,
+ * or (2026-11-13, a customer typed the Correios code there) the tracking code
+ * saved on the order — searched among the latest orders.
+ */
 export async function pedidoPeloCodigo(codigo: string): Promise<PedidoCliente | null> {
   const cod = codigo.replace(/[^a-z0-9]/gi, "").toUpperCase();
-  if (cod.length !== 8) return null;
-  const [ref] = (await redis([["GET", kcod(cod)]])) as (string | null)[];
-  return ref ? lerPedido(ref) : null;
+  if (cod.length === 8) {
+    const [ref] = (await redis([["GET", kcod(cod)]])) as (string | null)[];
+    if (ref) return lerPedido(ref);
+  }
+  if (cod.length < 8) return null;
+  const limpo = (r: string) => r.replace(/[^a-z0-9]/gi, "").toUpperCase();
+  return (await pedidosRecentes(300)).find((p) => p.rastreio?.split(",").some((r) => limpo(r) === cod)) ?? null;
 }
 
 export async function pedidosRecentes(limite = 80): Promise<PedidoCliente[]> {
