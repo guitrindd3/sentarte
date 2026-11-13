@@ -851,8 +851,15 @@ export async function recebiPorForaAction(ref: string, _p: Resultado, formData: 
 export async function salvarRastreioAction(ref: string, _p: Resultado, formData: FormData) {
   return executar(async () => {
     const p = await pedidoOuAviso(ref);
-    p.rastreio = String(formData.get("rastreio") ?? "").trim().toUpperCase().slice(0, 80) || undefined;
-    p.transportadora = String(formData.get("transportadora") ?? "").trim().slice(0, 40) || undefined;
+    let rastreio = String(formData.get("rastreio") ?? "").trim().toUpperCase().slice(0, 80);
+    let transportadora = String(formData.get("transportadora") ?? "").trim().slice(0, 40);
+    // A tracking code typed in "Transportadora" (user 2026-11-13): move it to the code box.
+    if (!rastreio && /^(?=.*\d)[A-Z0-9-]{8,}$/i.test(transportadora.replace(/\s/g, ""))) {
+      rastreio = transportadora.replace(/\s/g, "").toUpperCase();
+      transportadora = /^[A-Z]{2}\d{9}BR$/.test(rastreio) ? "Correios" : "";
+    }
+    p.rastreio = rastreio || undefined;
+    p.transportadora = transportadora || undefined;
     if (p.rastreio && p.status === "pago" && (p.etapa ?? "producao") === "producao") {
       p.etapa = "enviado";
       p.etapaEm = { ...p.etapaEm, enviado: Date.now() };

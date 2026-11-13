@@ -12,7 +12,8 @@ import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
 import { definirEtapaAction, editarPassaporteAction, gerarPassaportesAction, recebiPorForaAction, salvarRastreioAction } from "../../../actions";
 import { codigoDoPassaporte, lerConfigPassaporte, lerPassaportes, numeroBonito, rotuloTipo } from "@/lib/passaporte";
-import { AdminForm, btnSecondary, Card, Field, inputClass, SaveButton } from "../../../_ui";
+import { AdminForm, Card, Field, SaveButton } from "../../../_ui";
+import { btnSecondary, inputClass } from "../../../_classes";
 import { CopiarNumeros } from "../copiar";
 import { Etiqueta } from "./etiqueta";
 import { FotosProducao } from "./fotos-producao";
@@ -352,12 +353,20 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
           <p className="text-sm text-ink-soft">As etapas aparecem quando o pagamento for aprovado.</p>
         )}
 
-        <AdminForm action={salvarRastreioAction.bind(null, p.ref)} className="mt-6 grid gap-4 border-t border-line/70 pt-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <Field label="Código de rastreio" dica="Preenche sozinho com a etiqueta do Melhor Envio.">
+        {/* User 2026-11-13 typed the Correios code in "Transportadora": the code box comes
+            first and wider, and the server moves a code typed in the wrong box. */}
+        <AdminForm action={salvarRastreioAction.bind(null, p.ref)} className="mt-6 grid gap-4 border-t border-line/70 pt-5 sm:grid-cols-[1.4fr_1fr_auto] sm:items-end">
+          <Field label="Código de rastreio" dica="Cole aqui o código dos Correios ou da transportadora.">
             <input name="rastreio" defaultValue={p.rastreio ?? ""} className={`${inputClass} font-mono uppercase`} placeholder="Ex.: AA123456789BR" />
           </Field>
-          <Field label="Transportadora">
-            <input name="transportadora" defaultValue={p.transportadora ?? ""} className={inputClass} placeholder="Ex.: Correios" />
+          <Field label="Transportadora" dica="Só o nome.">
+            <input name="transportadora" defaultValue={p.transportadora ?? ""} list="transportadoras" className={inputClass} placeholder="Ex.: Correios" />
+            <datalist id="transportadoras">
+              <option value="Correios" />
+              <option value="Jadlog" />
+              <option value="J&T Express" />
+              <option value="Loggi" />
+            </datalist>
           </Field>
           <SaveButton>Salvar rastreio</SaveButton>
         </AdminForm>

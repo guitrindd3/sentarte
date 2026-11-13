@@ -918,3 +918,6 @@ The user approved the preview ("gostei do ano novo, pode deixar para subir no si
 
 ## 2026-11-13: /acompanhar finds the order by tracking code too
 A customer typed the Correios code (AP…BR) in "Número do pedido". `pedidoPeloCodigo()` now also matches the tracking code saved on the order (`p.rastreio`, comma list) among the latest 300 orders; the field label says "Número do pedido ou código de rastreio". The 4 WhatsApp digits are still required. The code must be saved in the admin order ("Salvar rastreio") to be found.
+
+## 2026-11-13: admin boxes with no border (client constant in a server template string)
+The order page "Código de rastreio" box rendered with no border/padding, so the user typed the code in "Transportadora". Cause: `inputClass`/`btnPrimary`/`btnSecondary` lived in `app/admin/_ui.tsx` ("use client"); a server page doing `${inputClass} font-mono` got a client-reference function stringified instead of the classes (plain `className={inputClass}` happened to work). They now live in `app/admin/_classes.ts`; server pages import them from there (_ui.tsx re-exports for client files). Same bug fixed on avisos, cupons and seguranca. `salvarRastreioAction` also moves a tracking code typed in "Transportadora" into the code (Correios pattern → transportadora "Correios"); the carrier field has a datalist.

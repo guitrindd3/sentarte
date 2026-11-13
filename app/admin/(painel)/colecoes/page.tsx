@@ -6,7 +6,8 @@ import { SITE_URL } from "@/lib/nav";
 import { produtosDaLoja } from "@/lib/produtos";
 import { redisAtivo } from "@/lib/redis";
 import { apagarColecaoAction, mandarCampanhaAction, salvarColecaoAction } from "../../actions";
-import { AdminForm, BotaoExcluir, btnSecondary, Card, Field, inputClass, SaveButton } from "../../_ui";
+import { AdminForm, BotaoExcluir, Card, Field, SaveButton } from "../../_ui";
+import { btnSecondary, inputClass } from "../../_classes";
 
 // "Coleções numeradas" (lib/colecoes.ts, 2026-11-06): limited editions of
 // chosen chairs, each one numbered (nº 07 de 40), with a waiting list before

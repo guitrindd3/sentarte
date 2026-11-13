@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getAdminContent } from "@/lib/content-store";
 import { paginaEditavel, textosDaPagina } from "@/lib/textos-paginas";
 import { restaurarPaginaAction, salvarPaginaAction } from "../../../actions";
-import { AdminForm, BarraSalvar, BotaoExcluir, Card, CampoTexto, Field, FotoSlot, btnSecondary } from "../../../_ui";
+import { AdminForm, BarraSalvar, BotaoExcluir, Card, CampoTexto, Field, FotoSlot } from "../../../_ui";
+import { btnSecondary } from "../../../_classes";
 import { EditorBlocos } from "../blocos";
 import { EditorFotos } from "../fotos";
 

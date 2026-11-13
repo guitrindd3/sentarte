@@ -1,7 +1,8 @@
 import { getAdminContent } from "@/lib/content-store";
 import { updateHeroAction, updateSiteAction } from "../../actions";
 import { HeroTagsField } from "../../hero-tags-field";
-import { AdminForm, Card, CampoTexto, Field, SaveButton, inputClass } from "../../_ui";
+import { AdminForm, Card, CampoTexto, Field, SaveButton } from "../../_ui";
+import { inputClass } from "../../_classes";
 
 export default async function TextosDoSite() {
   const { hero, site } = await getAdminContent();

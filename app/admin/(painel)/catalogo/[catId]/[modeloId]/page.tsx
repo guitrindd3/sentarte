@@ -6,7 +6,8 @@ import { grupoDoModelo } from "@/lib/grupos";
 import { getAdminContent } from "@/lib/content-store";
 import { CATEGORIA_COM_PRECO } from "@/lib/offer";
 import { deleteModeloAction, moverModeloAction, updateModeloAction } from "../../../../actions";
-import { AdminForm, BarraSalvar, BotaoExcluir, Card, CampoTexto, Field, FotoSlot, GaleriaFotos, SaveButton, btnSecondary, inputClass } from "../../../../_ui";
+import { AdminForm, BarraSalvar, BotaoExcluir, Card, CampoTexto, Field, FotoSlot, GaleriaFotos, SaveButton } from "../../../../_ui";
+import { btnSecondary, inputClass } from "../../../../_classes";
 import { CampoInclui } from "./inclui";
 import { PreviaCadeira } from "./previa";
 

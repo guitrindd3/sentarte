@@ -2,7 +2,8 @@ import { estadoDaChave, type EstadoChave } from "@/lib/github-store";
 import { redisAtivo } from "@/lib/redis";
 import { doisFatoresAtivo, historico, reservasRestantes, type Entrada } from "@/lib/seguranca";
 import { desativarDoisFatoresAction, logoutTodosAction } from "../../actions";
-import { AdminForm, Card, Field, SaveButton, btnSecondary, inputClass } from "../../_ui";
+import { AdminForm, Card, Field, SaveButton } from "../../_ui";
+import { btnSecondary, inputClass } from "../../_classes";
 import { AtivarDoisFatores } from "./ativar";
 import { NovosCodigos } from "./novos-codigos";
 

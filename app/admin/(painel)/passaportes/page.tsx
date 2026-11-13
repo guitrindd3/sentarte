@@ -3,7 +3,8 @@ import { TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
 import { codigoDoPassaporte, lerConfigPassaporte, numeroBonito, passaportesRecentes } from "@/lib/passaporte";
 import { redisAtivo } from "@/lib/redis";
 import { salvarConfigPassaporteAction } from "../../actions";
-import { AdminForm, btnSecondary, Card, Field, inputClass, SaveButton } from "../../_ui";
+import { AdminForm, Card, Field, SaveButton } from "../../_ui";
+import { btnSecondary, inputClass } from "../../_classes";
 
 // "Passaporte da cadeira" (lib/passaporte.ts, 2026-11-06): defaults shown on
 // every passport + the latest ones, with their QR tags.

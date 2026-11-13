@@ -6,7 +6,8 @@ import { redisAtivo } from "@/lib/redis";
 import { hojeBR, naBlackFriday } from "@/lib/black-friday";
 import { configBlackFriday, listarCupons, motivoInvalido } from "@/lib/cupons-store";
 import { mandarCampanhaAction, removerAssinanteAction, salvarBoasVindasAction } from "../../actions";
-import { AdminForm, BotaoExcluir, Card, Field, inputClass, SaveButton } from "../../_ui";
+import { AdminForm, BotaoExcluir, Card, Field, SaveButton } from "../../_ui";
+import { inputClass } from "../../_classes";
 
 // "Campanhas" (2026-11-05): the welcome-coupon window (components/janela-cupom.tsx)
 // and e-mails to the list (lib/campanhas.ts, lib/lista-email.ts).

@@ -1,7 +1,8 @@
 import { redisAtivo } from "@/lib/redis";
 import { estadoVagas } from "@/lib/vagas";
 import { salvarVagasAction } from "../../actions";
-import { AdminForm, Card, Field, inputClass, SaveButton } from "../../_ui";
+import { AdminForm, Card, Field, SaveButton } from "../../_ui";
+import { inputClass } from "../../_classes";
 
 // "Vagas da semana" (2026-10-19): how many chairs the atelier can make per
 // week. The site shows "Restam N vagas" on each chair page and in the cart.

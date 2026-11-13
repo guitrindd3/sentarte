@@ -4,7 +4,8 @@ import { codigoDoPedido } from "@/lib/pedido";
 import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
 import { excluirOrcamentoAction, statusOrcamentoAction } from "../../actions";
-import { AdminForm, BotaoExcluir, btnPrimary, btnSecondary, Card } from "../../_ui";
+import { AdminForm, BotaoExcluir, Card } from "../../_ui";
+import { btnPrimary, btnSecondary } from "../../_classes";
 
 // Quote requests from /eventos (2026-10-24): what the customer asked for and
 // the logo/pictures they attached. The atelier sketches the chair, sends it on

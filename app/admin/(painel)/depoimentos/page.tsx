@@ -3,7 +3,8 @@ import { avaliacoesPendentes, fotoDaAvaliacao, type AvaliacaoPendente } from "@/
 import { getAdminContent } from "@/lib/content-store";
 import { redisAtivo } from "@/lib/redis";
 import { addDepoimentoAction, aprovarAvaliacaoAction, deleteDepoimentoAction, estrelasDepoimentoAction, recusarAvaliacaoAction } from "../../actions";
-import { AdminForm, BotaoExcluir, Card, CampoTexto, Field, FotoSlot, SaveButton, btnSecondary, inputClass } from "../../_ui";
+import { AdminForm, BotaoExcluir, Card, CampoTexto, Field, FotoSlot, SaveButton } from "../../_ui";
+import { btnSecondary, inputClass } from "../../_classes";
 
 function SeletorEstrelas({ valor }: { valor?: number }) {
   return (

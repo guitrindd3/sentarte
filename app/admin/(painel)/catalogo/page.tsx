@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ondeAparece, OPCOES_COLECAO } from "@/lib/admin-grupos";
 import { getAdminContent } from "@/lib/content-store";
 import { addCategoriaAction, addModeloAction, deleteCategoriaAction, updateCategoriaAction } from "../../actions";
-import { AdminForm, BotaoExcluir, Card, CampoTexto, Field, SaveButton, inputClass } from "../../_ui";
+import { AdminForm, BotaoExcluir, Card, CampoTexto, Field, SaveButton } from "../../_ui";
+import { inputClass } from "../../_classes";
 import { GradeModelos } from "./grade";
 
 export default async function Catalogo({ searchParams }: PageProps<"/admin/catalogo">) {

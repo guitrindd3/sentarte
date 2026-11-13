@@ -3,7 +3,8 @@ import { configBlackFriday, listarCupons, motivoInvalido, usosDoCupom, type Cupo
 import { CODIGO_BLACK_FRIDAY, hojeBR, naBlackFriday, semanaDaBlackFriday, type ConfigBlackFriday } from "@/lib/black-friday";
 import { redisAtivo } from "@/lib/redis";
 import { alternarCupomAction, excluirCupomAction, salvarBlackFridayAction, salvarCupomAction } from "../../actions";
-import { AdminForm, BotaoExcluir, Card, Field, SaveButton, btnSecondary, inputClass } from "../../_ui";
+import { AdminForm, BotaoExcluir, Card, Field, SaveButton } from "../../_ui";
+import { btnSecondary, inputClass } from "../../_classes";
 import { CopiarTexto } from "./copiar";
 
 const dataBR = (iso: string) => iso.split("-").reverse().join("/");

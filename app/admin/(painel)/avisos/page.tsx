@@ -4,7 +4,8 @@ import { lerRemetente, remetenteDaConta, type Remetente } from "@/lib/melhor-env
 import { redisAtivo } from "@/lib/redis";
 import { desligarGmailAction, desligarNtfyAction, exemploLembretesAction, ligarNtfyAction, salvarGmailAction, salvarLembretesAction, salvarRemetenteAction, testarAvisosAction } from "../../actions";
 import { lerConfigLembretes, ultimaRodada } from "@/lib/lembretes";
-import { AdminForm, btnPrimary, btnSecondary, Card, Field, inputClass, SaveButton } from "../../_ui";
+import { AdminForm, Card, Field, SaveButton } from "../../_ui";
+import { btnPrimary, btnSecondary, inputClass } from "../../_classes";
 import { CopiarNumeros } from "../clientes/copiar";
 
 // "Avisos e envio" (2026-10-06): sale alerts (phone push via ntfy, e-mail via
