@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { logoutAction, logoutTodosAction } from "../../actions";
+import { InstalarApp } from "../instalar-app";
 import { GRUPOS_MAIS, ICONES, Icone } from "../menu";
 
 // Phone overflow menu (the bottom bar has room for 5 tabs). Since 2026-11-14:
@@ -32,6 +33,8 @@ export default function Mais() {
           </ul>
         </section>
       ))}
+
+      <InstalarApp />
 
       <section className="overflow-hidden rounded-2xl bg-espresso text-paper">
         <a href="/" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-4 py-3.5 active:bg-white/10">

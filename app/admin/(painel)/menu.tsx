@@ -42,6 +42,7 @@ export const ICONES = {
   seguranca: <path d="M12 3.5 5 6v5.5c0 4.3 3 7.7 7 9 4-1.3 7-4.7 7-9V6zM9 12l2 2 4-4" />,
   mais: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth="3" />,
   venda: <path d="M12 5v14M5 12h14" />,
+  envio: <path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4zM3.5 7.5l8.5 4 8.5-4M12 11.5v9M7.8 5.5l8.5 4" />,
   abrir: <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />,
   sair: <path d="M14 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 16l-4-4 4-4M6 12h10" />,
 } satisfies Record<string, ReactNode>;

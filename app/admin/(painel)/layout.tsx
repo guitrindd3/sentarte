@@ -8,6 +8,7 @@ import { estadoDaChave, githubConfigurado } from "@/lib/github-store";
 import { logoutAction, logoutTodosAction } from "../actions";
 import { StatusPublicacao, Toaster } from "../_ui";
 import { PainelPublicacao } from "../publicar";
+import { GuardarConviteInstalar } from "./instalar-app";
 import { BotaoRecolher, NavInferior, NavLateral, TituloSecao } from "./nav";
 
 export const dynamic = "force-dynamic";
@@ -128,6 +129,7 @@ export default async function PainelLayout({ children }: { children: React.React
       <NavInferior />
       <Toaster />
       <PainelPublicacao />
+      <GuardarConviteInstalar />
     </div>
   );
 }

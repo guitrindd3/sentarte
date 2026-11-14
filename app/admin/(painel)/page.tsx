@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { avaliacoesPendentes } from "@/lib/avaliacoes";
 import { listarInteressados, pedidosRecentes, recusasDosPedidos, type Interessado, type PedidoCliente } from "@/lib/clientes";
 import { orcamentosRecentes } from "@/lib/orcamentos";
@@ -10,6 +11,8 @@ import { CATEGORIAS_OCULTAS } from "@/lib/offer";
 import { redisAtivo } from "@/lib/redis";
 import { Card } from "../_ui";
 import { ICONES, Icone } from "./menu";
+import { GraficoVendas } from "./grafico-vendas";
+import { SaldoEnvio } from "./saldo-envio";
 import { TentaramComprar, tentativasDaSemana, type Tentativa } from "./tentaram-comprar";
 
 
@@ -38,6 +41,16 @@ const mes = (ms: number) => new Intl.DateTimeFormat("pt-BR", { month: "2-digit",
 function vendasDoMes(pagos: PedidoCliente[]) {
   const agora = mes(Date.now());
   return pagos.filter((p) => mes(p.pagoEm ?? p.em) === agora);
+}
+
+/** Orders read for the home (numbers, chart). */
+const LIMITE = 150;
+
+/** Now, for the sales chart; and whether the latest LIMITE orders may not reach 8 weeks back. */
+function referenciaDoGrafico(recentes: PedidoCliente[]) {
+  const agora = Date.now();
+  const maisAntigo = recentes.reduce((n, p) => Math.min(n, p.em), agora);
+  return { agora, incompleto: recentes.length >= LIMITE && maisAntigo > agora - 56 * 86400000 };
 }
 
 const reais = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: v >= 1000 ? 0 : 2 });
@@ -73,9 +86,11 @@ export default async function VisaoGeral() {
   let avaliacoesEsperando = 0;
   let orcamentosNovos = 0;
   let novosNaLista: Interessado[] = [];
+  let grafico: { agora: number; incompleto: boolean } | null = null;
   if (redisAtivo()) {
     try {
-      const recentes = await pedidosRecentes(80);
+      const recentes = await pedidosRecentes(LIMITE);
+      grafico = referenciaDoGrafico(recentes);
       tentaram = await tentativas(recentes);
       // Paid orders the atelier still has to weave/ship.
       pagos = recentes.filter((p) => p.status === "pago");
@@ -214,35 +229,45 @@ export default async function VisaoGeral() {
       ) : null}
 
 
-      {ultimosPagos.length ? (
-        <section>
-          <div className="mb-3 flex items-baseline justify-between px-1">
-            <h2 className="text-sm font-semibold text-ink-soft">Últimos pedidos pagos</h2>
-            <Link href="/admin/clientes?f=todos" className="text-sm font-semibold text-wood">Ver todos</Link>
-          </div>
-          <ul className="divide-y divide-line/60 overflow-hidden rounded-2xl border border-line/70 bg-paper">
-            {ultimosPagos.map((p) => {
-              const etapa = ETAPAS[p.etapa ?? "producao"];
-              return (
-                <li key={p.ref}>
-                  <Link href={`/admin/clientes/${p.ref}`} className="flex items-center gap-3 px-4 py-3 active:bg-canvas">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-canvas-deep font-serif text-lg font-semibold text-wood-dark">
-                      {p.nome.trim().charAt(0).toUpperCase()}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-semibold text-ink">{p.nome.split(" ").slice(0, 2).join(" ")}</span>
-                      <span className="block truncate text-xs text-ink-soft">{p.itens.join(", ")}</span>
-                    </span>
-                    <span className="shrink-0 text-right">
-                      <span className="block text-sm font-semibold text-ink">{reais(p.valor)}</span>
-                      <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[0.7rem] font-semibold ${etapa.cor}`}>{etapa.rotulo}</span>
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+      {/* Melhor Envio balance: streamed, never holds the page (hidden without token / on error). */}
+      <Suspense fallback={null}>
+        <SaldoEnvio paraEnviar={paraEnviar.length} />
+      </Suspense>
+
+      {grafico || ultimosPagos.length ? (
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          {grafico ? <GraficoVendas pagos={pagos} agora={grafico.agora} incompleto={grafico.incompleto} /> : null}
+          {ultimosPagos.length ? (
+            <section>
+              <div className="mb-3 flex items-baseline justify-between px-1">
+                <h2 className="text-sm font-semibold text-ink-soft">Últimos pedidos pagos</h2>
+                <Link href="/admin/clientes?f=todos" className="text-sm font-semibold text-wood">Ver todos</Link>
+              </div>
+              <ul className="divide-y divide-line/60 overflow-hidden rounded-2xl border border-line/70 bg-paper">
+                {ultimosPagos.map((p) => {
+                  const etapa = ETAPAS[p.etapa ?? "producao"];
+                  return (
+                    <li key={p.ref}>
+                      <Link href={`/admin/clientes/${p.ref}`} className="flex items-center gap-3 px-4 py-3 active:bg-canvas">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-canvas-deep font-serif text-lg font-semibold text-wood-dark">
+                          {p.nome.trim().charAt(0).toUpperCase()}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-semibold text-ink">{p.nome.split(" ").slice(0, 2).join(" ")}</span>
+                          <span className="block truncate text-xs text-ink-soft">{p.itens.join(", ")}</span>
+                        </span>
+                        <span className="shrink-0 text-right">
+                          <span className="block text-sm font-semibold text-ink">{reais(p.valor)}</span>
+                          <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[0.7rem] font-semibold ${etapa.cor}`}>{etapa.rotulo}</span>
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
