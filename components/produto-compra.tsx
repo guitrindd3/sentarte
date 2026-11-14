@@ -84,13 +84,13 @@ export function ProdutoCompra({
         type="button"
         data-rastro={`Comprar (página): ${e.ativo.nome}`}
         onClick={() => (e.faltaNome ? pedirNome() : comprarAgora(e.itemDoCarrinho))}
-        className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-3.5 font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97]"
+        className="inline-flex items-center justify-center gap-2 border border-verde bg-verde px-4 py-3 font-semibold text-paper transition-all duration-200 hover:border-verde-escuro hover:bg-verde-escuro active:scale-[0.97]"
       >
         Comprar
       </button>
       <AddToCartButton item={e.itemDoCarrinho} semNome={e.faltaNome ? pedirNome : undefined} contorno />
       {e.faltaNome ? (
-        <p className={`text-xs ${avisoNome ? "font-medium text-red-700" : "text-ink-soft"}`}>Escreva o nome que vai trançado na cadeira para comprar.</p>
+        <p className={`col-span-2 text-xs ${avisoNome ? "font-medium text-red-700" : "text-ink-soft"}`}>Escreva o nome que vai trançado na cadeira para comprar.</p>
       ) : null}
     </>
   );
@@ -124,10 +124,33 @@ export function ProdutoCompra({
     ) : null;
 
   return (
-    <div className="grid gap-8 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:gap-12">
+    <div>
+      {/* Name above the photo (2026-11-14), so photo + choices + Comprar fit one desktop screen */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm text-ink-soft">{categoria}</p>
+          <h1 className="mt-0.5 font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{modelo.nome}</h1>
+          <p className="mt-1.5 max-w-[70ch] leading-relaxed text-ink-soft">{e.ativo.descricao}</p>
+          <SeloColecao nome={modelo.nome} className="mt-2" />
+        </div>
+        <div className="flex shrink-0 gap-2">
+          {e.fotoAtiva ? (
+            <CompartilharCadeira
+              slug={slug}
+              foto={e.fotoAtiva}
+              nome={e.ativo.nome}
+              preco={precoBf ?? e.preco}
+              precoAntes={precoBf ? e.preco : undefined}
+              blackFriday={bf ? { percentual: bf.cupom.valor, fimMs: bf.fimMs } : null}
+            />
+          ) : null}
+          <BotaoFavorito slug={slug} nome={modelo.nome} />
+        </div>
+      </div>
+    <div className="mt-5 grid gap-6 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] md:gap-10">
       {/* Gallery */}
       <div className="md:sticky md:top-24 md:self-start">
-        <div className="relative aspect-square overflow-hidden border border-line bg-canvas md:aspect-[4/5]">
+        <div className="relative aspect-square overflow-hidden border border-line bg-canvas md:aspect-auto md:h-[min(60vh,520px)]">
           {e.fotoAtiva ? (
             <>
               <Image key={e.fotoAtiva} src={e.fotoAtiva} alt={e.ativo.nome} fill priority className="object-cover" sizes="(min-width: 768px) 55vw, 100vw" />
@@ -153,7 +176,7 @@ export function ProdutoCompra({
           ) : null}
         </div>
         {variasFotos ? (
-          <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Fotos">
+          <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Fotos">
             {e.fotos.map((foto, i) => (
               <button
                 key={foto}
@@ -161,7 +184,7 @@ export function ProdutoCompra({
                 onClick={() => e.setVarianteIndex(i)}
                 aria-label={`Ver foto ${i + 1}`}
                 aria-pressed={e.varianteIndex === i}
-                className={`relative h-16 w-16 overflow-hidden border-2 transition-all sm:h-20 sm:w-20 ${
+                className={`relative h-16 w-16 overflow-hidden border-2 transition-all sm:h-14 sm:w-14 ${
                   e.varianteIndex === i ? "border-ink" : "border-line opacity-70 hover:opacity-100"
                 }`}
               >
@@ -174,28 +197,9 @@ export function ProdutoCompra({
 
       {/* Choices */}
       <div>
-        <p className="text-sm text-ink-soft">{categoria}</p>
-        <div className="mt-1 flex items-start justify-between gap-4">
-          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{modelo.nome}</h1>
-          <div className="flex shrink-0 gap-2">
-            {e.fotoAtiva ? (
-              <CompartilharCadeira
-                slug={slug}
-                foto={e.fotoAtiva}
-                nome={e.ativo.nome}
-                preco={precoBf ?? e.preco}
-                precoAntes={precoBf ? e.preco : undefined}
-                blackFriday={bf ? { percentual: bf.cupom.valor, fimMs: bf.fimMs } : null}
-              />
-            ) : null}
-            <BotaoFavorito slug={slug} nome={modelo.nome} />
-          </div>
-        </div>
-        <SeloColecao nome={modelo.nome} className="mt-3" />
-        <p className="mt-3 max-w-[55ch] leading-relaxed text-ink-soft">{e.ativo.descricao}</p>
 
         {e.temPreco ? (
-          <div className="mt-5">
+          <div className="mb-5 md:hidden">
             {bf ? <SeloBlackFriday cupom={bf.cupom} className="mb-2" /> : null}
             <p className="text-3xl font-medium text-ink">
               {precoBf ? <s className="mr-2 text-xl text-ink-soft">{formatBRL(e.preco)}</s> : null}
@@ -216,13 +220,14 @@ export function ProdutoCompra({
         ) : null}
 
         {/* Step-by-step choices (2026-11-14): size, name, arms, tassel, then the summary. */}
-        <div className="mt-6 space-y-5">
+        <div className="space-y-3">
           {e.temPreco ? (
             <Passo n={++passo} titulo="Escolha o tamanho" extra="preço já com as suas escolhas">
               <EscolhaTamanho e={e} />
             </Passo>
           ) : null}
 
+          <div className="grid gap-3 lg:grid-cols-2 lg:gap-5">
           {e.podePersonalizar ? (
             <Passo n={++passo} titulo={e.nomeIncluso ? "Nome trançado (vem com ela)" : "Nome trançado"}>
               {e.nomeIncluso ? null : (
@@ -277,6 +282,7 @@ export function ProdutoCompra({
               )}
             </Passo>
           ) : null}
+          </div>
 
           {e.temPreco ? (
             <Passo n={++passo} titulo="Tassel nas laterais">
@@ -289,7 +295,8 @@ export function ProdutoCompra({
           ) : null}
         </div>
 
-        <div className="mt-6">
+        {/* desktop: total + Comprar stay on screen while the rest scrolls (user 2026-11-14: "não ter que arrastar para baixo") */}
+        <div className="mt-4 md:sticky md:bottom-3 md:z-20">
           <PortaoColecao nome={modelo.nome}>
             {e.temPreco ? (
               <ResumoCadeira e={e}>{botoesCompra}</ResumoCadeira>
@@ -297,8 +304,8 @@ export function ProdutoCompra({
               <div className="grid max-w-sm gap-2">{botoesCompra}</div>
             )}
           </PortaoColecao>
-          {e.temPreco ? <VagasSemana className="mt-3" /> : null}
         </div>
+        {e.temPreco ? <VagasSemana className="mt-3" /> : null}
 
         {e.temPreco ? (
           <div className="mt-4 border border-line bg-paper p-4">
@@ -365,6 +372,7 @@ export function ProdutoCompra({
           </button>
         </div>
       ) : null}
+    </div>
     </div>
   );
 }

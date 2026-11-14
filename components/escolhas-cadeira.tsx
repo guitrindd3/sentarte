@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { MEDIDAS_CADEIRAS, type ModeloMedidas } from "@/lib/medidas";
 import { BRACO_MADEIRA, formatBRL, PARCELAS_MAX, precoCadeira, precoPix, TASSEL_PRECO, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
 import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
+import { PrecoNatal } from "@/components/natal";
 import type { useEscolhaModelo } from "@/lib/use-escolha-modelo";
 
 // Step-by-step chooser on the product page (user 2026-11-14: every chair can be
@@ -28,8 +29,8 @@ const NOME_CURTO: Record<TipoCadeira, { nome: string; sub: string }> = {
 /** Numbered step title. */
 export function Passo({ n, titulo, extra, children }: { n: number; titulo: string; extra?: ReactNode; children: ReactNode }) {
   return (
-    <section className="border-t border-line pt-5">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
+    <section className="border-t border-line pt-3">
+      <div className="mb-2 flex items-baseline justify-between gap-3">
         <h2 className="flex items-center gap-2.5 text-[0.95rem] font-semibold text-ink">
           <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-ink text-xs font-semibold text-canvas">{n}</span>
           {titulo}
@@ -88,7 +89,7 @@ export function EscolhaTamanho({ e }: { e: Escolha }) {
               aria-checked={on}
               onClick={() => e.setTipo(t)}
               data-rastro={`Tamanho: ${NOME_CURTO[t].nome}`}
-              className={`relative flex flex-col items-center border px-1.5 pb-3 pt-2 text-center transition-colors ${
+              className={`relative flex flex-col items-center border px-1.5 py-2 text-center transition-colors sm:flex-row sm:gap-2 sm:px-2.5 sm:text-left ${
                 on ? "border-ink bg-paper ring-1 ring-ink" : "border-line bg-paper/50 hover:border-ink"
               }`}
             >
@@ -97,31 +98,20 @@ export function EscolhaTamanho({ e }: { e: Escolha }) {
                   ✓
                 </span>
               ) : null}
-              <Silhueta tipo={t} className={`h-12 w-12 ${on ? "text-ink" : "text-ink-soft"}`} />
-              <span className="mt-1 text-sm font-semibold text-ink">{NOME_CURTO[t].nome}</span>
-              <span className="text-xs text-ink-soft">{NOME_CURTO[t].sub}</span>
-              <span className="mt-1.5 text-sm font-medium text-ink">{formatBRL(final)}</span>
+              <Silhueta tipo={t} className={`h-10 w-10 shrink-0 ${on ? "text-ink" : "text-ink-soft"}`} />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold leading-tight text-ink">{NOME_CURTO[t].nome}</span>
+                <span className="block text-xs text-ink-soft">{NOME_CURTO[t].sub}</span>
+                <span className="mt-0.5 block text-sm font-medium text-ink">{formatBRL(final)}</span>
+              </span>
             </button>
           );
         })}
       </div>
-      <dl className="mt-3 grid grid-cols-2 gap-px overflow-hidden border border-line bg-line text-sm sm:grid-cols-4">
-        {[
-          ["Altura", m.altura],
-          ["Largura", m.largura],
-          ["Profundidade", m.profundidade],
-          ["Aguenta", m.capacidade],
-        ].map(([k, v]) => (
-          <div key={k} className="bg-paper px-3 py-2">
-            <dt className="text-xs text-ink-soft">{k}</dt>
-            <dd className="font-medium text-ink">{v}</dd>
-          </div>
-        ))}
-      </dl>
-      <p className="mt-2 text-xs text-ink-soft">
-        {TIPOS_CADEIRA[e.tipo].rotulo}
-        {m.peso ? `, pesa ${m.peso}` : ""}. Dobrável, de alumínio, trançada à mão com corda náutica.
-        {e.tipo !== "normal" ? " A foto mostra a cadeira normal: na " + NOME_CURTO[e.tipo].nome.toLowerCase() + " o trançado e as cores são os mesmos." : ""}
+      <p className="mt-2 text-xs leading-relaxed text-ink-soft">
+        <span className="font-medium text-ink">{TIPOS_CADEIRA[e.tipo].rotulo}:</span> altura {m.altura}, largura {m.largura}, profundidade {m.profundidade}, aguenta {m.capacidade}
+        {m.peso ? `, pesa ${m.peso}` : ""}.
+        {e.tipo !== "normal" ? " A foto mostra a cadeira normal; na " + NOME_CURTO[e.tipo].nome.toLowerCase() + " o trançado e as cores são os mesmos." : ""}
       </p>
     </>
   );
@@ -190,7 +180,7 @@ export function EscolhaTassel({ e, corA, corB }: { e: Escolha; corA: string; cor
           </div>
         </div>
       ) : null}
-      <p className="mt-2 text-xs text-ink-soft">Enfeite de corda trançada com conta de madeira, preso no alto do encosto.</p>
+      <p className="mt-2 text-xs text-ink-soft md:hidden">Enfeite de corda trançada com conta de madeira, preso no alto do encosto.</p>
     </>
   );
 }
@@ -222,38 +212,39 @@ export function ResumoCadeira({ e, children }: { e: Escolha; children?: ReactNod
   if (nTassel) linhas.push([`${nTassel} tassel${nTassel > 1 ? "s" : ""}${e.tasselIncluso ? " (vem com ela)" : ""}`, `+${formatBRL(nTassel * TASSEL_PRECO)}`]);
   const final = precoBlackFriday(e.preco, bf);
   return (
-    <div className="border border-ink bg-paper">
-      <div className="border-b border-line px-4 py-3">
-        <p className="font-serif text-lg font-medium tracking-tight text-ink">Sua cadeira</p>
-      </div>
-      <dl className="space-y-1.5 px-4 py-3 text-sm">
-        {linhas.map(([k, v]) => (
-          <div key={k} className="flex justify-between gap-4">
-            <dt className="text-ink-soft">{k}</dt>
-            <dd className="shrink-0 text-ink">{v}</dd>
-          </div>
-        ))}
-        {final !== null && bf ? (
-          <div className="flex justify-between gap-4">
-            <dt className="text-ink-soft">Black Friday ({bf.cupom.valor}%)</dt>
-            <dd className="shrink-0 text-ink">−{formatBRL(e.preco - final)}</dd>
-          </div>
-        ) : null}
-      </dl>
-      <div className="border-t border-line px-4 py-3">
-        <div className="flex items-baseline justify-between gap-4">
-          <span className="text-sm font-medium text-ink">Total</span>
-          <span className="text-2xl font-medium text-ink">
+    <div className="border border-ink bg-paper px-4 py-3 md:shadow-[0_14px_34px_-14px_rgba(36,31,26,0.45)]">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 lg:flex-nowrap">
+        <div className="min-w-0">
+          <p className="text-xs text-ink-soft">{bf ? `Total com Black Friday (−${bf.cupom.valor}%)` : "Total da sua cadeira"}</p>
+          <p className="whitespace-nowrap text-2xl font-medium leading-tight text-ink">
             {final !== null ? <s className="mr-2 text-base text-ink-soft">{formatBRL(e.preco)}</s> : null}
             {formatBRL(final ?? e.preco)}
-          </span>
+          </p>
+          <p className="text-sm">
+            <strong className="font-semibold text-ink">{formatBRL(precoPix(final ?? e.preco))} no Pix</strong>
+            <span className="text-ink-soft"> ou até {PARCELAS_MAX}x</span>
+          </p>
+          {final === null ? <PrecoNatal preco={e.preco} className="mt-0.5" /> : null}
         </div>
-        <p className="mt-0.5 text-right text-sm">
-          <strong className="font-semibold text-ink">{formatBRL(precoPix(final ?? e.preco))} no Pix</strong>
-          <span className="text-ink-soft"> ou até {PARCELAS_MAX}x no cartão</span>
-        </p>
+        {children ? <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:min-w-[19rem] lg:shrink-0">{children}</div> : null}
       </div>
-      {children ? <div className="grid gap-2 border-t border-line p-4">{children}</div> : null}
+      <details className="mt-2 border-t border-line pt-1.5 text-sm">
+        <summary className="cursor-pointer text-ink-soft hover:text-ink">Ver o que entra no preço</summary>
+        <dl className="mt-2 space-y-1">
+          {linhas.map(([k, v]) => (
+            <div key={k} className="flex justify-between gap-4">
+              <dt className="text-ink-soft">{k}</dt>
+              <dd className="shrink-0 text-ink">{v}</dd>
+            </div>
+          ))}
+          {final !== null && bf ? (
+            <div className="flex justify-between gap-4">
+              <dt className="text-ink-soft">Black Friday ({bf.cupom.valor}%)</dt>
+              <dd className="shrink-0 text-ink">−{formatBRL(e.preco - final)}</dd>
+            </div>
+          ) : null}
+        </dl>
+      </details>
     </div>
   );
 }
