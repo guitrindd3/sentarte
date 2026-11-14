@@ -364,6 +364,7 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
 
         {/* User 2026-11-13 typed the Correios code in "Transportadora": the code box comes
             first and wider, and the server moves a code typed in the wrong box. */}
+        <span id="rastreio" aria-hidden className="block scroll-mt-28" />
         <AdminForm action={salvarRastreioAction.bind(null, p.ref)} className="mt-6 grid gap-4 border-t border-line/70 pt-5 sm:grid-cols-[1.4fr_1fr_auto] sm:items-end">
           <Field label="Código de rastreio" dica="Cole aqui o código dos Correios ou da transportadora.">
             <input name="rastreio" defaultValue={p.rastreio ?? ""} className={`${inputClass} font-mono uppercase`} placeholder="Ex.: AA123456789BR" />
@@ -410,6 +411,40 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
           ) : (
             <Etiqueta refPedido={p.ref} envios={p.envios ?? []} etiquetaUrl={p.etiquetaUrl} freteCobrado={p.frete?.valor} />
           )}
+          {/* User 2026-11-14: "também quero poder fazer manual se eu quiser". */}
+          <details className="mt-5 rounded-2xl border border-line/70 bg-canvas/60 p-4 open:bg-canvas">
+            <summary className="cursor-pointer font-semibold text-ink">Prefere fazer a etiqueta por fora (agência dos Correios, outro site)?</summary>
+            <ol className="mt-3 list-decimal space-y-3 pl-5 text-sm text-ink">
+              <li>
+                Copie o endereço da cliente:
+                {e ? (
+                  <span className="mt-2 block">
+                    <CopiarNumeros numeros={[]} texto={enderecoTexto(p)} rotulo="Copiar endereço" />
+                  </span>
+                ) : (
+                  <span className="block text-ink-soft">Esse pedido não tem endereço guardado: peça para a cliente pelo WhatsApp.</span>
+                )}
+              </li>
+              <li>
+                Faça a etiqueta onde preferir: na agência dos Correios, no{" "}
+                <a href="https://www.correios.com.br" target="_blank" rel="noreferrer" className="font-medium text-wood-dark underline">
+                  site dos Correios
+                </a>{" "}
+                ou no{" "}
+                <a href="https://app.melhorenvio.com.br" target="_blank" rel="noreferrer" className="font-medium text-wood-dark underline">
+                  site do Melhor Envio
+                </a>
+                .
+              </li>
+              <li>
+                Cole o código de rastreio em{" "}
+                <a href="#rastreio" className="font-medium text-wood-dark underline">
+                  Código de rastreio
+                </a>{" "}
+                (no quadro Andamento, acima) e clique em Salvar rastreio. O pedido vai para &ldquo;Enviado&rdquo; e a cliente recebe o e-mail com o código.
+              </li>
+            </ol>
+          </details>
         </Card>
       ) : null}
 
