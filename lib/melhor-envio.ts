@@ -36,7 +36,7 @@ export type OpcaoEnvio = { id: number; nome: string; preco: number; prazo?: numb
 /** A Melhor Envio answer turned into words for the admin. */
 export class ErroEnvio extends Error {}
 
-async function me<T>(caminho: string, init?: { method?: string; body?: unknown }): Promise<T> {
+async function me<T>(caminho: string, init?: { method?: string; body?: unknown; signal?: AbortSignal }): Promise<T> {
   const token = process.env.MELHORENVIO_TOKEN;
   if (!token) throw new ErroEnvio("O Melhor Envio não está ligado no site (falta o token).");
   const res = await fetch(`${API}${caminho}`, {
@@ -49,6 +49,7 @@ async function me<T>(caminho: string, init?: { method?: string; body?: unknown }
     },
     body: init?.body ? JSON.stringify(init.body) : undefined,
     cache: "no-store",
+    signal: init?.signal,
   });
   const texto = await res.text();
   let j: unknown = null;
@@ -73,6 +74,31 @@ function mensagemDeErro(j: unknown): string | null {
   const detalhes = o.errors ? Object.values(o.errors).flat().join(" ") : "";
   const m = [o.message ?? o.error, detalhes].filter(Boolean).join(" ");
   return m ? m.slice(0, 300) : null;
+}
+
+// --- balance (admin home, 2026-11-14) -----------------------------------------------
+
+/** Read-only: the Melhor Envio wallet balance in reais (GET /me/balance). Throws on any problem. */
+async function lerSaldo(): Promise<number> {
+  const j = await me<{ balance?: number | string }>("/me/balance", { signal: AbortSignal.timeout(3000) });
+  const v = Number(j?.balance);
+  if (!Number.isFinite(v)) throw new Error("saldo sem número");
+  return v;
+}
+
+/**
+ * Balance for the admin home, or null when there's no token or Melhor Envio didn't answer within 3 s.
+ * Not cached on purpose: the home streams it inside <Suspense>, so it never holds the page, and a
+ * stale-while-revalidate cache would keep showing an old balance after a top-up or while the API fails.
+ */
+export async function saldoMelhorEnvio(): Promise<number | null> {
+  if (!process.env.MELHORENVIO_TOKEN) return null;
+  try {
+    return await lerSaldo();
+  } catch (err) {
+    console.error("melhor envio saldo", err instanceof Error ? err.message : err);
+    return null;
+  }
 }
 
 // --- sender ------------------------------------------------------------------------
