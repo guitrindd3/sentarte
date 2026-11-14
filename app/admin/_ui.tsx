@@ -157,7 +157,9 @@ export function StatusPublicacao() {
     <span
       title={publicando ? "A alteração salva está sendo publicada. Leva 1 a 2 minutos." : "O site está com a última versão salva."}
       className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
-        publicando ? "bg-rattan/15 text-wood-dark" : "bg-verde/10 text-verde-escuro"
+        publicando
+          ? "bg-rattan/20 text-rattan lg:bg-rattan/15 lg:text-wood-dark"
+          : "bg-white/10 text-paper/85 lg:bg-verde/10 lg:text-verde-escuro"
       }`}
     >
       <span className={`h-2 w-2 rounded-full ${publicando ? "animate-pulse bg-rattan" : "bg-verde"}`} />

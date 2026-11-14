@@ -9,14 +9,9 @@ import { ondeAparece } from "@/lib/admin-grupos";
 import { CATEGORIAS_OCULTAS } from "@/lib/offer";
 import { redisAtivo } from "@/lib/redis";
 import { Card } from "../_ui";
+import { ICONES, Icone } from "./menu";
 import { TentaramComprar, tentativasDaSemana, type Tentativa } from "./tentaram-comprar";
 
-const ICONES_ATALHO = [
-  <path key="n" d="M12 5v14M5 12h14" />,
-  <path key="f" d="M4 7.5A1.5 1.5 0 0 1 5.5 6h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0 1 20 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5zM12 16a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z" />,
-  <path key="d" d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM8 9.5h8M8 12.5h5" />,
-  <path key="p" d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10A.5.5 0 0 1 7 20zM14 3.5V8h4M10 12h5M10 15.5h5" />,
-];
 
 function saudacao() {
   const h = Number(new Intl.DateTimeFormat("pt-BR", { hour: "numeric", timeZone: "America/Sao_Paulo" }).format(new Date()));
@@ -36,6 +31,22 @@ async function tentativas(pedidos: PedidoCliente[]): Promise<{ lista: Tentativa[
   const recusas = await recusasDosPedidos(ps.filter((p) => p.status === "recusado").map((p) => p.ref));
   return { lista: ps.map((p) => ({ p, recusas: recusas.get(p.ref) ?? [] })), agora };
 }
+
+const mes = (ms: number) => new Intl.DateTimeFormat("pt-BR", { month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo" }).format(new Date(ms));
+
+/** Paid orders of this month (Brasília), from the latest orders. */
+function vendasDoMes(pagos: PedidoCliente[]) {
+  const agora = mes(Date.now());
+  return pagos.filter((p) => mes(p.pagoEm ?? p.em) === agora);
+}
+
+const reais = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: v >= 1000 ? 0 : 2 });
+
+const ETAPAS = {
+  producao: { rotulo: "Fazer", cor: "bg-rattan/20 text-wood-dark" },
+  enviado: { rotulo: "Enviado", cor: "bg-canvas-deep text-ink-soft" },
+  entregue: { rotulo: "Entregue", cor: "bg-verde/10 text-verde-escuro" },
+} as const;
 
 function quando(iso: string) {
   const min = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -58,6 +69,7 @@ export default async function VisaoGeral() {
   // Carts that went to Mercado Pago and never got paid, last 7 days; reviews waiting for approval.
   let tentaram: { lista: Tentativa[]; agora: number } = { lista: [], agora: 0 };
   let paraEnviar: PedidoCliente[] = [];
+  let pagos: PedidoCliente[] = [];
   let avaliacoesEsperando = 0;
   let orcamentosNovos = 0;
   let novosNaLista: Interessado[] = [];
@@ -66,6 +78,7 @@ export default async function VisaoGeral() {
       const recentes = await pedidosRecentes(80);
       tentaram = await tentativas(recentes);
       // Paid orders the atelier still has to weave/ship.
+      pagos = recentes.filter((p) => p.status === "pago");
       paraEnviar = recentes.filter((p) => p.status === "pago" && (p.etapa ?? "producao") === "producao");
       avaliacoesEsperando = (await avaliacoesPendentes()).length;
       orcamentosNovos = (await orcamentosRecentes(50)).filter((o) => o.status === "novo").length;
@@ -77,52 +90,70 @@ export default async function VisaoGeral() {
   const modelos = visiveis.flatMap((c) => c.modelos.map((m) => ({ ...m, cat: c })));
   // Collection covers like "Monte a sua trama" use a video, not a photo.
   const semFoto = modelos.filter((m) => !m.imagemUrl && !ondeAparece(m.nome, m.cat.slug).capa);
-  const fotos = modelos.reduce((n, m) => n + (m.imagemUrl ? 1 : 0) + (m.variantes?.length ?? 0) + (m.fotosExtras?.length ?? 0), 0);
   const cadeiras = content.categorias.find((c) => c.slug === "cadeiras") ?? visiveis[0];
 
+  const doMes = vendasDoMes(pagos);
+  const totalMes = doMes.reduce((n, p) => n + p.valor, 0);
+  const ultimosPagos = [...pagos].sort((x, y) => (y.pagoEm ?? y.em) - (x.pagoEm ?? x.em)).slice(0, 4);
+
   const numeros = [
-    { n: modelos.length, rotulo: "modelos no site", href: "/admin/catalogo" },
-    { n: fotos, rotulo: "fotos publicadas", href: "/admin/catalogo" },
-    { n: content.depoimentos.length, rotulo: content.depoimentos.length === 1 ? "depoimento" : "depoimentos", href: "/admin/depoimentos" },
+    { n: String(paraEnviar.length), rotulo: paraEnviar.length === 1 ? "pedido para fazer" : "pedidos para fazer", href: "/admin/clientes", destaque: paraEnviar.length > 0 },
+    { n: reais(totalMes), rotulo: `${doMes.length} ${doMes.length === 1 ? "venda" : "vendas"} no mês`, href: "/admin/clientes", destaque: false },
+    { n: String(orcamentosNovos), rotulo: orcamentosNovos === 1 ? "orçamento novo" : "orçamentos novos", href: "/admin/orcamentos", destaque: orcamentosNovos > 0 },
   ];
 
-  const atalhos = [
-    {
-      href: cadeiras ? `/admin/catalogo?cat=${cadeiras.id}&novo=1` : "/admin/catalogo",
-      titulo: "Cadastrar cadeira nova",
-      texto: "Nome, foto e descrição de um modelo novo.",
-    },
-    { href: "/admin/catalogo", titulo: "Trocar fotos e textos", texto: "Escolha a cadeira e edite o que quiser." },
-    { href: "/admin/depoimentos", titulo: "Adicionar depoimento", texto: "Elogio de cliente com foto da cadeira." },
-    { href: "/admin/paginas", titulo: "Textos das páginas", texto: "Sobre, perguntas frequentes, políticas e a página inicial." },
+  const acoes = [
+    { href: "/admin/vendas/nova", rotulo: "Lançar venda", icone: ICONES.venda },
+    { href: cadeiras ? `/admin/catalogo?cat=${cadeiras.id}&novo=1` : "/admin/catalogo", rotulo: "Cadeira nova", icone: ICONES.cadeiras },
+    { href: "/admin/clientes", rotulo: "Pedidos", icone: ICONES.clientes },
+    { href: "/admin/orcamentos", rotulo: "Orçamentos", icone: ICONES.orcamentos },
+    { href: "/admin/montar", rotulo: "Montar trama", icone: ICONES.montar },
+    { href: "/admin/cupons", rotulo: "Cupons", icone: ICONES.cupons },
+    { href: "/admin/cartoes", rotulo: "Cartões", icone: ICONES.cartoes },
+    { href: "/admin/depoimentos", rotulo: "Avaliações", icone: ICONES.depoimentos },
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="relative overflow-hidden rounded-3xl bg-espresso px-6 py-7 text-paper shadow-[0_24px_50px_-28px_rgba(20,14,8,0.8)] sm:px-9 sm:py-9">
+    <div className="space-y-7 sm:space-y-8">
+      <div className="relative -mx-4 -mt-6 overflow-hidden bg-espresso px-5 pb-6 pt-5 text-paper sm:mx-0 sm:mt-0 sm:rounded-3xl sm:px-9 sm:py-9 sm:shadow-[0_24px_50px_-28px_rgba(20,14,8,0.8)]">
         {/* soft woven-light glow, decorative */}
         <div aria-hidden className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-rattan/25 blur-3xl" />
         <div aria-hidden className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-wood/40 blur-3xl" />
         <div className="relative">
           <p className="text-sm font-medium text-rattan">{saudacao()}!</p>
-          <h1 className="mt-1 font-serif text-3xl font-medium tracking-tight sm:text-4xl">O que vamos mudar hoje?</h1>
-          <p className="mt-2 max-w-prose text-sm text-paper/70 sm:text-base">
-            Edite à vontade: nada vai para o site até você clicar em “Revisar e publicar”. Depois, um quadro mostra a publicação até ficar no ar.
-          </p>
+          <h1 className="mt-1 font-serif text-[1.9rem] font-medium leading-tight tracking-tight sm:text-4xl">
+            {paraEnviar.length
+              ? `${paraEnviar.length} ${paraEnviar.length === 1 ? "pedido esperando" : "pedidos esperando"} por você`
+              : "Tudo em dia no ateliê"}
+          </h1>
           <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-3">
             {numeros.map((x) => (
               <Link
                 key={x.rotulo}
                 href={x.href}
-                className="rounded-2xl bg-white/[0.07] px-3 py-3 ring-1 ring-white/10 transition hover:bg-white/[0.12] sm:px-4"
+                className={`rounded-2xl px-3 py-3 ring-1 transition sm:px-4 ${x.destaque ? "bg-rattan/20 ring-rattan/50" : "bg-white/[0.07] ring-white/10 hover:bg-white/[0.12]"}`}
               >
-                <p className="font-serif text-2xl font-semibold tracking-tight sm:text-3xl">{x.n}</p>
-                <p className="mt-0.5 text-xs text-paper/60">{x.rotulo}</p>
+                <p className={`font-serif font-semibold tracking-tight ${x.n.length > 6 ? "text-lg sm:text-2xl" : "text-2xl sm:text-3xl"}`}>{x.n}</p>
+                <p className="mt-0.5 text-xs leading-snug text-paper/65">{x.rotulo}</p>
               </Link>
             ))}
           </div>
         </div>
       </div>
+
+      <section>
+        <h2 className="mb-3 px-1 text-sm font-semibold text-ink-soft">Acesso rápido</h2>
+        <div className="grid grid-cols-4 gap-x-2 gap-y-4 sm:gap-4 lg:grid-cols-8">
+          {acoes.map((a) => (
+            <Link key={a.rotulo} href={a.href} className="group flex flex-col items-center gap-1.5 text-center active:scale-95">
+              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-espresso text-rattan shadow-[0_10px_20px_-12px_rgba(20,14,8,0.9)] transition group-hover:bg-espresso-soft sm:h-16 sm:w-16">
+                <Icone className="h-6 w-6">{a.icone}</Icone>
+              </span>
+              <span className="text-[0.78rem] font-medium leading-tight text-ink">{a.rotulo}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <TentaramComprar lista={tentaram.lista} agora={tentaram.agora} />
 
@@ -183,29 +214,36 @@ export default async function VisaoGeral() {
       ) : null}
 
 
-      <section>
-      <h2 className="mb-3 text-sm font-semibold text-ink-soft">Atalhos</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {atalhos.map((a, i) => (
-          <Link
-            key={a.href + i}
-            href={a.href}
-            className="group flex items-center gap-4 rounded-3xl border border-line/70 bg-paper p-4 shadow-[0_1px_2px_rgba(36,31,26,0.05)] transition hover:-translate-y-0.5 hover:border-wood/60 hover:shadow-[0_14px_30px_-20px_rgba(36,28,20,0.5)] active:scale-[0.99] sm:p-5"
-          >
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-wood to-espresso text-paper shadow-[0_8px_18px_-8px_rgba(107,65,38,0.9)]">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
-                {ICONES_ATALHO[i]}
-              </svg>
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-semibold text-ink group-hover:text-wood-dark">{a.titulo}</span>
-              <span className="block text-sm text-ink-soft">{a.texto}</span>
-            </span>
-            <span aria-hidden className="text-xl text-line transition group-hover:translate-x-0.5 group-hover:text-wood">›</span>
-          </Link>
-        ))}
-      </div>
-      </section>
+      {ultimosPagos.length ? (
+        <section>
+          <div className="mb-3 flex items-baseline justify-between px-1">
+            <h2 className="text-sm font-semibold text-ink-soft">Últimos pedidos pagos</h2>
+            <Link href="/admin/clientes" className="text-sm font-semibold text-wood">Ver todos</Link>
+          </div>
+          <ul className="divide-y divide-line/60 overflow-hidden rounded-2xl border border-line/70 bg-paper">
+            {ultimosPagos.map((p) => {
+              const etapa = ETAPAS[p.etapa ?? "producao"];
+              return (
+                <li key={p.ref}>
+                  <Link href={`/admin/clientes/${p.ref}`} className="flex items-center gap-3 px-4 py-3 active:bg-canvas">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-canvas-deep font-serif text-lg font-semibold text-wood-dark">
+                      {p.nome.trim().charAt(0).toUpperCase()}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-semibold text-ink">{p.nome.split(" ").slice(0, 2).join(" ")}</span>
+                      <span className="block truncate text-xs text-ink-soft">{p.itens.join(", ")}</span>
+                    </span>
+                    <span className="shrink-0 text-right">
+                      <span className="block text-sm font-semibold text-ink">{reais(p.valor)}</span>
+                      <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[0.7rem] font-semibold ${etapa.cor}`}>{etapa.rotulo}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
         <Card titulo="Últimas alterações" descricao="O que foi salvo pelo painel, da mais nova para a mais antiga.">

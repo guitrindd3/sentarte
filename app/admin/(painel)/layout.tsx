@@ -66,15 +66,16 @@ export default async function PainelLayout({ children }: { children: React.React
       </div>
 
       <div className="min-w-0 pb-32 lg:pb-0">
-        <header className="sticky top-0 z-30 border-b border-line/60 bg-canvas/80 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2.5 sm:px-8 lg:py-3">
-            <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
-              <Image src="/brand/logo.png" alt="" width={34} height={34} className="rounded-full ring-2 ring-paper shadow-sm" />
+        {/* Phones: espresso band like the desktop sidebar (user 2026-11-14: "coloca as cores que tem no adm do computador"). */}
+        <header className="sticky top-0 z-30 bg-espresso pt-[env(safe-area-inset-top)] text-paper shadow-[0_10px_24px_-18px_rgba(20,14,8,0.9)] lg:border-b lg:border-line/60 lg:bg-canvas/80 lg:text-ink lg:shadow-none lg:backdrop-blur-xl">
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-8 lg:py-3">
+            <a href="/admin" className="flex min-w-0 items-center gap-2.5 lg:hidden">
+              <Image src="/brand/logo.png" alt="" width={36} height={36} className="rounded-full bg-paper ring-2 ring-rattan/60" />
               <div className="min-w-0 leading-tight">
-                <p className="font-serif text-base font-medium tracking-tight text-ink">SentArte</p>
-                <p className="text-xs text-ink-soft">Painel do ateliê</p>
+                <p className="font-serif text-lg font-medium tracking-tight">SentArte</p>
+                <p className="text-xs text-paper/55">Painel do ateliê</p>
               </div>
-            </div>
+            </a>
             <div className="hidden lg:block" />
             <div className="flex items-center gap-2">
               <StatusPublicacao />
@@ -83,7 +84,7 @@ export default async function PainelLayout({ children }: { children: React.React
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Abrir o site"
-                className="grid h-9 w-9 place-items-center rounded-full border border-line/80 bg-paper text-ink-soft shadow-sm transition hover:text-ink lg:hidden"
+                className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-paper ring-1 ring-white/15 transition active:bg-white/20 lg:hidden"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4" aria-hidden>
                   <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" strokeLinecap="round" strokeLinejoin="round" />
