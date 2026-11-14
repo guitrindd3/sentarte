@@ -213,8 +213,8 @@ export function ResumoCadeira({ e, children }: { e: Escolha; children?: ReactNod
   const final = precoBlackFriday(e.preco, bf);
   return (
     <div className="border border-ink bg-paper px-4 py-3 md:shadow-[0_14px_34px_-14px_rgba(36,31,26,0.45)]">
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 lg:flex-nowrap">
-        <div className="min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <div className="shrink-0">
           <p className="text-xs text-ink-soft">{bf ? `Total com Black Friday (−${bf.cupom.valor}%)` : "Total da sua cadeira"}</p>
           <p className="whitespace-nowrap text-2xl font-medium leading-tight text-ink">
             {final !== null ? <s className="mr-2 text-base text-ink-soft">{formatBRL(e.preco)}</s> : null}
@@ -226,7 +226,7 @@ export function ResumoCadeira({ e, children }: { e: Escolha; children?: ReactNod
           </p>
           {final === null ? <PrecoNatal preco={e.preco} className="mt-0.5" /> : null}
         </div>
-        {children ? <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:min-w-[19rem] lg:shrink-0">{children}</div> : null}
+        {children ? <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:min-w-[19rem]">{children}</div> : null}
       </div>
       <details className="mt-2 border-t border-line pt-1.5 text-sm">
         <summary className="cursor-pointer text-ink-soft hover:text-ink">Ver o que entra no preço</summary>

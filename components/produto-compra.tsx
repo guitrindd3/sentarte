@@ -147,13 +147,15 @@ export function ProdutoCompra({
           <BotaoFavorito slug={slug} nome={modelo.nome} />
         </div>
       </div>
-    <div className="mt-5 grid gap-6 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] md:gap-10">
+    <div className="mt-5 grid gap-6 md:grid-cols-[auto_minmax(0,1fr)] md:gap-10">
       {/* Gallery */}
       <div className="md:sticky md:top-24 md:self-start">
-        <div className="relative aspect-square overflow-hidden border border-line bg-canvas md:aspect-auto md:h-[min(60vh,520px)]">
+        <div className="relative aspect-[4/5] overflow-hidden border border-line bg-canvas md:aspect-auto md:h-[min(60vh,520px)] md:w-[calc(min(60vh,520px)*0.8)] md:max-w-[42vw]">
           {e.fotoAtiva ? (
             <>
-              <Image key={e.fotoAtiva} src={e.fotoAtiva} alt={e.ativo.nome} fill priority className="object-cover" sizes="(min-width: 768px) 55vw, 100vw" />
+              {/* photos come in many shapes (0.5 to 1.0): the whole chair always shows, a blurred copy fills the frame */}
+              <Image key={`fundo-${e.fotoAtiva}`} src={e.fotoAtiva} alt="" aria-hidden fill className="scale-110 object-cover opacity-70 blur-2xl" sizes="(min-width: 768px) 30vw, 60vw" />
+              <Image key={e.fotoAtiva} src={e.fotoAtiva} alt={e.ativo.nome} fill priority className="object-contain" sizes="(min-width: 768px) 40vw, 100vw" />
               {bf && e.temPreco ? <LogoBlackFriday className="z-10 w-[34%]" /> : null}
               {e.temPreco && !bf ? <LacoNatal /> : null}
               {e.temPreco && !bf ? <FitaAnoNovo /> : null}
