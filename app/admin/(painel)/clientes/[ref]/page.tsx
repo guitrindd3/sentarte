@@ -78,15 +78,72 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
         <Link href="/admin/clientes" className="text-sm font-medium text-wood-dark hover:underline">
           ‹ Clientes
         </Link>
-        <h1 className="mt-2 font-serif text-3xl font-medium tracking-tight text-ink sm:text-4xl">
-          Pedido {codigoDoPedido(p.ref)}
-        </h1>
-        <p className="mt-1 text-ink-soft">
-          {p.nome}, {quando(p.em)}.{" "}
-          <strong className={pago ? "text-verde-escuro" : "text-clay-dark"}>
-            {pago ? `${p.origem === "painel" ? "Lançada no painel em" : "Pago em"} ${quando(p.pagoEm)}` : p.status === "recusado" ? "Pagamento recusado" : p.status === "pendente" ? "Pagamento pendente" : "Não pago"}
-          </strong>
-        </p>
+        {/* Summary card (2026-11-14, "pode melhorar"): who, how much, where it is, quick actions. */}
+        <div className="relative mt-3 overflow-hidden rounded-3xl bg-espresso p-5 text-paper shadow-[0_24px_50px_-28px_rgba(20,14,8,0.8)] sm:p-7">
+          <div aria-hidden className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-rattan/20 blur-3xl" />
+          <div className="relative">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-mono text-sm text-rattan">Pedido {codigoDoPedido(p.ref)}</span>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${pago ? "bg-verde text-paper" : p.status === "recusado" ? "bg-clay text-paper" : "bg-white/15 text-paper"}`}
+              >
+                {pago ? (p.origem === "painel" ? "Venda lançada" : "Pago") : p.status === "recusado" ? "Pagamento recusado" : p.status === "pendente" ? "Pagamento pendente" : "Não pago"}
+              </span>
+            </div>
+            <h1 className="mt-2 font-serif text-3xl font-medium tracking-tight sm:text-4xl">{p.nome}</h1>
+            <p className="mt-1 text-sm text-paper/70">
+              <span className="font-semibold text-paper">{formatBRL(p.valor)}</span> {noPagamento(p.forma)}, {p.cidade}. Pedido em {quando(p.em)}
+              {pago && p.pagoEm ? `, ${p.origem === "painel" ? "lançado" : "pago"} em ${quando(p.pagoEm)}` : ""}.
+            </p>
+
+            {pago ? (
+              <ol className="mt-5 grid grid-cols-4 gap-1.5" aria-label="Andamento do pedido">
+                {[
+                  { t: "Pago", feito: true, em: p.pagoEm },
+                  { t: "Fazendo", feito: true, atual: etapa === "producao", em: undefined },
+                  { t: "Enviado", feito: etapa === "enviado" || etapa === "entregue", atual: etapa === "enviado", em: p.etapaEm?.enviado },
+                  { t: "Entregue", feito: etapa === "entregue", atual: etapa === "entregue", em: p.etapaEm?.entregue },
+                ].map((x) => (
+                  <li key={x.t} aria-current={x.atual ? "step" : undefined}>
+                    <span className={`block h-1.5 rounded-full ${x.feito ? "bg-rattan" : "bg-white/15"}`} />
+                    <span className={`mt-1.5 block text-xs ${x.atual ? "font-semibold text-paper" : x.feito ? "text-paper/75" : "text-paper/45"}`}>{x.t}</span>
+                    {x.em ? <span className="block text-[0.7rem] text-paper/50">{quando(x.em).slice(0, 5)}</span> : null}
+                  </li>
+                ))}
+              </ol>
+            ) : null}
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <a
+                href={whatsappUrl(p.whatsapp, mensagemAoCliente(p))}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-verde px-4 py-2 text-sm font-semibold text-paper hover:bg-verde-escuro"
+              >
+                WhatsApp
+              </a>
+              {e ? <CopiarNumeros numeros={[]} texto={enderecoTexto(p)} rotulo="Copiar endereço" /> : null}
+              {pago ? (
+                <>
+                  <a href="#rastreio" className="inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-paper ring-1 ring-white/15 hover:bg-white/15">
+                    Rastreio
+                  </a>
+                  <a href="#etiqueta" className="inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-paper ring-1 ring-white/15 hover:bg-white/15">
+                    Etiqueta
+                  </a>
+                </>
+              ) : null}
+              <a
+                href={`/acompanhar/${p.ref}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-paper ring-1 ring-white/15 hover:bg-white/15"
+              >
+                Ver como a cliente vê
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       {recusas.length && !pago ? (
@@ -389,6 +446,7 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
         ) : null}
       </Card>
 
+      <span id="etiqueta" aria-hidden className="-mb-6 block scroll-mt-28" />
       {pago ? (
         <Card
           titulo="Etiqueta de envio (Melhor Envio)"

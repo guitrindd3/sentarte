@@ -97,8 +97,8 @@ export default async function VisaoGeral() {
   const ultimosPagos = [...pagos].sort((x, y) => (y.pagoEm ?? y.em) - (x.pagoEm ?? x.em)).slice(0, 4);
 
   const numeros = [
-    { n: String(paraEnviar.length), rotulo: paraEnviar.length === 1 ? "pedido para fazer" : "pedidos para fazer", href: "/admin/clientes", destaque: paraEnviar.length > 0 },
-    { n: reais(totalMes), rotulo: `${doMes.length} ${doMes.length === 1 ? "venda" : "vendas"} no mês`, href: "/admin/clientes", destaque: false },
+    { n: String(paraEnviar.length), rotulo: paraEnviar.length === 1 ? "pedido para fazer" : "pedidos para fazer", href: "/admin/clientes?f=fazer", destaque: paraEnviar.length > 0 },
+    { n: reais(totalMes), rotulo: `${doMes.length} ${doMes.length === 1 ? "venda" : "vendas"} no mês`, href: "/admin/clientes?f=todos", destaque: false },
     { n: String(orcamentosNovos), rotulo: orcamentosNovos === 1 ? "orçamento novo" : "orçamentos novos", href: "/admin/orcamentos", destaque: orcamentosNovos > 0 },
   ];
 
@@ -159,7 +159,7 @@ export default async function VisaoGeral() {
 
       {paraEnviar.length ? (
         <Link
-          href={paraEnviar.length === 1 ? `/admin/clientes/${paraEnviar[0].ref}` : "/admin/clientes"}
+          href={paraEnviar.length === 1 ? `/admin/clientes/${paraEnviar[0].ref}` : "/admin/clientes?f=fazer"}
           className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-verde bg-verde/10 px-5 py-4 transition hover:bg-verde/15"
         >
           <span>
@@ -198,7 +198,7 @@ export default async function VisaoGeral() {
 
       {novosNaLista.length ? (
         <Link
-          href="/admin/clientes"
+          href="/admin/clientes?aba=lista"
           className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-verde/30 bg-verde/5 px-5 py-4 transition hover:border-verde"
         >
           <span>
@@ -218,7 +218,7 @@ export default async function VisaoGeral() {
         <section>
           <div className="mb-3 flex items-baseline justify-between px-1">
             <h2 className="text-sm font-semibold text-ink-soft">Últimos pedidos pagos</h2>
-            <Link href="/admin/clientes" className="text-sm font-semibold text-wood">Ver todos</Link>
+            <Link href="/admin/clientes?f=todos" className="text-sm font-semibold text-wood">Ver todos</Link>
           </div>
           <ul className="divide-y divide-line/60 overflow-hidden rounded-2xl border border-line/70 bg-paper">
             {ultimosPagos.map((p) => {
