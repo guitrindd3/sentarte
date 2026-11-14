@@ -10,12 +10,15 @@ export function OpcaoBraco({
   onChange,
   tipo = "normal",
   compacto = false,
+  semTitulo = false,
 }: {
   madeira: boolean;
   onChange: (madeira: boolean) => void;
   tipo?: TipoCadeira;
   /** catalog card: one small checkbox line */
   compacto?: boolean;
+  /** product page: the step already has a title */
+  semTitulo?: boolean;
 }) {
   const extra = formatBRL(BRACO_MADEIRA[tipo]);
   const amostra = (
@@ -35,8 +38,8 @@ export function OpcaoBraco({
   }
   return (
     <fieldset>
-      <legend className="text-sm text-ink-soft">Braço da cadeira</legend>
-      <div className="mt-2 grid grid-cols-2 gap-2" role="radiogroup" aria-label="Braço da cadeira">
+      <legend className={semTitulo ? "sr-only" : "text-sm text-ink-soft"}>Braço da cadeira</legend>
+      <div className={semTitulo ? "grid grid-cols-2 gap-2" : "mt-2 grid grid-cols-2 gap-2"} role="radiogroup" aria-label="Braço da cadeira">
         {[false, true].map((m) => {
           const on = madeira === m;
           return (

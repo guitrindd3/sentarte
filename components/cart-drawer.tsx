@@ -23,6 +23,7 @@ import {
   precoItemCadeira,
   PRECO_CADEIRA,
   rotuloTassel,
+  rotuloTipoDoItem,
 } from "@/lib/offer";
 import { whatsappUrl } from "@/lib/urls";
 
@@ -133,6 +134,7 @@ export function CartDrawer({
                 ? ` — ${formatBRL(precoItemCadeira(i))} cada`
                 : "") +
               (i.variante ? ` — cor: ${i.variante}` : "") +
+              (rotuloTipoDoItem(i) ? ` — ${rotuloTipoDoItem(i).toLowerCase()}` : "") +
               (i.bracoMadeira ? " — braço de madeira" : "") +
               (i.tassel ? ` — ${rotuloTassel(i)}` : "") +
               (i.nomePersonalizado ? (i.categoriaSlug === CATEGORIA_VALE ? ` — para: ${i.nomePersonalizado}` : ` — nome: "${i.nomePersonalizado}"`) : "")
@@ -209,6 +211,7 @@ export function CartDrawer({
                     {item.variante ? (
                       <p className="text-xs italic text-ink-soft">Cor: {item.variante}</p>
                     ) : null}
+                    {rotuloTipoDoItem(item) ? <p className="text-xs italic text-ink-soft">{rotuloTipoDoItem(item)}</p> : null}
                     {item.bracoMadeira ? <p className="text-xs italic text-ink-soft">Braço de madeira</p> : null}
                     {item.tassel ? <p className="text-xs italic text-ink-soft">{rotuloTassel(item).replace(/^./, (c) => c.toUpperCase())}</p> : null}
                     {item.nomePersonalizado ? (

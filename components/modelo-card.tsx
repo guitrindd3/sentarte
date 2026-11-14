@@ -243,14 +243,26 @@ export function ModeloCard({
         <PortaoColecao nome={modelo.nome}>
           {/* phones: Comprar + a cart icon side by side; stacked from sm */}
           <div className="mt-4 grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-1">
-            <button
-              type="button"
-              data-rastro={`Comprar: ${ativo.nome}`}
-              onClick={() => (faltaNome ? pedirNome() : comprarAgora(itemDoCarrinho))}
-              className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas"
-            >
-              Comprar
-            </button>
+            {/* user 2026-11-14: "Comprar" opens the chair's page, where the size,
+                name, arms and tassel are chosen (cards without a page still buy here) */}
+            {pagina && temPreco ? (
+              <Link
+                href={pagina}
+                data-rastro={`Comprar: ${ativo.nome}`}
+                className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97]"
+              >
+                Comprar
+              </Link>
+            ) : (
+              <button
+                type="button"
+                data-rastro={`Comprar: ${ativo.nome}`}
+                onClick={() => (faltaNome ? pedirNome() : comprarAgora(itemDoCarrinho))}
+                className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas"
+              >
+                Comprar
+              </button>
+            )}
             <AddToCartButton item={itemDoCarrinho} semNome={faltaNome ? pedirNome : undefined} contorno curtoNoCelular />
           </div>
           {faltaNome ? <p className="mt-1.5 text-xs text-ink-soft">Escreva o nome que vai trançado na cadeira para comprar.</p> : null}

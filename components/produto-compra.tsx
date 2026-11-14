@@ -11,7 +11,8 @@ import { VagasSemana } from "@/components/vagas-semana";
 import { PrevisaoEntrega } from "@/components/previsao-entrega";
 import { WeavePattern } from "@/components/weave-pattern";
 import { ChevronDownIcon, WhatsAppIcon } from "@/components/icons";
-import { formatBRL, PARCELAS_MAX, rotulosInclui, precoPix, PRAZO_PRODUCAO_DIAS_UTEIS } from "@/lib/offer";
+import { formatBRL, PARCELAS_MAX, precoCadeira, rotulosInclui, precoPix, PRAZO_PRODUCAO_DIAS_UTEIS } from "@/lib/offer";
+import { EscolhaTamanho, EscolhaTassel, Passo, ResumoCadeira } from "@/components/escolhas-cadeira";
 import { useCart } from "@/lib/cart-context";
 import { useEscolhaModelo } from "@/lib/use-escolha-modelo";
 import { cepGuardado, guardarCep, textoFrete, useFrete } from "@/lib/use-frete";
@@ -75,6 +76,25 @@ export function ProdutoCompra({
     window.addEventListener("keydown", tecla);
     return () => window.removeEventListener("keydown", tecla);
   }, [zoom, mudarVariante]);
+
+  let passo = 0;
+  const botoesCompra = (
+    <>
+      <button
+        type="button"
+        data-rastro={`Comprar (página): ${e.ativo.nome}`}
+        onClick={() => (e.faltaNome ? pedirNome() : comprarAgora(e.itemDoCarrinho))}
+        className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-3.5 font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97]"
+      >
+        Comprar
+      </button>
+      <AddToCartButton item={e.itemDoCarrinho} semNome={e.faltaNome ? pedirNome : undefined} contorno />
+      {e.faltaNome ? (
+        <p className={`text-xs ${avisoNome ? "font-medium text-red-700" : "text-ink-soft"}`}>Escreva o nome que vai trançado na cadeira para comprar.</p>
+      ) : null}
+    </>
+  );
+  const tasseisAgora = e.itemDoCarrinho.tassel ? (e.itemDoCarrinho.tasselQtd === 1 ? 1 : 2) : 0;
 
   const variasFotos = e.fotos.length > 1;
   const setas = (claro: boolean) =>
@@ -175,7 +195,7 @@ export function ProdutoCompra({
         <p className="mt-3 max-w-[55ch] leading-relaxed text-ink-soft">{e.ativo.descricao}</p>
 
         {e.temPreco ? (
-          <div className="mt-6 border-y border-line py-5">
+          <div className="mt-5">
             {bf ? <SeloBlackFriday cupom={bf.cupom} className="mb-2" /> : null}
             <p className="text-3xl font-medium text-ink">
               {precoBf ? <s className="mr-2 text-xl text-ink-soft">{formatBRL(e.preco)}</s> : null}
@@ -192,80 +212,96 @@ export function ProdutoCompra({
                 {rotulosInclui(e.inclui).join(", ")}
               </p>
             ) : null}
-            {!e.wantsNome && e.podePersonalizar ? (
-              <p className="mt-1 text-xs text-ink-soft">Com o seu nome trançado: {formatBRL(precoBlackFriday(e.precoComNome, bf) ?? e.precoComNome)}</p>
-            ) : null}
           </div>
         ) : null}
 
-        {e.podePersonalizar ? (
-          <div className="mt-6">
-            <p className="text-sm font-medium text-ink">Personalização</p>
-            {e.nomeIncluso ? null : (
-              <div className="mt-2 inline-flex border border-line text-sm" role="group" aria-label="Personalização">
-                <button
-                  type="button"
-                  onClick={() => e.escolherNome(false)}
-                  aria-pressed={!e.wantsNome}
-                  className={`px-4 py-2 transition-colors ${!e.wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"}`}
-                >
-                  Sem nome
-                </button>
-                <button
-                  type="button"
-                  onClick={() => e.escolherNome(true)}
-                  aria-pressed={e.wantsNome}
-                  className={`border-l border-line px-4 py-2 transition-colors ${e.wantsNome ? "bg-ink text-canvas" : "text-ink-soft hover:text-ink"}`}
-                >
-                  Personalizado
-                </button>
-              </div>
-            )}
-            {e.wantsNome ? (
-              <label className="mt-3 block max-w-sm">
-                <span className="text-sm text-ink-soft">Nome ou apelido para trançar</span>
-                <input
-                  type="text"
-                  value={e.nomeTexto}
-                  onChange={(ev) => e.setNomeTexto(ev.target.value)}
-                  placeholder="Ex: João"
-                  maxLength={24}
-                  autoFocus={!e.nomeIncluso}
-                  ref={nomeRef}
-                  aria-invalid={avisoNome && e.faltaNome ? true : undefined}
-                  className="mt-1 w-full border border-line bg-paper px-3 py-2 text-ink focus:border-ink focus:outline-none"
-                />
-              </label>
-            ) : null}
-            {e.madeiraInclusa ? null : (
-              <div className="mt-5">
-                <OpcaoBraco madeira={e.madeira} onChange={e.setMadeira} />
-              </div>
-            )}
-            {e.wantsNome ? <PreviaNome nome={e.nomeTexto} corA={e.ativo.corA} corB={e.ativo.corB} trama={modelo.trama} /> : null}
-          </div>
-        ) : null}
+        {/* Step-by-step choices (2026-11-14): size, name, arms, tassel, then the summary. */}
+        <div className="mt-6 space-y-5">
+          {e.temPreco ? (
+            <Passo n={++passo} titulo="Escolha o tamanho" extra="preço já com as suas escolhas">
+              <EscolhaTamanho e={e} />
+            </Passo>
+          ) : null}
 
-        <div className="mt-6 grid max-w-sm gap-2">
+          {e.podePersonalizar ? (
+            <Passo n={++passo} titulo={e.nomeIncluso ? "Nome trançado (vem com ela)" : "Nome trançado"}>
+              {e.nomeIncluso ? null : (
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Nome trançado">
+                  {[false, true].map((sim) => {
+                    const on = e.wantsNome === sim;
+                    return (
+                      <button
+                        key={String(sim)}
+                        type="button"
+                        role="radio"
+                        aria-checked={on}
+                        onClick={() => e.escolherNome(sim)}
+                        className={`border px-3 py-2.5 text-left text-sm transition-colors ${on ? "border-ink bg-ink text-canvas" : "border-line text-ink hover:border-ink"}`}
+                      >
+                        <span className="block font-medium">{sim ? "Com o seu nome" : "Sem nome"}</span>
+                        <span className={`block text-xs ${on ? "text-canvas/75" : "text-ink-soft"}`}>
+                          {sim
+                            ? `+${formatBRL(precoCadeira(true, e.tipo, e.madeira, tasseisAgora) - precoCadeira(false, e.tipo, e.madeira, tasseisAgora))}`
+                            : "Igual à foto"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {e.wantsNome ? (
+                <label className="mt-3 block">
+                  <span className="text-sm text-ink-soft">Nome ou apelido para trançar</span>
+                  <input
+                    type="text"
+                    value={e.nomeTexto}
+                    onChange={(ev) => e.setNomeTexto(ev.target.value)}
+                    placeholder="Ex: João"
+                    maxLength={24}
+                    ref={nomeRef}
+                    aria-invalid={avisoNome && e.faltaNome ? true : undefined}
+                    className="mt-1 w-full border border-line bg-paper px-3 py-2.5 text-ink focus:border-ink focus:outline-none"
+                  />
+                </label>
+              ) : null}
+              {e.wantsNome ? <PreviaNome nome={e.nomeTexto} corA={e.ativo.corA} corB={e.ativo.corB} trama={modelo.trama} /> : null}
+            </Passo>
+          ) : null}
+
+          {e.temPreco ? (
+            <Passo n={++passo} titulo="Braço da cadeira">
+              {e.madeiraInclusa ? (
+                <p className="text-sm text-ink">Esta cadeira já vem com braço de madeira.</p>
+              ) : (
+                <OpcaoBraco madeira={e.madeira} onChange={e.setMadeira} tipo={e.tipo} semTitulo />
+              )}
+            </Passo>
+          ) : null}
+
+          {e.temPreco ? (
+            <Passo n={++passo} titulo="Tassel nas laterais">
+              {e.tasselIncluso ? (
+                <p className="text-sm text-ink">Esta cadeira já vem com {rotulosInclui(e.inclui).find((r) => r.includes("tassel"))}.</p>
+              ) : (
+                <EscolhaTassel e={e} corA={e.ativo.corA} corB={e.ativo.corB} />
+              )}
+            </Passo>
+          ) : null}
+        </div>
+
+        <div className="mt-6">
           <PortaoColecao nome={modelo.nome}>
-            <button
-              type="button"
-              data-rastro={`Comprar (página): ${e.ativo.nome}`}
-              onClick={() => (e.faltaNome ? pedirNome() : comprarAgora(e.itemDoCarrinho))}
-              className="inline-flex items-center justify-center gap-2 border border-ink bg-ink px-4 py-3 font-medium text-canvas transition-all duration-200 hover:bg-transparent hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-canvas"
-            >
-              Comprar
-            </button>
-            <AddToCartButton item={e.itemDoCarrinho} semNome={e.faltaNome ? pedirNome : undefined} contorno />
-            {e.faltaNome ? (
-              <p className={`text-xs ${avisoNome ? "font-medium text-red-700" : "text-ink-soft"}`}>Escreva o nome que vai trançado na cadeira para comprar.</p>
-            ) : null}
+            {e.temPreco ? (
+              <ResumoCadeira e={e}>{botoesCompra}</ResumoCadeira>
+            ) : (
+              <div className="grid max-w-sm gap-2">{botoesCompra}</div>
+            )}
           </PortaoColecao>
-          {e.temPreco ? <VagasSemana className="mt-2" /> : null}
+          {e.temPreco ? <VagasSemana className="mt-3" /> : null}
         </div>
 
         {e.temPreco ? (
-          <div className="mt-6 max-w-sm border border-line bg-paper p-4">
+          <div className="mt-4 border border-line bg-paper p-4">
             <label htmlFor="cep-produto" className="text-sm font-medium text-ink">
               Calcular o frete
             </label>

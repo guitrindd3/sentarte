@@ -1,7 +1,7 @@
 import type { CartItem } from "./cart-context";
 import { DESENHO_TEMAS } from "./desenho-model";
 import { melhorCupom, type CupomPublico } from "./cupom";
-import { CATEGORIA_COM_PRECO, PIX_DESCONTO, precoCadeira, quantosTasseis, rotuloTassel } from "./offer";
+import { CATEGORIA_COM_PRECO, PIX_DESCONTO, precoCadeira, quantosTasseis, rotuloTassel, rotuloTipoDoItem } from "./offer";
 import { valorDoVale } from "./vale";
 
 // Order math shared by the cart drawer (display) and /api/checkout (the
@@ -162,6 +162,7 @@ export function descricaoItem(i: ItemDoPedido) {
   const vale = valorDoVale(i) !== null;
   return (
     `${i.modeloNome} (x${i.quantidade})` +
+    (rotuloTipoDoItem(i) ? ` — ${rotuloTipoDoItem(i).toLowerCase()}` : "") +
     (i.variante ? ` — cor: ${i.variante}` : "") +
     (i.bracoMadeira ? " — braço de madeira" : "") +
     (i.tassel ? ` — ${rotuloTassel(i)}` : "") +

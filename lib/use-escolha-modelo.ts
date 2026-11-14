@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CATEGORIA_COM_PRECO, formatBRL, precoCadeira, rotuloTassel } from "./offer";
+import { CATEGORIA_COM_PRECO, formatBRL, precoCadeira, rotuloTassel, TIPOS_CADEIRA, type TipoCadeira } from "./offer";
 import { grupoDoModelo } from "./grupos";
 import type { Modelo } from "./content-schema";
 import type { CartItem } from "./cart-context";
@@ -35,6 +35,11 @@ export function useEscolhaModelo({
   const [madeiraEscolha, setMadeiraEscolha] = useState(false);
   const madeira = madeiraEscolha || madeiraInclusa;
   const setMadeira = (m: boolean) => setMadeiraEscolha(m);
+  // Chair size + tassels on every catalog chair (user 2026-11-14: "infantil, normal ou 8 posições… tassel, braço de madeira").
+  const [tipo, setTipo] = useState<TipoCadeira>("normal");
+  const [tasselQtd, setTasselQtd] = useState<0 | 1 | 2>(0);
+  const [tasselLado, setTasselLado] = useState<"esq" | "dir">("dir");
+  const [tasselCor, setTasselCor] = useState<"a" | "b">("b");
 
   const ativo = wantsNome && personalizado ? personalizado : modelo;
   // Color options (a real choice, sent with the order) come first, then
@@ -60,21 +65,31 @@ export function useEscolhaModelo({
   // personalized price, and no name on top (user 2026-09-29).
   const ehDesenho = grupoDoModelo(modelo) === "desenhos";
   const podePersonalizar = !ehDesenho && (temPreco || Boolean(personalizado));
-  const preco = precoCadeira(wantsNome || ehDesenho, "normal", madeira, tasseis);
-  const precoComNome = precoCadeira(true, "normal", madeira, tasseis);
+  // tassels the chair comes with (admin) win over the customer's choice
+  const tasseisTotal = tasseis || (temPreco ? tasselQtd : 0);
+  const preco = precoCadeira(wantsNome || ehDesenho, tipo, madeira, tasseisTotal);
+  const precoComNome = precoCadeira(true, tipo, madeira, tasseisTotal);
+  /** Price of the same chair in another size, with every other choice kept. */
+  const precoNoTipo = (t: TipoCadeira) => precoCadeira(wantsNome || ehDesenho, t, madeira, tasseisTotal);
   const tassel = tasseis
     ? {
         tassel: inclui?.tasselCor?.trim() || "igual ao da foto",
         ...(tasseis === 1 ? { tasselQtd: 1 as const, tasselLado: inclui?.tasselLado === "esq" ? ("esq" as const) : ("dir" as const) } : {}),
       }
-    : null;
+    : tasseisTotal
+      ? {
+          tassel: tasselCor === "a" ? "na cor principal" : "na cor do detalhe",
+          ...(tasseisTotal === 1 ? { tasselQtd: 1 as const, tasselLado } : {}),
+        }
+      : null;
+  const tipoNoPedido = temPreco && tipo !== "normal" ? tipo : undefined;
   const faltaNome = wantsNome && !nomeFinal;
   const mensagemWhatsapp = `Oi! Quero pedir uma peça de ${categoria}, modelo "${ativo.nome}"${
     temPreco ? ` (${formatBRL(preco)})` : ""
-  }.${varianteLabel ? ` Cor: ${varianteLabel}.` : ""}${tassel ? ` Com ${rotuloTassel(tassel)}.` : ""}${madeira ? " Com braço de madeira." : ""}${nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""}`;
+  }.${tipoNoPedido ? ` Tamanho: ${TIPOS_CADEIRA[tipoNoPedido].rotulo.toLowerCase()}.` : ""}${varianteLabel ? ` Cor: ${varianteLabel}.` : ""}${tassel ? ` Com ${rotuloTassel(tassel)}.` : ""}${madeira ? " Com braço de madeira." : ""}${nomeFinal ? ` Nome/apelido para trançar: "${nomeFinal}".` : ""}`;
 
   const itemDoCarrinho: Omit<CartItem, "quantidade"> = {
-    id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}${varianteLabel ? `:${varianteLabel}` : ""}${madeira ? ":madeira" : ""}${tassel ? ":tassel" : ""}`,
+    id: `${categoriaSlug}:${ativo.id}${nomeFinal ? `:${nomeFinal}` : ""}${varianteLabel ? `:${varianteLabel}` : ""}${tipoNoPedido ? `:${tipoNoPedido}` : ""}${madeira ? ":madeira" : ""}${tassel ? `:tassel${tasseisTotal}${tassel.tasselLado ?? ""}${tassel.tassel}` : ""}`,
     categoriaSlug,
     categoriaTitulo: categoria,
     modeloId: ativo.id,
@@ -86,6 +101,7 @@ export function useEscolhaModelo({
     personalizada: ehDesenho || undefined,
     variante: varianteLabel || undefined,
     bracoMadeira: madeira || undefined,
+    tipoCadeira: tipoNoPedido,
     ...(tassel ?? {}),
   };
 
@@ -119,5 +135,16 @@ export function useEscolhaModelo({
     itemDoCarrinho,
     madeira,
     setMadeira,
+    tipo,
+    setTipo,
+    precoNoTipo,
+    /** the chair comes with tassels (admin): no tassel choice */
+    tasselIncluso: tasseis > 0,
+    tasselQtd,
+    setTasselQtd,
+    tasselLado,
+    setTasselLado,
+    tasselCor,
+    setTasselCor,
   };
 }

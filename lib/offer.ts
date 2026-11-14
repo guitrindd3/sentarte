@@ -61,6 +61,12 @@ export function rotuloTassel(item: { tassel?: string; tasselQtd?: 1 | 2; tasselL
   return item.tasselQtd === 1 ? `1 tassel ${cor} (lado ${item.tasselLado === "esq" ? "esquerdo" : "direito"})` : `2 tassels ${cor}`;
 }
 
+/** "Infantil" / "Reclinável 8 posições" for a cart line or order item; "" for the normal chair and for builder chairs (their name already says it). */
+export function rotuloTipoDoItem(i: { tipoCadeira?: TipoCadeira; modeloNome?: string }) {
+  if (!i.tipoCadeira || i.tipoCadeira === "normal" || i.modeloNome?.startsWith("Monte a sua trama")) return "";
+  return TIPOS_CADEIRA[i.tipoCadeira]?.curto ?? "";
+}
+
 /** Fixed price of a catalog chair, counting what it comes with (Modelo.inclui). */
 export function precoDoModelo(m: { inclui?: { nome?: boolean; tasseis?: 1 | 2; bracoMadeira?: boolean } }, desenho = false) {
   const i = m.inclui;
