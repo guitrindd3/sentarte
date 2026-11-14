@@ -86,28 +86,8 @@ export const GRUPOS_MAIS: { titulo: string; itens: ItemMenu[] }[] = [
   },
 ];
 
-/** Desktop sidebar order (unchanged from before the 2026-11-14 phone pass). */
-const porHref = new Map(GRUPOS_MAIS.flatMap((g) => g.itens).map((i) => [i.href, i]));
-const de = (href: string) => porHref.get(href)!;
-export const ITENS_LATERAL: ItemMenu[] = [
-  INICIO,
-  ACESSOS,
-  CLIENTES,
-  de("/admin/orcamentos"),
-  de("/admin/avisos"),
-  de("/admin/vagas"),
-  de("/admin/cupons"),
-  de("/admin/campanhas"),
-  de("/admin/colecoes"),
-  de("/admin/passaportes"),
-  de("/admin/cartoes"),
-  CADEIRAS,
-  de("/admin/montar"),
-  de("/admin/depoimentos"),
-  de("/admin/site"),
-  de("/admin/paginas"),
-  de("/admin/seguranca"),
-];
+/** Top of the desktop sidebar and of the phone bottom bar; the rest goes in GRUPOS_MAIS. */
+export const PRINCIPAIS: ItemMenu[] = [INICIO, CLIENTES, CADEIRAS, ACESSOS];
 
 export const MAIS: ItemMenu = item("/admin/mais", "Mais", ICONES.mais, "");
 

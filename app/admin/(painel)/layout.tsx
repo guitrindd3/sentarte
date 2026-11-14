@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -7,7 +8,7 @@ import { estadoDaChave, githubConfigurado } from "@/lib/github-store";
 import { logoutAction, logoutTodosAction } from "../actions";
 import { StatusPublicacao, Toaster } from "../_ui";
 import { PainelPublicacao } from "../publicar";
-import { BotaoRecolher, NavInferior, NavLateral } from "./nav";
+import { BotaoRecolher, NavInferior, NavLateral, TituloSecao } from "./nav";
 
 export const dynamic = "force-dynamic";
 
@@ -76,9 +77,25 @@ export default async function PainelLayout({ children }: { children: React.React
                 <p className="text-xs text-paper/55">Painel do ateliê</p>
               </div>
             </a>
-            <div className="hidden lg:block" />
+            <div className="hidden min-w-0 lg:block">
+              <TituloSecao />
+            </div>
             <div className="flex items-center gap-2">
               <StatusPublicacao />
+              <Link
+                href="/admin/vendas/nova"
+                className="hidden items-center gap-1.5 rounded-full bg-espresso px-4 py-2 text-sm font-semibold text-paper shadow-sm transition hover:bg-espresso-soft lg:inline-flex"
+              >
+                <span className="text-rattan">+</span> Lançar venda
+              </Link>
+              <a
+                href="/"
+                target="_blank"
+                rel="noreferrer"
+                className="hidden items-center gap-1.5 rounded-full border border-line bg-paper px-4 py-2 text-sm font-medium text-ink transition hover:border-wood lg:inline-flex"
+              >
+                Abrir o site
+              </a>
               <a
                 href="/"
                 target="_blank"
