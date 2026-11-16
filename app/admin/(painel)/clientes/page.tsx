@@ -5,6 +5,7 @@ import { formatBRL } from "@/lib/offer";
 import { noPagamento } from "@/lib/pedido";
 import { redisAtivo } from "@/lib/redis";
 import { whatsappUrl } from "@/lib/urls";
+import { SITE_URL } from "@/lib/nav";
 import { editarInteressadoAction, excluirInteressadoAction, excluirPedidoAction } from "../../actions";
 import { BotaoExcluir, Card } from "../../_ui";
 import { listarCupons, motivoInvalido } from "@/lib/cupons-store";
@@ -38,8 +39,18 @@ function mensagem(p: PedidoCliente) {
   return `Oi, ${primeiroNome(p.nome)}! Aqui é do Ateliê SentArte. Vi que você começou um pedido no site (${itens}) e o pagamento não foi concluído. Posso te ajudar com alguma coisa?`;
 }
 
-function pedidoDeAvaliacao(nome: string, link: string) {
-  return `Oi, ${primeiroNome(nome)}! Aqui é do Ateliê SentArte. Espero que esteja curtindo a sua cadeira! Se puder, deixa uma avaliação pra gente no Google? Leva 1 minutinho e ajuda muito o ateliê: ${link}`;
+/** Review request (2026-11-16: "quando o cliente for avaliar tem que ter algo
+ *  já certo"): a link straight to the open form — the order's own page (name
+ *  already filled) once shipped, else /avaliacoes — plus Google when set. */
+function linkDeAvaliar(p?: PedidoCliente) {
+  return p && p.status === "pago" && (p.etapa === "enviado" || p.etapa === "entregue") ? `${SITE_URL}/acompanhar/${p.ref}#avaliar` : `${SITE_URL}/avaliacoes#avaliar`;
+}
+function pedidoDeAvaliacao(nome: string, link: string, google?: string) {
+  return (
+    `Oi, ${primeiroNome(nome)}! Aqui é do Ateliê SentArte. Espero que esteja curtindo a sua cadeira! ` +
+    `Conta pra gente como ficou? É só tocar no link, escolher as estrelas e escrever (se quiser, manda uma foto também): ${link}` +
+    (google ? ` E se puder, avalie também no Google, ajuda muito o ateliê: ${google}` : "")
+  );
 }
 
 function referencias() {
@@ -98,7 +109,7 @@ export default async function Clientes({ searchParams }: PageProps<"/admin/clien
   const { site } = await getAdminContent();
   const naoTerminou = pedidos.filter((p) => situacao(p, agora).t === "Não terminou").length;
 
-  const aba = abaParam === "lista" || (abaParam === "avaliacao" && site.googleUrl) ? abaParam : "pedidos";
+  const aba = abaParam === "lista" || abaParam === "avaliacao" ? abaParam : "pedidos";
   const conta = (id: Filtro) => (id === "todos" ? pedidos.length : pedidos.filter((p) => grupoDe(p) === id).length);
   const filtro: Filtro = FILTROS.find((x) => x.id === filtroParam)?.id ?? (conta("fazer") ? "fazer" : "todos");
   const visiveis = filtro === "todos" ? pedidos : pedidos.filter((p) => grupoDe(p) === filtro);
@@ -106,7 +117,7 @@ export default async function Clientes({ searchParams }: PageProps<"/admin/clien
   const abas = [
     { id: "pedidos", rotulo: "Pedidos", n: pedidos.length as number | null },
     { id: "lista", rotulo: "Novidades", n: lista.length as number | null },
-    ...(site.googleUrl ? [{ id: "avaliacao", rotulo: "Google", n: null }] : []),
+    { id: "avaliacao", rotulo: "Avaliação", n: null },
   ];
 
   return (
@@ -207,9 +218,9 @@ export default async function Clientes({ searchParams }: PageProps<"/admin/clien
                       >
                         WhatsApp
                       </a>
-                      {p.status === "pago" && site.googleUrl ? (
+                      {p.status === "pago" ? (
                         <a
-                          href={whatsappUrl(p.whatsapp, pedidoDeAvaliacao(p.nome, site.googleUrl))}
+                          href={whatsappUrl(p.whatsapp, pedidoDeAvaliacao(p.nome, linkDeAvaliar(p), site.googleUrl))}
                           target="_blank"
                           rel="noreferrer"
                           className="rounded-full px-3 py-1.5 text-sm font-medium text-verde-escuro hover:bg-verde/10"
@@ -234,13 +245,21 @@ export default async function Clientes({ searchParams }: PageProps<"/admin/clien
         </section>
       ) : null}
 
-      {aba === "avaliacao" && site.googleUrl ? (
+      {aba === "avaliacao" ? (
         <Card
-          titulo="Pedir avaliação no Google"
-          descricao="Avaliações fazem o ateliê aparecer mais no Google Maps. Depois de entregar, mande esta mensagem para o cliente no WhatsApp (troque o nome). Cada pedido pago também tem o botão Pedir avaliação."
-          acao={<CopiarNumeros numeros={[]} texto={pedidoDeAvaliacao("Cliente", site.googleUrl)} rotulo="Copiar mensagem" />}
+          titulo="Pedir avaliação"
+          descricao="Depois de entregar, mande esta mensagem para o cliente no WhatsApp (troque o nome). O link abre a página Avaliações do site com o formulário já aberto: é só escolher as estrelas e escrever. Cada pedido pago também tem o botão Pedir avaliação, que já leva o nome do cliente preenchido."
+          acao={
+            <span className="flex flex-wrap gap-2">
+              <CopiarNumeros numeros={[]} texto={pedidoDeAvaliacao("Cliente", linkDeAvaliar(), site.googleUrl)} rotulo="Copiar mensagem" />
+              <CopiarNumeros numeros={[]} texto={linkDeAvaliar()} rotulo="Copiar só o link" />
+            </span>
+          }
         >
-          <p className="rounded-xl bg-canvas px-4 py-3 text-sm text-ink">{pedidoDeAvaliacao("Cliente", site.googleUrl)}</p>
+          <p className="rounded-xl bg-canvas px-4 py-3 text-sm text-ink">{pedidoDeAvaliacao("Cliente", linkDeAvaliar(), site.googleUrl)}</p>
+          <a href="/avaliacoes#avaliar" target="_blank" className="mt-3 inline-block text-sm font-medium text-wood-dark underline">
+            Ver como o cliente vê
+          </a>
         </Card>
       ) : null}
 

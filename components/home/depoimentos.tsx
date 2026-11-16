@@ -12,11 +12,19 @@ export function Depoimentos({
   depoimentos,
   titulo = "Quem já tem a sua",
   googleUrl,
+  formPrimeiro = false,
 }: {
   depoimentos: Depoimento[];
   titulo?: string;
   googleUrl?: string;
+  /** /avaliacoes: the "Avalie" form right under the average, before the list. */
+  formPrimeiro?: boolean;
 }) {
+  const form = (
+    <div id={formPrimeiro ? "avaliar" : undefined} className="mt-6 scroll-mt-28">
+      <Avaliar googleUrl={googleUrl} abertoInicial={formPrimeiro} />
+    </div>
+  );
   const comEstrelas = depoimentos.filter((d) => d.estrelas);
   const media = comEstrelas.length ? comEstrelas.reduce((s, d) => s + (d.estrelas ?? 0), 0) / comEstrelas.length : 0;
 
@@ -42,6 +50,8 @@ export function Depoimentos({
           </div>
         </div>
 
+        {formPrimeiro ? form : null}
+
         {depoimentos.length ? (
           <ul className="mt-8 grid gap-4 md:grid-cols-2">
             {depoimentos.map((d) => (
@@ -64,9 +74,7 @@ export function Depoimentos({
           </ul>
         ) : null}
 
-        <div className="mt-6">
-          <Avaliar googleUrl={googleUrl} />
-        </div>
+        {formPrimeiro ? null : form}
       </div>
     </section>
   );

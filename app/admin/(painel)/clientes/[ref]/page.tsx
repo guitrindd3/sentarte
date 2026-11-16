@@ -506,16 +506,20 @@ export default async function PedidoAdmin({ params }: PageProps<"/admin/clientes
         </Card>
       ) : null}
 
-      {site.googleUrl && etapa === "entregue" ? (
+      {etapa === "entregue" ? (
         <p className="text-sm text-ink-soft">
           Entregue! Que tal{" "}
           <a
-            href={whatsappUrl(p.whatsapp, `Oi, ${p.nome.split(" ")[0]}! Aqui é do Ateliê SentArte. Espero que esteja curtindo a sua cadeira! Se puder, deixa uma avaliação pra gente no Google? Ajuda muito o ateliê: ${site.googleUrl}`)}
+            href={whatsappUrl(
+              p.whatsapp,
+              `Oi, ${p.nome.split(" ")[0]}! Aqui é do Ateliê SentArte. Espero que esteja curtindo a sua cadeira! Conta pra gente como ficou? É só tocar no link, escolher as estrelas e escrever (se quiser, manda uma foto também): ${SITE_URL}/acompanhar/${p.ref}#avaliar` +
+                (site.googleUrl ? ` E se puder, avalie também no Google, ajuda muito o ateliê: ${site.googleUrl}` : "")
+            )}
             target="_blank"
             rel="noreferrer"
             className="font-medium text-wood-dark underline"
           >
-            pedir uma avaliação no Google
+            pedir uma avaliação
           </a>
           ?
         </p>

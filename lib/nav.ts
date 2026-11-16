@@ -8,6 +8,7 @@ export const NAV_LINKS = [
   { label: "Eventos", href: "/eventos" },
   { label: "Monte a sua", href: "/personalizar" },
   { label: "Vale-presente", href: "/vale-presente" },
+  { label: "Avaliações", href: "/avaliacoes" },
   { label: "Sobre", href: "/sobre" },
 ] as const;
 
@@ -15,6 +16,7 @@ export const FOOTER_LINKS = {
   institucional: [
     { label: "Sobre o SentArte", href: "/sobre" },
     { label: "Contato", href: "/contato" },
+    { label: "Avaliações de clientes", href: "/avaliacoes" },
     { label: "Perguntas frequentes", href: "/faq" },
     { label: "Acompanhar pedido", href: "/acompanhar" },
     { label: "Vale-presente", href: "/vale-presente" },

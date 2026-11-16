@@ -16,6 +16,7 @@ const STATIC_ROUTES = [
   "/eventos",
   "/personalizar",
   "/vale-presente",
+  "/avaliacoes",
   "/sobre",
   "/contato",
   "/faq",
