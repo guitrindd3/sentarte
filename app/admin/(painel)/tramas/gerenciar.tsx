@@ -6,6 +6,7 @@ import { CATEGORIAS, type Categoria } from "@/lib/formas-categorias";
 import { semAcento } from "@/lib/formas-lista";
 import { FIOS, type Fio } from "@/lib/palette";
 import { brilhoDasCelulas, codificarGrade, decodificarGrade, FOTO_COLS, FOTO_ROWS, gradeDaFoto, limiarAutomatico } from "@/lib/trama-foto";
+import { gradeDaPixelArte, lerPixelArte, type PixelArte } from "@/lib/trama-pixel";
 import { MAX_TRAMAS_NOVAS, PREFIXO_NOVA, TODAS_AS_FORMAS, type TramaNova, type TramasDoPainel } from "@/lib/tramas-painel";
 import { salvarTramasAction } from "../../actions";
 import { AdminForm, SaveButton } from "../../_ui";
@@ -61,7 +62,8 @@ export function GerenciarTramas({ inicial }: { inicial: TramasDoPainel }) {
   const [filtro, setFiltro] = useState<Filtro>("site");
   const [grupo, setGrupo] = useState<Categoria>("basicos");
   const [busca, setBusca] = useState("");
-  const [editando, setEditando] = useState<{ id?: string; rotulo: string; grupo: Categoria; bits: Uint8Array } | null>(null);
+  const [editando, setEditando] = useState<{ id?: string; rotulo: string; grupo: Categoria; bits: Uint8Array; arquivo?: File; vez?: number } | null>(null);
+  const anexoRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
   const itens: Item[] = useMemo(
@@ -178,11 +180,39 @@ export function GerenciarTramas({ inicial }: { inicial: TramasDoPainel }) {
           <span className="text-rattan">+</span> Desenhar um traçado novo
         </button>
       </div>
+      {/* Pixel art / cross-stitch chart straight to the chair (user 2026-11-16) */}
+      <input
+        ref={anexoRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const arq = e.target.files?.[0];
+          e.target.value = "";
+          if (arq) abrirEditor({ rotulo: "", grupo: termo ? "divertidos" : grupo, bits: new Uint8Array(N), arquivo: arq, vez: Date.now() });
+        }}
+      />
+      {editando ? null : (
+        <button
+          type="button"
+          disabled={t.novas.length >= MAX_TRAMAS_NOVAS}
+          onClick={() => anexoRef.current?.click()}
+          className="flex w-full items-center gap-3 rounded-3xl border-2 border-dashed border-wood/50 bg-paper px-4 py-3.5 text-left hover:border-wood hover:bg-canvas disabled:opacity-50"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-wood to-espresso text-xl text-paper" aria-hidden>
+            📎
+          </span>
+          <span>
+            <span className="block text-sm font-semibold text-ink">Anexar uma imagem e pôr na cadeira</span>
+            <span className="block text-xs text-ink-soft">Desenho em pixel ou gráfico de ponto cruz (JPG ou PNG). Cada quadradinho vira um ponto da trama.</span>
+          </span>
+        </button>
+      )}
 
       {editando ? (
         <div ref={editorRef} className="scroll-mt-24">
           <EditorTrama
-            key={editando.id ?? "novo"}
+            key={`${editando.id ?? "novo"}-${editando.vez ?? 0}`}
             inicial={editando}
             itens={itens}
             existentes={t.novas}
@@ -350,6 +380,19 @@ export function GerenciarTramas({ inicial }: { inicial: TramasDoPainel }) {
 
 const LADO = 12; // px per cell on the drawing canvas
 
+/** A picture turned into points: read as pixel art / cross-stitch chart, or as a photo by brightness. */
+type Imagem = {
+  url: string;
+  arte: PixelArte | null;
+  brilho: Float32Array;
+  modo: "pixel" | "foto";
+  limiar: number;
+  tolerancia: number;
+  inverter: boolean;
+  info: { largura: number; altura: number; diminuiu: boolean } | null;
+};
+const TOLERANCIA_PADRAO = 60;
+
 function EditorTrama({
   inicial,
   itens,
@@ -357,7 +400,7 @@ function EditorTrama({
   onCancelar,
   onGuardar,
 }: {
-  inicial: { id?: string; rotulo: string; grupo: Categoria; bits: Uint8Array };
+  inicial: { id?: string; rotulo: string; grupo: Categoria; bits: Uint8Array; arquivo?: File };
   itens: Item[];
   existentes: TramaNova[];
   onCancelar: () => void;
@@ -369,7 +412,9 @@ function EditorTrama({
   const [fioA, setFioA] = useState<Fio>(FIOS.find((f) => f.cor.toUpperCase() === COR_A) ?? FIOS[0]);
   const [fioB, setFioB] = useState<Fio>(FIOS.find((f) => f.cor.toUpperCase() === COR_B) ?? FIOS[1]);
   const [base, setBase] = useState("");
-  const [foto, setFoto] = useState<{ brilho: Float32Array; limiar: number; inverter: boolean } | null>(null);
+  const [foto, setFoto] = useState<Imagem | null>(null);
+  const [soltando, setSoltando] = useState(false);
+  const arquivoRef = useRef<HTMLInputElement>(null);
   const [erro, setErro] = useState("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pintando = useRef<0 | 1 | null>(null);
@@ -434,18 +479,30 @@ function EditorTrama({
     });
   const em = (b: Uint8Array, i: number, j: number) => (i < 0 || j < 0 || i >= FOTO_COLS || j >= FOTO_ROWS ? 0 : b[j * FOTO_COLS + i]);
 
-  const aplicarFoto = (f: { brilho: Float32Array; limiar: number; inverter: boolean }) => {
-    setFoto(f);
-    setBits(gradeDaFoto(f.brilho, f.limiar, f.inverter));
+  const aplicarFoto = (f: Imagem) => {
+    if (f.modo === "pixel" && f.arte) {
+      const r = gradeDaPixelArte(f.arte, f.tolerancia, f.inverter);
+      setBits(r.bits);
+      setFoto({ ...f, info: { largura: r.largura, altura: r.altura, diminuiu: r.diminuiu } });
+    } else {
+      setBits(gradeDaFoto(f.brilho, f.limiar, f.inverter));
+      setFoto({ ...f, info: null });
+    }
   };
-  const abrirImagem = (arq: File | undefined) => {
+  const abrirImagem = (arq: File | undefined | null) => {
     if (!arq) return;
+    if (!arq.type.startsWith("image/")) return setErro("Esse arquivo não é uma imagem. Use JPG ou PNG.");
+    setErro("");
     const url = URL.createObjectURL(arq);
     const img = new Image();
     img.onload = () => {
       const brilho = brilhoDasCelulas(img);
-      URL.revokeObjectURL(url);
-      aplicarFoto({ brilho, limiar: limiarAutomatico(brilho), inverter: false });
+      const arte = lerPixelArte(img);
+      setFoto((antes) => {
+        if (antes) URL.revokeObjectURL(antes.url);
+        return antes;
+      });
+      aplicarFoto({ url, arte, brilho, modo: arte ? "pixel" : "foto", limiar: limiarAutomatico(brilho), tolerancia: TOLERANCIA_PADRAO, inverter: false, info: null });
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
@@ -453,6 +510,27 @@ function EditorTrama({
     };
     img.src = url;
   };
+  // the picture chosen with "Anexar uma imagem" above the list
+  const arquivoInicial = useRef(inicial.arquivo);
+  useEffect(() => {
+    const arq = arquivoInicial.current;
+    arquivoInicial.current = undefined;
+    if (arq) abrirImagem(arq);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // a copied picture (Ctrl+V) also works while the editor is open
+  useEffect(() => {
+    const colar = (e: ClipboardEvent) => {
+      const arq = [...(e.clipboardData?.files ?? [])].find((f) => f.type.startsWith("image/"));
+      if (arq) {
+        e.preventDefault();
+        abrirImagem(arq);
+      }
+    };
+    window.addEventListener("paste", colar);
+    return () => window.removeEventListener("paste", colar);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const termoBase = semAcento(base);
   const achados = termoBase.length >= 2 ? itens.filter((f) => semAcento(f.rotulo).includes(termoBase)).slice(0, 12) : [];
@@ -541,6 +619,117 @@ function EditorTrama({
         </div>
 
         <div className="space-y-4">
+          <div
+            className={`rounded-2xl border-2 border-dashed p-3 transition ${soltando ? "border-wood bg-rattan/10" : "border-wood/40 bg-canvas"}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setSoltando(true);
+            }}
+            onDragLeave={() => setSoltando(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setSoltando(false);
+              abrirImagem(e.dataTransfer.files?.[0]);
+            }}
+          >
+            <input ref={arquivoRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+              abrirImagem(e.target.files?.[0]);
+              e.target.value = "";
+            }} />
+            {foto ? (
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={foto.url} alt="Imagem anexada" className="h-20 w-20 shrink-0 rounded-lg border border-line bg-paper object-contain [image-rendering:pixelated]" />
+                  <div className="min-w-0 text-xs text-ink-soft">
+                    {foto.modo === "pixel" && foto.info ? (
+                      foto.info.largura ? (
+                        <p>
+                          <strong className="text-ink">
+                            Li o desenho: {foto.info.largura} × {foto.info.altura} pontos.
+                          </strong>{" "}
+                          {foto.info.diminuiu
+                            ? `A cadeira tem ${FOTO_COLS} × ${FOTO_ROWS}, então diminuí para caber, sem perder a forma.`
+                            : "Cada quadradinho virou um ponto, no meio da cadeira."}
+                        </p>
+                      ) : (
+                        <p className="text-clay-dark">Não achei desenho nessa imagem. Mexa em &ldquo;Mais pontos&rdquo; ou troque para Foto ou logo.</p>
+                      )
+                    ) : (
+                      <p>
+                        <strong className="text-ink">Lida como foto ou logo:</strong> a parte escura vira o desenho.
+                      </p>
+                    )}
+                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+                      <button type="button" className="font-medium text-wood-dark underline" onClick={() => arquivoRef.current?.click()}>
+                        Trocar imagem
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-1 rounded-full bg-paper p-1" role="group" aria-label="Como ler a imagem">
+                  {(
+                    [
+                      ["pixel", "Pixel / ponto cruz"],
+                      ["foto", "Foto ou logo"],
+                    ] as const
+                  ).map(([m, r]) => (
+                    <button
+                      key={m}
+                      type="button"
+                      aria-pressed={foto.modo === m}
+                      disabled={m === "pixel" && !foto.arte}
+                      title={m === "pixel" && !foto.arte ? "Não achei quadradinhos nessa imagem" : undefined}
+                      onClick={() => aplicarFoto({ ...foto, modo: m })}
+                      className={`rounded-full px-2 py-1.5 text-xs font-medium disabled:opacity-40 ${foto.modo === m ? "bg-espresso text-paper" : "text-ink"}`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+                <label className="block text-xs text-ink-soft">
+                  <span className="flex justify-between">
+                    <span>Menos pontos</span>
+                    <span>Mais pontos</span>
+                  </span>
+                  {foto.modo === "pixel" ? (
+                    <input
+                      type="range"
+                      min={10}
+                      max={200}
+                      value={210 - foto.tolerancia}
+                      onChange={(e) => aplicarFoto({ ...foto, tolerancia: 210 - Number(e.target.value) })}
+                      className="mt-1 w-full accent-wood"
+                    />
+                  ) : (
+                    <input
+                      type="range"
+                      min={10}
+                      max={245}
+                      value={foto.limiar}
+                      onChange={(e) => aplicarFoto({ ...foto, limiar: Number(e.target.value) })}
+                      className="mt-1 w-full accent-wood"
+                    />
+                  )}
+                </label>
+                <label className="flex items-center gap-2 text-xs text-ink">
+                  <input type="checkbox" checked={foto.inverter} onChange={(e) => aplicarFoto({ ...foto, inverter: e.target.checked })} />
+                  {foto.modo === "pixel" ? "Trocar: o fundo vira o desenho" : "Usar a parte clara da imagem"}
+                </label>
+              </div>
+            ) : (
+              <button type="button" onClick={() => arquivoRef.current?.click()} className="flex w-full items-center gap-3 text-left">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-wood to-espresso text-lg text-paper" aria-hidden>
+                  📎
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-ink">Anexar imagem</span>
+                  <span className="block text-xs text-ink-soft">Pixel ou ponto cruz. Toque, arraste a imagem para cá ou cole (Ctrl+V).</span>
+                </span>
+              </button>
+            )}
+          </div>
+
           <label className="block">
             <span className="text-sm font-medium text-ink">Nome do traçado</span>
             <input value={rotulo} maxLength={40} onChange={(e) => setRotulo(e.target.value)} placeholder="Ex.: Âncora com corda" className={`${inputClass} mt-1`} />
@@ -575,30 +764,6 @@ function EditorTrama({
             ) : null}
           </details>
 
-          <details className="rounded-2xl border border-line bg-canvas px-4 py-3" open={Boolean(foto)}>
-            <summary className="cursor-pointer text-sm font-medium text-ink">Começar de uma imagem (logo, desenho)</summary>
-            <p className="mt-2 text-xs text-ink-soft">A imagem vira pontos da grade aqui mesmo no seu aparelho. Desenhos simples, de duas cores, ficam melhores.</p>
-            <input type="file" accept="image/*" onChange={(e) => abrirImagem(e.target.files?.[0])} className="mt-2 block w-full text-sm" />
-            {foto ? (
-              <div className="mt-3 space-y-2">
-                <label className="block text-xs text-ink-soft">
-                  Mais pontos ↔ menos pontos
-                  <input
-                    type="range"
-                    min={10}
-                    max={245}
-                    value={foto.limiar}
-                    onChange={(e) => aplicarFoto({ ...foto, limiar: Number(e.target.value) })}
-                    className="mt-1 w-full accent-wood"
-                  />
-                </label>
-                <label className="flex items-center gap-2 text-xs text-ink">
-                  <input type="checkbox" checked={foto.inverter} onChange={(e) => aplicarFoto({ ...foto, inverter: e.target.checked })} />
-                  Usar a parte clara da imagem
-                </label>
-              </div>
-            ) : null}
-          </details>
 
           <div>
             <p className="text-sm font-medium text-ink">Cores só para ver</p>
