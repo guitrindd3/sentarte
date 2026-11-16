@@ -1,4 +1,5 @@
 import type { TextosSalvos } from "./textos-paginas";
+import type { TramasDoPainel } from "./tramas-painel";
 export type Modelo = {
   id: string;
   nome: string;
@@ -83,6 +84,8 @@ export type SiteContent = {
   depoimentos: Depoimento[];
   /** Page texts edited in /admin "Páginas" (only fields changed from the defaults in lib/textos-paginas.ts). */
   paginas: TextosSalvos;
+  /** Admin "Traçados": shapes of Monte a sua trama taken out / brought back / drawn (lib/tramas-painel.ts). */
+  tramas?: TramasDoPainel;
 };
 
 export const DEFAULT_CONTENT: SiteContent = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckIcon, CompartilharIcon, WhatsAppIcon } from "@/components/icons";
 import { useCart } from "@/lib/cart-context";
 import { PublicarTrama } from "@/components/publicar-trama";
@@ -8,8 +8,10 @@ import { desenharMiniatura, IMG_H, IMG_W, pintarCadeira, posicaoNoEncosto, type 
 import { formatBRL, PARCELAS_MAX, precoCadeira, precoPix, rotuloTassel, TASSEL_PRECO, TIPOS_CADEIRA, type TipoCadeira } from "@/lib/offer";
 import { MEDIDAS_CADEIRAS } from "@/lib/medidas";
 import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
-import { CATEGORIAS, categoriaDa, type Categoria } from "@/lib/formas-categorias";
-import { FORMAS, FORMAS_VISIVEIS, ROTULOS_BUSCA, SUBGRUPO_DA_FORMA, semAcento } from "@/lib/formas-lista";
+import { CATEGORIAS, type Categoria } from "@/lib/formas-categorias";
+import { semAcento } from "@/lib/formas-lista";
+import { formasDoSite, PREFIXO_NOVA, TODAS_AS_FORMAS, type TramasDoPainel } from "@/lib/tramas-painel";
+import { decodificarGrade } from "@/lib/trama-foto";
 import { SUBGRUPOS } from "@/lib/formas-subgrupos";
 import { codificarCadeira, decodificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
@@ -72,10 +74,24 @@ function desenhar(
   ctx.putImageData(saida, -(corte.x0 ?? 0), -corte.y0);
 }
 
-/** Shape name for labels and the order ("foto" isn't in the shape list). */
-const rotuloDaForma = (f: Forma) => (f === "foto" ? "Sua foto" : (FORMAS.find((x) => x.valor === f)?.rotulo ?? "Lisa"));
-
-export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumero: string; /** /admin/montar: step 4 publishes the chair instead of ordering it. */ painel?: boolean }) {
+export function ChairBuilder({
+  whatsappNumero,
+  painel = false,
+  tramas,
+}: {
+  whatsappNumero: string;
+  /** /admin/montar: step 4 publishes the chair instead of ordering it. */
+  painel?: boolean;
+  /** Admin "Traçados": shapes taken out / brought back / drawn (SiteContent.tramas). */
+  tramas?: TramasDoPainel;
+}) {
+  // The grid's shapes: the code's list with the admin's changes (lib/tramas-painel.ts).
+  const { lista: formasVisiveis, busca: rotulosBusca, subgrupo: subgrupoDaForma } = useMemo(() => formasDoSite(tramas), [tramas]);
+  /** Shape name for labels and the order (drawn shapes included; any key, even a hidden one). */
+  const rotuloDaForma = (f: Forma) =>
+    f === "foto" ? "Sua foto" : (formasVisiveis.find((x) => x.valor === f)?.rotulo ?? TODAS_AS_FORMAS.find((x) => x.valor === f)?.rotulo ?? "Lisa");
+  /** A drawn shape's grid (its key starts with "nv-"). */
+  const gradeDa = (f: string) => (f.startsWith(PREFIXO_NOVA) ? formasVisiveis.find((x) => x.valor === f)?.grade : undefined);
   // Opens straight on step 1 with the woven chair (user 2026-10-06: no empty
   // frame / "Começar a montar" any more).
   const [passo, setPasso] = useState(1);
@@ -83,7 +99,6 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
   const [forma, setForma] = useState<Forma>("lisa");
   // "Sua foto vira trama" was taken out the same day (user); the renderer still
   // reads `foto` so links made in the meantime keep their picture.
-  const fotoDaForma: string | undefined = undefined;
   // Chair type (user 2026-10-05): only chosen here, in the builder. The picture
   // stays the normal chair; the type changes the price, the order and the shipping.
   const [tipo, setTipo] = useState<TipoCadeira>("normal");
@@ -146,13 +161,16 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
       const op = decodificarCadeira(q);
       const fio = (cor: string): Fio =>
         FIOS.find((f) => f.cor.toLowerCase() === cor.toLowerCase()) ?? { nome: `Cor personalizada (${cor.toUpperCase()})`, cor };
-      setForma(op.forma === "foto" ? "lisa" : op.forma);
-      const f = FORMAS.find((x) => x.valor === op.forma);
+      // a drawn shape comes back as its grid: find it among the admin's shapes
+      const desenhada = (g?: string) => (g ? (formasVisiveis.find((x) => x.grade === g)?.valor as Forma | undefined) : undefined) ?? "lisa";
+      const formaLink = op.forma === "foto" ? desenhada(op.foto) : op.forma;
+      setForma(formaLink);
+      const f = formasVisiveis.find((x) => x.valor === formaLink) ?? TODAS_AS_FORMAS.find((x) => x.valor === formaLink);
       if (f) {
-        setGrupo(categoriaDa(f.valor, f.grupo));
+        setGrupo(f.grupo);
         setSub("");
       }
-      setFormaAssento(op.formaAssento ?? "lisa");
+      setFormaAssento(op.formaAssento === "foto" ? desenhada(op.fotoAssento) : (op.formaAssento ?? "lisa"));
       setEscalaAssento(op.escalaAssento ?? 1);
       setFioA(fio(op.corA));
       setFioB(fio(op.corB));
@@ -180,7 +198,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
     const aoPedir = (e: Event) => aplicar(new URLSearchParams((e as CustomEvent<string>).detail));
     window.addEventListener("sentarte:trama", aoPedir);
     return () => window.removeEventListener("sentarte:trama", aoPedir);
-  }, [painel]);
+  }, [painel, formasVisiveis]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const passosRef = useRef<HTMLDivElement>(null);
@@ -224,12 +242,17 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
 
   const nomeEncosto = nomeNoAssento ? "" : nome;
   const nomeAssento = nomeNoAssento ? nome : "";
-  const opcoes = { tipo: tipo === "normal" ? undefined : tipo, forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira: bracoMadeira || undefined, ...tasselOpcoes };
+  // drawn shapes go to the renderer (and the link) as their grid
+  const gradeEncosto = gradeDa(forma);
+  const gradeAssento = gradeDa(formaAssento);
+  const formaDesenho: Forma = gradeEncosto ? "foto" : forma;
+  const formaAssentoDesenho: Forma = gradeAssento ? "foto" : formaAssento;
+  const opcoes = { tipo: tipo === "normal" ? undefined : tipo, forma: formaDesenho, formaAssento: formaAssentoDesenho, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: gradeEncosto, fotoAssento: gradeAssento, bracoMadeira: bracoMadeira || undefined, ...tasselOpcoes };
 
   // Main preview.
   useEffect(() => {
     if (!foto || passo === 0) return;
-    desenhar(canvasRef.current, foto, { forma, formaAssento, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: fotoDaForma, bracoMadeira, tassel: tasselCor ?? undefined, tasselQtd, tasselLado }, {
+    desenhar(canvasRef.current, foto, { forma: formaDesenho, formaAssento: formaAssentoDesenho, corA: fioA.cor, corB: fioB.cor, corC, nome: nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, foto: gradeEncosto, fotoAssento: gradeAssento, bracoMadeira, tassel: tasselCor ?? undefined, tasselQtd, tasselLado }, {
       y0: CORTE_Y0,
       h: CORTE_H,
     });
@@ -239,38 +262,38 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
       ctx?.clearRect(0, 0, mini.width, mini.height);
       ctx?.drawImage(canvasRef.current, 0, 0, mini.width, mini.height);
     }
-  }, [foto, passo, forma, formaAssento, fioA, fioB, corC, nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, fotoDaForma, bracoMadeira, tasselCor, tasselQtd, tasselLado]);
+  }, [foto, passo, formaDesenho, formaAssentoDesenho, fioA, fioB, corC, nomeEncosto, nomeAssento, tamanhoNomeAssento, escalaAssento, posicao, tamanhoNome, escalaForma, posForma, gradeEncosto, gradeAssento, bracoMadeira, tasselCor, tasselQtd, tasselLado]);
 
   // Shape thumbnails: flat and straight (just the figure), in the chosen
   // colors — the photo's perspective made them look slanted.
   useEffect(() => {
     if (passo > 1) return;
     const termo = semAcento(busca);
-    FORMAS_VISIVEIS.forEach((f, i) => {
+    formasVisiveis.forEach((f, i) => {
       const c = miniaturasRef.current[i];
-      const visivel = termo ? ROTULOS_BUSCA[i].includes(termo) : f.grupo === grupo && (!sub || SUBGRUPO_DA_FORMA[i] === sub);
+      const visivel = termo ? rotulosBusca[i].includes(termo) : f.grupo === grupo && (!sub || subgrupoDaForma[i] === sub);
       const ctx = visivel ? c?.getContext("2d") : null;
-      if (c && ctx) desenharMiniatura(ctx, c.width, c.height, f.valor, fioA.cor, fioB.cor, parte);
+      if (c && ctx) desenharMiniatura(ctx, c.width, c.height, (f.grade ? "foto" : f.valor) as Forma, fioA.cor, fioB.cor, parte, f.grade ? decodificarGrade(f.grade) : null);
     });
-  }, [passo, fioA, fioB, grupo, sub, parte, busca]);
+  }, [passo, fioA, fioB, grupo, sub, parte, busca, formasVisiveis, rotulosBusca, subgrupoDaForma]);
   const termoBusca = semAcento(busca);
   const mostrarForma = (i: number) =>
-    termoBusca ? ROTULOS_BUSCA[i].includes(termoBusca) : FORMAS_VISIVEIS[i].grupo === grupo && (!sub || SUBGRUPO_DA_FORMA[i] === sub);
+    termoBusca ? rotulosBusca[i].includes(termoBusca) : formasVisiveis[i].grupo === grupo && (!sub || subgrupoDaForma[i] === sub);
   // Sub-group chips of the open tab, with how many shapes each one has.
   const subsDaAba = (() => {
     const lista = SUBGRUPOS[grupo];
     if (!lista || termoBusca) return [];
     const conta = new Map<string, number>();
-    FORMAS_VISIVEIS.forEach((f, i) => {
-      if (f.grupo === grupo) conta.set(SUBGRUPO_DA_FORMA[i], (conta.get(SUBGRUPO_DA_FORMA[i]) ?? 0) + 1);
+    formasVisiveis.forEach((f, i) => {
+      if (f.grupo === grupo) conta.set(subgrupoDaForma[i], (conta.get(subgrupoDaForma[i]) ?? 0) + 1);
     });
     return [...lista, { valor: "outros", rotulo: "Outros" }]
       .map((s) => ({ valor: s.valor, rotulo: s.rotulo, n: conta.get(s.valor) ?? 0 }))
       .filter((s) => s.n > 0);
   })();
-  const achadas = termoBusca ? ROTULOS_BUSCA.filter((r) => r.includes(termoBusca)).length : -1;
+  const achadas = termoBusca ? rotulosBusca.filter((r) => r.includes(termoBusca)).length : -1;
   const NO_CELULAR = 24;
-  const formasDaAba = FORMAS_VISIVEIS.flatMap((f, i) => (mostrarForma(i) ? [i] : []));
+  const formasDaAba = formasVisiveis.flatMap((f, i) => (mostrarForma(i) ? [i] : []));
   const posNaAba = new Map(formasDaAba.map((i, pos) => [i, pos]));
   const cortaNoCelular = !todasFormas && !termoBusca && formasDaAba.length > NO_CELULAR;
 
@@ -387,7 +410,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
         ? "com o nome"
         : formaAssento === "lisa"
           ? "liso"
-          : `${FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? formaAssento}${Math.abs(escalaAssento - 1) > 0.02 ? ` (tamanho ${Math.round(escalaAssento * 100)}%)` : ""}`
+          : `${rotuloDaForma(formaAssento)}${Math.abs(escalaAssento - 1) > 0.02 ? ` (tamanho ${Math.round(escalaAssento * 100)}%)` : ""}`
     }`,
     temNome
       ? nomeNoAssento
@@ -764,7 +787,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
               >
                 {GRUPOS.map((g) => {
                   const aberto = grupo === g.valor;
-                  const temEscolhido = FORMAS_VISIVEIS.some((f) => f.grupo === g.valor && f.valor === formaAtiva);
+                  const temEscolhido = formasVisiveis.some((f) => f.grupo === g.valor && f.valor === formaAtiva);
                   return (
                     <button
                       key={g.valor}
@@ -797,7 +820,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                 <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Tipo de desenho">
                   {[{ valor: "", rotulo: "Todos", n: 0 }, ...subsDaAba].map((s) => {
                     const ativo = sub === s.valor;
-                    const temEscolhido = s.valor !== "" && FORMAS_VISIVEIS.some((f, i) => f.grupo === grupo && SUBGRUPO_DA_FORMA[i] === s.valor && f.valor === formaAtiva);
+                    const temEscolhido = s.valor !== "" && formasVisiveis.some((f, i) => f.grupo === grupo && subgrupoDaForma[i] === s.valor && f.valor === formaAtiva);
                     return (
                       <button
                         key={s.valor || "todos"}
@@ -820,11 +843,11 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                 </div>
               ) : null}
               <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
-                {FORMAS_VISIVEIS.map((f, i) => !mostrarForma(i) ? null : (
+                {formasVisiveis.map((f, i) => !mostrarForma(i) ? null : (
                   <button
                     key={f.valor}
                     type="button"
-                    onClick={() => escolherForma(f.valor)}
+                    onClick={() => escolherForma(f.valor as Forma)}
                     aria-pressed={formaAtiva === f.valor}
                     className={`relative flex flex-col items-center gap-1.5 border-2 p-1.5 text-xs transition-all ${
                       cortaNoCelular && (posNaAba.get(i) ?? 0) >= NO_CELULAR && formaAtiva !== f.valor ? "max-sm:hidden" : ""
@@ -1014,7 +1037,7 @@ export function ChairBuilder({ whatsappNumero, painel = false }: { whatsappNumer
                       ? "Com o nome"
                       : formaAssento === "lisa"
                         ? "Liso"
-                        : FORMAS.find((f) => f.valor === formaAssento)?.rotulo ?? "",
+                        : rotuloDaForma(formaAssento),
                   ],
                   ["Nome", temNome ? nomeLimpo.replace(/\n/g, " / ") : "Sem nome"],
                   ...(bracoMadeira ? [["Braço", "De madeira"]] : []),

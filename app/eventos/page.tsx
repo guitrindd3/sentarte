@@ -83,7 +83,7 @@ export default async function EventosPage() {
         <h2 className="font-serif text-3xl font-medium tracking-tight text-ink">{textoSimples(tp.linha("monteTitulo"))}</h2>
         <p className="mb-6 mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">{textoSimples(tp.linha("monteTexto"))}</p>
         <AvisoBlackFriday />
-        <ChairBuilder whatsappNumero={zap} />
+        <ChairBuilder whatsappNumero={zap} tramas={content.tramas} />
       </section>
 
       {modelos.length > 0 && cadeiras ? (

@@ -32,6 +32,8 @@ export function codificarCadeira(op: Opcoes): string {
   p.set("b", op.corB.replace("#", ""));
   if (op.corC) p.set("c", op.corC.replace("#", ""));
   if (op.formaAssento && op.formaAssento !== "lisa") p.set("fa", op.formaAssento);
+  // a seat shape drawn in the admin travels as its grid
+  if (op.formaAssento === "foto" && op.fotoAssento) p.set("fda", op.fotoAssento);
   if ((op.escalaAssento ?? 1) !== 1) p.set("ea", String(r2(op.escalaAssento ?? 1)));
   if (op.nomeAssento?.trim()) p.set("na", op.nomeAssento.trim().slice(0, 48));
   if ((op.tamanhoNomeAssento ?? 1) !== 1) p.set("tna", String(r2(op.tamanhoNomeAssento ?? 1)));
@@ -57,7 +59,8 @@ export function decodificarCadeira(q: URLSearchParams): Opcoes {
   const fd = q.get("fd");
   const temFoto = decodificarGrade(fd) !== null;
   const forma = q.get("f") === "foto" && !temFoto ? "lisa" : (q.get("f") ?? "lisa");
-  const formaAssento = q.get("fa") ?? "lisa";
+  const fda = q.get("fda");
+  const formaAssento = q.get("fa") === "foto" && decodificarGrade(fda) === null ? "lisa" : (q.get("fa") ?? "lisa");
   const tc = q.get("tc");
   return {
     tipo: tc === "infantil" || tc === "reclinavel" ? tc : undefined,
@@ -79,5 +82,6 @@ export function decodificarCadeira(q: URLSearchParams): Opcoes {
     escalaForma: num(q.get("e"), 0.35, 1, 1),
     posForma: { x: num(q.get("fx"), 0, 1, 0.5), y: num(q.get("fy"), 0, 1, 0.5) },
     ...(forma === "foto" && fd ? { foto: fd } : {}),
+    ...(formaAssento === "foto" && fda ? { fotoAssento: fda } : {}),
   };
 }

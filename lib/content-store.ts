@@ -22,6 +22,7 @@ function normalizar(data: Partial<SiteContent>): SiteContent {
     categorias: data.categorias ?? DEFAULT_CONTENT.categorias,
     depoimentos: data.depoimentos ?? [],
     paginas: data.paginas ?? {},
+    ...(data.tramas ? { tramas: data.tramas } : {}),
   };
 }
 

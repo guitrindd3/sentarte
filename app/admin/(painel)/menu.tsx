@@ -30,6 +30,7 @@ export const ICONES = {
       <path d="M6 12h12M8 12l-2 8M16 12l2 8M9.5 4v8M12 4v8M14.5 4v8" />
     </>
   ),
+  tramas: <path d="M4 4h16v16H4zM4 9.3h16M4 14.6h16M9.3 4v16M14.6 4v16M9.3 9.3h5.3v5.3H9.3z" />,
   montar: <path d="M5 19.5 15.5 9M14 5.5l4.5 4.5M12.5 4 20 11.5M4.5 14.5l5 5" />,
   depoimentos: <path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM8 9.5h8M8 12.5h5" />,
   site: (
@@ -79,6 +80,7 @@ export const GRUPOS_MAIS: { titulo: string; itens: ItemMenu[] }[] = [
     titulo: "Site",
     itens: [
       item("/admin/montar", "Montar e publicar", ICONES.montar, "Crie uma trama e publique."),
+      item("/admin/tramas", "Traçados", ICONES.tramas, "Tire, volte ou desenhe traçados."),
       item("/admin/paginas", "Páginas", ICONES.paginas, "Sobre, FAQ, políticas."),
       item("/admin/depoimentos", "Depoimentos", ICONES.depoimentos, "Avaliações de clientes."),
       item("/admin/site", "Textos e contato", ICONES.site, "WhatsApp, Instagram, Google."),

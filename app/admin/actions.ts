@@ -63,6 +63,7 @@ import {
 import { getAdminContent, getContent, getContentForWrite, prepararFoto, saveContent } from "@/lib/content-store";
 import type { ArquivoNovo } from "@/lib/github-store";
 import { commitDaAcao } from "@/lib/github-store";
+import { normalizarTramas } from "@/lib/tramas-painel";
 import type { Categoria, Depoimento, Modelo } from "@/lib/content-schema";
 
 export type LoginState = { error?: string; etapa?: "senha" | "codigo" } | undefined;
@@ -648,6 +649,26 @@ export async function excluirCupomAction(codigo: string) {
     updateTag("cupons");
     revalidateSite();
     return `Cupom ${codigo} apagado.`;
+  });
+}
+
+// --- Traçados do Monte a sua trama (2026-11-16) -------------------------------------
+
+/** Shapes taken out / brought back / drawn in /admin/tramas, all in one commit. */
+export async function salvarTramasAction(_p: Resultado, formData: FormData) {
+  return executar(async () => {
+    let bruto: unknown;
+    try {
+      bruto = JSON.parse(String(formData.get("tramas") ?? ""));
+    } catch {
+      throw new Aviso("Não deu para ler as mudanças. Recarregue a página e tente de novo.");
+    }
+    const t = normalizarTramas(bruto);
+    const content = await getContentForWrite();
+    if (t.ocultas.length || t.mostrar.length || t.novas.length) content.tramas = t;
+    else delete content.tramas;
+    await saveContent(content, "muda os traçados do Monte a sua trama");
+    return { msg: PRONTO, ir: "/admin/tramas" };
   });
 }
 

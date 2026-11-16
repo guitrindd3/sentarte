@@ -56,7 +56,7 @@ export default async function PersonalizarPage() {
       </section>
       <section className="mx-auto max-w-6xl px-6 py-14">
         <AvisoBlackFriday />
-        <ChairBuilder whatsappNumero={content.site.whatsappNumero} />
+        <ChairBuilder whatsappNumero={content.site.whatsappNumero} tramas={content.tramas} />
       </section>
     </>
   );

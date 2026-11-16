@@ -17,7 +17,7 @@ export default async function Montar() {
         </p>
       </div>
       <div className="rounded-2xl border border-line/70 bg-canvas p-3 sm:p-6">
-        <ChairBuilder whatsappNumero={content.site.whatsappNumero} painel />
+        <ChairBuilder whatsappNumero={content.site.whatsappNumero} painel tramas={content.tramas} />
       </div>
     </div>
   );

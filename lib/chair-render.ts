@@ -230,6 +230,8 @@ export type Opcoes = {
   escalaAssento?: number;
   /** forma "foto": the backrest grid made from the customer's photo (lib/trama-foto.ts). */
   foto?: string;
+  /** formaAssento "foto": a 29x29 grid drawn in the admin "Traçados" (lib/tramas-painel.ts). */
+  fotoAssento?: string;
   /** Wooden armrests (2026-10-21): the photo's grey plastic arms are repainted as wood. */
   bracoMadeira?: boolean;
   /** Tassels (2026-10-23): one on each backrest upright, in one of the chair's
@@ -1305,6 +1307,17 @@ function mascaraNomeAssento(texto: string, tamanho = 1) {
 
 /** Flat, straight thumbnail of a shape (no photo): the pattern grid in the
  * two thread colors, with thin gaps so it still reads as woven. */
+/**
+ * A 29x29 grid (lib/trama-foto.ts) on the seat: a centered square of
+ * ASSENTO_ROWS cells (the seat grid is much wider than tall), nearest cell.
+ */
+function celulaDaGradeNoAssento(g: Uint8Array, fi: number, fj: number) {
+  const lado = ASSENTO_ROWS;
+  const i = fi - Math.floor((ASSENTO_COLS - lado) / 2);
+  if (i < 0 || i >= lado || fj < 0 || fj >= lado) return false;
+  return g[Math.floor((fj * FOTO_ROWS) / lado) * FOTO_COLS + Math.floor((i * FOTO_COLS) / lado)] === 1;
+}
+
 export function desenharMiniatura(
   ctx: CanvasRenderingContext2D,
   largura: number,
@@ -1312,7 +1325,9 @@ export function desenharMiniatura(
   forma: Forma,
   corA: string,
   corB: string,
-  parte: "encosto" | "assento"
+  parte: "encosto" | "assento",
+  /** forma "foto": the drawn grid (lib/trama-foto.ts). */
+  grade?: Uint8Array | null
 ) {
   const cols = parte === "encosto" ? ENCOSTO_COLS : ASSENTO_COLS;
   const rows = parte === "encosto" ? ENCOSTO_ROWS : ASSENTO_ROWS;
@@ -1323,7 +1338,13 @@ export function desenharMiniatura(
   ctx.fillStyle = corB;
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
-      const on = forma === "meio-a-meio" ? i >= cols / 2 : forma !== "lisa" && celulaDaForma(forma, i, j, cols, rows);
+      const on = grade
+        ? parte === "encosto"
+          ? i < FOTO_COLS && j < FOTO_ROWS && grade[j * FOTO_COLS + i] === 1
+          : celulaDaGradeNoAssento(grade, i, j)
+        : forma === "meio-a-meio"
+          ? i >= cols / 2
+          : forma !== "lisa" && forma !== "foto" && celulaDaForma(forma, i, j, cols, rows);
       if (on) ctx.fillRect(i * cw, j * ch, Math.ceil(cw), Math.ceil(ch));
     }
   }
@@ -1430,7 +1451,8 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   // Seat: main (vertical) color, with an optional pattern in the detail
   // color. Pattern cells follow the seat's perspective: u runs across the
   // seat between its left/right edges on that row, v from back to front.
-  const formaAssento = op.formaAssento ?? "lisa";
+  const gradeAssento = op.formaAssento === "foto" ? decodificarGrade(op.fotoAssento) : null;
+  const formaAssento = op.formaAssento === "foto" && !gradeAssento ? "lisa" : (op.formaAssento ?? "lisa");
   const nomeSeat = mascaraNomeAssento(op.nomeAssento ?? "", op.tamanhoNomeAssento ?? 1);
   // above 1 the figure grows and is cut at the panel edge — never past it
   const escA = Math.max(0.4, Math.min(2, op.escalaAssento ?? 1));
@@ -1464,7 +1486,11 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
           !nomeSeat &&
           dentroCaixa &&
           formaAssento !== "lisa" &&
-          (formaAssento === "meio-a-meio" ? us >= 0.5 : celulaDaForma(formaAssento, fi, fj, ASSENTO_COLS, ASSENTO_ROWS));
+          (gradeAssento
+            ? celulaDaGradeNoAssento(gradeAssento, fi, fj)
+            : formaAssento === "meio-a-meio"
+              ? us >= 0.5
+              : celulaDaForma(formaAssento, fi, fj, ASSENTO_COLS, ASSENTO_ROWS));
         if (nomeSeat) {
           const k = cj * ASSENTO_COLS + ci;
           if (nomeSeat.letra[k]) detalhe = true;
