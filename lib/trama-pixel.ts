@@ -1,4 +1,4 @@
-import { FOTO_COLS, FOTO_ROWS } from "./trama-foto";
+import { FOTO_COLS, FOTO_ROWS, MAX_LADO_DESENHO, type Desenho } from "./trama-foto";
 
 // Pixel art and cross-stitch charts (admin Traçados, user 2026-11-16: "anexar
 // uma imagem… em pixel ou em ponto cruz… e você coloca na cadeira").
@@ -7,7 +7,7 @@ import { FOTO_COLS, FOTO_ROWS } from "./trama-foto";
 // grid lines — and read one color per square, from the middle of the square so
 // grid lines and the X of a stitch don't count. Every square that isn't the
 // background color becomes a detail-thread point; the design keeps its exact
-// stitches when it fits in 29x29 and is scaled to fit when bigger.
+// stitches; a design bigger than 29x29 keeps its own size (no shrinking).
 // lerPixelArte needs a browser (canvas); the rest is plain math.
 
 const N = FOTO_COLS * FOTO_ROWS;
@@ -119,7 +119,7 @@ export function lerPixelArteDosPixels(d: Uint8ClampedArray, w: number, h: number
   const inicioY = py.o >= py.p * 0.6 ? py.o - py.p : py.o;
   const cols = Math.floor((w - inicioX) / px.p + 1e-6);
   const rows = Math.floor((h - inicioY) / py.p + 1e-6);
-  if (cols < 3 || rows < 3 || cols > 160 || rows > 160) return null;
+  if (cols < 3 || rows < 3 || cols > MAX_LADO_DESENHO || rows > MAX_LADO_DESENHO) return null;
 
   const cores = new Uint8ClampedArray(cols * rows * 3);
   for (let j = 0; j < rows; j++) {
@@ -189,11 +189,13 @@ export function lerPixelArte(img: HTMLImageElement | HTMLCanvasElement | ImageBi
 }
 
 /**
- * The 29x29 grid from the squares: squares farther than `tolerancia` from the
- * background become points (the opposite with `inverter`). Trimmed to the
- * design and centered; a design bigger than 29 is scaled down keeping its shape.
+ * The design from the squares: squares farther than `tolerancia` from the
+ * background become points (the opposite with `inverter`), trimmed to the
+ * design. Up to 29x29 it's centered on the classic grid; bigger, it keeps its
+ * own size, point by point — never shrunk (user 2026-11-16: "não quero que o
+ * desenho seja diminuído… deixa sem limite").
  */
-export function gradeDaPixelArte(a: PixelArte, tolerancia: number, inverter: boolean) {
+export function gradeDaPixelArte(a: PixelArte, tolerancia: number, inverter: boolean): Desenho & { largura: number; altura: number } {
   const { cores, cols, rows, fundo } = a;
   const on = new Uint8Array(cols * rows);
   let x0 = cols;
@@ -212,33 +214,19 @@ export function gradeDaPixelArte(a: PixelArte, tolerancia: number, inverter: boo
       }
     }
   }
-  const bits = new Uint8Array(N);
-  if (x1 < 0) return { bits: inverter ? bits.fill(1) : bits, largura: 0, altura: 0, diminuiu: false };
+  if (x1 < 0) {
+    const bits = new Uint8Array(N);
+    return { bits: inverter ? bits.fill(1) : bits, cols: FOTO_COLS, rows: FOTO_ROWS, largura: 0, altura: 0 };
+  }
   const bw = x1 - x0 + 1;
   const bh = y1 - y0 + 1;
-  const escala = Math.max(1, bw / FOTO_COLS, bh / FOTO_ROWS);
-  const tw = Math.min(FOTO_COLS, Math.round(bw / escala));
-  const th = Math.min(FOTO_ROWS, Math.round(bh / escala));
-  const ox = Math.floor((FOTO_COLS - tw) / 2);
-  const oy = Math.floor((FOTO_ROWS - th) / 2);
-  for (let j = 0; j < th; j++) {
-    for (let i = 0; i < tw; i++) {
-      let v: number;
-      if (escala === 1) v = on[(y0 + j) * cols + x0 + i];
-      else {
-        // share of the source squares under this point that are lit
-        const sx0 = Math.floor(x0 + i * escala);
-        const sx1 = Math.min(x1 + 1, Math.ceil(x0 + (i + 1) * escala));
-        const sy0 = Math.floor(y0 + j * escala);
-        const sy1 = Math.min(y1 + 1, Math.ceil(y0 + (j + 1) * escala));
-        let s = 0;
-        let n = 0;
-        for (let y = sy0; y < sy1; y++) for (let x = sx0; x < sx1; x++, n++) s += on[y * cols + x];
-        v = n && s / n >= 0.4 ? 1 : 0;
-      }
-      bits[(oy + j) * FOTO_COLS + ox + i] = v;
-    }
-  }
-  if (inverter) for (let k = 0; k < N; k++) bits[k] = bits[k] ? 0 : 1;
-  return { bits, largura: bw, altura: bh, diminuiu: escala > 1 };
+  const grande = bw > FOTO_COLS || bh > FOTO_ROWS;
+  const gc = grande ? bw : FOTO_COLS;
+  const gr = grande ? bh : FOTO_ROWS;
+  const ox = grande ? 0 : Math.floor((FOTO_COLS - bw) / 2);
+  const oy = grande ? 0 : Math.floor((FOTO_ROWS - bh) / 2);
+  const bits = new Uint8Array(gc * gr);
+  for (let j = 0; j < bh; j++) for (let i = 0; i < bw; i++) bits[(oy + j) * gc + ox + i] = on[(y0 + j) * cols + x0 + i];
+  if (inverter) for (let k = 0; k < bits.length; k++) bits[k] = bits[k] ? 0 : 1;
+  return { bits, cols: gc, rows: gr, largura: bw, altura: bh };
 }

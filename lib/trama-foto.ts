@@ -36,6 +36,71 @@ export function decodificarGrade(s: string | null | undefined): Uint8Array | nul
   return bits;
 }
 
+/**
+ * Any-size design (admin Traçados, user 2026-11-16: "retira esse limite de
+ * 29x29… quero que ele fique do jeito que eu adiciono"). A design up to 29x29
+ * keeps the old 144-char format above; a bigger one is "." + cols (2 chars) +
+ * rows (2 chars) + its bits, and the chair draws it with smaller cells so every
+ * stitch stays (lib/chair-render.ts).
+ */
+export type Desenho = { bits: Uint8Array; cols: number; rows: number };
+export const MAX_LADO_DESENHO = 200;
+
+function bitsEmTexto(bits: Uint8Array, n: number) {
+  const bytes = new Uint8Array(Math.ceil(n / 8));
+  for (let k = 0; k < n; k++) if (bits[k]) bytes[k >> 3] |= 1 << (7 - (k & 7));
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 3) {
+    const v = (bytes[i] << 16) | ((bytes[i + 1] ?? 0) << 8) | (bytes[i + 2] ?? 0);
+    s += B64[(v >> 18) & 63] + B64[(v >> 12) & 63] + B64[(v >> 6) & 63] + B64[v & 63];
+  }
+  return s;
+}
+
+export function codificarDesenho(d: Desenho): string {
+  if (d.cols === FOTO_COLS && d.rows === FOTO_ROWS) return codificarGrade(d.bits);
+  const dois = (v: number) => B64[(v >> 6) & 63] + B64[v & 63];
+  return "." + dois(d.cols) + dois(d.rows) + bitsEmTexto(d.bits, d.cols * d.rows);
+}
+
+/** A design of any size (the old 29x29 format too), or null for anything malformed. */
+export function decodificarDesenho(s: string | null | undefined): Desenho | null {
+  if (!s) return null;
+  if (s[0] !== ".") {
+    const bits = decodificarGrade(s);
+    return bits ? { bits, cols: FOTO_COLS, rows: FOTO_ROWS } : null;
+  }
+  if (!/^\.[A-Za-z0-9_-]+$/.test(s) || s.length < 9) return null;
+  const v = (i: number) => (B64.indexOf(s[i]) << 6) | B64.indexOf(s[i + 1]);
+  const cols = v(1);
+  const rows = v(3);
+  if (cols < 1 || rows < 1 || cols > MAX_LADO_DESENHO || rows > MAX_LADO_DESENHO) return null;
+  const n = cols * rows;
+  const corpo = s.slice(5);
+  if (corpo.length !== Math.ceil(Math.ceil(n / 8) / 3) * 4) return null;
+  const bytes = new Uint8Array(Math.ceil(Math.ceil(n / 8) / 3) * 3);
+  for (let i = 0, o = 0; i < corpo.length; i += 4, o += 3) {
+    const x = (B64.indexOf(corpo[i]) << 18) | (B64.indexOf(corpo[i + 1]) << 12) | (B64.indexOf(corpo[i + 2]) << 6) | B64.indexOf(corpo[i + 3]);
+    bytes[o] = (x >> 16) & 255;
+    bytes[o + 1] = (x >> 8) & 255;
+    bytes[o + 2] = x & 255;
+  }
+  const bits = new Uint8Array(n);
+  for (let k = 0; k < n; k++) bits[k] = (bytes[k >> 3] >> (7 - (k & 7))) & 1;
+  return { bits, cols, rows };
+}
+
+/**
+ * Whether the point (x, y) of an area w x h (any unit) falls on a stitch of a
+ * design bigger than 29x29: the design is fitted whole and centered, square cells.
+ */
+export function pontoDoDesenho(d: Desenho, x: number, y: number, w: number, h: number) {
+  const s = Math.min(w / d.cols, h / d.rows);
+  const i = Math.floor((x - (w - d.cols * s) / 2) / s);
+  const j = Math.floor((y - (h - d.rows * s) / 2) / s);
+  return i >= 0 && j >= 0 && i < d.cols && j < d.rows && d.bits[j * d.cols + i] === 1;
+}
+
 /** Brightness of each cell (0-255), center-cropped to a square and averaged down. Browser only. */
 export function brilhoDasCelulas(img: HTMLImageElement | HTMLCanvasElement | ImageBitmap): Float32Array {
   const w = "naturalWidth" in img ? img.naturalWidth : img.width;

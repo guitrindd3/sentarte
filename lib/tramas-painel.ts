@@ -2,7 +2,7 @@ import { CATEGORIAS, categoriaDa, type Categoria } from "./formas-categorias";
 import { FORMAS, semAcento } from "./formas-lista";
 import { FORMAS_OCULTAS } from "./formas-extras-3";
 import { subgrupoDa } from "./formas-subgrupos";
-import { decodificarGrade } from "./trama-foto";
+import { decodificarDesenho } from "./trama-foto";
 
 // Admin "Traçados" (2026-11-16, user: "a pessoa que é adm pode escolher tirar
 // ou até mesmo colocar os traçados no monte sua trama… ver os traçados todos…
@@ -10,7 +10,7 @@ import { decodificarGrade } from "./trama-foto";
 // Saved in SiteContent.tramas (one commit, site updates in 1-2 min):
 // - ocultas: shape keys the admin took out of the grid;
 // - mostrar: shapes hidden in code (FORMAS_OCULTAS, near-duplicates) that the admin brought back;
-// - novas: shapes the admin drew (29x29 grid, same encoding as lib/trama-foto.ts).
+// - novas: shapes the admin drew (29x29 grid or any size, codificarDesenho in lib/trama-foto.ts).
 // A hidden shape still renders for old links — nothing is ever deleted from
 // the code. A drawn shape travels in the chair link as its grid (f=foto&fd=…,
 // seat fa=foto&fda=…), so links keep working even if it's deleted later.
@@ -35,7 +35,7 @@ export function normalizarTramas(x: unknown): TramasDoPainel {
     if (!n || typeof n !== "object") continue;
     const { id, rotulo, grupo, grade } = n as Record<string, unknown>;
     if (typeof id !== "string" || !/^[a-z]{4,12}$/.test(id) || ids.has(id)) continue;
-    if (typeof grade !== "string" || !decodificarGrade(grade)) continue;
+    if (typeof grade !== "string" || !decodificarDesenho(grade)) continue;
     const nome = typeof rotulo === "string" ? rotulo.replace(/\s+/g, " ").trim().slice(0, 40) : "";
     if (!nome) continue;
     ids.add(id);

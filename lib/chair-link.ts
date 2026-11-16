@@ -1,5 +1,5 @@
 import type { Forma, Opcoes } from "./chair-render";
-import { decodificarGrade } from "./trama-foto";
+import { decodificarDesenho } from "./trama-foto";
 
 // A Monte a sua trama design packed into a short query string, so the
 // WhatsApp message can carry a link whose preview IS the chair: /c?… is a
@@ -57,10 +57,10 @@ export function decodificarCadeira(q: URLSearchParams): Opcoes {
     return HEX.test(v) ? `#${v}` : padrao;
   };
   const fd = q.get("fd");
-  const temFoto = decodificarGrade(fd) !== null;
+  const temFoto = decodificarDesenho(fd) !== null;
   const forma = q.get("f") === "foto" && !temFoto ? "lisa" : (q.get("f") ?? "lisa");
   const fda = q.get("fda");
-  const formaAssento = q.get("fa") === "foto" && decodificarGrade(fda) === null ? "lisa" : (q.get("fa") ?? "lisa");
+  const formaAssento = q.get("fa") === "foto" && decodificarDesenho(fda) === null ? "lisa" : (q.get("fa") ?? "lisa");
   const tc = q.get("tc");
   return {
     tipo: tc === "infantil" || tc === "reclinavel" ? tc : undefined,

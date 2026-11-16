@@ -22,7 +22,10 @@ import { FORMAS_BOHO_TRIBAL } from "./formas-boho-tribal";
 import { FORMAS_BOHO_CULTURAS } from "./formas-boho-culturas";
 import { FORMAS_ANIMES } from "./formas-animes";
 import { GLYPH_H, GLYPH_W, glyphPixel, normalizarTexto } from "./pixel-font";
-import { decodificarGrade, FOTO_COLS, FOTO_ROWS } from "./trama-foto";
+import { decodificarDesenho, FOTO_COLS, FOTO_ROWS, pontoDoDesenho, type Desenho } from "./trama-foto";
+
+/** A design that isn't the classic 29x29 grid: drawn whole with smaller cells. */
+const desenhoGrande = (d: Desenho | null) => (d && (d.cols !== FOTO_COLS || d.rows !== FOTO_ROWS) ? d : null);
 
 export type Forma =
   | "lisa"
@@ -1326,9 +1329,11 @@ export function desenharMiniatura(
   corA: string,
   corB: string,
   parte: "encosto" | "assento",
-  /** forma "foto": the drawn grid (lib/trama-foto.ts). */
-  grade?: Uint8Array | null
+  /** forma "foto": the drawn design (lib/trama-foto.ts). */
+  desenho?: Desenho | null
 ) {
+  const grande = desenhoGrande(desenho ?? null);
+  const grade = grande ? null : (desenho?.bits ?? null);
   const cols = parte === "encosto" ? ENCOSTO_COLS : ASSENTO_COLS;
   const rows = parte === "encosto" ? ENCOSTO_ROWS : ASSENTO_ROWS;
   const cw = largura / cols;
@@ -1347,6 +1352,18 @@ export function desenharMiniatura(
           : forma !== "lisa" && forma !== "foto" && celulaDaForma(forma, i, j, cols, rows);
       if (on) ctx.fillRect(i * cw, j * ch, Math.ceil(cw), Math.ceil(ch));
     }
+  }
+  if (grande) {
+    // every stitch of a big design, fitted whole and centered
+    ctx.fillStyle = corA;
+    ctx.fillRect(0, 0, largura, altura);
+    ctx.fillStyle = corB;
+    const s = Math.min(largura / grande.cols, altura / grande.rows);
+    const ox = (largura - grande.cols * s) / 2;
+    const oy = (altura - grande.rows * s) / 2;
+    for (let j = 0; j < grande.rows; j++)
+      for (let i = 0; i < grande.cols; i++)
+        if (grande.bits[j * grande.cols + i]) ctx.fillRect(ox + i * s, oy + j * s, Math.max(1, s), Math.max(1, s));
   }
   // vertical strand lines
   ctx.fillStyle = "rgba(0,0,0,0.14)";
@@ -1395,7 +1412,9 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   const cols = Math.ceil(wIn / CELULA);
   const rows = Math.ceil((h - MARGEM_TOPO - MARGEM_BASE) / CELULA);
   const nome = rasterizarNome(op.nome, op.posicao, op.tamanhoNome ?? 1);
-  const grade = op.forma === "foto" ? decodificarGrade(op.foto) : null;
+  const desenho = op.forma === "foto" ? decodificarDesenho(op.foto) : null;
+  const grande = desenhoGrande(desenho);
+  const grade = grande ? null : (desenho?.bits ?? null);
   const celula = (ci: number, cj: number) =>
     grade ? ci < FOTO_COLS && cj < FOTO_ROWS && grade[cj * FOTO_COLS + ci] === 1 : celulaDaForma(op.forma, ci, cj, cols, rows);
   // The shape is drawn as a scaled-down copy inside a box of the name area.
@@ -1424,7 +1443,7 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
           ? lx >= w / 2
           : !naMargem &&
             naCaixa &&
-            celula(Math.floor(u / CELULA), Math.floor(v / CELULA));
+            (grande ? pontoDoDesenho(grande, u, v, wIn, areaH) : celula(Math.floor(u / CELULA), Math.floor(v / CELULA)));
       if (nome) {
         const k = ly * w + lx;
         // Full-size shapes get a plain band behind the name; a reduced shape
@@ -1451,8 +1470,10 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
   // Seat: main (vertical) color, with an optional pattern in the detail
   // color. Pattern cells follow the seat's perspective: u runs across the
   // seat between its left/right edges on that row, v from back to front.
-  const gradeAssento = op.formaAssento === "foto" ? decodificarGrade(op.fotoAssento) : null;
-  const formaAssento = op.formaAssento === "foto" && !gradeAssento ? "lisa" : (op.formaAssento ?? "lisa");
+  const desenhoAssento = op.formaAssento === "foto" ? decodificarDesenho(op.fotoAssento) : null;
+  const grandeAssento = desenhoGrande(desenhoAssento);
+  const gradeAssento = grandeAssento ? null : (desenhoAssento?.bits ?? null);
+  const formaAssento = op.formaAssento === "foto" && !desenhoAssento ? "lisa" : (op.formaAssento ?? "lisa");
   const nomeSeat = mascaraNomeAssento(op.nomeAssento ?? "", op.tamanhoNomeAssento ?? 1);
   // above 1 the figure grows and is cut at the panel edge — never past it
   const escA = Math.max(0.4, Math.min(2, op.escalaAssento ?? 1));
@@ -1486,7 +1507,9 @@ export function pintarCadeira(foto: ImageData, saida: ImageData, op: Opcoes) {
           !nomeSeat &&
           dentroCaixa &&
           formaAssento !== "lisa" &&
-          (gradeAssento
+          (grandeAssento
+            ? pontoDoDesenho(grandeAssento, us * ASSENTO_COLS, vs * ASSENTO_ROWS, ASSENTO_COLS, ASSENTO_ROWS)
+            : gradeAssento
             ? celulaDaGradeNoAssento(gradeAssento, fi, fj)
             : formaAssento === "meio-a-meio"
               ? us >= 0.5

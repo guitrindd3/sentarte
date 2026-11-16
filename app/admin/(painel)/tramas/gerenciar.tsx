@@ -5,7 +5,7 @@ import { celulaDaForma, desenharMiniatura, type Forma } from "@/lib/chair-render
 import { CATEGORIAS, type Categoria } from "@/lib/formas-categorias";
 import { semAcento } from "@/lib/formas-lista";
 import { FIOS, type Fio } from "@/lib/palette";
-import { brilhoDasCelulas, codificarGrade, decodificarGrade, FOTO_COLS, FOTO_ROWS, gradeDaFoto, limiarAutomatico } from "@/lib/trama-foto";
+import { brilhoDasCelulas, codificarDesenho, decodificarDesenho, FOTO_COLS, FOTO_ROWS, gradeDaFoto, limiarAutomatico, type Desenho } from "@/lib/trama-foto";
 import { gradeDaPixelArte, lerPixelArte, type PixelArte } from "@/lib/trama-pixel";
 import { MAX_TRAMAS_NOVAS, PREFIXO_NOVA, TODAS_AS_FORMAS, type TramaNova, type TramasDoPainel } from "@/lib/tramas-painel";
 import { salvarTramasAction } from "../../actions";
@@ -18,6 +18,7 @@ import { btnSecondary, inputClass } from "../../_classes";
 // "Publicar no site" (one commit, see salvarTramasAction).
 
 const N = FOTO_COLS * FOTO_ROWS;
+const vazio = (): Desenho => ({ bits: new Uint8Array(N), cols: FOTO_COLS, rows: FOTO_ROWS });
 type Filtro = "site" | "fora" | "meus" | "mudou";
 type Item = { valor: string; rotulo: string; grupo: Categoria; doCodigoOculta: boolean; grade?: string };
 
@@ -34,14 +35,14 @@ function novoId() {
   return Array.from({ length: 8 }, () => letras[Math.floor(Math.random() * letras.length)]).join("");
 }
 
-/** The 29x29 cells of any shape (a code shape, or a drawn one). */
-function bitsDe(f: Item): Uint8Array {
-  if (f.grade) return decodificarGrade(f.grade) ?? new Uint8Array(N);
+/** The cells of any shape (a code shape = 29x29, or a drawn one of any size). */
+function bitsDe(f: Item): Desenho {
+  if (f.grade) return decodificarDesenho(f.grade) ?? vazio();
   const b = new Uint8Array(N);
   for (let j = 0; j < FOTO_ROWS; j++)
     for (let i = 0; i < FOTO_COLS; i++)
       b[j * FOTO_COLS + i] = (f.valor === "meio-a-meio" ? i >= FOTO_COLS / 2 : f.valor !== "lisa" && celulaDaForma(f.valor as Forma, i, j, FOTO_COLS, FOTO_ROWS)) ? 1 : 0;
-  return b;
+  return { bits: b, cols: FOTO_COLS, rows: FOTO_ROWS };
 }
 
 function Miniatura({ item, corA = COR_A, corB = COR_B }: { item: Item; corA?: string; corB?: string }) {
@@ -50,7 +51,7 @@ function Miniatura({ item, corA = COR_A, corB = COR_B }: { item: Item; corA?: st
     const c = ref.current;
     const ctx = c?.getContext("2d");
     if (!c || !ctx) return;
-    const grade = item.grade ? decodificarGrade(item.grade) : null;
+    const grade = item.grade ? decodificarDesenho(item.grade) : null;
     desenharMiniatura(ctx, c.width, c.height, (grade ? "foto" : item.valor) as Forma, corA, corB, "encosto", grade);
   }, [item, corA, corB]);
   return <canvas ref={ref} width={165} height={135} className="aspect-[165/135] w-full rounded-lg bg-canvas" />;
@@ -62,7 +63,7 @@ export function GerenciarTramas({ inicial }: { inicial: TramasDoPainel }) {
   const [filtro, setFiltro] = useState<Filtro>("site");
   const [grupo, setGrupo] = useState<Categoria>("basicos");
   const [busca, setBusca] = useState("");
-  const [editando, setEditando] = useState<{ id?: string; rotulo: string; grupo: Categoria; bits: Uint8Array; arquivo?: File; vez?: number } | null>(null);
+  const [editando, setEditando] = useState<{ id?: string; rotulo: string; grupo: Categoria; bits: Desenho; arquivo?: File; vez?: number } | null>(null);
   const anexoRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -133,7 +134,7 @@ export function GerenciarTramas({ inicial }: { inicial: TramasDoPainel }) {
   };
 
   const guardar = (e: NonNullable<typeof editando>) => {
-    const grade = codificarGrade(e.bits);
+    const grade = codificarDesenho(e.bits);
     const n: TramaNova = { id: e.id ?? novoId(), rotulo: e.rotulo.trim(), grupo: e.grupo, grade };
     setT((v) => ({ ...v, novas: e.id ? v.novas.map((x) => (x.id === e.id ? n : x)) : [...v.novas, n] }));
     setEditando(null);
@@ -174,7 +175,7 @@ export function GerenciarTramas({ inicial }: { inicial: TramasDoPainel }) {
         <button
           type="button"
           disabled={t.novas.length >= MAX_TRAMAS_NOVAS}
-          onClick={() => abrirEditor({ rotulo: "", grupo: termo ? "divertidos" : grupo, bits: new Uint8Array(N) })}
+          onClick={() => abrirEditor({ rotulo: "", grupo: termo ? "divertidos" : grupo, bits: vazio() })}
           className="inline-flex items-center justify-center gap-1.5 rounded-full bg-espresso px-4 py-2.5 text-sm font-semibold text-paper hover:bg-espresso-soft disabled:opacity-50"
         >
           <span className="text-rattan">+</span> Desenhar um traçado novo
@@ -189,7 +190,7 @@ export function GerenciarTramas({ inicial }: { inicial: TramasDoPainel }) {
         onChange={(e) => {
           const arq = e.target.files?.[0];
           e.target.value = "";
-          if (arq) abrirEditor({ rotulo: "", grupo: termo ? "divertidos" : grupo, bits: new Uint8Array(N), arquivo: arq, vez: Date.now() });
+          if (arq) abrirEditor({ rotulo: "", grupo: termo ? "divertidos" : grupo, bits: vazio(), arquivo: arq, vez: Date.now() });
         }}
       />
       {editando ? null : (
@@ -389,7 +390,7 @@ type Imagem = {
   limiar: number;
   tolerancia: number;
   inverter: boolean;
-  info: { largura: number; altura: number; diminuiu: boolean } | null;
+  info: { largura: number; altura: number } | null;
 };
 const TOLERANCIA_PADRAO = 60;
 
@@ -400,13 +401,20 @@ function EditorTrama({
   onCancelar,
   onGuardar,
 }: {
-  inicial: { id?: string; rotulo: string; grupo: Categoria; bits: Uint8Array; arquivo?: File };
+  inicial: { id?: string; rotulo: string; grupo: Categoria; bits: Desenho; arquivo?: File };
   itens: Item[];
   existentes: TramaNova[];
   onCancelar: () => void;
-  onGuardar: (e: { id?: string; rotulo: string; grupo: Categoria; bits: Uint8Array }) => void;
+  onGuardar: (e: { id?: string; rotulo: string; grupo: Categoria; bits: Desenho }) => void;
 }) {
-  const [bits, setBits] = useState<Uint8Array>(() => inicial.bits.slice());
+  // the design being drawn: 29x29, or the size of an attached picture (no limit)
+  const [desenho, setDesenho] = useState<Desenho>(() => ({ ...inicial.bits, bits: inicial.bits.bits.slice() }));
+  const { bits, cols, rows } = desenho;
+  const setBits = (f: (b: Uint8Array) => Uint8Array) =>
+    setDesenho((d) => {
+      const n = f(d.bits);
+      return n === d.bits ? d : { ...d, bits: n };
+    });
   const [rotulo, setRotulo] = useState(inicial.rotulo);
   const [grupo, setGrupo] = useState<Categoria>(inicial.grupo);
   const [fioA, setFioA] = useState<Fio>(FIOS.find((f) => f.cor.toUpperCase() === COR_A) ?? FIOS[0]);
@@ -428,25 +436,21 @@ function EditorTrama({
     ctx.fillStyle = fioA.cor;
     ctx.fillRect(0, 0, c.width, c.height);
     ctx.fillStyle = fioB.cor;
-    for (let k = 0; k < N; k++) if (bits[k]) ctx.fillRect((k % FOTO_COLS) * LADO, Math.floor(k / FOTO_COLS) * LADO, LADO, LADO);
-    ctx.strokeStyle = "rgba(128,128,128,0.35)";
+    for (let k = 0; k < bits.length; k++) if (bits[k]) ctx.fillRect((k % cols) * LADO, Math.floor(k / cols) * LADO, LADO, LADO);
     ctx.lineWidth = 1;
-    for (let i = 0; i <= FOTO_COLS; i++) {
-      const forte = i === Math.floor(FOTO_COLS / 2) || i === Math.ceil(FOTO_COLS / 2);
+    const linha = (x0: number, y0: number, x1: number, y1: number, forte: boolean) => {
       ctx.strokeStyle = forte ? "rgba(200,140,60,0.7)" : "rgba(128,128,128,0.35)";
       ctx.beginPath();
-      ctx.moveTo(i * LADO + 0.5, 0);
-      ctx.lineTo(i * LADO + 0.5, c.height);
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
       ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(0, i * LADO + 0.5);
-      ctx.lineTo(c.width, i * LADO + 0.5);
-      ctx.stroke();
-    }
-  }, [bits, fioA, fioB]);
+    };
+    for (let i = 0; i <= cols; i++) linha(i * LADO + 0.5, 0, i * LADO + 0.5, c.height, i === Math.floor(cols / 2) || i === Math.ceil(cols / 2));
+    for (let j = 0; j <= rows; j++) linha(0, j * LADO + 0.5, c.width, j * LADO + 0.5, j === Math.floor(rows / 2) || j === Math.ceil(rows / 2));
+  }, [bits, cols, rows, fioA, fioB]);
 
   // the real chair, rendered by the site (backrest + seat), a moment after the last change
-  const grade = codificarGrade(bits);
+  const grade = codificarDesenho(desenho);
   const [previa, setPrevia] = useState("");
   useEffect(() => {
     const q = new URLSearchParams({ f: "foto", fd: grade, fa: "foto", fda: grade, a: fioA.cor.slice(1), b: fioB.cor.slice(1) });
@@ -456,9 +460,9 @@ function EditorTrama({
 
   const celulaDoPonteiro = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
-    const i = Math.floor(((e.clientX - r.left) / r.width) * FOTO_COLS);
-    const j = Math.floor(((e.clientY - r.top) / r.height) * FOTO_ROWS);
-    return i < 0 || j < 0 || i >= FOTO_COLS || j >= FOTO_ROWS ? -1 : j * FOTO_COLS + i;
+    const i = Math.floor(((e.clientX - r.left) / r.width) * cols);
+    const j = Math.floor(((e.clientY - r.top) / r.height) * rows);
+    return i < 0 || j < 0 || i >= cols || j >= rows ? -1 : j * cols + i;
   };
   const pintar = (k: number, v: 0 | 1) => {
     if (k < 0 || k === ultima.current) return;
@@ -473,19 +477,19 @@ function EditorTrama({
 
   const transformar = (fn: (i: number, j: number, b: Uint8Array) => number) =>
     setBits((b) => {
-      const n = new Uint8Array(N);
-      for (let j = 0; j < FOTO_ROWS; j++) for (let i = 0; i < FOTO_COLS; i++) n[j * FOTO_COLS + i] = fn(i, j, b) ? 1 : 0;
+      const n = new Uint8Array(cols * rows);
+      for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) n[j * cols + i] = fn(i, j, b) ? 1 : 0;
       return n;
     });
-  const em = (b: Uint8Array, i: number, j: number) => (i < 0 || j < 0 || i >= FOTO_COLS || j >= FOTO_ROWS ? 0 : b[j * FOTO_COLS + i]);
+  const em = (b: Uint8Array, i: number, j: number) => (i < 0 || j < 0 || i >= cols || j >= rows ? 0 : b[j * cols + i]);
 
   const aplicarFoto = (f: Imagem) => {
     if (f.modo === "pixel" && f.arte) {
       const r = gradeDaPixelArte(f.arte, f.tolerancia, f.inverter);
-      setBits(r.bits);
-      setFoto({ ...f, info: { largura: r.largura, altura: r.altura, diminuiu: r.diminuiu } });
+      setDesenho({ bits: r.bits, cols: r.cols, rows: r.rows });
+      setFoto({ ...f, info: { largura: r.largura, altura: r.altura } });
     } else {
-      setBits(gradeDaFoto(f.brilho, f.limiar, f.inverter));
+      setDesenho({ bits: gradeDaFoto(f.brilho, f.limiar, f.inverter), cols: FOTO_COLS, rows: FOTO_ROWS });
       setFoto({ ...f, info: null });
     }
   };
@@ -541,7 +545,7 @@ function EditorTrama({
     if (ligadas < 3) return setErro("Pinte o desenho na grade antes de guardar.");
     const igual = existentes.find((n) => n.grade === grade && n.id !== inicial.id);
     if (igual) return setErro(`Esse desenho é igual ao "${igual.rotulo}", que você já fez.`);
-    onGuardar({ id: inicial.id, rotulo, grupo, bits });
+    onGuardar({ id: inicial.id, rotulo, grupo, bits: desenho });
   };
 
   const ferramenta = "rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-medium text-ink hover:border-wood";
@@ -565,9 +569,10 @@ function EditorTrama({
         <div>
           <canvas
             ref={canvasRef}
-            width={FOTO_COLS * LADO}
-            height={FOTO_ROWS * LADO}
-            className="aspect-square w-full max-w-[348px] cursor-crosshair touch-none rounded-lg border border-line"
+            width={cols * LADO}
+            height={rows * LADO}
+            style={{ aspectRatio: `${cols} / ${rows}`, maxWidth: cols >= rows ? 348 : (348 * cols) / rows }}
+            className="w-full cursor-crosshair touch-none rounded-lg border border-line"
             aria-label="Grade para desenhar o traçado"
             onPointerDown={(e) => {
               const k = celulaDoPonteiro(e);
@@ -584,19 +589,19 @@ function EditorTrama({
             onPointerCancel={() => (pintando.current = null)}
           />
           <div className="mt-3 flex flex-wrap gap-1.5">
-            <button type="button" className={ferramenta} onClick={() => setBits(new Uint8Array(N))}>
+            <button type="button" className={ferramenta} onClick={() => setDesenho(vazio())}>
               Limpar
             </button>
             <button type="button" className={ferramenta} onClick={() => transformar((i, j, b) => 1 - em(b, i, j))}>
               Inverter cores
             </button>
-            <button type="button" className={ferramenta} onClick={() => transformar((i, j, b) => (i < FOTO_COLS / 2 ? em(b, i, j) : em(b, FOTO_COLS - 1 - i, j)))}>
+            <button type="button" className={ferramenta} onClick={() => transformar((i, j, b) => (i < cols / 2 ? em(b, i, j) : em(b, cols - 1 - i, j)))}>
               Espelhar esquerda → direita
             </button>
-            <button type="button" className={ferramenta} onClick={() => transformar((i, j, b) => em(b, FOTO_COLS - 1 - i, j))}>
+            <button type="button" className={ferramenta} onClick={() => transformar((i, j, b) => em(b, cols - 1 - i, j))}>
               Virar de lado
             </button>
-            <button type="button" className={ferramenta} onClick={() => transformar((i, j, b) => em(b, i, FOTO_ROWS - 1 - j))}>
+            <button type="button" className={ferramenta} onClick={() => transformar((i, j, b) => em(b, i, rows - 1 - j))}>
               Virar de cabeça para baixo
             </button>
           </div>
@@ -614,7 +619,9 @@ function EditorTrama({
                 {s}
               </button>
             ))}
-            <span className="ml-1">{ligadas} pontos pintados</span>
+            <span className="ml-1">
+              {ligadas} pontos pintados, grade de {cols} × {rows}
+            </span>
           </div>
         </div>
 
@@ -648,8 +655,8 @@ function EditorTrama({
                           <strong className="text-ink">
                             Li o desenho: {foto.info.largura} × {foto.info.altura} pontos.
                           </strong>{" "}
-                          {foto.info.diminuiu
-                            ? `A cadeira tem ${FOTO_COLS} × ${FOTO_ROWS}, então diminuí para caber, sem perder a forma.`
+                          {cols !== FOTO_COLS || rows !== FOTO_ROWS
+                            ? "Ficou do tamanho da imagem, ponto por ponto: nada foi diminuído nem mudado. Na cadeira ele ocupa a área do desenho."
                             : "Cada quadradinho virou um ponto, no meio da cadeira."}
                         </p>
                       ) : (
@@ -752,7 +759,7 @@ function EditorTrama({
               <ul className="mt-2 grid grid-cols-3 gap-2">
                 {achados.map((f) => (
                   <li key={f.valor}>
-                    <button type="button" onClick={() => setBits(bitsDe(f))} className="w-full rounded-xl border border-line bg-paper p-1 text-left text-[0.7rem] leading-tight text-ink hover:border-wood">
+                    <button type="button" onClick={() => setDesenho(bitsDe(f))} className="w-full rounded-xl border border-line bg-paper p-1 text-left text-[0.7rem] leading-tight text-ink hover:border-wood">
                       <Miniatura item={f} corA={fioA.cor} corB={fioB.cor} />
                       <span className="mt-1 block">{f.rotulo}</span>
                     </button>

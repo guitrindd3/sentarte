@@ -11,7 +11,7 @@ import { FAMILIAS, FIOS, type Fio } from "@/lib/palette";
 import { CATEGORIAS, type Categoria } from "@/lib/formas-categorias";
 import { semAcento } from "@/lib/formas-lista";
 import { formasDoSite, PREFIXO_NOVA, TODAS_AS_FORMAS, type TramasDoPainel } from "@/lib/tramas-painel";
-import { decodificarGrade } from "@/lib/trama-foto";
+import { decodificarDesenho } from "@/lib/trama-foto";
 import { SUBGRUPOS } from "@/lib/formas-subgrupos";
 import { codificarCadeira, decodificarCadeira } from "@/lib/chair-link";
 import { SITE_URL } from "@/lib/nav";
@@ -273,7 +273,7 @@ export function ChairBuilder({
       const c = miniaturasRef.current[i];
       const visivel = termo ? rotulosBusca[i].includes(termo) : f.grupo === grupo && (!sub || subgrupoDaForma[i] === sub);
       const ctx = visivel ? c?.getContext("2d") : null;
-      if (c && ctx) desenharMiniatura(ctx, c.width, c.height, (f.grade ? "foto" : f.valor) as Forma, fioA.cor, fioB.cor, parte, f.grade ? decodificarGrade(f.grade) : null);
+      if (c && ctx) desenharMiniatura(ctx, c.width, c.height, (f.grade ? "foto" : f.valor) as Forma, fioA.cor, fioB.cor, parte, f.grade ? decodificarDesenho(f.grade) : null);
     });
   }, [passo, fioA, fioB, grupo, sub, parte, busca, formasVisiveis, rotulosBusca, subgrupoDaForma]);
   const termoBusca = semAcento(busca);
