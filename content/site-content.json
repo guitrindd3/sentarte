@@ -503,5 +503,12 @@
       "resumo": "Nossas peças são produzidas ponto a ponto, onde dedico horas de trabalho minucioso, para transformar cordas em obras de arte funcionais.",
       "foto": "/catalogo/fa3651c1-4d83-4285-82d4-bde2cc2ab987.jpg"
     }
+  },
+  "tramas": {
+    "ocultas": [
+      "gola-v"
+    ],
+    "mostrar": [],
+    "novas": []
   }
 }
