@@ -509,6 +509,13 @@
       "gola-v"
     ],
     "mostrar": [],
-    "novas": []
+    "novas": [
+      {
+        "id": "flumlmeq",
+        "rotulo": "Bola de Basquete",
+        "grupo": "esportes",
+        "grade": "AAAAAAB4AAAf8AAGf9AAef7AB-fzAD-fnAP-fvA_-feB_-e8D_-dwB_-5oYf8yY-D8xx_h5nj_44PH_8xMH_8LAP_x3wf-LvAfh3OAAfvYA__egA_88AA_74AAfPgAAM4AAAAAAAAAAAAAAA"
+      }
+    ]
   }
 }
