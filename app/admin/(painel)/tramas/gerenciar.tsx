@@ -5,7 +5,7 @@ import { celulaDaForma, desenharMiniatura, type Forma } from "@/lib/chair-render
 import { CATEGORIAS, type Categoria } from "@/lib/formas-categorias";
 import { semAcento } from "@/lib/formas-lista";
 import { FIOS, type Fio } from "@/lib/palette";
-import { brilhoDasCelulas, codificarDesenho, decodificarDesenho, FOTO_COLS, FOTO_ROWS, gradeDaFoto, limiarAutomatico, type Desenho } from "@/lib/trama-foto";
+import { brilhoDaImagem, codificarDesenho, decodificarDesenho, FOTO_COLS, FOTO_ROWS, gradeDaFoto, limiarAutomatico, type Desenho } from "@/lib/trama-foto";
 import { gradeDaPixelArte, lerPixelArte, type PixelArte } from "@/lib/trama-pixel";
 import { MAX_TRAMAS_NOVAS, PREFIXO_NOVA, TODAS_AS_FORMAS, type TramaNova, type TramasDoPainel } from "@/lib/tramas-painel";
 import { salvarTramasAction } from "../../actions";
@@ -385,7 +385,10 @@ const LADO = 12; // px per cell on the drawing canvas
 type Imagem = {
   url: string;
   arte: PixelArte | null;
-  brilho: Float32Array;
+  img: HTMLImageElement;
+  /** photo mode: points on the longer side, and the brightness read at that size */
+  lado: number;
+  brilho: { brilho: Float32Array; cols: number; rows: number };
   modo: "pixel" | "foto";
   limiar: number;
   tolerancia: number;
@@ -393,6 +396,7 @@ type Imagem = {
   info: { largura: number; altura: number } | null;
 };
 const TOLERANCIA_PADRAO = 60;
+const LADO_FOTO_PADRAO = 48;
 
 function EditorTrama({
   inicial,
@@ -489,7 +493,8 @@ function EditorTrama({
       setDesenho({ bits: r.bits, cols: r.cols, rows: r.rows });
       setFoto({ ...f, info: { largura: r.largura, altura: r.altura } });
     } else {
-      setDesenho({ bits: gradeDaFoto(f.brilho, f.limiar, f.inverter), cols: FOTO_COLS, rows: FOTO_ROWS });
+      const { brilho, cols: c, rows: r } = f.brilho;
+      setDesenho({ bits: gradeDaFoto(brilho, f.limiar, f.inverter, c, r), cols: c, rows: r });
       setFoto({ ...f, info: null });
     }
   };
@@ -500,13 +505,13 @@ function EditorTrama({
     const url = URL.createObjectURL(arq);
     const img = new Image();
     img.onload = () => {
-      const brilho = brilhoDasCelulas(img);
+      const brilho = brilhoDaImagem(img, LADO_FOTO_PADRAO);
       const arte = lerPixelArte(img);
       setFoto((antes) => {
         if (antes) URL.revokeObjectURL(antes.url);
         return antes;
       });
-      aplicarFoto({ url, arte, brilho, modo: arte ? "pixel" : "foto", limiar: limiarAutomatico(brilho), tolerancia: TOLERANCIA_PADRAO, inverter: false, info: null });
+      aplicarFoto({ url, img, lado: LADO_FOTO_PADRAO, arte, brilho, modo: arte ? "pixel" : "foto", limiar: limiarAutomatico(brilho.brilho), tolerancia: TOLERANCIA_PADRAO, inverter: false, info: null });
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
@@ -664,7 +669,10 @@ function EditorTrama({
                       )
                     ) : (
                       <p>
-                        <strong className="text-ink">Lida como foto ou logo:</strong> a parte escura vira o desenho.
+                        <strong className="text-ink">
+                          Lida como foto ou logo: {cols} × {rows} pontos.
+                        </strong>{" "}
+                        A imagem inteira, sem cortar. Quer mais detalhe? Aumente o tamanho logo abaixo.
                       </p>
                     )}
                     <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
@@ -719,6 +727,29 @@ function EditorTrama({
                     />
                   )}
                 </label>
+                {foto.modo === "foto" ? (
+                  <label className="block text-xs text-ink-soft">
+                    <span className="flex justify-between">
+                      <span>Tamanho do desenho</span>
+                      <span className="font-medium text-ink">{foto.lado} pontos</span>
+                    </span>
+                    <input
+                      type="range"
+                      min={15}
+                      max={120}
+                      value={foto.lado}
+                      onChange={(e) => {
+                        const lado = Number(e.target.value);
+                        aplicarFoto({ ...foto, lado, brilho: brilhoDaImagem(foto.img, lado) });
+                      }}
+                      className="mt-1 w-full accent-wood"
+                    />
+                    <span className="flex justify-between">
+                      <span>Mais simples</span>
+                      <span>Mais detalhe</span>
+                    </span>
+                  </label>
+                ) : null}
                 <label className="flex items-center gap-2 text-xs text-ink">
                   <input type="checkbox" checked={foto.inverter} onChange={(e) => aplicarFoto({ ...foto, inverter: e.target.checked })} />
                   {foto.modo === "pixel" ? "Trocar: o fundo vira o desenho" : "Usar a parte clara da imagem"}

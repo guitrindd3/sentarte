@@ -101,31 +101,37 @@ export function pontoDoDesenho(d: Desenho, x: number, y: number, w: number, h: n
   return i >= 0 && j >= 0 && i < d.cols && j < d.rows && d.bits[j * d.cols + i] === 1;
 }
 
-/** Brightness of each cell (0-255), center-cropped to a square and averaged down. Browser only. */
-export function brilhoDasCelulas(img: HTMLImageElement | HTMLCanvasElement | ImageBitmap): Float32Array {
+/**
+ * Brightness of each point of a picture read as a photo or logo (0-255). The
+ * WHOLE picture, in its own proportions — no square crop (user 2026-11-16: in
+ * "Foto ou logo" the crop zoomed in and the drawing became unrecognizable):
+ * the longer side gets `lado` points. Browser only.
+ */
+export function brilhoDaImagem(img: HTMLImageElement | HTMLCanvasElement | ImageBitmap, lado: number) {
   const w = "naturalWidth" in img ? img.naturalWidth : img.width;
   const h = "naturalHeight" in img ? img.naturalHeight : img.height;
-  const lado = Math.min(w, h);
+  const n = Math.max(4, Math.min(MAX_LADO_DESENHO, Math.round(lado)));
+  const cols = Math.max(1, Math.round(w >= h ? n : (n * w) / h));
+  const rows = Math.max(1, Math.round(h >= w ? n : (n * h) / w));
   // two steps (to 8x, then to the grid) average better than one big jump
   const meio = document.createElement("canvas");
-  meio.width = FOTO_COLS * 8;
-  meio.height = FOTO_ROWS * 8;
+  meio.width = cols * 8;
+  meio.height = rows * 8;
   const gm = meio.getContext("2d")!;
+  gm.fillStyle = "#fff"; // transparent PNGs: the empty part is white
+  gm.fillRect(0, 0, meio.width, meio.height);
   gm.imageSmoothingQuality = "high";
-  gm.drawImage(img, (w - lado) / 2, (h - lado) / 2, lado, lado, 0, 0, meio.width, meio.height);
+  gm.drawImage(img, 0, 0, meio.width, meio.height);
   const c = document.createElement("canvas");
-  c.width = FOTO_COLS;
-  c.height = FOTO_ROWS;
+  c.width = cols;
+  c.height = rows;
   const g = c.getContext("2d", { willReadFrequently: true })!;
   g.imageSmoothingQuality = "high";
-  g.drawImage(meio, 0, 0, FOTO_COLS, FOTO_ROWS);
-  const d = g.getImageData(0, 0, FOTO_COLS, FOTO_ROWS).data;
-  const out = new Float32Array(N);
-  for (let k = 0; k < N; k++) {
-    const a = d[k * 4 + 3] / 255; // transparent PNGs: treat the empty part as white
-    out[k] = (0.299 * d[k * 4] + 0.587 * d[k * 4 + 1] + 0.114 * d[k * 4 + 2]) * a + 255 * (1 - a);
-  }
-  return out;
+  g.drawImage(meio, 0, 0, cols, rows);
+  const d = g.getImageData(0, 0, cols, rows).data;
+  const brilho = new Float32Array(cols * rows);
+  for (let k = 0; k < brilho.length; k++) brilho[k] = 0.299 * d[k * 4] + 0.587 * d[k * 4 + 1] + 0.114 * d[k * 4 + 2];
+  return { brilho, cols, rows };
 }
 
 /** Otsu's threshold: the cut that best separates the dark and light cells. */
@@ -138,7 +144,7 @@ export function limiarAutomatico(brilho: Float32Array) {
   for (let t = 0; t < 256; t++) {
     wB += hist[t];
     if (!wB) continue;
-    const wF = N - wB;
+    const wF = brilho.length - wB;
     if (!wF) break;
     sB += t * hist[t];
     const mB = sB / wB, mF = (soma - sB) / wF;
@@ -156,23 +162,23 @@ export function limiarAutomatico(brilho: Float32Array) {
  * ones with `inverter`. Lone cells are dropped: a single stray stitch reads as
  * a mistake on a woven chair.
  */
-export function gradeDaFoto(brilho: Float32Array, limiar: number, inverter: boolean): Uint8Array {
-  const bits = new Uint8Array(N);
-  for (let k = 0; k < N; k++) bits[k] = (brilho[k] < limiar) !== inverter ? 1 : 0;
+export function gradeDaFoto(brilho: Float32Array, limiar: number, inverter: boolean, cols = FOTO_COLS, rows = FOTO_ROWS): Uint8Array {
+  const bits = new Uint8Array(cols * rows);
+  for (let k = 0; k < bits.length; k++) bits[k] = (brilho[k] < limiar) !== inverter ? 1 : 0;
   const limpo = bits.slice();
-  for (let j = 0; j < FOTO_ROWS; j++) {
-    for (let i = 0; i < FOTO_COLS; i++) {
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
       let iguais = 0, vizinhos = 0;
       for (let dj = -1; dj <= 1; dj++) {
         for (let di = -1; di <= 1; di++) {
           if (!di && !dj) continue;
           const x = i + di, y = j + dj;
-          if (x < 0 || y < 0 || x >= FOTO_COLS || y >= FOTO_ROWS) continue;
+          if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
           vizinhos++;
-          if (bits[y * FOTO_COLS + x] === bits[j * FOTO_COLS + i]) iguais++;
+          if (bits[y * cols + x] === bits[j * cols + i]) iguais++;
         }
       }
-      if (iguais === 0 && vizinhos > 0) limpo[j * FOTO_COLS + i] = bits[j * FOTO_COLS + i] ? 0 : 1;
+      if (iguais === 0 && vizinhos > 0) limpo[j * cols + i] = bits[j * cols + i] ? 0 : 1;
     }
   }
   return limpo;
