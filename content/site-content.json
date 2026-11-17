@@ -415,9 +415,13 @@
           "id": "c4232ea4-b7e4-4472-a92b-068c61e29d3f",
           "nome": "Maori_S",
           "descricao": "",
-          "corA": "#15564C",
-          "corB": "#BD502E",
-          "grupo": "boho"
+          "corA": "#15564c",
+          "corB": "#bd502e",
+          "grupo": "boho",
+          "imagemUrl": "/catalogo/f984b584-34ce-4c02-87cf-a454ffc8890c.jpg",
+          "fotosExtras": [
+            "/catalogo/fa2bf6c9-3af8-463a-bc6d-e558fef03261.jpg"
+          ]
         }
       ]
     },
