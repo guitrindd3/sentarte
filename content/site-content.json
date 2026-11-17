@@ -410,6 +410,14 @@
           "fotosExtras": [
             "/catalogo/65f39ea9-9467-4665-9132-fc9a8c9a2f46.jpg"
           ]
+        },
+        {
+          "id": "c4232ea4-b7e4-4472-a92b-068c61e29d3f",
+          "nome": "Maori_S",
+          "descricao": "",
+          "corA": "#15564C",
+          "corB": "#BD502E",
+          "grupo": "boho"
         }
       ]
     },
