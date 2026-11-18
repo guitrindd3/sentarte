@@ -619,6 +619,18 @@
         "rotulo": "CACHORRO",
         "grupo": "bichos",
         "grade": "AfgAAPh8ABkAOAE4ADAKgADARAADAiwAJBFgARBIAwhEwBhCKgACIZAAEQCcAZAF8AyAL4BkAVQnIAnCaoBkJiIB8iAIA-AAICAAQAGABAAMAEAAMAQAAUDAAAkYAABhAAABEAAADAAAAAAA"
+      },
+      {
+        "id": "honnmano",
+        "rotulo": "ÁGUIA",
+        "grupo": "bichos",
+        "grade": ".AfAnAAAAgAAAAYAAAAsAAAAXAAAAL9QAAH-8AAD_fAAB_3wAA_58AAf9-AAP-fwAX_P4AP_h-AH_gfAH_wPgD_4D4D_4B8D_8A-H_-Afn__AH___gP___wP___wP___wH___wD___AB3_3AAx_4AAIf8AAAf_AAAf_4AAP__AB-__4Bc__8AEe_8AGPf-AAeH4AAeAAAAKAAAAAA"
+      },
+      {
+        "id": "lvncdohs",
+        "rotulo": "GATINHO OLHANDO",
+        "grupo": "bichos",
+        "grade": ".AeAuAIAEAAcAOAA8AfAA-AfAB-AfAB_A_gD_A_gD_A_gD_h_gH_h_wH_h_wH___wH___wH___wH___wH___wHw_jwHgfBwHjfZwHjfZwHjfZwHgfBwH45jw_____H___wH___85___gD___wMP_8MQH_wAAP_gAAP_wAAP_wAAf_wAAf_wAAf_wAA__4AA__4AB__4AB__4AD__8AD__8AH__8AH__8AP__-AP__-AAA"
       }
     ]
   }
