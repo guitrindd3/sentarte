@@ -519,7 +519,10 @@
   "tramas": {
     "ocultas": [
       "gola-v",
-      "fig-pato"
+      "fig-pato",
+      "ic-horse",
+      "bicho-leao",
+      "bicho-elefante"
     ],
     "mostrar": [],
     "novas": [
@@ -582,6 +585,30 @@
         "rotulo": "ELEFANTE",
         "grupo": "bichos",
         "grade": ".AmAmDAAAAABwAAAAA8AAAAAOAAAAAHAAAAABgAAAAA4AAAAAOAAAAADgAAAAA8D4AAAPj_cAAD___gAAf__8AAD___PgBf__v-Ab____wD__-_-AP__f_wAf_v_-AP73__gAfb__8AD5___AAf___wAH___-AB____gAf___oAH___6AD___-wA_9__MAfPP_xAHjwb8AB48HfgAePB74AHzwefAB88HjwAOPj48AAH5-fAAB-fnwAAA"
+      },
+      {
+        "id": "oopkmyzi",
+        "rotulo": "CAVALINHO",
+        "grupo": "bichos",
+        "grade": ".AiAbLwAAAA_wAAAD_gAAAf_AAAA_-AAAH_8AAA-_4H4Dz___8GP___4A___-wB___7AH___uAf__-4B___7gD___OAf_n84H_AP7ge4Ab-BhgB3cGGAHNwcYA4yA5gHDABmA4MAAYDAwADgcHAAcBg4ABwADgAAA"
+      },
+      {
+        "id": "ebfadbef",
+        "rotulo": "BEIJA-FLOR",
+        "grupo": "bichos",
+        "grade": ".AuAzAAAAAAQAAAAAABgAAAAAAOEAAAAAA8YAAAAADxwAAAAAfHAAAAAB8cAAAAAfjwAPAAD8fAD_gA_n8Af_AH4___7-A8f-B__4Hn_4Af_Bj_-AA_8M__0AA_gf_9wAD-DgV_AAHwA__4AAcAP__gAAAB__wAAAAP__AAAIAf_8AAAQA_fAAABgB_gAAADAB-AAAAPAAAAAAAeAAAAAAA-AAAAAAB-ABgAAAB_wCAAAAD_4MAAAAB_wQAAAAAfhgAAAAADKAAAAAAWsAAAAADbwAAAAAdPAAAAAD88AAAAAezwAAAAB7PAAAAAPd8AAAAA93wAAAADvfAAAAAG_8AAAAALvwAAAAAO-AAAAAA74AAAAABngAAAAAAMAAAAAAAwAAAAAABAA"
+      },
+      {
+        "id": "xchtlgeg",
+        "rotulo": "CACHORRINHO",
+        "grupo": "bichos",
+        "grade": "AAAAAAAAAAf__-A___8B___4D___wHvf_gOMf_AcA_-A4B_cByT-4DwP9wHGP7gOMfnAeBOOA-GA8B_4B4D-ADwH8AHgP4APAf4AOA_w4cB_x44D_nzwH___gP___Af__-AAAAAAAAAAAAAA"
+      },
+      {
+        "id": "weyixvtc",
+        "rotulo": "CACHORRO",
+        "grupo": "bichos",
+        "grade": "AfgAAPh8ABkAOAE4ADAKgADARAADAiwAJBFgARBIAwhEwBhCKgACIZAAEQCcAZAF8AyAL4BkAVQnIAnCaoBkJiIB8iAIA-AAICAAQAGABAAMAEAAMAQAAUDAAAkYAABhAAABEAAADAAAAAAA"
       }
     ]
   }
