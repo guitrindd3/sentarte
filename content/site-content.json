@@ -1071,6 +1071,18 @@
         "rotulo": "NAVE ESPACIAL",
         "grupo": "divertidos",
         "grade": ".AgAbAAfgAAAZ-AAAN_wAAG_-AAB__gAAgAEAD___8Hu73d7_____YAAABh____gH___gAPgfAAAH4AAAD_AAAA_wAAAf-AAAH_gAAD_8AAA__AAAf_4AAH_-AAD__wAA__8AAf__gAP__8AD___A"
+      },
+      {
+        "id": "itaszdms",
+        "rotulo": "FLOR",
+        "grupo": "natureza",
+        "grade": ".AyAxAAA-AAAAAAA_wAAAAAAP_ADMAAAH_4AzAAAH__AAAAAH__4MMAAD__-DDAAA___wGAAAP__8BgAAB_--EAAAAf_viAAAAD85wgHwAAfmcQP_AAD4iMH_4AAPAmH__AfBwJj__wP-eAx-f8P_zgMYH_H__8CID_h___BgH_4f__wYH__H_w-OH__z_wBjD__8__AIxgH_f_8AcAAPv_-AGAAAD_-AAAP4A__H8AH_4P_3_AAP_D__xgAA_4f_4wICH_B_8cCA8_4P-OAzH_-B-PAMY__gMHgTjP_4AD4m4__-AB8J-P__AAfHfx__wAPx_8f_8AD8__H__AA___x__wAP__8f_4AD___D_sAAf__w_gAAD__4HgAAAf_-AAAAAD__AAAAAA_wAAAAAADwAAAAAAAA"
+      },
+      {
+        "id": "rnpyliwe",
+        "rotulo": "SOL CARACOL",
+        "grupo": "natureza",
+        "grade": ".AnAnAAAAAAAAABAAAAAAIAAAAACAAAAAAQAAAAAGAAAAAAwAAAAAGACAAQA4BgABAjEYAAMAYGAAA8AAwAADx-OAAAE_MgAAAfgQAAAj55EAAAeQsAAAH20gAAA-kkeDD30Yv8H--QZwYOHzGAAAA_PkAAAD8BgAAEf44gAAB_-gAABn_vAAAMPx8AABgYHwAAYDEGAAGAcgYABADgBAAAAMAAAAABgAAAAAIAAAAABAAAAAAQAAAAACAAAAAAAAAAAA"
       }
     ]
   }
