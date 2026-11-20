@@ -708,7 +708,20 @@
       "coroa",
       "escudo-arredondado-estrela",
       "escudo-oval-estrela",
-      "escudo-hexagonal-diagonal"
+      "escudo-hexagonal-diagonal",
+      "nuvem",
+      "gota",
+      "margarida",
+      "cogumelo",
+      "nat-eclipse",
+      "nat-lua-cheia",
+      "nat-folha-caindo",
+      "nat-ninho",
+      "nat-musgo-pedra",
+      "nat-espiga",
+      "nat-montanha-neve",
+      "nat-sol-rosto",
+      "nat-dente-de-leao"
     ],
     "mostrar": [],
     "novas": [
