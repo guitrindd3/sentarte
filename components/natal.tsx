@@ -21,9 +21,16 @@ const PREVIA = "sentarte-natal-previa";
 
 function natalAgora() {
   try {
-    const q = new URLSearchParams(window.location.search).get("natal");
-    if (q === "1") sessionStorage.setItem(PREVIA, "1");
-    if (q === "0") sessionStorage.removeItem(PREVIA);
+    const busca = new URLSearchParams(window.location.search);
+    const q = busca.get("natal");
+    // Only one season preview per tab (user 2026-11-23: opened ?natal=1, then
+    // ?anonovo=1 in the same tab and Christmas, which wins, stayed on).
+    if (q === "1") {
+      sessionStorage.setItem(PREVIA, "1");
+      sessionStorage.removeItem("sentarte-anonovo-previa");
+    }
+    if (q === "0" || busca.get("anonovo") === "1") sessionStorage.removeItem(PREVIA);
+    if (busca.get("anonovo") === "1" || (q !== "1" && sessionStorage.getItem("sentarte-anonovo-previa") === "1")) return false;
     if (sessionStorage.getItem(PREVIA) === "1") return true;
   } catch {}
   return naEpocaDeNatal(hojeBR());

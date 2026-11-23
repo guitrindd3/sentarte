@@ -24,9 +24,13 @@ const PREVIA = "sentarte-anonovo-previa";
 function anoNovoAgora() {
   const hoje = hojeBR();
   try {
-    const q = new URLSearchParams(window.location.search).get("anonovo");
-    if (q === "1") sessionStorage.setItem(PREVIA, "1");
-    if (q === "0") sessionStorage.removeItem(PREVIA);
+    const busca = new URLSearchParams(window.location.search);
+    const q = busca.get("anonovo");
+    if (q === "1") {
+      sessionStorage.setItem(PREVIA, "1");
+      sessionStorage.removeItem("sentarte-natal-previa"); // one season preview per tab
+    }
+    if (q === "0" || busca.get("natal") === "1") sessionStorage.removeItem(PREVIA);
     // Previewing outside the dates (e.g. in November): show the coming turn of the year (2026 → 2027), with the countdown.
     if (sessionStorage.getItem(PREVIA) === "1") return naEpocaDeAnoNovo(hoje) ? anoQueVem(hoje) : Number(hoje.slice(0, 4)) + 1;
   } catch {}
