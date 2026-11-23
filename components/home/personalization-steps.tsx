@@ -34,8 +34,8 @@ export function PersonalizationSteps({
     // number beside the step title, 2 per row on phones, less padding.
     <section className="bg-canvas-deep px-4 py-7 sm:px-6 md:py-9">
       <div className="mx-auto max-w-6xl">
-        <h2 className="font-serif text-xl font-medium tracking-tight text-ink">{titulo}</h2>
-        <ol className="mt-5 grid grid-cols-2 gap-x-5 gap-y-5 md:grid-cols-4 md:gap-x-0">
+        <h2 className="text-center font-serif text-2xl font-medium tracking-[0.06em] text-ink md:text-[1.7rem]">{titulo}</h2>
+        <ol className="mt-6 grid grid-cols-2 gap-x-5 gap-y-5 md:grid-cols-4 md:gap-x-0">
           {lista.map((step, i) => (
             <li key={step.numero} className={i === 0 ? "md:pr-6" : "md:border-l md:border-line md:px-6"}>
               <p className="flex items-baseline gap-2 font-serif font-medium tracking-tight text-ink">

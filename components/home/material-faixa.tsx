@@ -1,4 +1,5 @@
 import { ICONES_MATERIAL, SeloRustico } from "@/components/icones-rusticos";
+import { IlustracaoAgulhas, IlustracaoLinha } from "@/components/home/ilustracoes-atelie";
 
 // Homepage version of the material block, without the spool photo (user
 // 2026-11-23: the photo section left the home for /sobre, then "quero isso
@@ -14,7 +15,11 @@ export function MaterialFaixa({
   itens: { titulo: string; texto: string }[];
 }) {
   return (
-    <section className="border-t border-line bg-canvas-deep px-6 py-10 text-ink md:py-12" aria-labelledby="titulo-material">
+    <section className="relative overflow-hidden border-t border-line bg-canvas-deep px-6 py-10 text-ink md:py-12" aria-labelledby="titulo-material">
+      {/* Spool on the left, crochet hooks on the right (user 2026-11-23), only where
+          the sides have room beside the centred column. */}
+      <IlustracaoLinha className="pointer-events-none absolute left-8 top-1/2 hidden w-[min(15rem,calc((100vw-72rem)/2-2rem))] -translate-y-1/2 2xl:block" />
+      <IlustracaoAgulhas className="pointer-events-none absolute right-8 top-1/2 hidden w-[min(15rem,calc((100vw-72rem)/2-2rem))] -translate-y-1/2 2xl:block" />
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <h2 id="titulo-material" className="font-serif text-3xl font-medium tracking-tight md:text-4xl">
