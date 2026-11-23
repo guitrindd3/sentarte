@@ -4,6 +4,7 @@ import { CategoryBento } from "@/components/home/category-bento";
 import { ContactCta } from "@/components/home/contact-cta";
 import { Depoimentos } from "@/components/home/depoimentos";
 import { FotosClientes } from "@/components/fotos-clientes";
+import { MaterialFaixa } from "@/components/home/material-faixa";
 import { Novidades } from "@/components/home/novidades";
 import { MedidasCadeiras } from "@/components/medidas-cadeiras";
 import { PersonalizationSteps } from "@/components/home/personalization-steps";
@@ -28,6 +29,8 @@ export default async function Home() {
   const content = await getContent();
   const t = textosDaPagina(content.paginas, "inicio");
   const zap = content.site.whatsappNumero;
+  // material texts live in Páginas → Sobre (shared with /sobre)
+  const ts = textosDaPagina(content.paginas, "sobre");
 
   return (
     <>
@@ -40,6 +43,11 @@ export default async function Home() {
       <BrindeDeAnoNovo />
       <PersonalizationSteps titulo={t.linha("passosTitulo")} passos={t.blocos("passos").map((b) => ({ titulo: b.titulo, texto: textoSimples(b.texto) }))} />
       <Novidades content={content} />
+      <MaterialFaixa
+        titulo={ts.linha("materialTitulo")}
+        texto={textoSimples(ts.linha("materialTexto"))}
+        itens={ts.blocos("materialItens").map((b) => ({ titulo: b.titulo, texto: textoSimples(b.texto) }))}
+      />
       <MedidasCadeiras whatsappNumero={content.site.whatsappNumero} />
       <FotosClientes depoimentos={content.depoimentos} />
       <Depoimentos depoimentos={content.depoimentos} titulo={t.linha("depoimentosTitulo")} googleUrl={content.site.googleUrl} />

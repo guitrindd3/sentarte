@@ -1,21 +1,21 @@
 import { FramedWeave } from "@/components/framed-weave";
-import { WaveIcon, FrameIcon, HandIcon } from "@/components/icons";
+import { AncoraCorda, CadeiraDobravel, SeloRustico, TramaAgulha } from "@/components/icones-rusticos";
 
 const FEATURES = [
   {
     titulo: "Resistente à maresia",
     valor: "O polipropileno não absorve água, então não apodrece nem mofa.",
-    Icon: WaveIcon,
+    Icon: AncoraCorda,
   },
   {
     titulo: "Estrutura em alumínio",
     valor: "Não enferruja e mantém a cadeira leve.",
-    Icon: FrameIcon,
+    Icon: CadeiraDobravel,
   },
   {
     titulo: "Trançado à mão",
     valor: "Cada peça é feita fio a fio, com acabamento firme.",
-    Icon: HandIcon,
+    Icon: TramaAgulha,
   },
 ];
 
@@ -42,8 +42,10 @@ export function MaterialSpec({
           </p>
           <dl className="mt-8 space-y-5">
             {destaques.map(({ titulo, valor, Icon }) => (
-              <div key={titulo} className="flex gap-3">
-                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-clay" />
+              <div key={titulo} className="flex items-start gap-4">
+                <SeloRustico>
+                  <Icon className="h-7 w-7" />
+                </SeloRustico>
                 <div>
                   <dt className="font-serif text-base font-medium text-ink">{titulo}</dt>
                   <dd className="mt-1 max-w-[48ch] text-sm leading-relaxed text-ink-soft">{valor}</dd>
