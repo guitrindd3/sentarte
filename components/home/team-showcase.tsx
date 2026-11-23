@@ -63,8 +63,8 @@ export function TeamShowcase({
       <LuzesTitulo />
       {/* Title and text spread across the column (user 2026-11-12: "mais distribuído"):
           side by side from md, stacked on phones. */}
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:items-end md:gap-12">
+      <div className="px-6 md:px-[2cm]">
+        <div className="grid max-w-6xl gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:items-end md:gap-12">
           <h2 className="font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">{titulo}</h2>
           <p className="text-sm leading-relaxed text-ink-soft md:border-l md:border-line md:pl-8 md:text-base">
             {texto ?? "De time, boho ou com o seu desenho preferido — todas trançadas à mão, e qualquer uma pode levar um nome no encosto."}
@@ -73,10 +73,12 @@ export function TeamShowcase({
       </div>
       {/* Full screen width (user 2026-10-05: chairs should slide in and out at the
           screen edges, not vanish at the content edge). The first card still lines
-          up with the text column. Cards made smaller 2026-10-05 ("muito grande"). */}
+          up with the text column. Cards made smaller 2026-10-05 ("muito grande").
+          2026-11-23 ("deixa as cadeiras rodando desde a margem"): title and row start
+          at the same 2 cm margin as the Novidades showcase, not the centred column. */}
       <AutoScrollRow
         copiaNoNavegador
-        className="mt-8 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:gap-6 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] [&::-webkit-scrollbar]:hidden [&>*]:flex [&>*>*]:w-full [&>*]:w-[calc((100vw-3rem)*0.76)] [&>*]:shrink-0 sm:[&>*]:w-[calc((100vw-3rem)*0.34)] lg:[&>*]:w-[calc((min(100vw,72rem)-3rem)*0.235)]"
+        className="mt-8 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:gap-6 md:px-[2cm] [&::-webkit-scrollbar]:hidden [&>*]:flex [&>*>*]:w-full [&>*]:w-[calc((100vw-3rem)*0.76)] [&>*]:shrink-0 sm:[&>*]:w-[calc((100vw-3rem)*0.34)] lg:[&>*]:w-[calc((min(100vw,72rem)-3rem)*0.235)]"
       >
         {/* The second copy for the seamless loop is added by AutoScrollRow in
               the browser (speed pass 2026-10-31: 35 full cards twice made the
