@@ -22,6 +22,12 @@ export function MaterialFaixa({
       <IlustracaoAgulhas className="pointer-events-none absolute right-8 top-1/2 hidden w-[min(15rem,calc((100vw-72rem)/2-2rem))] -translate-y-1/2 2xl:block" />
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
+          {/* Phones and narrower screens (no room on the sides): both drawings,
+              small, above the title (user 2026-11-23: "no celular não aparece nada"). */}
+          <div aria-hidden className="mb-3 flex items-end justify-center gap-6 2xl:hidden">
+            <IlustracaoLinha ids="linha-cel" className="h-20 w-[4.7rem] md:h-24 md:w-[5.6rem]" />
+            <IlustracaoAgulhas ids="agulha-cel" className="h-20 w-[7.5rem] md:h-24 md:w-36" />
+          </div>
           <h2 id="titulo-material" className="font-serif text-3xl font-medium tracking-tight md:text-4xl">
             {titulo}
           </h2>
