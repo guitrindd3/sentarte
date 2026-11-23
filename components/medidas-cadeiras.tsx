@@ -49,22 +49,26 @@ export function MedidasCadeiras({ whatsappNumero, embutido = false }: { whatsapp
     );
   }
   return (
-    <section className="border-t border-line bg-paper px-6 py-14" aria-labelledby="titulo-medidas">
+    // Compact (user 2026-11-23: "tem muito espaço, tira um pouco"): less padding,
+    // the frame detail beside the name, tighter rows.
+    <section className="border-t border-line bg-paper px-6 py-9 md:py-10" aria-labelledby="titulo-medidas">
       <div className="mx-auto max-w-6xl">
-        <h2 id="titulo-medidas" className="font-serif text-2xl font-medium tracking-tight text-ink md:text-3xl">
-          Medidas e especificações
-        </h2>
-        <p className="mt-2 max-w-[60ch] text-sm text-ink-soft">
-          Estrutura em alumínio e trançado em corda náutica. Medidas da cadeira aberta.
-        </p>
-        <ul className="mt-8 grid gap-5 md:grid-cols-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1">
+          <h2 id="titulo-medidas" className="font-serif text-2xl font-medium tracking-tight text-ink md:text-3xl">
+            Medidas e especificações
+          </h2>
+          <p className="text-sm text-ink-soft">Estrutura em alumínio e trançado em corda náutica. Medidas da cadeira aberta.</p>
+        </div>
+        <ul className="mt-5 grid gap-4 md:grid-cols-3">
           {MEDIDAS_CADEIRAS.map((m) => (
-            <li key={m.nome} className="border border-line bg-canvas p-5">
-              <p className="font-serif text-xl font-medium tracking-tight text-ink">{m.nome}</p>
-              {m.detalhe ? <p className="text-sm text-ink-soft">{m.detalhe}</p> : <p className="text-sm text-ink-soft">&nbsp;</p>}
-              <dl className="mt-4 space-y-2 text-sm">
+            <li key={m.nome} className="border border-line bg-canvas px-5 py-4">
+              <p className="flex items-baseline gap-2 font-serif text-lg font-medium tracking-tight text-ink">
+                {m.nome}
+                {m.detalhe ? <span className="font-sans text-xs font-normal tracking-normal text-ink-soft">{m.detalhe}</span> : null}
+              </p>
+              <dl className="mt-2.5 space-y-1 text-sm">
                 {linhas(m).map(([rotulo, valor]) => (
-                  <div key={rotulo} className="flex justify-between gap-3 border-b border-line pb-2 last:border-0 last:pb-0">
+                  <div key={rotulo} className="flex justify-between gap-3 border-b border-line pb-1 last:border-0 last:pb-0">
                     <dt className="text-ink-soft">{rotulo}</dt>
                     <dd className="font-medium text-ink">{valor}</dd>
                   </div>
@@ -73,7 +77,7 @@ export function MedidasCadeiras({ whatsappNumero, embutido = false }: { whatsapp
             </li>
           ))}
         </ul>
-        <p className="mt-6 text-sm text-ink-soft">
+        <p className="mt-4 text-sm text-ink-soft">
           {OBS_RECLINAVEL} Quer a infantil ou a reclinável?{" "}
           <a
             href={whatsappUrl(whatsappNumero, "Oi! Quero saber mais sobre a cadeira infantil / reclinável.")}
