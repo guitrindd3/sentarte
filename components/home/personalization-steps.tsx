@@ -30,21 +30,19 @@ export function PersonalizationSteps({
 }) {
   const lista = passos?.length ? passos.map((p, i) => ({ ...p, numero: String(i + 1) })) : STEPS;
   return (
-    <section className="bg-canvas-deep px-6 pb-8 pt-12 md:pb-10 md:pt-16">
+    // Compact (user 2026-11-23: "deixa isso aqui menor, tá ocupando muito espaço"):
+    // number beside the step title, 2 per row on phones, less padding.
+    <section className="bg-canvas-deep px-4 py-7 sm:px-6 md:py-9">
       <div className="mx-auto max-w-6xl">
-        <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">{titulo}</h2>
-        <ol className="mt-10 grid gap-8 md:grid-cols-4">
+        <h2 className="font-serif text-xl font-medium tracking-tight text-ink">{titulo}</h2>
+        <ol className="mt-5 grid grid-cols-2 gap-x-5 gap-y-5 md:grid-cols-4 md:gap-x-0">
           {lista.map((step, i) => (
-            <li key={step.numero}>
-              <div
-                className={`border-t-2 border-line pt-4 md:border-t-0 md:pt-0 ${
-                  i === 0 ? "" : "md:border-l md:pl-6"
-                }`}
-              >
-                <span className="font-serif text-3xl font-medium text-ink">{step.numero}</span>
-                <p className="mt-2 font-serif text-lg font-medium tracking-tight text-ink">{step.titulo}</p>
-                <p className="mt-2 text-sm leading-relaxed text-ink-soft">{step.texto}</p>
-              </div>
+            <li key={step.numero} className={i === 0 ? "md:pr-6" : "md:border-l md:border-line md:px-6"}>
+              <p className="flex items-baseline gap-2 font-serif font-medium tracking-tight text-ink">
+                <span className="text-xl">{step.numero}</span>
+                <span className="text-base leading-snug">{step.titulo}</span>
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-ink-soft sm:text-sm">{step.texto}</p>
             </li>
           ))}
         </ol>
