@@ -17,6 +17,16 @@
   /* Call-to-action green for the builder's "go" buttons (user 2026-09-30:
      "cor chamativa verde, de validação"). The only saturated color in the
      customer-facing chrome — keep it to primary actions. */
+  /* Social network brand colours — only for the contact cards (user 2026-11-23:
+     "com as cores das redes sociais"). */
+  --whatsapp: #25d366;
+  --whatsapp-escuro: #0e7a6e;
+  --pinterest: #e60023;
+  --instagram: #d62976;
+  --google-azul: #4285f4;
+  --google-vermelho: #ea4335;
+  --google-amarelo: #fbbc05;
+  --google-verde: #34a853;
   --verde: #1f9d55;
   --verde-escuro: #177a42;
 }
@@ -35,6 +45,14 @@
   --color-espresso: var(--espresso);
   --color-espresso-soft: var(--espresso-soft);
   --color-line: var(--line);
+  --color-whatsapp: var(--whatsapp);
+  --color-whatsapp-escuro: var(--whatsapp-escuro);
+  --color-pinterest: var(--pinterest);
+  --color-instagram: var(--instagram);
+  --color-google-azul: var(--google-azul);
+  --color-google-vermelho: var(--google-vermelho);
+  --color-google-amarelo: var(--google-amarelo);
+  --color-google-verde: var(--google-verde);
   --color-verde: var(--verde);
   --color-verde-escuro: var(--verde-escuro);
   --font-sans: var(--font-body);
@@ -302,4 +320,9 @@ html {
 }
 @media (prefers-reduced-motion: reduce) {
   .fotos-passando-zoom { animation: none; }
+}
+
+/* Instagram's gradient (contact cards). */
+.bg-instagram {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
 }

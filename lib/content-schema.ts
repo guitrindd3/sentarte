@@ -79,6 +79,8 @@ export type SiteContent = {
     instagramHandle: string;
     /** Google Business Profile link (reviews), editable in /admin "Textos e contato". */
     googleUrl: string;
+    /** Pinterest profile link (user 2026-11-23), editable in /admin "Textos e contato"; empty = hidden. */
+    pinterestUrl?: string;
   };
   hero: {
     titulo: string;
@@ -102,6 +104,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     whatsappNumero: "5527995201669",
     instagramHandle: "ateliesentarte",
     googleUrl: "https://share.google/bKZENAGHKnARnTU1y",
+    pinterestUrl: "https://www.pinterest.com/ateliesentarte/",
   },
   hero: {
     titulo: "Ateliê SentArte",

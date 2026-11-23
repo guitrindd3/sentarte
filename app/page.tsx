@@ -52,8 +52,7 @@ export default async function Home() {
       <FotosClientes depoimentos={content.depoimentos} />
       <Depoimentos depoimentos={content.depoimentos} titulo={t.linha("depoimentosTitulo")} googleUrl={content.site.googleUrl} />
       <ContactCta
-        whatsappNumero={zap}
-        instagramHandle={content.site.instagramHandle}
+        site={content.site}
         titulo={t.linha("contatoTitulo")}
         texto={textoSimples(t.linha("contatoTexto"))}
       />

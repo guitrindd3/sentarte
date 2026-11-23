@@ -255,6 +255,9 @@ export async function updateSiteAction(_p: Resultado, formData: FormData) {
     const google = txt(formData, "googleUrl", content.site.googleUrl).trim();
     if (google && !/^https:\/\/[^\s]+$/.test(google)) throw new Aviso("O link do Google precisa começar com https://");
     content.site.googleUrl = google;
+    const pinterest = txt(formData, "pinterestUrl", content.site.pinterestUrl ?? "").trim();
+    if (pinterest && !/^https:\/\/[^\s]+$/.test(pinterest)) throw new Aviso("O link do Pinterest precisa começar com https://");
+    content.site.pinterestUrl = pinterest;
     if (content.site.whatsappNumero.length < 12) throw new Aviso("O WhatsApp precisa ter o 55 + DDD + número (ex.: 5527999999999).");
     await saveContent(content, "edita as configurações do site");
     return PRONTO;

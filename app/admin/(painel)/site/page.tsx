@@ -48,6 +48,9 @@ export default async function TextosDoSite() {
           <Field label="Link do Google (avaliações)" dica="O link do Perfil da Empresa no Google. Aparece no rodapé, no Contato e na mensagem de pedir avaliação.">
             <input name="googleUrl" type="url" defaultValue={site.googleUrl} placeholder="https://..." className={inputClass} />
           </Field>
+          <Field label="Link do Pinterest" dica="O endereço da página do ateliê no Pinterest. Aparece no quadro de contato, no Contato e no rodapé. Em branco = não aparece.">
+            <input name="pinterestUrl" type="url" defaultValue={site.pinterestUrl} placeholder="https://www.pinterest.com/..." className={inputClass} />
+          </Field>
           <Field label="Nome do site">
             <CampoTexto name="nome" defaultValue={site.nome} max={40} />
           </Field>

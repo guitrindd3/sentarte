@@ -142,7 +142,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             telephone: `+${site.whatsappNumero}`,
             priceRange: `${formatBRL(PRECO_CADEIRA)} a ${formatBRL(PRECO_CADEIRA_COM_NOME)}`,
             areaServed: "BR",
-            sameAs: [instagramUrl(site.instagramHandle)],
+            sameAs: [instagramUrl(site.instagramHandle), ...(site.pinterestUrl ? [site.pinterestUrl] : [])],
           }}
         />
         {/* Tells Google the site's name, so results say "SentArte" instead of "Vercel". */}
