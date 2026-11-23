@@ -291,3 +291,15 @@ html {
   .anonovo-rolo { transition: none; }
   .anonovo-serpentina { display: none; }
 }
+
+/* "Ver todas as cadeiras" tile on the homepage: slow zoom on the photo showing (components/home/fotos-passando.tsx). */
+@keyframes fotos-passando-zoom {
+  from { transform: scale(1.12); }
+  to { transform: scale(1); }
+}
+.fotos-passando-zoom {
+  animation: fotos-passando-zoom 3.6s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fotos-passando-zoom { animation: none; }
+}

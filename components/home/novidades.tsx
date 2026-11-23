@@ -4,6 +4,7 @@ import type { SiteContent } from "@/lib/content-schema";
 import { PRAZO_PRODUCAO_DIAS_UTEIS, precoDoModelo } from "@/lib/offer";
 import { produtosDaLoja, type Produto } from "@/lib/produtos";
 import { PrecoVitrine } from "@/components/home/preco-vitrine";
+import { FotosPassando } from "@/components/home/fotos-passando";
 
 // Homepage "Novidades" showcase (user 2026-11-23: where the material block was,
 // "coloque mais novidades de venda… mais cadeira para as pessoas verem… deixa
@@ -32,6 +33,11 @@ export function Novidades({ content }: { content: SiteContent }) {
   const limite = maisNovo ? new Date(new Date(maisNovo).getTime() - DIAS_NOVO * 86_400_000).toISOString() : "9";
   const novo = (p: Produto) => quando(p) >= limite;
   const [destaque, ...resto] = lista;
+  // Photos for the "Ver todas" tile: the chairs NOT already shown above, then the rest.
+  const mostrados = new Set(lista.map((p) => p.slug));
+  const fotosTile = [...produtos.filter((p) => !mostrados.has(p.slug)), ...lista]
+    .slice(0, 14)
+    .map((p) => ({ src: p.base.imagemUrl!, alt: p.base.nome }));
 
   return (
     <section className="border-t border-line bg-paper py-14 md:py-20" aria-labelledby="titulo-novidades">
@@ -69,13 +75,18 @@ export function Novidades({ content }: { content: SiteContent }) {
             <Link
               href="/categoria/cadeiras"
               data-rastro="Novidades: tile ver todas"
-              className="group flex h-full min-h-40 flex-col justify-between bg-ink p-5 text-canvas transition-opacity hover:opacity-90"
+              className="group relative flex h-full min-h-56 flex-col justify-between overflow-hidden bg-ink p-5 text-canvas"
             >
-              <span className="font-serif text-2xl font-medium leading-tight tracking-tight">
+              <FotosPassando fotos={fotosTile} />
+              <span className="relative font-serif text-2xl font-medium leading-tight tracking-tight [text-shadow:0_1px_12px_rgb(0_0_0/0.45)]">
                 Ver todas as cadeiras
               </span>
-              <span className="mt-4 text-sm text-canvas/80">
-                Times, boho, desenhos e a sua própria trama
+              <span className="relative mt-4 block [text-shadow:0_1px_10px_rgb(0_0_0/0.5)]">
+                <span className="block text-sm font-semibold">{produtos.length} modelos</span>
+                <span className="block text-sm text-canvas/85">Times, boho, desenhos e a sua própria trama</span>
+                <span className="mt-3 inline-block border border-canvas/70 px-3 py-1.5 text-xs font-semibold transition-colors group-hover:bg-canvas group-hover:text-ink">
+                  Ver o catálogo
+                </span>
               </span>
             </Link>
           </li>
