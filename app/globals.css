@@ -298,7 +298,7 @@ html {
   to { transform: scale(1); }
 }
 .fotos-passando-zoom {
-  animation: fotos-passando-zoom 3.6s ease-out both;
+  animation: fotos-passando-zoom 2.4s ease-out both;
 }
 @media (prefers-reduced-motion: reduce) {
   .fotos-passando-zoom { animation: none; }

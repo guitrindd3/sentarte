@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { SiteContent } from "@/lib/content-schema";
 import { PRAZO_PRODUCAO_DIAS_UTEIS, precoDoModelo } from "@/lib/offer";
 import { produtosDaLoja, type Produto } from "@/lib/produtos";
-import { PrecoVitrine } from "@/components/home/preco-vitrine";
+import { EnfeitesDaFoto, PrecoVitrine } from "@/components/home/preco-vitrine";
 import { FotosPassando } from "@/components/home/fotos-passando";
 
 // Homepage "Novidades" showcase (user 2026-11-23: where the material block was,
@@ -112,8 +112,9 @@ function Cartao({ p, novo, grande = false }: { p: Produto; novo: boolean; grande
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes={grande ? "(min-width: 768px) 560px, 100vw" : "(min-width: 768px) 270px, 50vw"}
         />
+        <EnfeitesDaFoto grande={grande} />
         {novo ? (
-          <span className="absolute left-3 top-3 bg-ink px-2 py-1 text-xs font-semibold text-canvas">
+          <span className="absolute right-3 top-3 bg-ink px-2 py-1 text-xs font-semibold text-canvas">
             Novo
           </span>
         ) : null}

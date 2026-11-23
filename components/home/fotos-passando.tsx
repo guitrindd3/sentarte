@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 // (user 2026-11-23: "animações de imagens das cadeiras mudando e aparecendo").
 // Each photo fades in with a slow zoom; only the previous, current and next ones
 // are mounted, so the tile stays light. Stops on "reduzir movimento" (first photo only).
-const TEMPO_MS = 2600;
+const TEMPO_MS = 1700; // faster at the user's request (was 2600)
 
 export function FotosPassando({ fotos }: { fotos: { src: string; alt: string }[] }) {
   const [atual, setAtual] = useState(0);
@@ -39,7 +39,7 @@ export function FotosPassando({ fotos }: { fotos: { src: string; alt: string }[]
         i === atual || i === proxima || i === anterior ? (
           <span
             key={f.src}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-out ${i === atual ? "opacity-100" : "opacity-0"}`}
+            className={`absolute inset-0 transition-opacity duration-700 ease-out ${i === atual ? "opacity-100" : "opacity-0"}`}
           >
             <Image
               src={f.src}
