@@ -31,6 +31,12 @@ export type Modelo = {
    * `bracoMadeira` = wooden armrests. See precoDoModelo in lib/offer.ts.
    */
   inclui?: ModeloInclui;
+  /**
+   * When it was added (ISO date, 2026-11-23). Feeds the homepage "Novidades"
+   * showcase. Older chairs were back-filled from the git history of
+   * content/site-content.json; missing = an old chair.
+   */
+  criadoEm?: string;
 };
 
 export type ModeloInclui = {

@@ -4,6 +4,7 @@ import { CategoryBento } from "@/components/home/category-bento";
 import { ContactCta } from "@/components/home/contact-cta";
 import { Depoimentos } from "@/components/home/depoimentos";
 import { FotosClientes } from "@/components/fotos-clientes";
+import { Novidades } from "@/components/home/novidades";
 import { MedidasCadeiras } from "@/components/medidas-cadeiras";
 import { PersonalizationSteps } from "@/components/home/personalization-steps";
 import { TeamShowcase } from "@/components/home/team-showcase";
@@ -38,6 +39,7 @@ export default async function Home() {
       <PresenteDeNatal />
       <BrindeDeAnoNovo />
       <PersonalizationSteps titulo={t.linha("passosTitulo")} passos={t.blocos("passos").map((b) => ({ titulo: b.titulo, texto: textoSimples(b.texto) }))} />
+      <Novidades content={content} />
       <MedidasCadeiras whatsappNumero={content.site.whatsappNumero} />
       <FotosClientes depoimentos={content.depoimentos} />
       <Depoimentos depoimentos={content.depoimentos} titulo={t.linha("depoimentosTitulo")} googleUrl={content.site.googleUrl} />

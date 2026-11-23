@@ -27,14 +27,16 @@
           "descricao": "Estampas boho exclusivas, em tons terrosos — cada padrão é uma trama diferente.",
           "corA": "#15564C",
           "corB": "#BD502E",
-          "imagemUrl": "/catalogo/cadeiras-boho.jpg"
+          "imagemUrl": "/catalogo/cadeiras-boho.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-60128627-f011-4a55-b52c-1c70ecf4344a",
           "nome": "Monte a sua trama",
           "descricao": "Escolha o modelo, a forma do trançado e as cores. Uma cadeira sua, do seu jeito.",
           "corA": "#15564C",
-          "corB": "#0E3E37"
+          "corB": "#0E3E37",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-a2743711-282e-44ad-9a12-b8f834cdbce8",
@@ -42,7 +44,8 @@
           "descricao": "Cores e brasão do seu time, trançados na estrutura — sem adesivo, sem estampa.",
           "corA": "#16222B",
           "corB": "#BD502E",
-          "imagemUrl": "/catalogo/time-do-coracao.jpg"
+          "imagemUrl": "/catalogo/time-do-coracao.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-cc7970d4-201a-43a6-927a-9c46348acafd",
@@ -50,7 +53,8 @@
           "descricao": "Desenhos, personagens e frases tecidos na cadeira, do jeito que você imaginar.",
           "corA": "#15564C",
           "corB": "#BD502E",
-          "imagemUrl": "/catalogo/animes-e-desenhos.jpg"
+          "imagemUrl": "/catalogo/animes-e-desenhos.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-2af168e3-0db2-4f24-9c9b-588d6660f989",
@@ -63,7 +67,8 @@
             "/catalogo/botafogo-foto2.jpg",
             "/catalogo/botafogo-foto3.jpg",
             "/catalogo/botafogo-foto4.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-c1b9cdbe-354d-46f6-a4c7-5534640b4751",
@@ -71,7 +76,8 @@
           "descricao": "Escudo do Botafogo com o nome que você quiser tecido embaixo. Manda pelo WhatsApp.",
           "corA": "#111111",
           "corB": "#F2F2F2",
-          "imagemUrl": "/catalogo/botafogo-personalizado.jpg"
+          "imagemUrl": "/catalogo/botafogo-personalizado.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-7a28ae75-662e-4a38-8788-67dcc229e2f4",
@@ -84,7 +90,8 @@
             "/catalogo/corinthians-foto2.jpg",
             "/catalogo/corinthians-foto3.jpg",
             "/catalogo/corinthians-foto4.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-d4486d07-bb10-4c95-be30-56f561e65b18",
@@ -96,7 +103,8 @@
           "variantes": [
             "/catalogo/flamengo-cor2.jpg",
             "/catalogo/flamengo-cor3.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-f6259487-5c53-4f14-8cbf-09d3bec71fa9",
@@ -108,7 +116,8 @@
           "fotosExtras": [
             "/catalogo/flamengo-personalizado-foto2.jpg",
             "/catalogo/flamengo-personalizado-foto3.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-a05e269c-5609-4411-96e7-132b4c739878",
@@ -120,7 +129,8 @@
           "fotosExtras": [
             "/catalogo/fluminense.jpg",
             "/catalogo/fluminense-foto3.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-90315ea0-8785-486c-b166-6db04e1d7958",
@@ -128,7 +138,8 @@
           "descricao": "Escudo do Palmeiras tecido em verde e branco.",
           "corA": "#006437",
           "corB": "#F2F2F2",
-          "imagemUrl": "/catalogo/palmeiras.jpg"
+          "imagemUrl": "/catalogo/palmeiras.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-fb28a240-cdd5-412e-b2c6-5279026faf92",
@@ -136,7 +147,8 @@
           "descricao": "Cruz de malta do Vasco tecida em preto, branco e vermelho.",
           "corA": "#111111",
           "corB": "#B0121A",
-          "imagemUrl": "/catalogo/vasco.jpg"
+          "imagemUrl": "/catalogo/vasco.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-4442ac16-1064-48d8-ac63-51c76c2dcbb5",
@@ -147,7 +159,8 @@
           "imagemUrl": "/catalogo/vasco-personalizado.jpg",
           "fotosExtras": [
             "/catalogo/vasco-personalizado-foto2.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-6f73a3f4-07ff-42f1-a81a-07fe390c7c96",
@@ -159,7 +172,8 @@
           "fotosExtras": [
             "/catalogo/diamante-verde-foto2.jpg",
             "/catalogo/diamante-verde-foto3.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-1899d435-b163-4f1f-b24d-e853c8c981ef",
@@ -172,7 +186,8 @@
             "/catalogo/degrade-por-do-sol-foto2.jpg",
             "/catalogo/degrade-por-do-sol-foto3.jpg",
             "/catalogo/degrade-por-do-sol-foto4.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-94c66c49-d1c4-406b-a94e-4e762ea4dd8d",
@@ -180,7 +195,8 @@
           "descricao": "Losango colorido, várias tonalidades numa trama só.",
           "corA": "#BD502E",
           "corB": "#15564C",
-          "imagemUrl": "/catalogo/diamante-multicolor.jpg"
+          "imagemUrl": "/catalogo/diamante-multicolor.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-978306d8-9152-4693-9802-ee24716ade31",
@@ -188,7 +204,8 @@
           "descricao": "Padrão totem em terracota e areia.",
           "corA": "#BD502E",
           "corB": "#EDE3D0",
-          "imagemUrl": "/catalogo/totem-espiral.jpg"
+          "imagemUrl": "/catalogo/totem-espiral.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-2a5abb86-9420-4b2e-9f31-8f4f8df2953e",
@@ -199,7 +216,8 @@
           "imagemUrl": "/catalogo/losango-terracota.jpg",
           "fotosExtras": [
             "/catalogo/losango-terracota-foto2.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-b1cac2d7-63d0-4eec-808d-d5866756d2c4",
@@ -211,7 +229,8 @@
           "fotosExtras": [
             "/catalogo/sol-foto2.jpg",
             "/catalogo/sol-foto3.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-dc70e2e6-e163-49e5-9f3b-106d75f51b66",
@@ -219,7 +238,8 @@
           "descricao": "Personagem de anime tecido em preto e branco.",
           "corA": "#111111",
           "corB": "#F2F2F2",
-          "imagemUrl": "/catalogo/sukuna-2.jpg"
+          "imagemUrl": "/catalogo/sukuna-2.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-d39e5dbc-6275-48b6-aaed-ad5278be70dc",
@@ -227,7 +247,8 @@
           "descricao": "O Sharingan tecido em preto, vermelho e branco.",
           "corA": "#B0121A",
           "corB": "#111111",
-          "imagemUrl": "/catalogo/itachi-uchiha.jpg"
+          "imagemUrl": "/catalogo/itachi-uchiha.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-f9dc8a5d-f16e-4a89-bd42-7e223f807edb",
@@ -235,7 +256,8 @@
           "descricao": "Nome tecido junto com uma borboleta, em roxo e pink. Manda o nome que você quer pelo WhatsApp.",
           "corA": "#8B5FBF",
           "corB": "#EC1E79",
-          "imagemUrl": "/catalogo/borboleta.jpg"
+          "imagemUrl": "/catalogo/borboleta.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-483f7774-7901-4d16-9575-152a66c92136",
@@ -243,7 +265,8 @@
           "descricao": "A frase que só você tem, tecida na cadeira. Manda o texto pelo WhatsApp.",
           "corA": "#2F6690",
           "corB": "#E8DCC0",
-          "imagemUrl": "/catalogo/coracao-leve.jpg"
+          "imagemUrl": "/catalogo/coracao-leve.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-ad39708e-2902-464e-ad4e-860af57c82ba",
@@ -251,7 +274,8 @@
           "descricao": "Máscara do Homem-Aranha tecida em vermelho e preto.",
           "corA": "#C21807",
           "corB": "#111111",
-          "imagemUrl": "/catalogo/homem-aranha.jpg"
+          "imagemUrl": "/catalogo/homem-aranha.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-eabfd8ec-50f5-4f5a-956a-9296f34fd81c",
@@ -259,7 +283,8 @@
           "descricao": "Gatinho em pixel art tecido em rosa e branco.",
           "corA": "#EC1E79",
           "corB": "#F8C8DC",
-          "imagemUrl": "/catalogo/gato.jpg"
+          "imagemUrl": "/catalogo/gato.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-e8db6821-bdba-4d7c-ab1d-d36c88dc3c9e",
@@ -267,7 +292,8 @@
           "descricao": "Creeper de Minecraft em verde e preto, com nome tecido embaixo.",
           "corA": "#6FA83C",
           "corB": "#111111",
-          "imagemUrl": "/catalogo/creeper.jpg"
+          "imagemUrl": "/catalogo/creeper.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-00d97af3-cb50-412b-805a-f27aece363c0",
@@ -275,7 +301,8 @@
           "descricao": "Degradê do rosa ao amarelo em formato de cauda de sereia.",
           "corA": "#E85A97",
           "corB": "#F5A83C",
-          "imagemUrl": "/catalogo/sereia-arco-iris.jpg"
+          "imagemUrl": "/catalogo/sereia-arco-iris.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-196c59ea-b897-4aa0-ab25-e195068cd8e7",
@@ -283,7 +310,8 @@
           "descricao": "Só o nome, grande e limpo, tecido do jeito que você quiser. Combina as cores e manda pelo WhatsApp.",
           "corA": "#111111",
           "corB": "#D9D9D9",
-          "imagemUrl": "/catalogo/jv-trindade.jpg"
+          "imagemUrl": "/catalogo/jv-trindade.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-01d16dd0-66cf-4fa2-8491-85c2c74e18cc",
@@ -291,7 +319,8 @@
           "descricao": "Personagem de anime tecido em marrom e branco.",
           "corA": "#2B2118",
           "corB": "#E8DCC8",
-          "imagemUrl": "/catalogo/satoru-gojo.jpg"
+          "imagemUrl": "/catalogo/satoru-gojo.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-57626963-7d95-418e-95fc-498bdcd70b1e",
@@ -299,7 +328,8 @@
           "descricao": "Personagem de terror com o sobrenome tecido no assento, em preto e branco.",
           "corA": "#111111",
           "corB": "#F2F2F2",
-          "imagemUrl": "/catalogo/ghostface.jpg"
+          "imagemUrl": "/catalogo/ghostface.jpg",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-arpoador",
@@ -310,7 +340,8 @@
           "imagemUrl": "/catalogo/arpoador.jpg",
           "fotosExtras": [
             "/catalogo/arpoador-foto2.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T16:20:17.000Z"
         },
         {
           "id": "mod-tracada-listrada",
@@ -322,7 +353,8 @@
           "fotosExtras": [
             "/catalogo/tracada-listrada-foto2.jpg",
             "/catalogo/tracada-listrada-foto3.jpg"
-          ]
+          ],
+          "criadoEm": "2026-10-02T16:20:17.000Z"
         },
         {
           "id": "cf49e9a0-7fe2-4c9d-b050-1754a6e095db",
@@ -341,7 +373,8 @@
           "fotosExtras": [
             "/catalogo/b5d743f5-8a15-433e-9d15-ba319e6fd8a7.jpg",
             "/catalogo/ad81c5d3-2bd8-48ca-a2c8-8d0b7af3d859.jpg"
-          ]
+          ],
+          "criadoEm": "2026-11-01T12:23:38.000Z"
         },
         {
           "id": "5be5d974-765a-4c2b-8876-3e89c61cfd66",
@@ -353,7 +386,8 @@
           "imagemUrl": "/catalogo/6172bc6b-0521-494e-9d30-e4832d0b3056.jpg",
           "variantes": [
             "/catalogo/542cf852-0216-4c94-800b-ed6328f9b041.jpg"
-          ]
+          ],
+          "criadoEm": "2026-11-01T12:28:44.000Z"
         },
         {
           "id": "860930ac-16ca-4a54-8a76-bd3329f17f0b",
@@ -365,7 +399,8 @@
           "imagemUrl": "/catalogo/c3985318-5ecf-4a4f-99b7-d520d6062afc.jpg",
           "variantes": [
             "/catalogo/cb672088-f3b2-4d4b-b24f-9065a943ccd3.jpg"
-          ]
+          ],
+          "criadoEm": "2026-11-01T12:32:30.000Z"
         },
         {
           "id": "b212bc64-dc43-4979-af91-1d0627fc2d9b",
@@ -381,7 +416,8 @@
           "imagemUrl": "/catalogo/a90b9160-2c60-4f5f-8fde-f2cb6796a576.jpg",
           "fotosExtras": [
             "/catalogo/d177f6c7-c1fe-4825-895c-c0056e5c419a.jpg"
-          ]
+          ],
+          "criadoEm": "2026-11-05T10:30:06.000Z"
         },
         {
           "id": "f50d06c6-43d3-4514-9ef0-ea0691e3a8a8",
@@ -397,7 +433,8 @@
           "imagemUrl": "/catalogo/8703e1c9-bf5c-486d-95b1-74ad7e1ff168.jpg",
           "fotosExtras": [
             "/catalogo/8cbb334c-206b-4526-af83-9ac6ebac5436.jpg"
-          ]
+          ],
+          "criadoEm": "2026-11-03T20:06:41.000Z"
         },
         {
           "id": "e6f06d56-d44e-4c92-b05d-8bb4f3a76e6f",
@@ -409,7 +446,8 @@
           "imagemUrl": "/catalogo/7c63c49a-b5b6-404d-88e5-59e9ac549645.jpg",
           "fotosExtras": [
             "/catalogo/65f39ea9-9467-4665-9132-fc9a8c9a2f46.jpg"
-          ]
+          ],
+          "criadoEm": "2026-11-15T22:12:29.000Z"
         },
         {
           "id": "0e12b7b8-95bb-4c8a-b69d-202bba4bd41a",
@@ -423,7 +461,8 @@
             "/catalogo/45e89a04-d70d-4220-85af-c700a9d3879f.jpg",
             "/catalogo/6f0dc359-d80b-4a43-bcbb-1a10fe0a2b97.jpg",
             "/catalogo/99a70967-8438-49c4-9aca-30d5c5d206c2.jpg"
-          ]
+          ],
+          "criadoEm": "2026-11-20T21:20:50.000Z"
         },
         {
           "id": "c4232ea4-b7e4-4472-a92b-068c61e29d3f",
@@ -435,7 +474,8 @@
           "imagemUrl": "/catalogo/f984b584-34ce-4c02-87cf-a454ffc8890c.jpg",
           "fotosExtras": [
             "/catalogo/fa2bf6c9-3af8-463a-bc6d-e558fef03261.jpg"
-          ]
+          ],
+          "criadoEm": "2026-11-17T14:40:56.000Z"
         }
       ]
     },
@@ -453,14 +493,16 @@
           "nome": "Bolsa dia a dia",
           "descricao": "Tamanho médio, alça de ombro, para o uso do dia a dia.",
           "corA": "#A9835A",
-          "corB": "#EDE3D0"
+          "corB": "#EDE3D0",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-83de0859-309f-49a3-bea1-880869868beb",
           "nome": "Bolsa de praia",
           "descricao": "Grande, com espaço para canga, protetor e o que mais precisar levar.",
           "corA": "#15564C",
-          "corB": "#BD502E"
+          "corB": "#BD502E",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         }
       ]
     },
@@ -478,14 +520,16 @@
           "nome": "Trama lisa",
           "descricao": "Uma cor só, acabamento limpo, do jeito que combina com qualquer varanda.",
           "corA": "#15564C",
-          "corB": "#0E3E37"
+          "corB": "#0E3E37",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         },
         {
           "id": "mod-5e874097-66e2-42e3-9220-38dc4055ec01",
           "nome": "Trama mesclada",
           "descricao": "Duas cores intercaladas, para dar mais presença à peça.",
           "corA": "#BD502E",
-          "corB": "#EDE3D0"
+          "corB": "#EDE3D0",
+          "criadoEm": "2026-10-02T15:39:15.000Z"
         }
       ]
     }

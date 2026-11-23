@@ -320,6 +320,7 @@ export async function addModeloAction(categoriaId: string, _p: Resultado, formDa
       descricao: "",
       corA: "#15564C",
       corB: "#BD502E",
+      criadoEm: new Date().toISOString(),
     };
     const colecao = colecaoDoForm(formData);
     if (colecao) novo.grupo = colecao;
@@ -1140,6 +1141,7 @@ export async function publicarTramaAction(_p: Resultado, formData: FormData) {
       corB: cor("corB", "#e8dccb"),
       imagemUrl: preparada.url,
       trama: trama || undefined,
+      criadoEm: new Date().toISOString(),
       ...(colecao === "cadeiras" ? {} : { grupo: colecao as "times" | "boho" | "desenhos" | "eventos" }),
     };
     cat.modelos.push(novo);
