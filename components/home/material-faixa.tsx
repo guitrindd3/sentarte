@@ -14,32 +14,33 @@ export function MaterialFaixa({
   itens: { titulo: string; texto: string }[];
 }) {
   return (
-    <section className="border-t border-line bg-canvas-deep px-6 py-14 text-ink md:py-20" aria-labelledby="titulo-material">
+    <section className="border-t border-line bg-canvas-deep px-6 py-10 text-ink md:py-12" aria-labelledby="titulo-material">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <h2 id="titulo-material" className="font-serif text-3xl font-medium tracking-tight md:text-4xl">
             {titulo}
           </h2>
-          <span aria-hidden className="mx-auto mt-5 flex w-40 items-center gap-2 text-wood/60">
+          <span aria-hidden className="mx-auto mt-3 flex w-40 items-center gap-2 text-wood/60">
             <span className="h-px flex-1 border-t border-dashed border-current" />
             <svg viewBox="0 0 24 12" className="h-3 w-6" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
               <path d="M1 6 C5 1 9 11 12 6 C15 1 19 11 23 6" />
             </svg>
             <span className="h-px flex-1 border-t border-dashed border-current" />
           </span>
-          <p className="mt-5 text-sm leading-relaxed text-ink-soft md:text-base">{texto}</p>
+          <p className="mt-3 text-sm leading-relaxed text-ink-soft md:text-base">{texto}</p>
         </div>
 
-        <ul className="mx-auto mt-12 grid max-w-md gap-7 md:max-w-none md:grid-cols-3 md:gap-8">
+        <ul className="mx-auto mt-8 grid max-w-md gap-6 md:max-w-none md:grid-cols-3 md:gap-8">
           {itens.slice(0, 3).map((it, i) => {
             const Icone = ICONES_MATERIAL[i];
             return (
               <li key={i} className="flex items-center gap-5 md:flex-col md:items-center md:gap-0 md:text-center">
-                <SeloRustico grande>
-                  <Icone className="h-12 w-12" />
+                {/* Bigger seals, less space around (user 2026-11-23: "diminui um pouco e aumenta um pouco das logos") */}
+                <SeloRustico className="h-24 w-24 md:h-28 md:w-28">
+                  <Icone className="h-16 w-16 md:h-[4.5rem] md:w-[4.5rem]" />
                 </SeloRustico>
                 <div>
-                  <h3 className="font-serif text-xl font-medium tracking-tight md:mt-5">{it.titulo}</h3>
+                  <h3 className="font-serif text-xl font-medium tracking-tight md:mt-3">{it.titulo}</h3>
                   <p className="mt-1.5 max-w-[34ch] text-sm leading-relaxed text-ink-soft md:mt-2">{it.texto}</p>
                 </div>
               </li>

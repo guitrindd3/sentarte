@@ -89,11 +89,11 @@ export function TramaAgulha({ className }: P) {
 export const ICONES_MATERIAL = [AncoraCorda, CadeiraDobravel, TramaAgulha];
 
 /** Stitched round patch the rustic icons sit in. */
-export function SeloRustico({ children, grande = false }: { children: React.ReactNode; grande?: boolean }) {
+export function SeloRustico({ children, grande = false, className }: { children: React.ReactNode; grande?: boolean; className?: string }) {
   return (
     <span
       className={`relative flex shrink-0 items-center justify-center rounded-full border border-line bg-paper text-wood ${
-        grande ? "h-20 w-20" : "h-12 w-12"
+        className ?? (grande ? "h-20 w-20" : "h-12 w-12")
       }`}
     >
       <span className={`absolute rounded-full border border-dashed border-wood/45 ${grande ? "inset-1.5" : "inset-1"}`} />
