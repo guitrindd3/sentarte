@@ -5,9 +5,7 @@ import { ContactCta } from "@/components/home/contact-cta";
 import { Depoimentos } from "@/components/home/depoimentos";
 import { FotosClientes } from "@/components/fotos-clientes";
 import { MedidasCadeiras } from "@/components/medidas-cadeiras";
-import { MaterialSpec } from "@/components/home/material-spec";
 import { PersonalizationSteps } from "@/components/home/personalization-steps";
-import { PullQuote } from "@/components/home/pull-quote";
 import { TeamShowcase } from "@/components/home/team-showcase";
 import type { Metadata } from "next";
 import { OfferStrip } from "@/components/offer-strip";
@@ -40,13 +38,6 @@ export default async function Home() {
       <PresenteDeNatal />
       <BrindeDeAnoNovo />
       <PersonalizationSteps titulo={t.linha("passosTitulo")} passos={t.blocos("passos").map((b) => ({ titulo: b.titulo, texto: textoSimples(b.texto) }))} />
-      <PullQuote frase={textoSimples(t.linha("frase"))} assinatura={textoSimples(t.linha("fraseAssinatura"))} />
-      <MaterialSpec
-        foto={t.linha("materialFoto")}
-        titulo={t.linha("materialTitulo")}
-        texto={textoSimples(t.linha("materialTexto"))}
-        itens={t.blocos("materialItens").map((b) => ({ titulo: b.titulo, texto: textoSimples(b.texto) }))}
-      />
       <MedidasCadeiras whatsappNumero={content.site.whatsappNumero} />
       <FotosClientes depoimentos={content.depoimentos} />
       <Depoimentos depoimentos={content.depoimentos} titulo={t.linha("depoimentosTitulo")} googleUrl={content.site.googleUrl} />

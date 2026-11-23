@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { FramedWeave } from "@/components/framed-weave";
+import { MaterialSpec } from "@/components/home/material-spec";
+import { PullQuote } from "@/components/home/pull-quote";
 import { PageHeader } from "@/components/page-header";
 import { TextoRico, textoSimples } from "@/components/texto-rico";
 import { textosDaPagina } from "@/lib/textos-paginas";
@@ -32,6 +34,14 @@ export default async function SobrePage() {
         </div>
         <FramedWeave imagemUrl={t.linha("foto")} alt={t.linha("foto").startsWith("/photos/") ? "Areia de praia com ondulações formadas pelo vento" : `Foto do ateliê ${site.nome}`} />
       </section>
+      {/* Moved here from the homepage 2026-11-23 (user didn't want it on the home). */}
+      <PullQuote frase={textoSimples(t.linha("frase"))} assinatura={textoSimples(t.linha("fraseAssinatura"))} />
+      <MaterialSpec
+        foto={t.linha("materialFoto")}
+        titulo={t.linha("materialTitulo")}
+        texto={textoSimples(t.linha("materialTexto"))}
+        itens={t.blocos("materialItens").map((b) => ({ titulo: b.titulo, texto: textoSimples(b.texto) }))}
+      />
     </>
   );
 }
