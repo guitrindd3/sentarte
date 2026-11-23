@@ -51,7 +51,7 @@ export function MedidasCadeiras({ whatsappNumero, embutido = false }: { whatsapp
   return (
     // Compact (user 2026-11-23: "tem muito espaço, tira um pouco"): less padding,
     // the frame detail beside the name, tighter rows.
-    <section className="border-t border-line bg-paper px-6 py-9 md:py-10" aria-labelledby="titulo-medidas">
+    <section className="border-t border-line bg-paper px-4 py-7 sm:px-6 md:py-10" aria-labelledby="titulo-medidas">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1">
           <h2 id="titulo-medidas" className="font-serif text-2xl font-medium tracking-tight text-ink md:text-3xl">
@@ -59,7 +59,38 @@ export function MedidasCadeiras({ whatsappNumero, embutido = false }: { whatsapp
           </h2>
           <p className="text-sm text-ink-soft">Estrutura em alumínio e trançado em corda náutica. Medidas da cadeira aberta.</p>
         </div>
-        <ul className="mt-5 grid gap-4 md:grid-cols-3">
+        {/* Phones: one comparison table (user 2026-11-23: "não vi tudo olhando pelo
+            celular" — three stacked cards were ~870px, more than a screen). */}
+        <table className="mt-4 w-full table-fixed border border-line bg-canvas text-xs md:hidden">
+          <thead>
+            <tr className="border-b border-line">
+              <th className="w-[27%] px-2 py-2" aria-label="Medida" />
+              {MEDIDAS_CADEIRAS.map((m) => (
+                <th key={m.nome} scope="col" className="px-1.5 py-2 text-left align-bottom font-normal">
+                  <span className="block font-serif text-sm font-medium leading-tight tracking-tight text-ink">
+                    {m.nome.replace(/^Cadeira /, "").replace(/^\w/, (c) => c.toUpperCase())}
+                  </span>
+                  <span className="block text-xs leading-tight text-ink-soft">{m.detalhe ?? " "}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {ROTULOS.map(([rotulo, chave]) => (
+              <tr key={rotulo} className="border-b border-line last:border-0">
+                <th scope="row" className="px-2 py-1.5 text-left align-top font-normal text-ink-soft">
+                  {rotulo}
+                </th>
+                {MEDIDAS_CADEIRAS.map((m) => (
+                  <td key={m.nome} className="px-1.5 py-1.5 align-top font-medium leading-snug text-ink">
+                    {m[chave] ?? "—"}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <ul className="mt-5 hidden gap-4 md:grid md:grid-cols-3">
           {MEDIDAS_CADEIRAS.map((m) => (
             <li key={m.nome} className="border border-line bg-canvas px-5 py-4">
               <p className="flex items-baseline gap-2 font-serif text-lg font-medium tracking-tight text-ink">
@@ -77,7 +108,7 @@ export function MedidasCadeiras({ whatsappNumero, embutido = false }: { whatsapp
             </li>
           ))}
         </ul>
-        <p className="mt-4 text-sm text-ink-soft">
+        <p className="mt-3 text-xs text-ink-soft md:mt-4 md:text-sm">
           {OBS_RECLINAVEL} Quer a infantil ou a reclinável?{" "}
           <a
             href={whatsappUrl(whatsappNumero, "Oi! Quero saber mais sobre a cadeira infantil / reclinável.")}
@@ -93,6 +124,14 @@ export function MedidasCadeiras({ whatsappNumero, embutido = false }: { whatsapp
     </section>
   );
 }
+
+const ROTULOS: [string, "altura" | "largura" | "profundidade" | "capacidade" | "peso"][] = [
+  ["Altura", "altura"],
+  ["Largura", "largura"],
+  ["Profund.", "profundidade"],
+  ["Aguenta", "capacidade"],
+  ["Peso", "peso"],
+];
 
 function linhas(m: (typeof MEDIDAS_CADEIRAS)[number]): [string, string][] {
   return [
