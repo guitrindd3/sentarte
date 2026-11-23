@@ -39,12 +39,12 @@ export function Novidades({ content }: { content: SiteContent }) {
     .slice(0, 14)
     .map((p) => ({ src: p.base.imagemUrl!, alt: p.base.nome }));
 
-  // Full screen width, no side margins (user 2026-11-23: "cubra toda área… não
-  // quero margem nesse aqui… deixa mais como venda"). Grid: phones 2 cols,
+  // Nearly full width: first no side margins (user 2026-11-23: "cubra toda área… não
+  // quero margem nesse aqui"), then "margem mínima… de pelo menos 2 cm" = 2cm from md, 16px on phones. Grid: phones 2 cols,
   // md 4 cols (big 2x2 + 8 cells = 3 rows), xl 6 cols (big 2x2 + 8 = 2 rows).
   return (
-    <section className="border-t border-line bg-paper pt-12 md:pt-16" aria-labelledby="titulo-novidades">
-      <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 px-4 sm:px-6 lg:px-10">
+    <section className="border-t border-line bg-paper py-12 md:py-16" aria-labelledby="titulo-novidades">
+      <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 px-4 md:px-[2cm]">
         <div className="max-w-2xl">
           <p className="text-sm text-ink-soft">Recém-trançadas</p>
           <h2 id="titulo-novidades" className="mt-2 font-serif text-3xl font-medium tracking-tight text-ink md:text-5xl">
@@ -65,7 +65,7 @@ export function Novidades({ content }: { content: SiteContent }) {
         </Link>
       </div>
 
-      <ul className="mt-8 grid grid-cols-2 gap-1 md:mt-10 md:grid-cols-4 md:gap-1.5 xl:grid-cols-6">
+      <ul className="mt-8 grid grid-cols-2 gap-1 px-4 md:mt-10 md:grid-cols-4 md:gap-1.5 md:px-[2cm] xl:grid-cols-6">
         <li className="col-span-2 md:row-span-2">
           <Cartao p={destaque} novo={novo(destaque)} grande />
         </li>
