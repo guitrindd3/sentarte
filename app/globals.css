@@ -221,8 +221,24 @@ html {
   .natal-vale b.longo { font-size: 14px; }
   .natal-caixa.aberta .tampa { transform: translate(-104px, 34px) rotate(-12deg); }
 }
+/* confetti thrown out of the gift box on every opening (natal.tsx, CaixaDeVales) */
+.natal-confete { position: absolute; width: 7px; height: 11px; margin: -5px 0 0 -3px; background: currentColor; opacity: 0; will-change: transform, opacity;
+  animation: natal-confete 2s cubic-bezier(0.2, 0.6, 0.4, 1) both; }
+.natal-confete.bola { width: 7px; height: 7px; border-radius: 50%; }
+.natal-confete.estrela { width: 12px; height: 12px; clip-path: polygon(50% 0, 61% 38%, 100% 38%, 69% 61%, 80% 100%, 50% 76%, 20% 100%, 31% 61%, 0 38%, 39% 38%); }
+@keyframes natal-confete {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0) scale(0.4); }
+  30% { opacity: 1; transform: translate(calc(var(--dx) * 0.55), var(--sobe)) rotate(calc(var(--giro) * 0.4)) scale(1); animation-timing-function: cubic-bezier(0.5, 0, 0.8, 0.6); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--cai)) rotate(var(--giro)) scale(0.9); }
+}
+/* gold sparkles drifting down behind "Escolha a sua cadeira" (natal.tsx, FlocosDourados) */
+.natal-floco { position: absolute; top: -16px; width: 10px; height: 10px; background: currentColor; opacity: 0.55;
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); animation: natal-floco 11s linear infinite; }
+@keyframes natal-floco { 0% { transform: translate(0, 0) rotate(0); opacity: 0; } 10% { opacity: 0.55; } 50% { transform: translate(18px, 50vh) rotate(180deg); } 90% { opacity: 0.45; } 100% { transform: translate(-6px, 100vh) rotate(360deg); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .natal-lampada, .natal-fada, .natal-pend, .natal-cintila, .natal-laco svg, .natal-laco .fita-h::after, .natal-laco .fita-v::after, .natal-caixa { animation: none !important; }
+  .natal-lampada, .natal-fada, .natal-pend, .natal-cintila, .natal-laco svg, .natal-laco .fita-h::after, .natal-laco .fita-v::after, .natal-caixa, .natal-floco { animation: none !important; }
+  .natal-floco { display: none; }
   .natal-caixa .tampa, .natal-vale { transition: none; }
 }
 

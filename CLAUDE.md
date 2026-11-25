@@ -973,3 +973,7 @@ User had a Correios fake "delivery attempt" and couldn't reach support → asked
 ## Christmas on the 11-23 sections (2026-11-25)
 
 User: "faça o de Natal mais bonito agora com o novo design". In `components/natal.tsx`: `Azevinho` (holly sprig SVG), `AzevinhoNatal` (December only), `MeioDoDivisor` (rope wave all year → holly in December), `EtiquetaCupomNatal` (gift-tag coupon with "Usar o cupom", replaces the plain red Natal line in `ChamadaOferta` under "Novidades"). Material block: `LuzesTitulo` lights on top, holly on the divider and pinned on each rustic seal (alternating sides). Contact block (now `relative`): `LuzesTitulo` + holly before "Fale com o ateliê". Checked with `?natal=1` at 1440 px and iPhone 13 (scrollWidth = viewport).
+
+## Christmas: chair picker + gift box confetti (2026-11-25)
+- "Escolha a sua cadeira" (category-bento.tsx) in December: warm lights on top (`LuzesTitulo`), gold sparkles drifting (`FlocosDourados`, `.natal-floco`), holly subtitle "Uma cadeira de presente neste Natal" (`SubtituloEscolhaNatal`), and a swinging ornament on each card (`EnfeiteDoCartao`).
+- Gift box (`CaixaDeVales`): opens by itself once when 70% visible (IntersectionObserver) and then stays open; hover/tap still opens. Every opening throws confetti + little stars (`.natal-confete`); hovering the open box throws more (throttled 900 ms). No confetti with prefers-reduced-motion.

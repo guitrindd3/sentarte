@@ -576,8 +576,16 @@ function VaralQuente() {
 }
 
 const GIROS = [-5, 3, -2, 4, -3];
+const CORES_CONFETE = ["#b8322b", "#d9473b", "#2f6a3c", "#3f9a5a", "#d9a441", "#e7b84a", "#fff1c9"];
+const FORMAS_CONFETE = ["fita", "fita", "bola", "estrela"] as const;
+type Confete = { k: number; x: number; y: number; dx: number; sobe: number; cai: number; giro: number; cor: string; forma: string; atraso: number; dur: number };
 
-/** Gift box: vale tags fly out on hover (mouse) or tap (touch); each tag puts that vale in the cart. */
+/**
+ * Gift box: opens by itself when it scrolls into view (user 2026-11-25: "deve abrir
+ * sozinha ou quando a pessoa passar o mouse… coloca alguns confetes") and on hover
+ * or tap; every opening throws red, green and gold confetti and little stars out of
+ * the box. Each vale tag puts that vale in the cart.
+ */
 function CaixaDeVales() {
   const { addItem } = useCart();
   const area = useRef<HTMLDivElement>(null);
@@ -591,6 +599,34 @@ function CaixaDeVales() {
   );
   const [escolhido, setEscolhido] = useState<number | null>(null);
   const fechar = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [confetes, setConfetes] = useState<Confete[]>([]);
+  const ultimaRajada = useRef(0);
+  const sozinha = useRef(false);
+
+  const soltarConfete = (quantos = 46) => {
+    const c = caixa.current;
+    if (!c || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const agora = Date.now();
+    if (agora - ultimaRajada.current < 900) return;
+    ultimaRajada.current = agora;
+    const x = c.offsetLeft + c.offsetWidth / 2,
+      y = c.offsetTop + 50;
+    const novos = Array.from({ length: quantos }, (_, i) => ({
+      k: agora + i,
+      x: x + (Math.random() - 0.5) * 60,
+      y,
+      dx: (Math.random() - 0.5) * 340,
+      sobe: -(90 + Math.random() * 170),
+      cai: 120 + Math.random() * 160,
+      giro: (Math.random() - 0.5) * 900,
+      cor: CORES_CONFETE[i % CORES_CONFETE.length],
+      forma: FORMAS_CONFETE[i % FORMAS_CONFETE.length],
+      atraso: Math.random() * 160,
+      dur: 1500 + Math.random() * 900,
+    }));
+    setConfetes(novos);
+    setTimeout(() => setConfetes((atual) => (atual === novos ? [] : atual)), 2700);
+  };
 
   // each tag starts inside the box: offset from its place to the box's mouth
   const mirar = () => {
@@ -611,14 +647,40 @@ function CaixaDeVales() {
     const tags = Array.from(lista.current?.children ?? []) as HTMLElement[];
     tags.forEach((t, i) => t.style.setProperty("--atraso", (abrir ? 120 + i * 80 : (tags.length - 1 - i) * 45) + "ms"));
     setAberto(abrir);
-    if (!abrir) setEscolhido(null);
+    if (abrir) soltarConfete();
+    else setEscolhido(null);
   };
+  const abrirRef = useRef(definir);
+  useEffect(() => {
+    abrirRef.current = definir;
+  });
+
+  // opens by itself once, when most of the box is on screen; then it stays open
+  useEffect(() => {
+    const el = caixa.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        obs.disconnect();
+        setTimeout(() => {
+          sozinha.current = true;
+          abrirRef.current(true);
+        }, 450);
+      },
+      { threshold: 0.7 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
   const entrar = (daCaixa: boolean) => {
     clearTimeout(fechar.current);
-    if (daCaixa || aberto) definir(true);
+    if (daCaixa && aberto) soltarConfete(28);
+    else if (daCaixa || aberto) definir(true);
   };
   const sair = () => {
     clearTimeout(fechar.current);
+    if (sozinha.current) return; // opened by itself: stays open
     fechar.current = setTimeout(() => definir(false), 400);
   };
 
@@ -666,7 +728,7 @@ function CaixaDeVales() {
         onMouseEnter={mouse ? () => entrar(true) : undefined}
         onMouseLeave={mouse ? sair : undefined}
         onFocus={mouse ? () => definir(true) : undefined}
-        onClick={() => (mouse ? definir(true) : definir(!aberto))}
+        onClick={() => (mouse || !aberto ? (aberto ? soltarConfete(28) : definir(true)) : definir(false))}
       >
         <span className="tampa">
           <svg viewBox="0 0 64 38" aria-hidden>
@@ -679,12 +741,31 @@ function CaixaDeVales() {
         </span>
         <span className="base" />
       </button>
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-[5]">
+        {confetes.map((c) => (
+          <span
+            key={c.k}
+            className={`natal-confete ${c.forma}`}
+            style={{
+              left: c.x,
+              top: c.y,
+              color: c.cor,
+              ["--dx" as string]: `${Math.round(c.dx)}px`,
+              ["--sobe" as string]: `${Math.round(c.sobe)}px`,
+              ["--cai" as string]: `${Math.round(c.cai)}px`,
+              ["--giro" as string]: `${Math.round(c.giro)}deg`,
+              animationDelay: `${Math.round(c.atraso)}ms`,
+              animationDuration: `${Math.round(c.dur)}ms`,
+            }}
+          />
+        ))}
+      </div>
       <p className="min-h-[1.3em] text-center text-xs text-ink-soft" aria-live="polite">
         {escolhido !== null
           ? `Vale de ${VALORES_VALE[escolhido].rotulo.toLowerCase()} foi para o carrinho.`
           : aberto
             ? mouse
-              ? "Escolha um vale"
+              ? "Escolha um vale · passe o mouse na caixa para mais confete"
               : "Escolha um vale · toque na caixa para fechar"
             : mouse
               ? "Passe o mouse na caixa"
@@ -842,6 +923,66 @@ export function EtiquetaCupomNatal() {
           {copiado ? "No carrinho!" : "Usar o cupom"}
         </button>
       </span>
+    </div>
+  );
+}
+
+const CORES_ENFEITE = ["#b8322b", "#2f6a3c", "#d9a441", "#b8322b"];
+
+/**
+ * "Escolha a sua cadeira" in December (user 2026-11-25: "na escolha da cadeira dá
+ * para colocar algo de Natal"): a red-and-gold ornament hanging on a thread over
+ * each card's top corner, swinging out of step. Parent must be `relative`.
+ */
+export function EnfeiteDoCartao({ i }: { i: number }) {
+  if (!useNatal()) return null;
+  const cor = CORES_ENFEITE[i % CORES_ENFEITE.length];
+  const fio = 16 + (i % 2) * 12;
+  return (
+    <svg
+      aria-hidden
+      viewBox={`-12 0 24 ${fio + 22}`}
+      className={`pointer-events-none absolute -top-1 z-10 w-7 sm:w-10 ${i % 2 ? "left-3 sm:left-5" : "right-3 sm:right-5"}`}
+    >
+      <g className="natal-pend" style={{ transformOrigin: "0 0", animationDelay: `-${(i * 0.9).toFixed(1)}s` }}>
+        <line x1={0} y1={0} x2={0} y2={fio} stroke="#8d6c47" strokeWidth={0.8} />
+        <g transform={`translate(0 ${fio})`}>
+          {i % 3 === 2 ? <g transform="translate(-9 0)">{estrela("#d9a441")}</g> : bola(cor)}
+        </g>
+      </g>
+    </svg>
+  );
+}
+
+/** Small line under the "Escolha a sua cadeira" title: holly + "uma cadeira de presente neste Natal". */
+export function SubtituloEscolhaNatal() {
+  if (!useNatal()) return null;
+  return (
+    <p className="mt-1 flex items-center gap-2 font-serif text-base italic text-[#b8322b]">
+      <Azevinho className="h-4 w-6 shrink-0" />
+      Uma cadeira de presente neste Natal
+    </p>
+  );
+}
+
+/** Gold sparkles drifting down behind the "Escolha a sua cadeira" cards. Parent must be `relative overflow-hidden`. */
+export function FlocosDourados() {
+  if (!useNatal()) return null;
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {Array.from({ length: 14 }, (_, k) => (
+        <span
+          key={k}
+          className="natal-floco"
+          style={{
+            left: `${(k * 7.3 + 3) % 100}%`,
+            animationDelay: `-${((k * 1.7) % 11).toFixed(1)}s`,
+            animationDuration: `${9 + (k % 4) * 2}s`,
+            scale: `${0.6 + (k % 3) * 0.25}`,
+            color: k % 3 ? "#d9a441" : "#b8322b",
+          }}
+        />
+      ))}
     </div>
   );
 }
