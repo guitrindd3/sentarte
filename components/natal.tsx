@@ -775,3 +775,73 @@ export function PraiaDeNatal() {
     </section>
   );
 }
+
+// --- 2026-11-25 (user: "faça o de Natal mais bonito… com o novo design que está no site"):
+// the sections redesigned on 11-23 (Novidades, "A linha que sustenta", contacts)
+// get the same quiet Christmas touch — holly sprigs and the warm lights — instead
+// of staying bare in December.
+
+/** Holly sprig: two serrated leaves and three berries. Raw seasonal hex like the rest of this file. */
+export function Azevinho({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 32" className={className} aria-hidden>
+      <path d="M24 20 C20 12 12 8 3 9 C5 11 4 13 6 14 C5 16 7 18 9 18 C9 20 12 21 13 20 C15 22 18 22 19 21 C21 22 23 21 24 20 Z" fill="#3f7a4a" />
+      <path d="M24 20 C28 12 36 8 45 9 C43 11 44 13 42 14 C43 16 41 18 39 18 C39 20 36 21 35 20 C33 22 30 22 29 21 C27 22 25 21 24 20 Z" fill="#2f6a3c" />
+      <path d="M24 20 C18 14 11 11 5 10.5 M24 20 C30 14 37 11 43 10.5" stroke="#9cc28a" strokeWidth="0.7" fill="none" opacity="0.8" />
+      <circle cx="21" cy="22.5" r="3.6" fill="#b8322b" />
+      <circle cx="27.5" cy="22.5" r="3.6" fill="#c63d33" />
+      <circle cx="24.2" cy="27.2" r="3.6" fill="#a62c26" />
+      <circle cx="20" cy="21.4" r="1" fill="#fff" opacity="0.7" />
+      <circle cx="26.5" cy="21.4" r="1" fill="#fff" opacity="0.7" />
+      <circle cx="23.2" cy="26.1" r="1" fill="#fff" opacity="0.7" />
+    </svg>
+  );
+}
+
+/** Holly sprig only in December. */
+export function AzevinhoNatal({ className = "" }: { className?: string }) {
+  return useNatal() ? <Azevinho className={className} /> : null;
+}
+
+/** Middle of a section divider: the rope wave all year, a holly sprig in December. */
+export function MeioDoDivisor() {
+  const natal = useNatal();
+  if (natal) return <Azevinho className="h-5 w-8" />;
+  return (
+    <svg viewBox="0 0 24 12" className="h-3 w-6" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+      <path d="M1 6 C5 1 9 11 12 6 C15 1 19 11 23 6" />
+    </svg>
+  );
+}
+
+/** Christmas coupon as a little gift tag under the "Novidades" title: holly, the code, and "Usar o cupom". */
+export function EtiquetaCupomNatal() {
+  const [copiado, setCopiado] = useState(false);
+  return (
+    <div className="relative mt-4 inline-flex max-w-full flex-wrap items-center gap-x-3 gap-y-2 border border-[#b8322b]/35 bg-[#fbf3e0] py-2.5 pl-3 pr-3 text-sm text-ink shadow-[3px_3px_0_0_rgba(184,50,43,0.18)]">
+      <Azevinho className="h-7 w-10 shrink-0" />
+      <span className="min-w-0">
+        <em className="block font-serif text-lg italic leading-tight text-[#9e2a24]">Natal na SentArte</em>
+        <span className="text-ink-soft">
+          {PERCENTUAL_NATAL}% off nas cadeiras com o cupom
+        </span>
+      </span>
+      <span className="inline-flex items-center gap-1.5 border border-dashed border-[#9e2a24] py-1 pl-2 pr-1 font-semibold tracking-wide text-[#9e2a24]">
+        {CODIGO_NATAL}
+        <button
+          type="button"
+          data-rastro="Natal: usar cupom (Novidades)"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent(EVENTO_CUPOM, { detail: CODIGO_NATAL }));
+            navigator.clipboard?.writeText(CODIGO_NATAL).catch(() => {});
+            setCopiado(true);
+            setTimeout(() => setCopiado(false), 2500);
+          }}
+          className="min-w-24 bg-[#9e2a24] px-2 py-1 text-xs tracking-normal text-[#fbf3e0] hover:bg-[#7d1f1a]"
+        >
+          {copiado ? "No carrinho!" : "Usar o cupom"}
+        </button>
+      </span>
+    </div>
+  );
+}

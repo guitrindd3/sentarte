@@ -3,9 +3,8 @@
 import { formatBRL, PARCELAS_MAX, precoPix } from "@/lib/offer";
 import { precoBlackFriday, useBlackFriday } from "@/lib/use-black-friday";
 import { LogoBlackFriday } from "@/components/logo-black-friday";
-import { LacoNatal, PrecoNatal, useNatal } from "@/components/natal";
+import { EtiquetaCupomNatal, LacoNatal, PrecoNatal, useNatal } from "@/components/natal";
 import { FitaAnoNovo } from "@/components/ano-novo";
-import { CODIGO_NATAL, PERCENTUAL_NATAL } from "@/lib/natal";
 
 /** Price block on the homepage "Novidades" cards — struck old price while Black Friday is on. */
 export function PrecoVitrine({ preco, grande = false }: { preco: number; grande?: boolean }) {
@@ -63,15 +62,6 @@ export function ChamadaOferta() {
       </p>
     );
   }
-  if (natal) {
-    return (
-      <p className="mt-4 inline-flex flex-wrap items-center gap-x-2 gap-y-1 bg-[#7d1f1a] px-3 py-2 text-sm text-[#fbf3e0]">
-        <span className="font-semibold">Natal:</span>
-        <span>
-          {PERCENTUAL_NATAL}% off com o cupom <strong className="whitespace-nowrap">{CODIGO_NATAL}</strong>
-        </span>
-      </p>
-    );
-  }
+  if (natal) return <EtiquetaCupomNatal />;
   return null;
 }
