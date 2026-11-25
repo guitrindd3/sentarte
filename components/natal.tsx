@@ -581,6 +581,63 @@ const FORMAS_CONFETE = ["fita", "fita", "bola", "estrela"] as const;
 type Confete = { k: number; x: number; y: number; dx: number; sobe: number; cai: number; giro: number; cor: string; forma: string; atraso: number; dur: number };
 
 /**
+ * Confetti burst (CSS `.natal-confete`), shared by the Christmas gift box and the New Year
+ * toast. `soltar(x, y)` throws from that point (px inside the `<Confetes>` parent);
+ * throttled to one burst per 900 ms, nothing with prefers-reduced-motion.
+ */
+export function useConfete(cores: string[] = CORES_CONFETE) {
+  const [lista, setLista] = useState<Confete[]>([]);
+  const ultima = useRef(0);
+  const soltar = (x: number, y: number, quantos = 46, forca = 1) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const agora = Date.now();
+    if (agora - ultima.current < 900) return;
+    ultima.current = agora;
+    const novos = Array.from({ length: quantos }, (_, i) => ({
+      k: agora + i,
+      x: x + (Math.random() - 0.5) * 60,
+      y,
+      dx: (Math.random() - 0.5) * 340 * forca,
+      sobe: -(90 + Math.random() * 170) * forca,
+      cai: 120 + Math.random() * 160,
+      giro: (Math.random() - 0.5) * 900,
+      cor: cores[i % cores.length],
+      forma: FORMAS_CONFETE[i % FORMAS_CONFETE.length],
+      atraso: Math.random() * 160,
+      dur: 1500 + Math.random() * 900,
+    }));
+    setLista(novos);
+    setTimeout(() => setLista((atual) => (atual === novos ? [] : atual)), 2700);
+  };
+  return [lista, soltar] as const;
+}
+
+/** The pieces from `useConfete`; put it inside a `relative` parent. */
+export function Confetes({ lista }: { lista: Confete[] }) {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-[5]">
+      {lista.map((c) => (
+        <span
+          key={c.k}
+          className={`natal-confete ${c.forma}`}
+          style={{
+            left: c.x,
+            top: c.y,
+            color: c.cor,
+            ["--dx" as string]: `${Math.round(c.dx)}px`,
+            ["--sobe" as string]: `${Math.round(c.sobe)}px`,
+            ["--cai" as string]: `${Math.round(c.cai)}px`,
+            ["--giro" as string]: `${Math.round(c.giro)}deg`,
+            animationDelay: `${Math.round(c.atraso)}ms`,
+            animationDuration: `${Math.round(c.dur)}ms`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
  * Gift box: opens by itself when it scrolls into view (user 2026-11-25: "deve abrir
  * sozinha ou quando a pessoa passar o mouse… coloca alguns confetes") and on hover
  * or tap; every opening throws red, green and gold confetti and little stars out of
@@ -599,33 +656,12 @@ function CaixaDeVales() {
   );
   const [escolhido, setEscolhido] = useState<number | null>(null);
   const fechar = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const [confetes, setConfetes] = useState<Confete[]>([]);
-  const ultimaRajada = useRef(0);
+  const [confetes, soltar] = useConfete();
   const sozinha = useRef(false);
 
   const soltarConfete = (quantos = 46) => {
     const c = caixa.current;
-    if (!c || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const agora = Date.now();
-    if (agora - ultimaRajada.current < 900) return;
-    ultimaRajada.current = agora;
-    const x = c.offsetLeft + c.offsetWidth / 2,
-      y = c.offsetTop + 50;
-    const novos = Array.from({ length: quantos }, (_, i) => ({
-      k: agora + i,
-      x: x + (Math.random() - 0.5) * 60,
-      y,
-      dx: (Math.random() - 0.5) * 340,
-      sobe: -(90 + Math.random() * 170),
-      cai: 120 + Math.random() * 160,
-      giro: (Math.random() - 0.5) * 900,
-      cor: CORES_CONFETE[i % CORES_CONFETE.length],
-      forma: FORMAS_CONFETE[i % FORMAS_CONFETE.length],
-      atraso: Math.random() * 160,
-      dur: 1500 + Math.random() * 900,
-    }));
-    setConfetes(novos);
-    setTimeout(() => setConfetes((atual) => (atual === novos ? [] : atual)), 2700);
+    if (c) soltar(c.offsetLeft + c.offsetWidth / 2, c.offsetTop + 50, quantos);
   };
 
   // each tag starts inside the box: offset from its place to the box's mouth
@@ -741,25 +777,7 @@ function CaixaDeVales() {
         </span>
         <span className="base" />
       </button>
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-[5]">
-        {confetes.map((c) => (
-          <span
-            key={c.k}
-            className={`natal-confete ${c.forma}`}
-            style={{
-              left: c.x,
-              top: c.y,
-              color: c.cor,
-              ["--dx" as string]: `${Math.round(c.dx)}px`,
-              ["--sobe" as string]: `${Math.round(c.sobe)}px`,
-              ["--cai" as string]: `${Math.round(c.cai)}px`,
-              ["--giro" as string]: `${Math.round(c.giro)}deg`,
-              animationDelay: `${Math.round(c.atraso)}ms`,
-              animationDuration: `${Math.round(c.dur)}ms`,
-            }}
-          />
-        ))}
-      </div>
+      <Confetes lista={confetes} />
       <p className="min-h-[1.3em] text-center text-xs text-ink-soft" aria-live="polite">
         {escolhido !== null
           ? `Vale de ${VALORES_VALE[escolhido].rotulo.toLowerCase()} foi para o carrinho.`

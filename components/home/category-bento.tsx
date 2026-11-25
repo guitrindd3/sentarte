@@ -4,6 +4,7 @@ import { DESENHO_NOME } from "@/lib/desenho-model";
 import { TIME_DO_CORACAO_NOME } from "@/lib/team-models";
 import type { Categoria } from "@/lib/content-schema";
 import { EnfeiteDoCartao, FlocosDourados, LuzesTitulo, SubtituloEscolhaNatal } from "@/components/natal";
+import { ConfeteCaindo, EnfeiteAnoNovoCartao, FogosDoCartao, GuirlandaDeEstrelas, SubtituloEscolhaAnoNovo } from "@/components/ano-novo";
 
 // The homepage's entry points into the catalog. Since bags and lounge chairs
 // were taken off the site (2026-09-29) there is only one category, so this
@@ -31,12 +32,16 @@ export function CategoryBento({ categorias, titulo = "Escolha a sua cadeira" }: 
       {/* December: warm lights on top, gold sparkles drifting, an ornament on each card */}
       <LuzesTitulo />
       <FlocosDourados />
+      {/* New Year: gold star garland, confetti drifting, a star / mirror ball on each card */}
+      <GuirlandaDeEstrelas />
+      <ConfeteCaindo />
       <div className="relative mx-auto max-w-6xl px-6 py-12 md:py-16">
         <h2 className="font-serif text-2xl font-medium tracking-tight text-ink">{titulo}</h2>
         <SubtituloEscolhaNatal />
+        <SubtituloEscolhaAnoNovo />
         <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
           {cards.map(({ modelo, href, linkLabel }, i) => (
-            <div key={modelo.id} className="relative flex flex-col [&>a]:flex-1">
+            <div key={modelo.id} className="group/cartao relative flex flex-col [&>a]:flex-1">
               <CoverLinkCard
                 modelo={modelo}
                 href={href}
@@ -46,6 +51,8 @@ export function CategoryBento({ categorias, titulo = "Escolha a sua cadeira" }: 
                 videoUrl={href === "/personalizar" ? VIDEO_MONTE_SUA_CADEIRA : undefined}
               />
               <EnfeiteDoCartao i={i} />
+              <EnfeiteAnoNovoCartao i={i} />
+              <FogosDoCartao i={i} />
             </div>
           ))}
         </div>

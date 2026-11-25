@@ -63,5 +63,5 @@ export function ChamadaOferta() {
     );
   }
   if (natal) return <EtiquetaCupomNatal />;
-  return null;
+  return null; // New Year: full-width band below the header (FaixaNovidadesAnoNovo)
 }

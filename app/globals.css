@@ -312,6 +312,12 @@ html {
 
 /* footer band: wave with a gold line, streamers falling */
 .anonovo-rodape { background: linear-gradient(180deg, #fffdf8, #fbf3df); }
+/* 2026-11-25: confetti drifting behind "Escolha a sua cadeira" */
+.anonovo-confete-cai { position: absolute; top: -14px; width: 6px; height: 9px; opacity: 0.6; animation: anonovo-confete-cai 10s linear infinite; }
+@keyframes anonovo-confete-cai { 0% { transform: translate(0, 0) rotate(0); opacity: 0; } 10% { opacity: 0.6; } 50% { transform: translate(16px, 50vh) rotate(260deg); } 90% { opacity: 0.5; } 100% { transform: translate(-8px, 100vh) rotate(520deg); opacity: 0; } }
+.anonovo-estouro { transform-box: view-box; transform-origin: 50% 50%; opacity: 0; animation: anonovo-estouro 3.2s ease-out infinite; }
+@keyframes anonovo-estouro { 0%, 8% { transform: scale(0.15); opacity: 0; } 14% { opacity: 1; } 45% { transform: scale(1); opacity: 0.95; } 70%, 100% { transform: scale(1.12); opacity: 0; } }
+.anonovo-linha-ouro { background: linear-gradient(90deg, #c9a14a, #fff1c2 30%, #c9a14a 50%, #fff1c2 70%, #c9a14a); background-size: 220% 100%; animation: anonovo-ouro-corre 3.6s linear infinite; }
 .anonovo-onda { position: absolute; inset-inline: 0; top: -1px; height: 26px; overflow: hidden; }
 .anonovo-onda svg { display: block; width: 200%; height: 100%; animation: anonovo-deslizar 14s linear infinite; }
 @keyframes anonovo-deslizar { to { transform: translateX(-50%); } }
@@ -319,7 +325,9 @@ html {
 @keyframes anonovo-cair { from { transform: translateY(0) rotate(0); } to { transform: translateY(260px) rotate(540deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .anonovo-ouro, .anonovo-ouro-escuro, .anonovo-cintila, .anonovo-faixa::before, .anonovo-dig b, .anonovo-fita::after, .anonovo-relogio.anonovo-bate, .anonovo-bokeh, .anonovo-taca, .anonovo-bolha, .anonovo-tim, .anonovo-tim-txt, .anonovo-gota, .anonovo-onda svg { animation: none !important; }
+  .anonovo-ouro, .anonovo-ouro-escuro, .anonovo-cintila, .anonovo-faixa::before, .anonovo-dig b, .anonovo-fita::after, .anonovo-relogio.anonovo-bate, .anonovo-bokeh, .anonovo-taca, .anonovo-bolha, .anonovo-tim, .anonovo-tim-txt, .anonovo-gota, .anonovo-onda svg, .anonovo-confete-cai, .anonovo-linha-ouro { animation: none !important; }
+  .anonovo-estouro { animation: none !important; opacity: 0.8; transform: none; }
+  .anonovo-confete-cai { display: none; }
   .anonovo-ouro, .anonovo-ouro-escuro { color: #c9a14a; background: none; -webkit-background-clip: border-box; background-clip: border-box; }
   .anonovo-ouro-escuro { color: #8a6a22; }
   .anonovo-rolo { transition: none; }

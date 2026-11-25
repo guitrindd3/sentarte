@@ -1,6 +1,7 @@
 import { ICONES_MATERIAL, SeloRustico } from "@/components/icones-rusticos";
 import { IlustracaoAgulhas, IlustracaoLinha } from "@/components/home/ilustracoes-atelie";
 import { AzevinhoNatal, LuzesTitulo, MeioDoDivisor } from "@/components/natal";
+import { CintilanteAnoNovo, GuirlandaDeEstrelas, MeioDoDivisorAnoNovo } from "@/components/ano-novo";
 
 // Homepage version of the material block, without the spool photo (user
 // 2026-11-23: the photo section left the home for /sobre, then "quero isso
@@ -23,6 +24,7 @@ export function MaterialFaixa({
       <IlustracaoAgulhas className="pointer-events-none absolute right-8 top-1/2 hidden w-[min(15rem,calc((100vw-72rem)/2-2rem))] -translate-y-1/2 2xl:block" />
       {/* December: warm fairy lights along the top, like "Nossas cadeiras" */}
       <LuzesTitulo />
+      <GuirlandaDeEstrelas />
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           {/* Phones and narrower screens (no room on the sides): both drawings,
@@ -36,7 +38,7 @@ export function MaterialFaixa({
           </h2>
           <span aria-hidden className="mx-auto mt-3 flex w-40 items-center gap-2 text-wood/60">
             <span className="h-px flex-1 border-t border-dashed border-current" />
-            <MeioDoDivisor />
+            <MeioDoDivisorAnoNovo senao={<MeioDoDivisor />} />
             <span className="h-px flex-1 border-t border-dashed border-current" />
           </span>
           <p className="mt-3 text-sm leading-relaxed text-ink-soft md:text-base">{texto}</p>
@@ -52,6 +54,7 @@ export function MaterialFaixa({
                   <Icone className="h-16 w-16 md:h-[4.5rem] md:w-[4.5rem]" />
                   {/* December: a holly sprig pinned on the seal's edge */}
                   <AzevinhoNatal className={`absolute -top-1 h-7 w-10 md:h-8 md:w-12 ${i % 2 ? "-left-3 -rotate-12" : "-right-3 rotate-12"}`} />
+                  <CintilanteAnoNovo className={`absolute -top-2 h-7 w-10 md:h-8 md:w-12 ${i % 2 ? "-left-3" : "-right-3"}`} />
                 </SeloRustico>
                 <div>
                   <h3 className="font-serif text-xl font-medium tracking-tight md:mt-3">{it.titulo}</h3>

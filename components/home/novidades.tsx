@@ -4,6 +4,7 @@ import type { SiteContent } from "@/lib/content-schema";
 import { PRAZO_PRODUCAO_DIAS_UTEIS, precoDoModelo } from "@/lib/offer";
 import { produtosDaLoja, type Produto } from "@/lib/produtos";
 import { ChamadaOferta, EnfeitesDaFoto, PrecoVitrine } from "@/components/home/preco-vitrine";
+import { FaixaNovidadesAnoNovo } from "@/components/ano-novo";
 import { FotosPassando } from "@/components/home/fotos-passando";
 
 // Homepage "Novidades" showcase (user 2026-11-23: where the material block was,
@@ -64,6 +65,7 @@ export function Novidades({ content }: { content: SiteContent }) {
           Ver todas as {produtos.length} cadeiras
         </Link>
       </div>
+      <FaixaNovidadesAnoNovo />
 
       <ul className="mt-8 grid grid-cols-2 gap-1 px-4 md:mt-10 md:grid-cols-4 md:gap-1.5 md:px-[2cm] xl:grid-cols-6">
         <li className="col-span-2 md:row-span-2">

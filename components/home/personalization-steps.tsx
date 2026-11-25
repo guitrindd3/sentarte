@@ -1,4 +1,5 @@
 import { AzevinhoNatal } from "@/components/natal";
+import { CintilanteAnoNovo } from "@/components/ano-novo";
 
 const STEPS = [
   {
@@ -39,8 +40,10 @@ export function PersonalizationSteps({
         {/* December: holly on both sides of the title (2026-11-25) */}
         <h2 className="flex items-center justify-center gap-3 text-center font-serif text-2xl font-medium tracking-[0.06em] text-ink md:text-[1.7rem]">
           <AzevinhoNatal className="hidden h-6 w-9 shrink-0 -scale-x-100 sm:block" />
+          <CintilanteAnoNovo className="hidden h-6 w-9 shrink-0 -scale-x-100 sm:block" />
           {titulo}
           <AzevinhoNatal className="hidden h-6 w-9 shrink-0 sm:block" />
+          <CintilanteAnoNovo className="hidden h-6 w-9 shrink-0 sm:block" />
         </h2>
         <ol className="mt-6 grid grid-cols-2 gap-x-5 gap-y-5 md:grid-cols-4 md:gap-x-0">
           {lista.map((step, i) => (

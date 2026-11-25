@@ -16,7 +16,7 @@ import { hojeBR } from "@/lib/black-friday";
 import { anoQueVem, naEpocaDeAnoNovo, viradaMs } from "@/lib/ano-novo";
 import { formatBRL } from "@/lib/offer";
 import { CATEGORIA_VALE, nomeDoVale, VALORES_VALE } from "@/lib/vale";
-import { useNatal } from "@/components/natal";
+import { Confetes, useConfete, useNatal } from "@/components/natal";
 
 const PREVIA = "sentarte-anonovo-previa";
 
@@ -584,9 +584,42 @@ const BOKEH = Array.from({ length: 12 }, (_, i) => ({
 /** Homepage New Year block: the midnight clock, then "Comece o ano com a sua cadeira" with the flutes and the vale buttons. */
 export function BrindeDeAnoNovo() {
   const ano = useAnoNovo();
+  return ano ? <Brinde ano={ano} /> : null;
+}
+
+const CONFETE_BRINDE = ["#c9a14a", "#e3c472", "#fff1c2", "#d6d2c8", "#f3dc9a", "#b8913c"];
+
+/**
+ * The toast band. When it scrolls into view the flutes throw gold and silver confetti
+ * (user 2026-11-25, like the Christmas gift box), and again on hover / tap of the flutes.
+ */
+function Brinde({ ano }: { ano: number }) {
   const { addItem } = useCart();
   const [escolhido, setEscolhido] = useState<number | null>(null);
-  if (!ano) return null;
+  const [confetes, soltar] = useConfete(CONFETE_BRINDE);
+  const tacas = useRef<HTMLDivElement>(null);
+  const brindar = (quantos = 50) => {
+    const t = tacas.current;
+    if (t) soltar(t.offsetLeft + t.offsetWidth / 2, t.offsetTop + t.offsetHeight * 0.2, quantos, 1.1);
+  };
+  const brindarRef = useRef(brindar);
+  useEffect(() => {
+    brindarRef.current = brindar;
+  });
+  useEffect(() => {
+    const el = tacas.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        obs.disconnect();
+        setTimeout(() => brindarRef.current(), 500);
+      },
+      { threshold: 0.6 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
   return (
     <>
       <RelogioDaVirada ano={ano} />
@@ -647,8 +680,25 @@ export function BrindeDeAnoNovo() {
               Ver o vale-presente
             </a>
           </div>
-          <Tacas />
+          <div
+            ref={tacas}
+            role="button"
+            tabIndex={0}
+            aria-label="Brindar"
+            className="relative cursor-pointer justify-self-center"
+            onMouseEnter={() => brindar(32)}
+            onClick={() => brindar(40)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                brindar(40);
+              }
+            }}
+          >
+            <Tacas />
+          </div>
         </div>
+        <Confetes lista={confetes} />
       </section>
     </>
   );
@@ -707,5 +757,293 @@ export function RodapeDeAnoNovo() {
         <p className="mx-auto mt-2 max-w-[40ch] text-sm text-ink-soft">Obrigada por fazer parte do ateliê em {ano - 1}.</p>
       </div>
     </section>
+  );
+}
+
+// ---------- 2026-11-25: New Year on the sections redesigned 11-23 + "Escolha a sua cadeira" ----------
+// (user: "agora quero que vc faça melhor o do ano novo", same idea as the Christmas pass:
+// gold where Christmas has holly, a gold-and-silver star garland where it has warm lights,
+// a hanging star / mirror ball on each chair card, confetti when the flutes clink.)
+
+const D_ESTRELA4 = "M10 0 L12.2 7.8 L20 10 L12.2 12.2 L10 20 L7.8 12.2 L0 10 L7.8 7.8 Z";
+
+/** Gold four-point sparkle with a small companion — the New Year counterpart of the holly sprig. */
+export function Cintilante({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 30 22" aria-hidden className={className}>
+      <path className="anonovo-cintila" d="M11 1 L13.4 8.6 L21 11 L13.4 13.4 L11 21 L8.6 13.4 L1 11 L8.6 8.6 Z" fill="#c9a14a" />
+      <path
+        className="anonovo-cintila"
+        style={{ animationDelay: "-1.4s" }}
+        d="M24 2 L25.1 5.4 L28.5 6.5 L25.1 7.6 L24 11 L22.9 7.6 L19.5 6.5 L22.9 5.4 Z"
+        fill="#e3c472"
+      />
+    </svg>
+  );
+}
+
+/** `Cintilante` only while the New Year look is on. */
+export function CintilanteAnoNovo({ className = "" }: { className?: string }) {
+  return useAnoNovo() ? <Cintilante className={className} /> : null;
+}
+
+function useLarguraSvg() {
+  const ref = useRef<SVGSVGElement>(null);
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setW(Math.round(el.getBoundingClientRect().width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, w] as const;
+}
+
+/**
+ * Gold thread draped edge to edge across the top of a section with little gold and
+ * silver foil stars hanging on short strings, twinkling out of step (New Year version
+ * of the Christmas `LuzesTitulo`). Parent must be `relative`.
+ */
+export function GuirlandaDeEstrelas() {
+  return useAnoNovo() ? <GuirlandaSvg /> : null;
+}
+
+function GuirlandaSvg() {
+  const [ref, w] = useLarguraSvg();
+  let conteudo: ReactNode = null;
+  if (w) {
+    const n = Math.max(2, Math.round(w / (w > 700 ? 280 : 170)));
+    const passo = w / n,
+      y0 = 5,
+      flecha = w > 700 ? 22 : 15;
+    const yEm = (x: number) => {
+      const t = (x % passo) / passo;
+      return y0 + 4 * flecha * t * (1 - t);
+    };
+    let fio = `M0 ${y0}`;
+    for (let i = 0; i < n; i++) fio += ` Q${r1(passo * i + passo / 2)} ${y0 + flecha * 2} ${r1(passo * (i + 1))} ${y0}`;
+    const pendentes: ReactNode[] = [];
+    const espaco = w > 700 ? 34 : 26;
+    let k = 0;
+    for (let x = espaco / 2; x < w; x += espaco, k++) {
+      const t = (x % passo) / passo;
+      if (t < 0.08 || t > 0.92) continue;
+      const y = yEm(x),
+        corda = 5 + ((k * 7) % 3) * 4,
+        prata = k % 3 === 1,
+        tam = k % 2 ? 4.2 : 5.6;
+      pendentes.push(
+        <g key={k}>
+          <line x1={r1(x)} y1={r1(y)} x2={r1(x)} y2={r1(y + corda)} stroke="#b8913c" strokeWidth={0.5} opacity={0.7} />
+          <g className="anonovo-cintila" style={{ animationDelay: `-${((k * 0.61) % 3).toFixed(2)}s` }}>
+            <path
+              transform={`translate(${r1(x - tam)} ${r1(y + corda)}) scale(${r1(tam / 10)})`}
+              d={D_ESTRELA4}
+              fill={prata ? "#d6d2c8" : k % 2 ? "#e3c472" : "#c9a14a"}
+            />
+          </g>
+        </g>,
+      );
+    }
+    const pontas: ReactNode[] = [];
+    for (let i = 0; i <= n; i++) pontas.push(<circle key={i} cx={r1(passo * i)} cy={y0} r={2.4} fill="#c9a14a" />);
+    conteudo = (
+      <>
+        <path d={fio} fill="none" stroke="#c9a14a" strokeWidth={1.1} />
+        <path d={fio} fill="none" stroke="#fff1c2" strokeWidth={0.5} strokeDasharray="1 5" />
+        {pendentes}
+        {pontas}
+      </>
+    );
+  }
+  const alto = (w > 700 ? 22 : 15) + 34;
+  return (
+    <svg
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-0 block w-full overflow-visible"
+      height={alto}
+      viewBox={`0 0 ${w || 1} ${alto}`}
+    >
+      {conteudo}
+    </svg>
+  );
+}
+
+/** Mirror ball (globo espelhado) hanging from (0,0). */
+function Globo() {
+  return (
+    <>
+      <rect x={-2.4} y={-1} width={4.8} height={3.4} rx={0.8} fill="#b8913c" />
+      <circle cx={0} cy={10} r={8} fill="#cfcac0" stroke="#8f8a80" strokeWidth={0.6} />
+      <path
+        d="M-8 10 H8 M-7 6 H7 M-7 14 H7 M-4.5 3.2 H4.5 M-4.5 16.8 H4.5 M0 2 V18 M-4 2.6 Q-6 10 -4 17.4 M4 2.6 Q6 10 4 17.4"
+        stroke="#9c978d"
+        strokeWidth={0.45}
+        fill="none"
+      />
+      <path className="anonovo-cintila" d="M-3.5 4.5 L-2.8 6.2 L-1.1 6.9 L-2.8 7.6 L-3.5 9.3 L-4.2 7.6 L-5.9 6.9 L-4.2 6.2 Z" fill="#fff" />
+      <circle cx={3} cy={13} r={1} fill="#fff8e1" opacity={0.9} />
+    </>
+  );
+}
+
+/** A gold star or a mirror ball hanging on a thread over a chair card's top corner. Parent must be `relative`. */
+export function EnfeiteAnoNovoCartao({ i }: { i: number }) {
+  if (!useAnoNovo()) return null;
+  const fio = 16 + (i % 2) * 12;
+  return (
+    <svg
+      aria-hidden
+      viewBox={`-12 0 24 ${fio + 22}`}
+      className={`pointer-events-none absolute -top-1 z-10 w-7 sm:w-10 ${i % 2 ? "left-3 sm:left-5" : "right-3 sm:right-5"}`}
+    >
+      <g className="natal-pend" style={{ transformOrigin: "0 0", animationDelay: `-${(i * 0.9).toFixed(1)}s` }}>
+        <line x1={0} y1={0} x2={0} y2={fio} stroke="#b8913c" strokeWidth={0.8} />
+        <g transform={`translate(0 ${fio})`}>
+          {i % 2 ? (
+            <Globo />
+          ) : (
+            <g className="anonovo-cintila">
+              <path transform="translate(-10 0)" d={D_ESTRELA4} fill="#c9a14a" stroke="#a7801f" strokeWidth={0.5} />
+            </g>
+          )}
+        </g>
+      </g>
+    </svg>
+  );
+}
+
+/** Line under the "Escolha a sua cadeira" title: "Cadeira nova para começar 2027". */
+export function SubtituloEscolhaAnoNovo() {
+  const ano = useAnoNovo();
+  if (!ano) return null;
+  return (
+    <p className="mt-1 flex items-center gap-2 font-serif text-base italic">
+      <Cintilante className="h-4 w-6 shrink-0" />
+      <span className="anonovo-ouro-escuro">Cadeira nova para começar {ano}</span>
+    </p>
+  );
+}
+
+const CONFETE_QUEDA = ["#c9a14a", "#e3c472", "#d6d2c8", "#b8913c", "#1d2642"];
+
+/** Gold, silver and night-blue confetti drifting down behind a section. Parent must be `relative`. */
+export function ConfeteCaindo() {
+  if (!useAnoNovo()) return null;
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {Array.from({ length: 16 }, (_, k) => (
+        <span
+          key={k}
+          className="anonovo-confete-cai"
+          style={{
+            left: `${(k * 6.7 + 2) % 100}%`,
+            animationDelay: `-${((k * 1.3) % 10).toFixed(1)}s`,
+            animationDuration: `${8 + (k % 4) * 2}s`,
+            background: CONFETE_QUEDA[k % CONFETE_QUEDA.length],
+            borderRadius: k % 4 === 0 ? "50%" : "1px",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Middle of the material block's divider: gold sparkle at New Year, else `senao`. */
+export function MeioDoDivisorAnoNovo({ senao }: { senao: ReactNode }) {
+  return useAnoNovo() ? <Cintilante className="h-5 w-7" /> : <>{senao}</>;
+}
+
+/** A small firework burst (gold rays + dots) that pops on a loop; `atraso` puts several out of step. */
+export function Estouro({ className = "", atraso = 0, cor = "#c9a14a" }: { className?: string; atraso?: number; cor?: string }) {
+  const raios = Array.from({ length: 12 }, (_, k) => {
+    const a = (k * Math.PI) / 6,
+      c = Math.cos(a),
+      s = Math.sin(a);
+    return { x1: r1(20 + c * 6), y1: r1(20 + s * 6), x2: r1(20 + c * 16), y2: r1(20 + s * 16), px: r1(20 + c * 18.5), py: r1(20 + s * 18.5) };
+  });
+  return (
+    <svg viewBox="0 0 40 40" aria-hidden className={className}>
+      <g className="anonovo-estouro" style={{ animationDelay: `-${atraso.toFixed(2)}s` }}>
+        {raios.map((r, k) => (
+          <g key={k}>
+            <line x1={r.x1} y1={r.y1} x2={r.x2} y2={r.y2} stroke={k % 3 === 1 ? "#d6d2c8" : cor} strokeWidth={1.4} strokeLinecap="round" />
+            <circle cx={r.px} cy={r.py} r={k % 2 ? 1 : 1.5} fill={k % 2 ? "#fff1c2" : cor} />
+          </g>
+        ))}
+        <circle cx={20} cy={20} r={2.2} fill="#fff1c2" />
+      </g>
+    </svg>
+  );
+}
+
+const CONFETE_CARTAO = ["#c9a14a", "#e3c472", "#d6d2c8", "#fff1c2", "#1d2642"];
+
+/**
+ * New Year on each "Escolha a sua cadeira" card's text area (user 2026-11-25: "faça alguma
+ * coisa aqui também… inventa algo legal"): two little gold fireworks popping out of step in
+ * the corner, a shimmering gold line along the bottom, and a confetti burst from the
+ * corner when the mouse enters the card. Put it inside the card's `relative` wrapper.
+ */
+export function FogosDoCartao({ i }: { i: number }) {
+  const ano = useAnoNovo();
+  const raiz = useRef<HTMLDivElement>(null);
+  const [confetes, soltar] = useConfete(CONFETE_CARTAO);
+  const soltarRef = useRef(soltar);
+  useEffect(() => {
+    soltarRef.current = soltar;
+  });
+  useEffect(() => {
+    const el = raiz.current,
+      cartao = el?.parentElement;
+    if (!el || !cartao || !window.matchMedia("(hover: hover)").matches) return;
+    const entrar = () => soltarRef.current(el.offsetWidth - 30, el.offsetHeight - 26, 22, 0.45);
+    cartao.addEventListener("mouseenter", entrar);
+    return () => cartao.removeEventListener("mouseenter", entrar);
+  }, [ano]);
+  if (!ano) return null;
+  return (
+    <div ref={raiz} aria-hidden className="pointer-events-none absolute inset-0 z-10 transition-transform duration-300 group-hover/cartao:-translate-y-1">
+      <Estouro className="absolute bottom-2 right-2 h-9 w-9 sm:bottom-3 sm:right-4 sm:h-11 sm:w-11" atraso={i * 0.8} />
+      <Estouro className="absolute bottom-3 right-11 h-5 w-5 sm:bottom-5 sm:right-[4.25rem] sm:h-6 sm:w-6" atraso={i * 0.8 + 1.3} cor="#e3c472" />
+      <span className="anonovo-linha-ouro absolute inset-x-px bottom-px h-[3px]" />
+      <Confetes lista={confetes} />
+    </div>
+  );
+}
+
+/**
+ * Full-width night-blue band between the "Novidades" title and the grid (user 2026-11-25:
+ * the small card looked "amador… pode deixar pegando na horizontal inteira do site").
+ */
+export function FaixaNovidadesAnoNovo() {
+  const ano = useAnoNovo();
+  if (!ano) return null;
+  return (
+    <div className="anonovo-banda relative mt-8 overflow-hidden md:mt-10">
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        {BOKEH.slice(0, 8).map((b, i) => (
+          <i key={i} className="anonovo-bokeh" style={{ left: b.left, top: b.top, width: b.t, height: b.t, animationDelay: b.atraso, animationDuration: b.dur }} />
+        ))}
+        <Estouro className="absolute left-[4%] top-2 hidden h-12 w-12 md:block" atraso={0.4} />
+        <Estouro className="absolute left-[22%] bottom-1 hidden h-7 w-7 lg:block" atraso={1.9} cor="#e3c472" />
+        <Estouro className="absolute right-[30%] top-1 hidden h-9 w-9 lg:block" atraso={1.1} />
+        <Estouro className="absolute right-[3%] bottom-2 h-8 w-8 md:h-12 md:w-12" atraso={2.4} cor="#e3c472" />
+      </div>
+      <div className="relative flex flex-col items-start gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between md:px-[2cm] md:py-7">
+        <div className="grid gap-1">
+          <p className="flex items-center gap-3 font-serif text-3xl italic md:text-4xl">
+            <Cintilante className="h-6 w-9 shrink-0" />
+            <span className="anonovo-ouro">Feliz {ano}!</span>
+          </p>
+          <p className="text-sm text-[#d6ccb8] md:text-base">Comece o ano com uma cadeira feita à mão, do seu jeito.</p>
+        </div>
+        <a href="/personalizar" data-rastro="Ano Novo: monte a sua (Novidades)" className="anonovo-botao shrink-0 px-6 py-3 text-sm font-medium">
+          Montar a minha
+        </a>
+      </div>
+    </div>
   );
 }

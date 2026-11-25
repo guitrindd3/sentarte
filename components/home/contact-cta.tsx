@@ -1,6 +1,7 @@
 import type { SiteContent } from "@/lib/content-schema";
 import { CartoesRedes } from "@/components/redes-sociais";
 import { AzevinhoNatal, LuzesTitulo } from "@/components/natal";
+import { CintilanteAnoNovo, GuirlandaDeEstrelas } from "@/components/ano-novo";
 
 // Homepage contact block (redesigned 2026-11-23, user: "sobre os contatos… deixe
 // mais bonito… com as cores das redes sociais"): one card per network in its
@@ -18,10 +19,12 @@ export function ContactCta({
     <section className="relative border-t border-line bg-canvas px-4 py-12 sm:px-6 md:py-16" aria-labelledby="titulo-contato">
       {/* December: warm fairy lights along the top */}
       <LuzesTitulo />
+      <GuirlandaDeEstrelas />
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <p className="flex items-center justify-center gap-1.5 text-sm text-ink-soft">
             <AzevinhoNatal className="h-4 w-6" />
+            <CintilanteAnoNovo className="h-4 w-6" />
             Fale com o ateliê
           </p>
           <h2 id="titulo-contato" className="mt-2 font-serif text-3xl font-medium tracking-tight text-ink md:text-4xl">

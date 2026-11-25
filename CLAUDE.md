@@ -977,3 +977,11 @@ User: "faça o de Natal mais bonito agora com o novo design". In `components/nat
 ## Christmas: chair picker + gift box confetti (2026-11-25)
 - "Escolha a sua cadeira" (category-bento.tsx) in December: warm lights on top (`LuzesTitulo`), gold sparkles drifting (`FlocosDourados`, `.natal-floco`), holly subtitle "Uma cadeira de presente neste Natal" (`SubtituloEscolhaNatal`), and a swinging ornament on each card (`EnfeiteDoCartao`).
 - Gift box (`CaixaDeVales`): opens by itself once when 70% visible (IntersectionObserver) and then stays open; hover/tap still opens. Every opening throws confetti + little stars (`.natal-confete`); hovering the open box throws more (throttled 900 ms). No confetti with prefers-reduced-motion.
+
+## New Year on the 11-23 sections (approved 2026-11-25)
+User approved the esboço ("então vai ser esse"). All in `components/ano-novo.tsx`, only while `useAnoNovo()` (26/12–15/01):
+- "Escolha a sua cadeira": `GuirlandaDeEstrelas` (gold thread + hanging gold/silver stars), `ConfeteCaindo`, `SubtituloEscolhaAnoNovo` ("Cadeira nova para começar {ano}"), `EnfeiteAnoNovoCartao` (gold star / mirror ball per card), `FogosDoCartao` (two `Estouro` fireworks in the card's bottom corner + shimmering gold bottom line + confetti on mouseenter; moves with the card via `group/cartao`).
+- Toast band (`Brinde`): flutes throw confetti when 60% visible and on hover/tap/Enter.
+- Novidades: `FaixaNovidadesAnoNovo`, a FULL-WIDTH night-blue band between the header and the grid (user: "de fora a fora"); `ChamadaOferta` returns nothing at New Year.
+- Como funciona / material / contatos: `CintilanteAnoNovo` where Christmas has holly, `GuirlandaDeEstrelas` where it has `LuzesTitulo`, `MeioDoDivisorAnoNovo` in the material divider.
+- Confetti is shared: `useConfete(cores)` + `<Confetes lista>` in natal.tsx (CSS `.natal-confete`), used by the Christmas gift box, the toast and the cards.
