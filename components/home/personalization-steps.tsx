@@ -1,3 +1,5 @@
+import { AzevinhoNatal } from "@/components/natal";
+
 const STEPS = [
   {
     numero: "1",
@@ -34,7 +36,12 @@ export function PersonalizationSteps({
     // number beside the step title, 2 per row on phones, less padding.
     <section className="bg-canvas-deep px-4 py-7 sm:px-6 md:py-9">
       <div className="mx-auto max-w-6xl">
-        <h2 className="text-center font-serif text-2xl font-medium tracking-[0.06em] text-ink md:text-[1.7rem]">{titulo}</h2>
+        {/* December: holly on both sides of the title (2026-11-25) */}
+        <h2 className="flex items-center justify-center gap-3 text-center font-serif text-2xl font-medium tracking-[0.06em] text-ink md:text-[1.7rem]">
+          <AzevinhoNatal className="hidden h-6 w-9 shrink-0 -scale-x-100 sm:block" />
+          {titulo}
+          <AzevinhoNatal className="hidden h-6 w-9 shrink-0 sm:block" />
+        </h2>
         <ol className="mt-6 grid grid-cols-2 gap-x-5 gap-y-5 md:grid-cols-4 md:gap-x-0">
           {lista.map((step, i) => (
             <li key={step.numero} className={i === 0 ? "md:pr-6" : "md:border-l md:border-line md:px-6"}>
