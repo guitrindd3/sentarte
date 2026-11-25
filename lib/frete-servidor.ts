@@ -14,6 +14,7 @@ import { PRAZO_ENVIO_ES_DIAS_UTEIS } from "./prazo-entrega";
 //   FRETE_CAIXA_INFANTIL / FRETE_CAIXA_RECLINAVEL — same, for the other chair
 //                         types (optional; estimates below until the real sizes come)
 //   MELHORENVIO_EMAIL   — contact e-mail Melhor Envio asks for in the User-Agent
+//   SUPERFRETE_TOKEN    — optional second platform; both are quoted, cheapest wins
 // Without them, non-ES CEPs get "combinar pelo WhatsApp" and can't pay online.
 
 function ehCepES(cep: string) {
@@ -66,7 +67,7 @@ export async function calcularFrete(cep: string, porTipo: ChairsPorTipo, valorDe
   const token = process.env.MELHORENVIO_TOKEN;
   const origem = (process.env.FRETE_CEP_ORIGEM ?? "").replace(/\D/g, "");
   const caixas = caixasPorTipo();
-  if (!token || origem.length !== 8 || !caixas.normal) return null;
+  if ((!token && !process.env.SUPERFRETE_TOKEN) || origem.length !== 8 || !caixas.normal) return null;
   const seguroPorCadeira = Math.round((valorDeclarado / qtdCadeiras) * 100) / 100;
   const produtos = (Object.keys(caixas) as (keyof ChairsPorTipo)[])
     .filter((t) => porTipo[t] > 0)
@@ -79,7 +80,19 @@ export async function calcularFrete(cep: string, porTipo: ChairsPorTipo, valorDe
   const guardado = cacheCotacoes.get(chave);
   if (guardado && Date.now() - guardado.em < DEZ_MIN) return guardado.frete;
 
-  let frete: Frete | null = null;
+  // Both platforms in parallel; the cheapest answer wins, and if one is down
+  // the other still quotes (user 2026-11-25: problems with Melhor Envio → add SuperFrete).
+  const [me, sf] = await Promise.all([cotarMelhorEnvio(token, origem, destino, produtos), cotarSuperFrete(origem, destino, produtos)]);
+  const frete = [me, sf].filter((f): f is Frete => !!f).sort((x, y) => x.valor - y.valor)[0] ?? null;
+  if (cacheCotacoes.size > 2000) cacheCotacoes.clear();
+  cacheCotacoes.set(chave, { em: Date.now(), frete });
+  return frete;
+}
+
+type Produto = { id: string; height: number; width: number; length: number; weight: number; insurance_value: number; quantity: number };
+
+async function cotarMelhorEnvio(token: string | undefined, origem: string, destino: string, produtos: Produto[]): Promise<Frete | null> {
+  if (!token) return null;
   try {
     const res = await fetch("https://melhorenvio.com.br/api/v2/me/shipment/calculate", {
       method: "POST",
@@ -96,27 +109,77 @@ export async function calcularFrete(cep: string, porTipo: ChairsPorTipo, valorDe
         options: { receipt: false, own_hand: false },
       }),
       cache: "no-store",
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) {
       console.error("melhor envio calculate failed", res.status, (await res.text()).slice(0, 300));
-    } else {
-      const servicos = (await res.json()) as Servico[];
-      const validos = servicos
-        .filter((s) => !s.error && Number(s.custom_price ?? s.price) > 0)
-        .sort((a, b) => Number(a.custom_price ?? a.price) - Number(b.custom_price ?? b.price));
-      const melhor = validos[0];
-      if (melhor) {
-        frete = {
-          valor: Math.round(Number(melhor.custom_price ?? melhor.price) * 100) / 100,
-          prazoDias: melhor.custom_delivery_time ?? melhor.delivery_time,
-          servico: [melhor.company?.name, melhor.name].filter(Boolean).join(" "),
-        };
-      }
+      return null;
     }
+    const servicos = (await res.json()) as Servico[];
+    const melhor = servicos
+      .filter((s) => !s.error && Number(s.custom_price ?? s.price) > 0)
+      .sort((a, b) => Number(a.custom_price ?? a.price) - Number(b.custom_price ?? b.price))[0];
+    if (!melhor) return null;
+    return {
+      valor: Math.round(Number(melhor.custom_price ?? melhor.price) * 100) / 100,
+      prazoDias: melhor.custom_delivery_time ?? melhor.delivery_time,
+      servico: [melhor.company?.name, melhor.name].filter(Boolean).join(" "),
+    };
   } catch (e) {
     console.error("melhor envio calculate error", e);
+    return null;
   }
-  if (cacheCotacoes.size > 2000) cacheCotacoes.clear();
-  cacheCotacoes.set(chave, { em: Date.now(), frete });
-  return frete;
+}
+
+// SuperFrete (superfrete.readme.io): token from web.superfrete.com → Integrações →
+// "Integrar em Desenvolvedores". Env: SUPERFRETE_TOKEN (+ SUPERFRETE_SANDBOX=1 to
+// test against sandbox.superfrete.com). Services: 1 PAC, 2 SEDEX, 17 Mini Envios,
+// 3 Jadlog, 33 J&T (Loggi is switched on in the token's settings). The service
+// name says "(SuperFrete)" so the admin knows where to buy the label.
+type ServicoSF = { id?: number; name?: string; price?: number | string; delivery_time?: number; has_error?: boolean; error?: string; company?: { name?: string } };
+
+async function cotarSuperFrete(origem: string, destino: string, produtos: Produto[]): Promise<Frete | null> {
+  const token = process.env.SUPERFRETE_TOKEN;
+  if (!token) return null;
+  const base = process.env.SUPERFRETE_SANDBOX === "1" ? "https://sandbox.superfrete.com" : "https://api.superfrete.com";
+  const seguro = Math.round(produtos.reduce((t, p) => t + p.insurance_value * p.quantity, 0) * 100) / 100;
+  try {
+    const res = await fetch(`${base}/api/v0/calculator`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "User-Agent": `SentArte 1.0 (${process.env.MELHORENVIO_EMAIL ?? "ateliesentarte@gmail.com"})`,
+      },
+      body: JSON.stringify({
+        from: { postal_code: origem },
+        to: { postal_code: destino },
+        services: "1,2,17,3,33",
+        options: { own_hand: false, receipt: false, insurance_value: seguro, use_insurance_value: seguro > 0 },
+        products: produtos.map((p) => ({ quantity: p.quantity, weight: p.weight, height: p.height, width: p.width, length: p.length })),
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      console.error("superfrete calculator failed", res.status, (await res.text()).slice(0, 300));
+      return null;
+    }
+    const servicos = (await res.json()) as ServicoSF[];
+    const melhor = (Array.isArray(servicos) ? servicos : [])
+      .filter((s) => !s.has_error && !s.error && Number(s.price) > 0)
+      .sort((a, b) => Number(a.price) - Number(b.price))[0];
+    if (!melhor) return null;
+    const empresa = melhor.company?.name;
+    const nome = melhor.name ?? "";
+    return {
+      valor: Math.round(Number(melhor.price) * 100) / 100,
+      prazoDias: melhor.delivery_time,
+      servico: `${empresa && !nome.toLowerCase().includes(empresa.toLowerCase()) ? `${empresa} ` : ""}${nome} (SuperFrete)`.trim(),
+    };
+  } catch (e) {
+    console.error("superfrete calculator error", e);
+    return null;
+  }
 }
