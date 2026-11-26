@@ -192,6 +192,8 @@ export async function talvezRodarLembretes() {
   try {
     const [vez] = await redis([["SET", K_VEZ, 1, "NX", "EX", 600]]);
     if (vez !== "OK") return;
+    // shipped orders that arrived → "entregue" (its own 3-hour pace; before the e-mails so "entregue" goes out in this round)
+    await import("./entregas").then((m) => m.talvezAtualizarEntregas()).catch((err) => console.error("entregas", err));
     await rodarLembretes();
     // e-mail campaigns waiting in line (lazy import: lib/campanhas.ts imports this file)
     await import("./campanhas").then((m) => m.processarCampanhas(40_000));

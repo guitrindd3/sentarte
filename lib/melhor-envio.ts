@@ -274,3 +274,23 @@ export async function atualizarEnvios(envios: EnvioME[]): Promise<EnvioME[]> {
 export async function tirarDoCarrinho(envios: EnvioME[]) {
   for (const e of envios) await me(`/me/cart/${e.id}`, { method: "DELETE" });
 }
+
+// --- labels bought on melhorenvio.com.br (2026-11-26) -------------------------------
+
+type PedidoME = { id?: string; status?: string; tracking?: string | null; self_tracking?: string | null; protocol?: string };
+
+/**
+ * Finds the Melhor Envio shipment behind a tracking code (labels bought on the Melhor
+ * Envio site, with only the code pasted in the admin). Read-only; null if not found.
+ */
+export async function envioPeloRastreio(codigo: string): Promise<EnvioME | null> {
+  const limpo = codigo.replace(/\s/g, "").toUpperCase();
+  if (!limpo) return null;
+  const r = await me<PedidoME[] | { data?: PedidoME[] }>(`/me/orders/search?q=${encodeURIComponent(limpo)}`, {
+    signal: AbortSignal.timeout(8000),
+  });
+  const lista = Array.isArray(r) ? r : (r?.data ?? []);
+  const o = lista.find((x) => [x.tracking, x.self_tracking, x.protocol].some((t) => t?.toUpperCase() === limpo)) ?? (lista.length === 1 ? lista[0] : undefined);
+  if (!o?.id) return null;
+  return { id: o.id, servico: "Melhor Envio", status: o.status, rastreio: o.tracking || o.self_tracking || limpo };
+}
